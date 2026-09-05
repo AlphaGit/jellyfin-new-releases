@@ -1,0 +1,14 @@
+# JPRM (Jellyfin Plugin Repository Manager) build manifest.
+# https://github.com/oddstr13/jellyfin-plugin-repository-manager
+name: "Jellyfin New Releases"
+guid: "b8a15db8-e368-42c4-9048-390faf0094db"
+version: "0.1.0"
+targetAbi: "10.11.0.0"
+framework: "net9.0"
+owner: "Alpha"
+overview: "New releases by your library's artists that you do not have yet."
+description: "Tracks new releases by the artists in your Jellyfin music library that the library does not yet contain, and surfaces them in admin and user-accessible views."
+category: "General"
+changelog: "Initial scaffold."
+artifacts:
+  - "Jellyfin.Plugin.NewReleases.dll"

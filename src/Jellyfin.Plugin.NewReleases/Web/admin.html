@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>New Releases</title>
+</head>
+<body>
+<div id="newreleasesConfigPage"
+     data-role="page"
+     class="page type-interior pluginConfigurationPage"
+     data-require="emby-input,emby-button,emby-checkbox">
+
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="nr-config-form">
+                <h1>New Releases</h1>
+                <p>Configuration fields are defined by the spec. Nothing to configure yet.</p>
+                <button is="emby-button" type="submit" class="raised button-submit block">
+                    <span>Save</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function () {
+            'use strict';
+            var PLUGIN_ID = 'b8a15db8-e368-42c4-9048-390faf0094db';
+            var page = document.querySelector('#newreleasesConfigPage');
+
+            page.addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (cfg) {
+                    // populate form from cfg
+                    Dashboard.hideLoadingMsg();
+                }).catch(function () { Dashboard.hideLoadingMsg(); });
+            });
+
+            page.querySelector('#nr-config-form').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (cfg) {
+                    // read form into cfg
+                    return ApiClient.updatePluginConfiguration(PLUGIN_ID, cfg);
+                }).then(function (result) {
+                    Dashboard.hideLoadingMsg();
+                    Dashboard.processPluginConfigurationUpdateResult(result);
+                }).catch(function () { Dashboard.hideLoadingMsg(); });
+                return false;
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>
