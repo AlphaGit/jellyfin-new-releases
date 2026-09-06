@@ -9,6 +9,9 @@ Sibling of [jellyfin-concert-radar](../jellyfin-concert-radar): same plugin shap
 **Status:** scaffold only. Behaviour is being specified with [Spec Kit](https://github.com/github/spec-kit)
 under `specs/`. Nothing fetches releases yet.
 
+**Roadmap:** https://github.com/users/AlphaGit/projects/2 — public board mirrored from the
+specs in this repo. The repo is the source of truth; the board is read-only.
+
 ## Layout
 
 ```

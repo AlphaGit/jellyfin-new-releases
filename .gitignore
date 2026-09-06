@@ -41,3 +41,7 @@ artifacts/
 *.secret
 .env
 .env.local
+
+# Spec Kit extension state
+.worktrees/
+.specify/extensions/.cache/

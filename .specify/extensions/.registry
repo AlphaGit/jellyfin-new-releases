@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0",
+  "extensions": {
+    "worktrees": {
+      "version": "1.3.2",
+      "source": "local",
+      "manifest_hash": "sha256:ec43973dd67ccd1c8aca2b2e711327bdaee55f0994fe2b2ed078899602533cd5",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.worktrees.create",
+          "speckit.worktrees.list",
+          "speckit.worktrees.clean"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-09-06T17:29:02.156270+00:00"
+    },
+    "tdd": {
+      "version": "1.1.2",
+      "source": "local",
+      "manifest_hash": "sha256:e07b49d00feb217a92cdbacd9471326b71bd31c636b184718cabb7904a13e6b2",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.tdd.setup",
+          "speckit.tdd.plan",
+          "speckit.tdd.run",
+          "speckit.tdd.verify"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-09-06T17:29:02.908284+00:00"
+    },
+    "grill": {
+      "version": "1.0.1",
+      "source": "local",
+      "manifest_hash": "sha256:7d67e2d0659b1e06353d2f81542b51dd5a53f39e3fc3247afd3dbda70016fc91",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.grill.me",
+          "speckit.grill.with-docs"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-09-06T17:29:03.606446+00:00"
+    },
+    "tasks-to-project": {
+      "version": "0.2.0",
+      "source": "local",
+      "manifest_hash": "sha256:aa941f46e632b61874ac7dbd94df86af269fe0a45254307e69cd88a3c657b22d",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.tasks-to-project.publish",
+          "speckit.tasks-to-project.sync"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-09-06T17:29:04.219740+00:00"
+    }
+  }
+}

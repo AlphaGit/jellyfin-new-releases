@@ -8,8 +8,24 @@ pattern, look there first.
 ## Workflow: Spec Kit
 
 Specs live in `specs/`, driven by the `speckit-*` skills in `.claude/skills/`. Order:
-`/speckit-constitution` → `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` →
+`/speckit-constitution` → `/speckit-specify` → `/speckit-grill-me` → `/speckit-plan` →
 `/speckit-tasks` → `/speckit-implement`. Do not add behaviour outside a spec'd feature.
+
+Installed extensions (`specify extension list`; hooks in `.specify/extensions.yml`):
+
+- **grill** — `/speckit-grill-me` replaces `/speckit-clarify`: one question at a time until
+  the spec has no open decision. `/speckit-grill-with-docs` also syncs `docs/domain_knowledge/`.
+- **tdd** — `before_implement` hook is mandatory: `/speckit-tdd-run` drives red-green-refactor
+  from `specs/<feature>/tdd/test-list.md` before `/speckit-implement` writes anything.
+  Stack commands live in `.specify/memory/tdd-profile.md`; re-run `/speckit-tdd-setup refresh`
+  when the test stack changes.
+- **worktrees** — `after_specify` offers a nested `.worktrees/<branch>` worktree. `auto_create`
+  is off because Orca already isolates each agent in its own worktree; decline unless you
+  need a second one.
+- **tasks-to-project** — one-way mirror of `tasks.md` onto a public GitHub Project (v2) so
+  third parties can see the roadmap. The repo is the source of truth; `sync` never writes back
+  to `tasks.md`. Config: `.specify/extensions/tasks-to-project/tasks-to-project-config.yml`
+  (`project.number` must be set before the `after_tasks` hook can publish).
 
 ## Conventions (inherited from concert-radar)
 
