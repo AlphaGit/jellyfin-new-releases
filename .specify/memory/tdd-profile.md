@@ -35,7 +35,7 @@ suite_seconds: 2
   `TreatWarningsAsErrors`). Mirror the source folder layout: a class under `src/.../Storage/`
   gets `tests/.../Storage/<Class>Tests.cs`.
 - Assertions use xunit `Assert.*`. Doubles use NSubstitute `Substitute.For<T>()`. No
-  FluentAssertions (deliberately: licence churn in v8+).
+  assertion library is referenced yet.
 - `{name}` in the single-test command is an xunit fully qualified name fragment, e.g.
   `PluginSanityTests.Plugin_Guid_IsStable`. `FullyQualifiedName~` is a substring match, so use
   `Class.Method` to hit exactly one test.
