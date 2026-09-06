@@ -1,10 +1,12 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0
+- Version change: 1.1.0 → 1.2.0
 - Modified principles: none
-- Modified sections: Development Workflow (single-maintainer branching model: commit to
-  `main`, no feature branches, no pull requests; CI gate wording), Governance (review wording
-  no longer assumes pull requests)
+- Modified sections: Development Workflow (CI on `main` is the final gate: a pushed feature is
+  not done until its CI run is verified green)
+- Previous amendment (1.1.0): Development Workflow (single-maintainer branching model: commit
+  to `main`, no feature branches, no pull requests), Governance (review wording no longer
+  assumes pull requests)
 - Initial ratification (1.0.0) added:
 - Added sections:
   - Core Principles I–VI (Spec-Driven Development; Test-Driven Development; Hermetic Tests;
@@ -146,7 +148,9 @@ Ship the smallest change that satisfies the spec.
 - Every plan's Constitution Check lists each principle above with a pass or a justified
   deviation in Complexity Tracking. An unjustified deviation blocks `/speckit-tasks`.
 - CI gate on every push to `main`: `dotnet build --configuration Release` with zero warnings,
-  then `dotnet test`. Red CI is fixed before new work starts.
+  then `dotnet test`. Because there are no pull requests, CI is the final check: a feature is
+  not done when it is pushed, it is done when the CI run for that push is verified green
+  (`gh run watch` or `gh run list --branch main`). Red CI is fixed before new work starts.
 - Commits follow Conventional Commits. Releases are semver tags `vX.Y.Z`; the tag triggers the
   JPRM package workflow, and `build.yaml`, `manifest.json`, and `CHANGELOG.md` change in the
   same commit as the version.
@@ -167,4 +171,4 @@ This constitution supersedes every other practice document in the repository.
 - The constitution is reviewed when the Jellyfin target major version changes, when Spec Kit
   changes its artifact contract, or at the first release, whichever comes first.
 
-**Version**: 1.1.0 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-09-06
+**Version**: 1.2.0 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-09-06
