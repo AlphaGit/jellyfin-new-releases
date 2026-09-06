@@ -1,7 +1,11 @@
 <!--
 Sync Impact Report
-- Version change: (template) → 1.0.0
-- Modified principles: none (initial ratification)
+- Version change: 1.0.0 → 1.1.0
+- Modified principles: none
+- Modified sections: Development Workflow (single-maintainer branching model: commit to
+  `main`, no feature branches, no pull requests; CI gate wording), Governance (review wording
+  no longer assumes pull requests)
+- Initial ratification (1.0.0) added:
 - Added sections:
   - Core Principles I–VI (Spec-Driven Development; Test-Driven Development; Hermetic Tests;
     Jellyfin Compatibility; Respectful Sources and Privacy; Simplicity)
@@ -134,12 +138,15 @@ Ship the smallest change that satisfies the spec.
   `/speckit-tasks` (accept `speckit-tdd-plan`; accept `speckit-tasks-to-project-publish` to
   mirror the roadmap) → `speckit-tdd-run` (mandatory pre-implement hook) →
   `/speckit-implement` → `speckit-tdd-verify` → `speckit-tasks-to-project-sync`.
-- One branch and one worktree per feature. Orca supplies the worktree; the worktrees extension
-  only prompts and MUST NOT auto-create a second one.
+- Single-maintainer project: no feature branches and no pull requests. Finished work is
+  committed to `main` and pushed. Parallel work and isolation use Orca worktrees; a worktree's
+  scratch branch is fast-forwarded onto `main` and is never pushed on its own. The worktrees
+  extension only prompts and MUST NOT auto-create worktrees or branches. Revisit this rule when
+  a second contributor joins.
 - Every plan's Constitution Check lists each principle above with a pass or a justified
   deviation in Complexity Tracking. An unjustified deviation blocks `/speckit-tasks`.
-- CI gate on every push and pull request: `dotnet build --configuration Release` with zero
-  warnings, then `dotnet test`. Red CI is fixed before new work starts.
+- CI gate on every push to `main`: `dotnet build --configuration Release` with zero warnings,
+  then `dotnet test`. Red CI is fixed before new work starts.
 - Commits follow Conventional Commits. Releases are semver tags `vX.Y.Z`; the tag triggers the
   JPRM package workflow, and `build.yaml`, `manifest.json`, and `CHANGELOG.md` change in the
   same commit as the version.
@@ -154,9 +161,10 @@ This constitution supersedes every other practice document in the repository.
   in a commit that states the reason, updates the Sync Impact Report, and bumps the version:
   MAJOR for removing or redefining a principle, MINOR for adding a principle or materially
   expanding guidance, PATCH for clarifications.
-- Every `plan.md` records a Constitution Check; every pull request review verifies it. A
-  principle that is repeatedly deviated from is amended or enforced, not ignored.
+- Every `plan.md` records a Constitution Check; `/speckit-analyze` and the implementer verify it
+  before work lands on `main`. A principle that is repeatedly deviated from is amended or
+  enforced, not ignored.
 - The constitution is reviewed when the Jellyfin target major version changes, when Spec Kit
   changes its artifact contract, or at the first release, whichever comes first.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-09-06
+**Version**: 1.1.0 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-09-06
