@@ -1252,3 +1252,10 @@ failed before the implementation.
 - green: `ReleaseRepository.ListAsync` — `WHERE (@archived = 1 OR r.ownership_state <> 'Owned')`. Suite -> 172 passed, 0 failed. US3 outer loop closed: A16–A19 green.
 - refactor: none needed
 - commit: `78ecfc9`
+
+## Correction to cycles 144 and 145 (A17 and A18 mutant evidence)
+
+- cycle 144's mutant (`return;` at the top of `RemoveAsync`) did not compile (CS0162 unreachable code, warnings are errors), so the entry above overstated it. Re-run with a compile-safe mutant (the DELETE key suffixed so nothing matches):
+  `dotnet test --configuration Release --filter "FullyQualifiedName~ArchiveTests.A17_" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ / Expected: ["Alive 2007", "Human After All"] / Actual: ["Alive 2007"]` (1 failed). Code restored exactly, test green again.
+- cycle 145's mutant (Archive join counts only Ignore) did fail the test, but through `System.InvalidOperationException : Sequence contains no matching element` (the `.Single()` over the Archive), not the `DoesNotContain` assertion the entry names. Re-run confirmed (1 failed). Code restored exactly, test green again.
