@@ -56,8 +56,13 @@ public sealed class SourceHttpClient
                 return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             }
 
+            if (attempt >= SourceLimits.RetryBackoffs.Length)
+            {
+                throw new HttpRequestException($"Source '{source}' still answered {(int)response.StatusCode} after {attempt} retries.", null, response.StatusCode);
+            }
+
             var retryAfter = response.Headers.RetryAfter?.Delta ?? (response.Headers.RetryAfter?.Date is { } date ? date - _clock.GetUtcNow() : null);
-            var delay = retryAfter ?? SourceLimits.RetryBackoffs[Math.Min(attempt, SourceLimits.RetryBackoffs.Length - 1)];
+            var delay = retryAfter ?? SourceLimits.RetryBackoffs[attempt];
             if (retryAfter is not null)
             {
                 await _state.SetNextAllowedAtAsync(source, _clock.GetUtcNow() + delay, ct).ConfigureAwait(false);

@@ -84,7 +84,8 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
             await Task.Yield();
         }
 
-        return await task;
+        // A task still pending here is waiting on the stub clock forever: report it instead of hanging the run.
+        return await task.WaitAsync(TimeSpan.FromSeconds(2));
     }
 
     private static HttpResponseMessage Response(HttpStatusCode status, string body, int? retryAfterSeconds = null)
@@ -112,5 +113,19 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
 
         Assert.Equal("{\"ok\":true}", body);
         Assert.Equal(2, _http.ReceivedRequests.Count);
+    }
+
+    [Fact]
+    public async Task GetStringAsync_Persistent500_RetriesThreeTimesWithBackoffThenThrows()
+    {
+        var sentAt = new List<DateTimeOffset>();
+        _http.OnUrlPattern(".*", (_, _) => { sentAt.Add(_clock.GetUtcNow()); return Response(HttpStatusCode.InternalServerError, "boom"); });
+        var client = Client();
+
+        var pending = client.GetStringAsync(Deezer, Url, CancellationToken.None);
+        await Assert.ThrowsAsync<HttpRequestException>(() => RunAdvancingAsync(pending, TimeSpan.FromMilliseconds(100), maxSteps: 60));
+
+        Assert.Equal(4, _http.ReceivedRequests.Count);
+        Assert.Equal([TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(800), TimeSpan.FromMilliseconds(3_200)], sentAt.Zip(sentAt.Skip(1), (a, b) => b - a));
     }
 }
