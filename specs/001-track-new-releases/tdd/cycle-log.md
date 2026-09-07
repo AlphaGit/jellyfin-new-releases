@@ -642,3 +642,12 @@ failed before the implementation.
 - green: `LibraryScanner.ProviderId()` (first comma-separated value) applied to the artist item, then to the artist's albums' `MusicBrainzAlbumArtist`; MBID becomes both `Mbid` and `ArtistKey`. Suite -> 97 passed, 0 failed
 - refactor: none needed
 - commit: `4e1abd1`
+
+## Cycle 72: U70 each album snapshot carries `MusicBrainzAlbum`, `MusicBrainzReleaseGroup` and the normalized titles of its `Audio` children
+
+- test: `Library/LibraryScannerTests.cs::Scan_AlbumSnapshotsCarryIdentifiersAndNormalizedTrackTitles` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~LibraryScannerTests.Scan_AlbumSnapshotsCarryIdentifiersAndNormalizedTrackTitles" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: 2 / Actual:   0` (1 failed; artists had no albums)
+- green: `LibraryScanner.SnapshotAlbum()` — `Audio` children via `GetItemList(ParentId = album.Id)`, track titles through `NormalizeTrack`, album title through `NormalizeAlbum`, both MusicBrainz provider ids. Suite -> 98 passed, 0 failed
+- refactor: none needed
+- commit: `8c1b0a8`
