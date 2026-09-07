@@ -470,3 +470,12 @@ failed before the implementation.
 - green: `SourceStateRepository.StartRunAsync` (`RETURNING id`), `FinishRunAsync`, `GetLastCompletedRunAsync` (`outcome = 'Completed'`, latest `ended_at`), `GetLatestRunAsync` via one `QueryRunAsync(tail)`. Suite -> 73 passed, 0 failed
 - refactor: none needed
 - commit: `182d498`
+
+## Cycle 53: A9 a new `PluginConfiguration` has both sources enabled and exactly Album and EP included
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Configuration/PluginConfigurationTests.cs::Defaults_BothSourcesEnabled_ExactlyAlbumsAndEpsIncluded_NoCutoffNoContact` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~PluginConfigurationTests.Defaults_BothSourcesEnabled_ExactlyAlbumsAndEpsIncluded_NoCutoffNoContact" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.True() Failure / Expected: True / Actual:   False` (1 failed; the eleven scalar properties were declared without initializers)
+- green: `PluginConfiguration` initializers `= true` on `MusicBrainzEnabled`, `DeezerEnabled`, `IncludeAlbums`, `IncludeEps`. Suite -> 74 passed, 0 failed
+- refactor: none needed
+- commit: `205293b`
