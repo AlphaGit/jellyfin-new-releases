@@ -132,7 +132,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | --- | --- | --- | --- | --- | --- |
 | U44 | Setting a decision inserts it; setting again for the same key replaces kind, user and time | FR-016 | example | DONE | `Storage/ArchiveRepositoryTests.cs::SetAsync_InsertsThenReplacesKindUserAndTime` |
 | U45 | Removing a decision deletes only that key; clearing deletes all | FR-013, FR-016 | example | DONE | `Storage/ArchiveRepositoryTests.cs::RemoveAsync_DeletesOnlyThatKey_ClearAsync_DeletesAll` |
-| U46 | A decision written before a purge still joins the release once the same title is upserted again | FR-013, R8 | example | PENDING | `Storage/ArchiveRepositoryTests.cs` |
+| U46 | A decision written before a purge still joins the release once the same title is upserted again | FR-013, R8 | example | DONE | `Storage/ArchiveRepositoryTests.cs::Decision_SurvivesPurgeAndJoinsTheReleaseWhenItIsFetchedAgain` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Storage/SourceStateRepository.cs`
 

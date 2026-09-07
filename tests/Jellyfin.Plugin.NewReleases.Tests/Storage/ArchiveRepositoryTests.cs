@@ -46,4 +46,22 @@ public sealed class ArchiveRepositoryTests : IAsyncLifetime
 
         Assert.Equal(0L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision"));
     }
+
+    [Fact]
+    public async Task Decision_SurvivesPurgeAndJoinsTheReleaseWhenItIsFetchedAgain()
+    {
+        var now = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
+        var filter = new ReleaseFilter(new HashSet<ReleaseType> { ReleaseType.Album, ReleaseType.EP }, new DateOnly(2026, 9, 6));
+        var artist = await _db.Artists.UpsertAsync(ArtistRepositoryTests.Artist("name:daft punk", "Daft Punk"), CancellationToken.None);
+        var item = ReleaseRepositoryTests.MusicBrainzItem("Discovery (Deluxe)", "rg-d", "2001-03-12");
+        await _db.Releases.UpsertFromSourceAsync(artist, "musicbrainz", item, 1, now, CancellationToken.None);
+        await _db.Archive.SetAsync("name:daft punk", "discovery", DecisionKind.Ignore, Alice, T1, CancellationToken.None);
+
+        await _db.Releases.PurgeAsync(CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(artist, "musicbrainz", item, 2, now, CancellationToken.None);
+
+        Assert.Empty(await _db.Releases.ListAsync(filter, CancellationToken.None));
+        var archived = Assert.Single(await _db.Releases.ListAsync(filter with { Archived = true }, CancellationToken.None));
+        Assert.Equal(DecisionKind.Ignore, archived.Archived!.Kind);
+    }
 }
