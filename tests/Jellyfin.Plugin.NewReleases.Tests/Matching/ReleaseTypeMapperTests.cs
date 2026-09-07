@@ -60,4 +60,15 @@ public class ReleaseTypeMapperTests
     {
         Assert.False(ReleaseTypeMapper.IsIncluded(ReleaseType.Album, [ReleaseType.Live], DefaultSelection));
     }
+
+    [Fact]
+    public void IsIncluded_EverySecondaryMustBeEnabled()
+    {
+        HashSet<ReleaseType> withLive = [ReleaseType.Album, ReleaseType.EP, ReleaseType.Live];
+        HashSet<ReleaseType> withLiveAndCompilation = [ReleaseType.Album, ReleaseType.EP, ReleaseType.Live, ReleaseType.Compilation];
+
+        Assert.True(ReleaseTypeMapper.IsIncluded(ReleaseType.Album, [ReleaseType.Live], withLive));
+        Assert.False(ReleaseTypeMapper.IsIncluded(ReleaseType.Album, [ReleaseType.Compilation, ReleaseType.Live], withLive));
+        Assert.True(ReleaseTypeMapper.IsIncluded(ReleaseType.Album, [ReleaseType.Compilation, ReleaseType.Live], withLiveAndCompilation));
+    }
 }
