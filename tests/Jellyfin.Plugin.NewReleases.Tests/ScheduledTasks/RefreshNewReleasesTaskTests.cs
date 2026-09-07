@@ -206,4 +206,29 @@ public sealed class RefreshNewReleasesTaskTests : IAsyncLifetime
         Assert.Equal(["Keeper"], (await _h.Db.Artists.GetAllAsync(CancellationToken.None)).Select(a => a.Name));
         Assert.Empty(await StoredTitlesAsync());
     }
+
+    [Fact]
+    public async Task Run_WritesOneRefreshRunRowWithCountsAndCompleted_CancelledRunWritesCancelled()
+    {
+        _library.Artist("Daft Punk"); _library.Album("Discovery", "Daft Punk", Library, trackTitles: ["One More Time"]);
+        _library.Artist("Justice"); _library.Album("Cross", "Justice", Library);
+        _configuration.DeezerEnabled = false;
+        MatchEverything(_musicBrainz, "mb:");
+        _musicBrainz.FetchCataloguePageAsync("mb:Daft Punk", 0, Arg.Any<CancellationToken>()).Returns(new CataloguePage([Item("musicbrainz", "rg-1", "Discovery"), Item("musicbrainz", "rg-2", "Homework")], null, 2));
+        _musicBrainz.FetchCataloguePageAsync("mb:Justice", 0, Arg.Any<CancellationToken>()).Returns<CataloguePage>(_ => throw new HttpRequestException("boom"));
+        _musicBrainz.FetchEditionsAsync("rg-1", Arg.Any<CancellationToken>()).Returns([new EditionTrackList("rel-1", "Discovery", ["one more time"])]);
+
+        await RunAsync();
+
+        var run = await _h.Db.SourceState.GetLastCompletedRunAsync(CancellationToken.None);
+        Assert.NotNull(run);
+        Assert.Equal((2, 2, 1, 1, "Completed"), (run.ArtistsProcessed, run.ReleasesFound, run.EditionsFetched, run.Errors, run.Outcome));
+        Assert.Equal(1L, await _h.Db.ScalarAsync<long>("SELECT COUNT(*) FROM refresh_run"));
+
+        using var cancelled = new CancellationTokenSource();
+        _musicBrainz.FetchCataloguePageAsync("mb:Daft Punk", 0, Arg.Any<CancellationToken>()).Returns<CataloguePage>(_ => { cancelled.Cancel(); throw new OperationCanceledException(cancelled.Token); });
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Task_().ExecuteAsync(new Progress<double>(), cancelled.Token));
+
+        Assert.Equal("Cancelled", (await _h.Db.SourceState.GetLatestRunAsync(CancellationToken.None))!.Outcome);
+    }
 }

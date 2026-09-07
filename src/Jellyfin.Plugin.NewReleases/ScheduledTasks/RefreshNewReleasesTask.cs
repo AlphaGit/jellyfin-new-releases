@@ -90,57 +90,96 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
         await _artists.DeleteMissingAsync(artistIds.Keys.ToArray(), cancellationToken).ConfigureAwait(false);
         var snapshots = snapshot.Artists.ToDictionary(a => a.ArtistKey, StringComparer.Ordinal);
         var runId = await _sourceState.StartRunAsync(cancellationToken).ConfigureAwait(false);
+        var counts = new RunCounts();
 
-        // 3. Rotate artists × enabled sources.
-        var rotation = await _artists.GetRotationAsync(cancellationToken).ConfigureAwait(false);
-        var done = 0;
-        foreach (var stored in rotation)
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            var artist = snapshots[stored.ArtistKey];
-            var everySourceAttempted = true;
-            foreach (var source in enabledSources)
+            // 3. Rotate artists × enabled sources.
+            var rotation = await _artists.GetRotationAsync(cancellationToken).ConfigureAwait(false);
+            var done = 0;
+            foreach (var stored in rotation)
             {
-                if (!await _http.IsAvailableAsync(source.Id, cancellationToken).ConfigureAwait(false))
+                cancellationToken.ThrowIfCancellationRequested();
+                var artist = snapshots[stored.ArtistKey];
+                var everySourceAttempted = true;
+                var anySourceAttempted = false;
+                foreach (var source in enabledSources)
                 {
-                    everySourceAttempted = false;
-                    continue;
+                    if (!await _http.IsAvailableAsync(source.Id, cancellationToken).ConfigureAwait(false))
+                    {
+                        everySourceAttempted = false;
+                        continue;
+                    }
+
+                    anySourceAttempted = true;
+                    try
+                    {
+                        await RefreshArtistAtSourceAsync(stored.Id, artist, source, runId, counts, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Failed: record, remove nothing, continue with the next source or artist (FR-014, contract failure semantics).
+                        counts.Errors++;
+                        _logger.LogWarning(ex, "Source {Source} failed for {Artist}.", source.Id, artist.Name);
+                        var state = await _artists.GetSourceStateAsync(stored.Id, source.Id, cancellationToken).ConfigureAwait(false);
+                        await _artists.SetFetchOutcomeAsync(stored.Id, source.Id, FetchOutcome.Failed, state?.ResumeOffset ?? 0, ex.Message, _clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+                    }
                 }
 
-                try
+                if (anySourceAttempted)
                 {
-                    await RefreshArtistAtSourceAsync(stored.Id, artist, source, runId, cancellationToken).ConfigureAwait(false);
+                    counts.ArtistsProcessed++;
                 }
-                catch (OperationCanceledException)
+
+                if (everySourceAttempted)
                 {
-                    throw;
+                    await _artists.SetLastRefreshedAsync(stored.Id, _clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
                 }
-                catch (Exception ex)
-                {
-                    // Failed: record, remove nothing, continue with the next source or artist (FR-014, contract failure semantics).
-                    _logger.LogWarning(ex, "Source {Source} failed for {Artist}.", source.Id, artist.Name);
-                    var state = await _artists.GetSourceStateAsync(stored.Id, source.Id, cancellationToken).ConfigureAwait(false);
-                    await _artists.SetFetchOutcomeAsync(stored.Id, source.Id, FetchOutcome.Failed, state?.ResumeOffset ?? 0, ex.Message, _clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
-                }
+
+                progress.Report(100.0 * ++done / Math.Max(1, rotation.Count));
             }
 
-            if (everySourceAttempted)
+            // 4. Ownership for every artist, from stored editions plus the fresh snapshot; editions fetched only for candidates (R11, EC-7).
+            foreach (var stored in rotation)
             {
-                await _artists.SetLastRefreshedAsync(stored.Id, _clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
+                await DecideOwnershipAsync(stored.Id, snapshots[stored.ArtistKey], enabledSources, counts, cancellationToken).ConfigureAwait(false);
             }
-
-            progress.Report(100.0 * ++done / Math.Max(1, rotation.Count));
         }
-
-        // 4. Ownership for every artist, from stored editions plus the fresh snapshot; editions fetched only for candidates (R11, EC-7).
-        foreach (var stored in rotation)
+        catch (OperationCanceledException)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            await DecideOwnershipAsync(stored.Id, snapshots[stored.ArtistKey], enabledSources, cancellationToken).ConfigureAwait(false);
+            await FinishAsync(runId, counts, "Cancelled").ConfigureAwait(false);
+            throw;
         }
+        catch (Exception)
+        {
+            await FinishAsync(runId, counts, "Failed").ConfigureAwait(false);
+            throw;
+        }
+
+        // 5. Record the run (FR-012).
+        await FinishAsync(runId, counts, "Completed", cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task DecideOwnershipAsync(long artistId, LibraryArtistSnapshot artist, IReadOnlyList<IReleaseSource> enabledSources, CancellationToken ct)
+    private Task FinishAsync(long runId, RunCounts counts, string outcome, CancellationToken ct = default)
+        => _sourceState.FinishRunAsync(runId, counts.ArtistsProcessed, counts.ReleasesFound, counts.EditionsFetched, counts.Errors, outcome, ct);
+
+    private sealed class RunCounts
+    {
+        public int ArtistsProcessed { get; set; }
+
+        public int ReleasesFound { get; set; }
+
+        public int EditionsFetched { get; set; }
+
+        public int Errors { get; set; }
+    }
+
+    private async Task DecideOwnershipAsync(long artistId, LibraryArtistSnapshot artist, IReadOnlyList<IReleaseSource> enabledSources, RunCounts counts, CancellationToken ct)
     {
         foreach (var release in await _releases.GetByArtistAsync(artistId, ct).ConfigureAwait(false))
         {
@@ -161,6 +200,7 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
                         foreach (var edition in await source.FetchEditionsAsync(sourceReleaseId, ct).ConfigureAwait(false))
                         {
                             await _releases.UpsertEditionAsync(release.Id, sourceId, edition, _clock.GetUtcNow(), ct).ConfigureAwait(false);
+                            counts.EditionsFetched++;
                         }
                     }
                     catch (Exception ex) when (ex is not OperationCanceledException)
@@ -180,7 +220,7 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
         }
     }
 
-    private async Task RefreshArtistAtSourceAsync(long artistId, LibraryArtistSnapshot artist, IReleaseSource source, long runId, CancellationToken ct)
+    private async Task RefreshArtistAtSourceAsync(long artistId, LibraryArtistSnapshot artist, IReleaseSource source, long runId, RunCounts counts, CancellationToken ct)
     {
         var state = await _artists.GetSourceStateAsync(artistId, source.Id, ct).ConfigureAwait(false);
         var match = state is { Status: MatchStatus.Matched, SourceArtistId: not null }
@@ -212,6 +252,7 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
             foreach (var item in page.Items)
             {
                 await _releases.UpsertFromSourceAsync(artistId, source.Id, item, runId, _clock.GetUtcNow(), ct).ConfigureAwait(false);
+                counts.ReleasesFound++;
             }
 
             next = page.NextOffset;
