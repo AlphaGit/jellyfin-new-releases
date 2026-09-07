@@ -45,4 +45,12 @@ public class TitleNormalizerTests
     {
         Assert.Equal(expected, TitleNormalizer.NormalizeAlbum(input));
     }
+
+    [Theory]
+    [InlineData("Get Lucky (feat. Pharrell Williams)", "get lucky")]
+    [InlineData("Get Lucky ft. Pharrell", "get lucky")]
+    public void NormalizeTrack_RemovesTrailingFeaturedArtist(string input, string expected)
+    {
+        Assert.Equal(expected, TitleNormalizer.NormalizeTrack(input));
+    }
 }

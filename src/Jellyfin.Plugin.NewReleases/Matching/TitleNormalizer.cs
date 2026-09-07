@@ -28,6 +28,12 @@ public static partial class TitleNormalizer
 
     public static string NormalizeAlbum(string title) => Finish(StripEditionQualifier(Base(title)));
 
+    // Rule 7: one trailing "(feat. …)", "[ft. …]" or " feat. …" segment.
+    [GeneratedRegex(@"\s*([(\[]\s*(feat|ft)\.?\s[^)\]]*[)\]]|\s(feat|ft)\.?\s.*)$")]
+    private static partial Regex TrailingFeaturedArtist();
+
+    public static string NormalizeTrack(string title) => Finish(TrailingFeaturedArtist().Replace(Base(title), string.Empty, 1));
+
     private static string StripEditionQualifier(string text)
     {
         var m = TrailingSegment().Match(text);
