@@ -112,6 +112,43 @@ public sealed class ReleaseRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// After a Complete fetch of (artist, source) in <paramref name="runId"/>: drops this pair's entries the run did not
+    /// return and recomputes the canonical entry of the releases touched (FR-014).
+    /// </summary>
+    public async Task PruneEntriesAsync(long artistId, string source, long runId, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(ct).ConfigureAwait(false);
+
+        var touched = new List<long>();
+        await using (var prune = connection.CreateCommand())
+        {
+            prune.Transaction = transaction;
+            prune.CommandText = """
+                DELETE FROM source_entry
+                WHERE source = @source AND last_seen_run_id < @runId
+                  AND release_id IN (SELECT id FROM release WHERE library_artist_id = @artistId)
+                RETURNING release_id
+                """;
+            prune.Parameters.AddWithValue("@source", source);
+            prune.Parameters.AddWithValue("@runId", runId);
+            prune.Parameters.AddWithValue("@artistId", artistId);
+            await using var reader = await prune.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            while (await reader.ReadAsync(ct).ConfigureAwait(false))
+            {
+                touched.Add(reader.GetInt64(0));
+            }
+        }
+
+        foreach (var releaseId in touched)
+        {
+            await RecomputeCanonicalAsync(connection, transaction, releaseId, ct).ConfigureAwait(false);
+        }
+
+        await transaction.CommitAsync(ct).ConfigureAwait(false);
+    }
+
     public async Task<Release?> GetAsync(long releaseId, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);

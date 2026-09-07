@@ -48,4 +48,18 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         Assert.Equal(("musicbrainz", "rg-9", ReleaseType.Album, "2001-10-02"), (release.CanonicalSource, release.CanonicalSourceId, release.PrimaryType, release.ReleaseDate));
         Assert.Equal([ReleaseType.Live], release.SecondaryTypes);
     }
+
+    [Fact]
+    public async Task PruneEntriesAsync_RemovingTheMusicBrainzEntryMakesDeezerCanonical()
+    {
+        var id = await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Homework", "rg-2", "1997-01-20"), Run1, Now, CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(_artist, "deezer", DeezerItem("Homework", "dz-2", "1997-01-17"), Run1, Now, CancellationToken.None);
+
+        // Run 2: Deezer still lists it, MusicBrainz (Complete fetch) no longer does.
+        await _db.Releases.UpsertFromSourceAsync(_artist, "deezer", DeezerItem("Homework", "dz-2", "1997-01-17"), Run1 + 1, Now, CancellationToken.None);
+        await _db.Releases.PruneEntriesAsync(_artist, "musicbrainz", Run1 + 1, CancellationToken.None);
+
+        var release = (await _db.Releases.GetAsync(id, CancellationToken.None))!;
+        Assert.Equal(("deezer", "dz-2", "1997-01-17"), (release.CanonicalSource, release.CanonicalSourceId, release.ReleaseDate));
+    }
 }
