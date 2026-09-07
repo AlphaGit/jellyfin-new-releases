@@ -670,3 +670,11 @@ failed before the implementation.
 - green: `LibraryScanner.Scan()` groups the per-name artists by `ArtistKey` and merges albums and library ids. Suite -> 100 passed, 0 failed
 - refactor: none needed
 - commit: `d5a1250`
+
+## Cycle 75: U73 the scanner never calls `ILibraryManager.GetArtist(string)`
+
+- test: `Library/LibraryScannerTests.cs::Scan_NeverCallsGetArtistByName` (new; interaction assertion at the boundary — the call itself is the forbidden side effect, R6)
+- red: passed on first run. Deliberate mutant: fall back to `_library.GetArtist(name)` for an album artist without an item -> `NSubstitute.Exceptions.ReceivedCallsException : Expected to receive no calls matching: … Actually received 1 matching call` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 101 passed, 0 failed
+- refactor: none needed
+- commit: `1b10343`
