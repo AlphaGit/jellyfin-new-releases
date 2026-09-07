@@ -91,4 +91,16 @@ public sealed class DeezerSourceTests : IAsyncLifetime
         Assert.Equal(ReleaseType.Single, first.Items.Single(i => i.Title.StartsWith("Get Lucky")).PrimaryType);
         Assert.All(first.Items, i => Assert.Empty(i.SecondaryTypes));
     }
+
+    [Fact]
+    public async Task FetchCataloguePageAsync_UnknownDateBecomesNull_LinkBecomesTheUrl()
+    {
+        _h.Fixture(Albums27, "deezer/artist_albums_unknown_date.json"); // first row release_date 0000-00-00
+
+        var page = await Source().FetchCataloguePageAsync("27", 0, CancellationToken.None);
+
+        Assert.Null(page.Items[0].Date);
+        Assert.Equal("2010-03-15", page.Items[1].Date);
+        Assert.All(page.Items, i => Assert.Equal($"https://www.deezer.com/album/{i.SourceReleaseId}", i.Url));
+    }
 }

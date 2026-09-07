@@ -61,7 +61,7 @@ public sealed class DeezerSource : IReleaseSource
                 album.GetProperty("link").GetString() ?? string.Empty,
                 primary,
                 secondaries,
-                album.TryGetProperty("release_date", out var date) ? date.GetString() : null);
+                album.TryGetProperty("release_date", out var date) && date.GetString() is { Length: > 0 } text && text != "0000-00-00" ? text : null);
         }).ToList();
         return new CataloguePage(items, NextIndex(json.RootElement), json.RootElement.TryGetProperty("total", out var total) ? total.GetInt32() : items.Count);
     }
