@@ -90,4 +90,25 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
 
         Assert.Equal(ArtistMatch.Unmatched("no result"), match);
     }
+
+    private const string ReleaseBrowse = @"musicbrainz\.org/ws/2/release\?artist=";
+
+    [Fact]
+    public async Task FetchCataloguePageAsync_GroupsByReleaseGroupMapsTypesKeepsPartialDatesAndLinksTheReleaseGroup()
+    {
+        _h.Fixture(ReleaseBrowse, "musicbrainz/releases_page1.json"); // 8 releases in 7 release groups
+
+        var page = await Source().FetchCataloguePageAsync(DaftPunkMbid, 0, CancellationToken.None);
+
+        Assert.Equal(7, page.Items.Count);
+        var discovery = page.Items.Single(i => i.Title == "Discovery");
+        Assert.Equal(("48117b90-a16e-34ca-a514-19c702df1158", "https://musicbrainz.org/release-group/48117b90-a16e-34ca-a514-19c702df1158", ReleaseType.Album, "2001-02-26"),
+            (discovery.SourceReleaseId, discovery.Url, discovery.PrimaryType, discovery.Date));
+        Assert.Empty(discovery.SecondaryTypes);
+        var alive = page.Items.Single(i => i.Title == "Alive 1997");
+        Assert.Equal((ReleaseType.Album, "1998"), (alive.PrimaryType, alive.Date));
+        Assert.Equal([ReleaseType.Live], alive.SecondaryTypes);
+        Assert.Equal([ReleaseType.Other], page.Items.Single(i => i.Title.StartsWith("Generic Radio Interview")).SecondaryTypes);
+        Assert.Equal(ReleaseType.Single, page.Items.Single(i => i.Title == "Da Funk").PrimaryType);
+    }
 }
