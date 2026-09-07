@@ -265,3 +265,12 @@ failed before the implementation.
 - green: `ReleaseRepository.PruneEntriesAsync` deletes the pair's entries with `last_seen_run_id < @runId` (`RETURNING release_id`) and recomputes the canonical entry of each touched release. Suite -> 47 passed, 0 failed
 - refactor: none needed
 - commit: `b4e8a6a`
+
+## Cycle 30: U30 a MusicBrainz entry without a date takes the Deezer entry's date
+
+- test: `Storage/ReleaseRepositoryTests.cs::UpsertFromSourceAsync_MusicBrainzWithoutDateTakesDeezerDate` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.UpsertFromSourceAsync_MusicBrainzWithoutDateTakesDeezerDate" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: Tuple ("musicbrainz", "2005-03-14") / Actual:   Tuple ("musicbrainz", null)` (1 failed)
+- green: `RecomputeCanonicalAsync` sets `release_date = COALESCE(canonical.source_date, any dated entry)`. Suite -> 48 passed, 0 failed
+- refactor: none needed
+- commit: `4c427ce`
