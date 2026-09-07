@@ -37,7 +37,11 @@ public sealed class SourceHttpClient
 
     public async Task<string> GetStringAsync(string source, string url, CancellationToken ct)
     {
-        var limits = SourceLimits.BySource[source];
+        if (!SourceLimits.BySource.TryGetValue(source, out var limits))
+        {
+            throw new ArgumentException($"Unknown source id '{source}'.", nameof(source));
+        }
+
         if (await _state.GetRemainingBudgetAsync(source, limits.DailyBudget, ct).ConfigureAwait(false) <= 0)
         {
             throw new DailyBudgetExhaustedException(source);

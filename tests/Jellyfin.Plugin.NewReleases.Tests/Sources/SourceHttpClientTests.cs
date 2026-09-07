@@ -179,4 +179,13 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
         _clock.Advance(SourceLimits.Cooldown);
         Assert.True(await client.IsAvailableAsync(Deezer, CancellationToken.None));
     }
+
+    [Fact]
+    public async Task GetStringAsync_UnknownSourceId_ThrowsArgumentException()
+    {
+        _http.AlwaysReturn(HttpStatusCode.OK, "{}");
+
+        await Assert.ThrowsAsync<ArgumentException>(() => Client().GetStringAsync("bandcamp", Url, CancellationToken.None));
+        Assert.Empty(_http.ReceivedRequests);
+    }
 }
