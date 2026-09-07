@@ -70,3 +70,11 @@ failed before the implementation.
 - green: no production change. Suite -> 13 passed, 0 failed
 - refactor: none needed
 - commit: `1c8512d`
+
+## Cycle 8: U8 `The Album` ≠ `Album`, `Vol. 2` ≠ `Volume 2`
+
+- test: `Matching/TitleNormalizerTests.cs::NormalizeAlbum_KeepsArticlesAndAbbreviationsDistinct` (new, Theory)
+- red: passed on first run. Deliberate mutant: `Finish()` drops a leading `the ` -> `Expected: Not "album" / Actual:       "album"` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 15 passed, 0 failed
+- refactor: none needed
+- commit: `142b4de`
