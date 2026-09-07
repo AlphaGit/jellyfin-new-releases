@@ -771,3 +771,12 @@ failed before the implementation.
 - green: `MusicBrainzSource.MatchArtistAsync` returns `Matched(artist.Mbid)` when the snapshot has one. Suite -> 112 passed, 0 failed
 - refactor: none needed
 - commit: `ace71f7`
+
+## Cycle 87: U75 top score 85+ with the runner-up far behind → `Matched`
+
+- test: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_ConfidentTopResult_IsMatched` (new; recorded `artist_search_confident.json`, 100 vs 66)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests.MatchArtistAsync_ConfidentTopResult_IsMatched" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed)
+- green: `MatchArtistAsync` searches `artist?query=artist:"<name>"&limit=5&fmt=json` through `SourceHttpClient` and returns the top result's id (fake-it: the score rules come with U76–U79). Suite -> 113 passed, 0 failed
+- refactor: none needed
+- commit: `a15687e`
