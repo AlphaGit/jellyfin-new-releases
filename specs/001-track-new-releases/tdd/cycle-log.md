@@ -496,3 +496,12 @@ failed before the implementation.
 - green: `PluginConfiguration.EnabledReleaseTypes()` maps the seven flags. Suite -> 76 passed, 0 failed
 - refactor: none needed
 - commit: `d29dbc7`
+
+## Cycle 56: U54 `ReleasedSinceDate()` parses `2020-01-01`; empty and `yesterday` give null
+
+- test: `Configuration/PluginConfigurationTests.cs::ReleasedSinceDate_ParsesIsoDate_EmptyOrInvalidIsNull` (new, Theory ×3)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~PluginConfigurationTests.ReleasedSinceDate_ParsesIsoDate_EmptyOrInvalidIsNull" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: 1/1/2020 / Actual:   null` (1 failed, 2 passed; stub returned null)
+- green: `PluginConfiguration.ReleasedSinceDate()` = `DateOnly.TryParseExact("yyyy-MM-dd")`. Suite -> 79 passed, 0 failed
+- refactor: none needed
+- commit: `2a997d9`
