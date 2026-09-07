@@ -952,3 +952,18 @@ failed before the implementation.
 - green: `RefreshArtistAtSourceAsync` calls `ReleaseRepository.PruneEntriesAsync(artist, source, runId)` before recording the Complete outcome. Suite -> 133 passed, 0 failed
 - refactor: none needed
 - commit: `2effcbe`
+
+## Cycle 108 (continued): U106 — first green attempt failed: the resumed Complete run pruned `Discovery` (seen only on run 1's page)
+
+- evidence: suite run after the Partial handling -> `Assert.Equal() Failure: Collections differ / Expected: ["Alive 1997", "Discovery"] / Actual:   ["Alive 1997"]` (1 failed). Root cause: `PruneEntriesAsync(…, runId)` compared against the current run, so a pass resumed at offset 100 dropped everything seen on page 0 in the previous run — an FR-014 violation the test caught.
+- green: `artist_source.pass_run_id` added to `001_initial.sql` (schema not yet released) and data-model.md; `ArtistRepository.BeginPassAsync` opens/continues a pass and returns its first run; `SetFetchOutcomeAsync(Complete)` clears it; the task prunes with the pass-start run. U106 single test green; suite green together with cycle 109 below.
+- follow-up: `U128` appended to the test list for the repository-level rule (pass kept across Partial, cleared on Complete).
+
+## Cycle 109: U107 a fetch that throws → outcome `Failed`, `last_error` recorded, nothing removed
+
+- test: `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_FetchThatThrows_IsFailedWithLastErrorAndRemovesNothing` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RefreshNewReleasesTaskTests.Run_FetchThatThrows_IsFailedWithLastErrorAndRemovesNothing" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.Net.Http.HttpRequestException : Source 'musicbrainz' still answered 503 after 3 retries.` (1 failed; the exception escaped the run)
+- green: `ExecuteAsync` wraps each (artist, source) in try/catch (cancellation rethrown): records `Failed` with the message and the unchanged offset, no prune, continues. Suite -> 135 passed, 0 failed
+- refactor: none needed
+- commit: `2683fc6`
