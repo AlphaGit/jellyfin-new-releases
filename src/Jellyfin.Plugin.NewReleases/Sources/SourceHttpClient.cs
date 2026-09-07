@@ -79,6 +79,14 @@ public sealed class SourceHttpClient
         }
     }
 
+    /// <summary>False while the source is cooling down or before its `Retry-After` floor; the task skips such a source (FR-011).</summary>
+    public async Task<bool> IsAvailableAsync(string source, CancellationToken ct)
+    {
+        var state = await _state.GetAsync(source, ct).ConfigureAwait(false);
+        var now = _clock.GetUtcNow();
+        return !(state?.CooldownUntil > now) && !(state?.NextAllowedAt > now);
+    }
+
     private async Task WaitForBackoffFloorAsync(string source, CancellationToken ct)
     {
         var state = await _state.GetAsync(source, ct).ConfigureAwait(false);

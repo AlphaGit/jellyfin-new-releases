@@ -158,4 +158,25 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
 
         Assert.Equal(0, (await _db.SourceState.GetAsync(Deezer, CancellationToken.None))!.ConsecutiveFailures);
     }
+
+    [Fact]
+    public async Task IsAvailableAsync_FalseDuringCooldownOrBeforeNextAllowedAt_TrueOtherwise()
+    {
+        var client = Client();
+        Assert.True(await client.IsAvailableAsync(Deezer, CancellationToken.None));
+
+        await _db.SourceState.SetNextAllowedAtAsync(Deezer, Start + TimeSpan.FromSeconds(30), CancellationToken.None);
+        Assert.False(await client.IsAvailableAsync(Deezer, CancellationToken.None));
+        _clock.Advance(TimeSpan.FromSeconds(30));
+        Assert.True(await client.IsAvailableAsync(Deezer, CancellationToken.None));
+
+        for (var i = 0; i < SourceLimits.FailureThreshold; i++)
+        {
+            await _db.SourceState.RecordFailureAsync(Deezer, "boom", SourceLimits.FailureThreshold, SourceLimits.Cooldown, CancellationToken.None);
+        }
+
+        Assert.False(await client.IsAvailableAsync(Deezer, CancellationToken.None));
+        _clock.Advance(SourceLimits.Cooldown);
+        Assert.True(await client.IsAvailableAsync(Deezer, CancellationToken.None));
+    }
 }
