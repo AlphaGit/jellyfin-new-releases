@@ -33,7 +33,7 @@ the web pages are checked manually (see Out of scope).
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| A1  | Library has A with X, Y; sources list X, Y, Z → after a run `GET api/releases` lists Z under A and neither X nor Y | US1-AS1 | example | PENDING | `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/BrowseReleasesTests.cs` |
+| A1 | Library has A with X, Y; sources list X, Y, Z → after a run `GET api/releases` lists Z under A and neither X nor Y | US1-AS1 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A1_ZIsListedUnderA_XAndYAreNot` |
 | A2  | Releases from several years come back ordered newest first with undated rows last, each carrying its year in `date` | US1-AS2 | example | PENDING | `Acceptance/BrowseReleasesTests.cs` |
 | A3  | With 40 releases, `?artistId=` returns only that artist's rows; the same call without the filter returns all 40 | US1-AS3 | example | PENDING | `Acceptance/BrowseReleasesTests.cs` |
 | A4  | Every listed release carries one `sources[]` link per source that lists it, each an `https` URL on `musicbrainz.org` or `www.deezer.com` | US1-AS4 | example | PENDING | `Acceptance/BrowseReleasesTests.cs` |
