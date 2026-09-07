@@ -424,3 +424,12 @@ failed before the implementation.
 - green: `SourceStateRepository.RecordCallAsync` upsert with `CASE WHEN calls_day = today THEN calls_today + 1 ELSE 1`; `GetAsync` reads the row. Suite -> 68 passed, 0 failed
 - refactor: none needed
 - commit: `4c65ed3`
+
+## Cycle 48: U48 remaining budget is budget minus calls today, never below 0
+
+- test: `Storage/SourceStateRepositoryTests.cs::GetRemainingBudgetAsync_IsBudgetMinusCallsToday_NeverBelowZero` (new; includes the day rollover)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceStateRepositoryTests.GetRemainingBudgetAsync_IsBudgetMinusCallsToday_NeverBelowZero" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: 0 / Actual:   3` (1 failed; stub returned the full budget)
+- green: `SourceStateRepository.GetRemainingBudgetAsync` = `max(0, budget − (calls_day == today ? calls_today : 0))`. Suite -> 69 passed, 0 failed
+- refactor: none needed
+- commit: `18ec5f4`
