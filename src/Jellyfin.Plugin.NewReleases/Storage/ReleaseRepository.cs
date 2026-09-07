@@ -272,6 +272,70 @@ public sealed class ReleaseRepository
 
     private static readonly JsonSerializerOptions JsonWeb = new(JsonSerializerDefaults.Web);
 
+    /// <summary>Stores one Official edition; unique on (source, source edition id) so a re-fetch updates in place (R11).</summary>
+    public async Task<long> UpsertEditionAsync(long releaseId, string source, EditionTrackList edition, DateTimeOffset now, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO edition (release_id, source, source_edition_id, title, status, tracks, fetched_at)
+            VALUES (@releaseId, @source, @editionId, @title, 'Official', @tracks, @now)
+            ON CONFLICT (source, source_edition_id) DO UPDATE SET
+                release_id = excluded.release_id, title = excluded.title, tracks = excluded.tracks, fetched_at = excluded.fetched_at
+            RETURNING id
+            """;
+        command.Parameters.AddWithValue("@releaseId", releaseId);
+        command.Parameters.AddWithValue("@source", source);
+        command.Parameters.AddWithValue("@editionId", edition.SourceEditionId);
+        command.Parameters.AddWithValue("@title", edition.Title);
+        command.Parameters.AddWithValue("@tracks", JsonSerializer.Serialize(edition.NormalizedTrackTitles));
+        command.Parameters.AddWithValue("@now", now.ToString("O"));
+        return (long)(await command.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
+    }
+
+    public async Task<IReadOnlyList<Edition>> GetEditionsAsync(long releaseId, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT id, release_id, source, source_edition_id, title, tracks, fetched_at FROM edition WHERE release_id = @releaseId ORDER BY source, source_edition_id";
+        command.Parameters.AddWithValue("@releaseId", releaseId);
+        var result = new List<Edition>();
+        await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
+        {
+            result.Add(new Edition(
+                reader.GetInt64(0),
+                reader.GetInt64(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                JsonSerializer.Deserialize<string[]>(reader.GetString(5)) ?? [],
+                DateTimeOffset.Parse(reader.GetString(6), CultureInfo.InvariantCulture)));
+        }
+
+        return result;
+    }
+
+    /// <summary>Writes the ownership check result onto the release (FR-005, FR-005a).</summary>
+    public async Task WriteOwnershipAsync(long releaseId, OwnershipResult result, DateTimeOffset now, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE release SET ownership_state = @state, match_method = @method, library_album_id = @album,
+                compared_edition_id = @edition, missing_tracks = @missing, ownership_checked_at = @now
+            WHERE id = @id
+            """;
+        command.Parameters.AddWithValue("@id", releaseId);
+        command.Parameters.AddWithValue("@state", result.State.ToString());
+        command.Parameters.AddWithValue("@method", (object?)result.MatchMethod ?? DBNull.Value);
+        command.Parameters.AddWithValue("@album", (object?)result.LibraryAlbumId?.ToString("D") ?? DBNull.Value);
+        command.Parameters.AddWithValue("@edition", (object?)result.EditionId ?? DBNull.Value);
+        command.Parameters.AddWithValue("@missing", JsonSerializer.Serialize(result.MissingTracks));
+        command.Parameters.AddWithValue("@now", now.ToString("O"));
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
     public async Task<Release?> GetAsync(long releaseId, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);

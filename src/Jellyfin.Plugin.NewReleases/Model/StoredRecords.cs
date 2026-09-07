@@ -86,3 +86,6 @@ public sealed record ListedRelease(
 public sealed record SourceLink(string Source, string Url);
 
 public sealed record ComparedEdition(string Source, string Title);
+
+/// <summary>Row of <c>edition</c>: one Official version of a release with its normalized track titles.</summary>
+public sealed record Edition(long Id, long ReleaseId, string Source, string SourceEditionId, string Title, IReadOnlyList<string> Tracks, DateTimeOffset FetchedAt);

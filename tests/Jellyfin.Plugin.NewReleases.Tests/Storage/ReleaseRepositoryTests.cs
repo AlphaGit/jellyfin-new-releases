@@ -231,4 +231,26 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
 
         Assert.Equal(5_000, (await _db.Releases.ListAsync(DefaultFilter, CancellationToken.None)).Count);
     }
+
+    [Fact]
+    public async Task Editions_UpsertIsUniquePerSourceEditionId_AndOwnershipColumnsAreStored()
+    {
+        var release = await Seed("Tron Legacy", "2010-12-03", "rg-tron");
+        var japan = new EditionTrackList("rel-jp", "Tron: Legacy (Japan)", ["overture", "the grid", "derezzed"]);
+
+        var first = await _db.Releases.UpsertEditionAsync(release, "musicbrainz", japan, Now, CancellationToken.None);
+        var again = await _db.Releases.UpsertEditionAsync(release, "musicbrainz", japan with { Title = "Tron: Legacy (Japan, reissue)" }, Now, CancellationToken.None);
+        await _db.Releases.UpsertEditionAsync(release, "deezer", new EditionTrackList("dz-tron", "TRON: Legacy", ["overture", "the grid"]), Now, CancellationToken.None);
+
+        Assert.Equal(first, again);
+        var editions = await _db.Releases.GetEditionsAsync(release, CancellationToken.None);
+        Assert.Equal([("deezer", "dz-tron", "TRON: Legacy", 2), ("musicbrainz", "rel-jp", "Tron: Legacy (Japan, reissue)", 3)], editions.Select(e => (e.Source, e.SourceEditionId, e.Title, e.Tracks.Count)));
+
+        var album = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        await _db.Releases.WriteOwnershipAsync(release, new OwnershipResult(OwnershipState.Incomplete, "Title", album, first, ["derezzed"]), Now, CancellationToken.None);
+
+        var stored = (await _db.Releases.GetAsync(release, CancellationToken.None))!;
+        Assert.Equal((OwnershipState.Incomplete, "Title", album, first, Now), (stored.OwnershipState, stored.MatchMethod, stored.LibraryAlbumId, stored.ComparedEditionId, stored.OwnershipCheckedAt));
+        Assert.Equal(["derezzed"], stored.MissingTracks);
+    }
 }
