@@ -925,3 +925,12 @@ failed before the implementation.
 - green: `DeezerSource.GetJsonAsync` checks `error` before `data`: code 4 waits 5 s on the injected `TimeProvider` and retries (bounded by `RetryBackoffs.Length`), other codes throw `HttpRequestException`. Constructor gains `TimeProvider`. Suite -> 130 passed, 0 failed
 - refactor: none needed
 - commit: `91d4802`
+
+## Cycle 105: U103 task `Name` is `Refresh new releases`, `Category` `New Releases`, `Key` `NewReleases.Refresh`, default trigger daily at 03:00
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/ScheduledTasks/RefreshNewReleasesTaskTests.cs::Metadata_NameCategoryKeyAndDailyTriggerAtThree` (new; sources substituted at `IReleaseSource`, storage/clock/HTTP policy real)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RefreshNewReleasesTaskTests.Metadata_NameCategoryKeyAndDailyTriggerAtThree" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: Tuple ("Refresh new releases", "New Releases", "NewReleases.Refresh") / Actual:   Tuple ("Refresh", "Library", "Refresh")` (1 failed; skeleton)
+- green: `RefreshNewReleasesTask` metadata and a `DailyTrigger` at 03:00. Suite -> 131 passed, 0 failed
+- refactor: none needed
+- commit: `d3e38a5`
