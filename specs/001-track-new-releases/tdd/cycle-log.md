@@ -633,3 +633,12 @@ failed before the implementation.
 - green: `LibraryScanner.Scan()` lists `MusicArtist` and `MusicAlbum` items once each, groups albums by `AlbumArtists` name and yields one artist per credited name with a `name:<normalized>` key. Suite -> 96 passed, 0 failed
 - refactor: none needed
 - commit: `abf8954`
+
+## Cycle 71: U69 MBID is read from the artist's `MusicBrainzArtist`, else the album's `MusicBrainzAlbumArtist`; with neither the key is `name:<normalized name>`
+
+- test: `Library/LibraryScannerTests.cs::Scan_MbidFromArtistThenAlbumArtistProviderId_ElseNameKey` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~LibraryScannerTests.Scan_MbidFromArtistThenAlbumArtistProviderId_ElseNameKey" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: [("Daft Punk", "056e4f3e-…", "056e4f3e-…"), ("Justice", "f6ccbf37-…", "f6ccbf37-…"), …] / Actual: [("Daft Punk", null, "name:daft punk"), ("Justice", null, "name:justice"), …]` (1 failed)
+- green: `LibraryScanner.ProviderId()` (first comma-separated value) applied to the artist item, then to the artist's albums' `MusicBrainzAlbumArtist`; MBID becomes both `Mbid` and `ArtistKey`. Suite -> 97 passed, 0 failed
+- refactor: none needed
+- commit: `4e1abd1`
