@@ -146,4 +146,17 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
 
         Assert.Equal(["Missing One"], titles);
     }
+
+    [Fact]
+    public async Task ListAsync_AppliesTheEnabledTypeSetAtReadTime()
+    {
+        await Seed("Studio", "2020-01-01", "rg-studio");
+        await Seed("Live Set", "2020-01-02", "rg-live", ReleaseType.Album, ReleaseType.Live);
+
+        var byDefault = await _db.Releases.ListAsync(DefaultFilter, CancellationToken.None);
+        var withLive = await _db.Releases.ListAsync(DefaultFilter with { EnabledTypes = new HashSet<ReleaseType> { ReleaseType.Album, ReleaseType.EP, ReleaseType.Live } }, CancellationToken.None);
+
+        Assert.Equal(["Studio"], byDefault.Select(r => r.Title));
+        Assert.Equal([("Live Set", ReleaseType.Live), ("Studio", ReleaseType.Album)], withLive.Select(r => (r.Title, r.Type)));
+    }
 }

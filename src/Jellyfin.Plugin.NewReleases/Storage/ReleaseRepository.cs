@@ -196,16 +196,21 @@ public sealed class ReleaseRepository
         await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
         while (await reader.ReadAsync(ct).ConfigureAwait(false))
         {
-            rows.Add(ReadListed(reader));
+            var primary = Enum.Parse<ReleaseType>(reader.GetString(5));
+            var secondaries = (JsonSerializer.Deserialize<string[]>(reader.GetString(6)) ?? []).Select(Enum.Parse<ReleaseType>).ToArray();
+            if (!ReleaseTypeMapper.IsIncluded(primary, secondaries, filter.EnabledTypes))
+            {
+                continue;
+            }
+
+            rows.Add(ReadListed(reader, primary, secondaries));
         }
 
         return rows;
     }
 
-    private static ListedRelease ReadListed(SqliteDataReader r)
+    private static ListedRelease ReadListed(SqliteDataReader r, ReleaseType primary, IReadOnlyList<ReleaseType> secondaries)
     {
-        var primary = Enum.Parse<ReleaseType>(r.GetString(5));
-        var secondaries = (JsonSerializer.Deserialize<string[]>(r.GetString(6)) ?? []).Select(Enum.Parse<ReleaseType>).ToArray();
         var ownership = Enum.Parse<OwnershipState>(r.GetString(9));
         var sources = (JsonSerializer.Deserialize<List<SourceLink>>(r.GetString(18), JsonWeb) ?? []).AsReadOnly();
         return new ListedRelease(
