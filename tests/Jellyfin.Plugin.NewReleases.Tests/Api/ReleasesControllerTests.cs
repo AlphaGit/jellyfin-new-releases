@@ -153,4 +153,36 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.Null(await _db.Archive.GetAsync("name:daft punk", "discovery", CancellationToken.None));
         Assert.NotNull(await _db.Archive.GetAsync("name:daft punk", "homework", CancellationToken.None));
     }
+
+    private static readonly Guid Bob = Guid.Parse("bbbbbbbb-2222-2222-2222-222222222222");
+
+    [Fact]
+    public async Task Decisions_UnknownReleaseIs404_ReleaseOutsideTheCallersLibrariesIs403WithNothingWritten()
+    {
+        await SeedArtistAsync("Justice", OtherLibrary, ("Cross", "2007-06-11"));
+        var crossId = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.Single().Id;
+        var limited = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: false, Library));
+
+        Assert.IsType<NotFoundResult>(await limited.IgnoreAsync(999_999, CancellationToken.None));
+        Assert.IsType<ForbidResult>(await limited.IgnoreAsync(crossId, CancellationToken.None));
+        Assert.IsType<ForbidResult>(await limited.RestoreAsync(crossId, CancellationToken.None));
+        Assert.Equal(0L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision"));
+    }
+
+    [Fact]
+    public async Task Decisions_AreSharedServerWide_ASecondUserSeesTheFirstUsersDecisionInTheArchive()
+    {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var alice = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        var id = Ok(await alice.GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.Single().Id;
+        await alice.HaveItAsync(id, CancellationToken.None);
+
+        var bob = Controller(Bob, ControllerContextFactory.User(Bob, allFolders: true));
+        var list = Ok(await bob.GetReleasesAsync(cancellationToken: CancellationToken.None));
+        var archive = Ok(await bob.GetReleasesAsync(archived: true, cancellationToken: CancellationToken.None));
+
+        Assert.Empty(list.Items);
+        var archived = Assert.Single(archive.Items);
+        Assert.Equal(("Discovery", "HaveIt", _clock.GetUtcNow()), (archived.Title, archived.Archived!.Kind, archived.Archived.DecidedAt));
+    }
 }
