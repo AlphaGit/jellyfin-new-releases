@@ -105,3 +105,12 @@ failed before the implementation.
 - green: `ReleaseTypeMapper.MapMusicBrainzSecondary()` switch applied to every secondary. Suite -> 25 passed, 0 failed
 - refactor: none needed
 - commit: `b8cfcc7`
+
+## Cycle 12: U12 Deezer `album`/`ep`/`single`/`compile` map as primary with no secondaries
+
+- test: `Matching/ReleaseTypeMapperTests.cs::MapDeezer_MapsRecordTypeAsPrimaryWithNoSecondaries` (new, Theory incl. unknown `mixtape` -> Other)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseTypeMapperTests.MapDeezer_MapsRecordTypeAsPrimaryWithNoSecondaries" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: Album / Actual:   Other` (4 failed, 1 passed; stub returned Other)
+- green: `ReleaseTypeMapper.MapDeezer()` switch. Suite -> 30 passed, 0 failed
+- refactor: none needed
+- commit: `b07cae8`
