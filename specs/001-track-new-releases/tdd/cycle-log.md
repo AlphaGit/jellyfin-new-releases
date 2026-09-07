@@ -838,3 +838,11 @@ failed before the implementation.
 - green: `MusicBrainzSource.FetchEditionsAsync` pages `release?release-group=…&status=official&inc=recordings+media&limit=25&offset=N&fmt=json` until `release-count`, flattening media tracks through `NormalizeTrack`. Suite -> 120 passed, 0 failed
 - refactor: none needed
 - commit: `869af8d`
+
+## Cycle 95: U83 request URLs are exactly the contract endpoints and carry only the artist name or ids
+
+- test: `Sources/MusicBrainzSourceTests.cs::Requests_UseExactlyTheContractEndpointsWithOnlyNamesAndIdsInTheQuery` (new; the three wire URLs compared verbatim)
+- red: the first run failed only because `SourceHarness.RequestedUrls` used `Uri.ToString()`, which unescapes `%22` (harness defect; fixed to `AbsoluteUri`, the form actually sent). Re-run passed. Deliberate mutant: `&inc=aliases` appended to the search URL -> `Assert.Equal() Failure: Collections differ` on the first URL (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 121 passed, 0 failed
+- refactor: none needed
+- commit: `9f5570a`
