@@ -854,3 +854,12 @@ failed before the implementation.
 - green: no production change (`SourceHttpClient` already throws after its retries; the source lets it through). Suite -> 122 passed, 0 failed
 - refactor: none needed
 - commit: `0b0bb83`
+
+## Cycle 97: U85 a candidate with the exact normalized name whose first albums page contains a library album title → `Matched(id)`
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Sources/DeezerSourceTests.cs::MatchArtistAsync_ExactNameWhoseFirstAlbumsPageContainsALibraryAlbum_IsMatched` (new; `search_artist_exact.json` + `artist_albums_page1.json`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DeezerSourceTests.MatchArtistAsync_ExactNameWhoseFirstAlbumsPageContainsALibraryAlbum_IsMatched" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub). `deezer/album.json` recorded for the edition title (the tracks endpoint carries none).
+- green: `DeezerSource.MatchArtistAsync` — `search/artist?q=<name>&limit=25`, candidates by equal `NormalizeName`, first `artist/<id>/albums?index=0&limit=100` page checked against the library's normalized album titles; `FetchCataloguePageAsync` maps `record_type` via `ReleaseTypeMapper.MapDeezer` (NextOffset/date rules follow in U89/U90). Suite -> 123 passed, 0 failed
+- refactor: none needed
+- commit: `66919ed`
