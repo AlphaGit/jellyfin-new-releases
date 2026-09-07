@@ -53,18 +53,18 @@ public sealed class SourceHttpClient
             using var response = await client.SendAsync(request, ct).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
+                await _state.RecordSuccessAsync(source, ct).ConfigureAwait(false);
                 return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             }
 
             var transient = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests || (int)response.StatusCode >= 500;
-            if (!transient)
+            if (!transient || attempt >= SourceLimits.RetryBackoffs.Length)
             {
-                throw new HttpRequestException($"Source '{source}' answered {(int)response.StatusCode}.", null, response.StatusCode);
-            }
-
-            if (attempt >= SourceLimits.RetryBackoffs.Length)
-            {
-                throw new HttpRequestException($"Source '{source}' still answered {(int)response.StatusCode} after {attempt} retries.", null, response.StatusCode);
+                var message = transient
+                    ? $"Source '{source}' still answered {(int)response.StatusCode} after {attempt} retries."
+                    : $"Source '{source}' answered {(int)response.StatusCode}.";
+                await _state.RecordFailureAsync(source, message, SourceLimits.FailureThreshold, SourceLimits.Cooldown, ct).ConfigureAwait(false);
+                throw new HttpRequestException(message, null, response.StatusCode);
             }
 
             var retryAfter = response.Headers.RetryAfter?.Delta ?? (response.Headers.RetryAfter?.Date is { } date ? date - _clock.GetUtcNow() : null);

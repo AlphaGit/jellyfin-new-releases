@@ -142,4 +142,20 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
         Assert.Equal(status, error.StatusCode);
         Assert.Single(_http.ReceivedRequests);
     }
+
+    [Fact]
+    public async Task GetStringAsync_FailureIncrementsConsecutiveFailures_LaterSuccessResetsThem()
+    {
+        var calls = 0;
+        _http.OnUrlPattern(".*", (_, _) => ++calls <= 2 ? Response(HttpStatusCode.NotFound, "nope") : Response(HttpStatusCode.OK, "{}"));
+        var client = Client();
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => client.GetStringAsync(Deezer, Url, CancellationToken.None));
+        await Assert.ThrowsAsync<HttpRequestException>(() => client.GetStringAsync(Deezer, Url, CancellationToken.None));
+        Assert.Equal(2, (await _db.SourceState.GetAsync(Deezer, CancellationToken.None))!.ConsecutiveFailures);
+
+        await client.GetStringAsync(Deezer, Url, CancellationToken.None);
+
+        Assert.Equal(0, (await _db.SourceState.GetAsync(Deezer, CancellationToken.None))!.ConsecutiveFailures);
+    }
 }
