@@ -62,4 +62,14 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         var release = (await _db.Releases.GetAsync(id, CancellationToken.None))!;
         Assert.Equal(("deezer", "dz-2", "1997-01-17"), (release.CanonicalSource, release.CanonicalSourceId, release.ReleaseDate));
     }
+
+    [Fact]
+    public async Task UpsertFromSourceAsync_MusicBrainzWithoutDateTakesDeezerDate()
+    {
+        var id = await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Human After All", "rg-3", date: null), Run1, Now, CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(_artist, "deezer", DeezerItem("Human After All", "dz-3", "2005-03-14"), Run1, Now, CancellationToken.None);
+
+        var release = (await _db.Releases.GetAsync(id, CancellationToken.None))!;
+        Assert.Equal(("musicbrainz", "2005-03-14"), (release.CanonicalSource, release.ReleaseDate));
+    }
 }

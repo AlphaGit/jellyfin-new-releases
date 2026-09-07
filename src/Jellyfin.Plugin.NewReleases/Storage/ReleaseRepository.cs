@@ -104,7 +104,7 @@ public sealed class ReleaseRepository
                 title = e.source_title,
                 primary_type = COALESCE(e.source_primary_type, 'Other'),
                 secondary_types = COALESCE(e.source_secondary_types, '[]'),
-                release_date = e.source_date
+                release_date = COALESCE(e.source_date, (SELECT source_date FROM source_entry WHERE release_id = @id AND source_date IS NOT NULL ORDER BY source LIMIT 1))
             FROM (SELECT * FROM source_entry WHERE release_id = @id ORDER BY CASE source WHEN 'musicbrainz' THEN 0 ELSE 1 END LIMIT 1) AS e
             WHERE release.id = @id
             """;
