@@ -82,4 +82,18 @@ public class OwnershipMatcherTests
 
         Assert.Equal((OwnershipState.Owned, 7L, 0, false), (result.State, result.EditionId, result.MissingTracks.Count, result.NeedsEditions));
     }
+
+    [Fact]
+    public void Decide_EightOfTenTracksMatched_IsIncompleteNamingTheTwoMissingTitlesAndTheEdition()
+    {
+        var ten = Enumerable.Range(1, 10).Select(i => $"track {i}").ToArray();
+        var album = Album("Ten Tracks", tracks: ten.Take(8).ToArray());
+        var edition = Edition(42, "deezer", "dz-10", ten);
+
+        var result = OwnershipMatcher.Decide(Release("ten tracks", "deezer", "dz-10"), [edition], [album]);
+
+        Assert.Equal(OwnershipState.Incomplete, result.State);
+        Assert.Equal(["track 9", "track 10"], result.MissingTracks);
+        Assert.Equal(42L, result.EditionId);
+    }
 }
