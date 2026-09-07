@@ -50,6 +50,16 @@ internal sealed class AcceptanceRig : IAsyncDisposable
         ControllerContext = ControllerContextFactory.ForUser(user),
     };
 
+    public AdminController AdminController() => new(
+        Harness.Db.Artists, Harness.Db.Releases, Harness.Db.Archive, Harness.Db.SourceState, Tasks, Harness.Clock,
+        NullLogger<AdminController>.Instance, () => Harness.Configuration);
+
+    public async Task<AdminStatusResponse> AdminStatusAsync()
+    {
+        var result = await AdminController().GetStatusAsync(CancellationToken.None);
+        return result.Value ?? (AdminStatusResponse)((ObjectResult)result.Result!).Value!;
+    }
+
     public async Task<ListResponse> ListAsync(Guid? artistId = null, string? type = null, string? state = null, string? from = null, string? to = null, bool archived = false)
     {
         var result = await ControllerFor(Alice).GetReleasesAsync(artistId, type, state, from, to, archived, CancellationToken.None);

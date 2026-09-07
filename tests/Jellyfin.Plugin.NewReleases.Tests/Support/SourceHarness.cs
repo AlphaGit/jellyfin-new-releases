@@ -61,6 +61,12 @@ internal sealed class SourceHarness : IAsyncDisposable
         return await task.WaitAsync(TimeSpan.FromSeconds(2));
     }
 
+    public async Task RunAdvancingAsync(Task task, TimeSpan step, TimeSpan? budget = null)
+    {
+        await RunAdvancingAsync(task.ContinueWith(_ => true, TaskContinuationOptions.ExecuteSynchronously), step, budget);
+        await task;
+    }
+
     public async ValueTask DisposeAsync()
     {
         await HttpClient.DisposeAsync();
