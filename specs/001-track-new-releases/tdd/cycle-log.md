@@ -309,3 +309,12 @@ failed before the implementation.
 - green: `ReleaseRepository.ListAsync` joined query (`artist`, compared `edition`, `decision`, `json_group_array` of source links) with `ORDER BY date_sort IS NULL, date_sort DESC, title`; `ReadListed` maps a row incl. display type. Suite -> 55 passed, 0 failed
 - refactor: none needed
 - commit: `e49b16d`
+
+## Cycle 35: U35 releases with ownership `Owned` are never returned by the list
+
+- test: `Storage/ReleaseRepositoryTests.cs::ListAsync_NeverReturnsOwnedReleases` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.ListAsync_NeverReturnsOwnedReleases" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ / Expected: ["Missing One"] / Actual: ["Missing One", "In Library"]` (1 failed)
+- green: `ListAsync` adds `WHERE r.ownership_state <> 'Owned'`. Suite -> 56 passed, 0 failed
+- refactor: none needed
+- commit: `3383f83`
