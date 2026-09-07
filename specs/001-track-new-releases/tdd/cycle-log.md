@@ -992,3 +992,12 @@ failed before the implementation.
 - green: no production change. Suite -> 138 passed, 0 failed
 - refactor: none needed
 - commit: `66538aa`
+
+## Cycle 113: U110 a completed run writes one `refresh_run` row with counts and `Completed`; a cancelled run writes `Cancelled`
+
+- test: `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_WritesOneRefreshRunRowWithCountsAndCompleted_CancelledRunWritesCancelled` (new; 2 artists, 2 entries, 1 edition, 1 failing source; then a run cancelled mid-fetch)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RefreshNewReleasesTaskTests.Run_WritesOneRefreshRunRowWithCountsAndCompleted_CancelledRunWritesCancelled" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.NotNull() Failure: Value is null` (1 failed; no completed run recorded)
+- green: `RunCounts` (artists processed = at least one source attempted, entries upserted, editions fetched, errors); `FinishRunAsync` with `Completed`, or `Cancelled`/`Failed` from catch blocks that rethrow. Suite -> 139 passed, 0 failed
+- refactor: none needed
+- commit: `4dc6d0f`
