@@ -70,4 +70,15 @@ public class PluginConfigurationTests
             new HashSet<ReleaseType> { ReleaseType.Single, ReleaseType.Compilation, ReleaseType.Live, ReleaseType.Remix, ReleaseType.Soundtrack },
             flipped.EnabledReleaseTypes());
     }
+
+    [Theory]
+    [InlineData("2020-01-01", 2020, 1, 1)]
+    [InlineData("", null, null, null)]
+    [InlineData("yesterday", null, null, null)]
+    public void ReleasedSinceDate_ParsesIsoDate_EmptyOrInvalidIsNull(string text, int? year, int? month, int? day)
+    {
+        var configuration = new PluginConfiguration { ReleasedSince = text };
+
+        Assert.Equal(year is null ? null : new DateOnly(year.Value, month!.Value, day!.Value), configuration.ReleasedSinceDate());
+    }
 }

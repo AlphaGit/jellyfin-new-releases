@@ -1,3 +1,4 @@
+using System.Globalization;
 using Jellyfin.Plugin.NewReleases.Model;
 using MediaBrowser.Model.Plugins;
 
@@ -31,6 +32,10 @@ public class PluginConfiguration : BasePluginConfiguration
     public string ReleasedSince { get; set; } = string.Empty;
 
     public string UserAgentContact { get; set; } = string.Empty;
+
+    /// <summary>"Released since" cutoff (FR-003): `yyyy-MM-dd`, or null when empty or unparseable (treated as unrestricted).</summary>
+    public DateOnly? ReleasedSinceDate()
+        => DateOnly.TryParseExact(ReleasedSince, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : null;
 
     /// <summary>The admin's type selection as a set (FR-004).</summary>
     public ISet<ReleaseType> EnabledReleaseTypes()

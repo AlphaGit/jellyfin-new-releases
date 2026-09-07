@@ -150,7 +150,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U53 | `EnabledReleaseTypes()` is {Album, EP} by default and reflects each toggled flag | FR-004 | example | DONE | `Configuration/PluginConfigurationTests.cs::EnabledReleaseTypes_AlbumAndEpByDefault_ReflectsEachToggle` |
-| U54 | `ReleasedSinceDate()` parses `2020-01-01`; empty and `yesterday` give null | FR-003 | example | PENDING | `Configuration/PluginConfigurationTests.cs` |
+| U54 | `ReleasedSinceDate()` parses `2020-01-01`; empty and `yesterday` give null | FR-003 | example | DONE | `Configuration/PluginConfigurationTests.cs::ReleasedSinceDate_ParsesIsoDate_EmptyOrInvalidIsNull` |
 | U55 | Deserializing XML that lacks every element yields the defaults (forward migration of older configs) | US2-AS2 | example | PENDING | `Configuration/PluginConfigurationTests.cs` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Sources/UserAgentBuilder.cs`
