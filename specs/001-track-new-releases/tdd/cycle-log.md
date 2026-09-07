@@ -461,3 +461,12 @@ failed before the implementation.
 - green: `SourceStateRepository.IsInCooldownAsync` = `cooldown_until > now`. Suite -> 72 passed, 0 failed
 - refactor: none needed
 - commit: `8e40b90`
+
+## Cycle 52: U52 runs are started and finished with counts and outcome; latest completed run and latest run are read back
+
+- test: `Storage/SourceStateRepositoryTests.cs::Runs_StartAndFinishWithCounts_LatestCompletedAndLatestAreReadBack` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceStateRepositoryTests.Runs_StartAndFinishWithCounts_LatestCompletedAndLatestAreReadBack" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stubs)
+- green: `SourceStateRepository.StartRunAsync` (`RETURNING id`), `FinishRunAsync`, `GetLastCompletedRunAsync` (`outcome = 'Completed'`, latest `ended_at`), `GetLatestRunAsync` via one `QueryRunAsync(tail)`. Suite -> 73 passed, 0 failed
+- refactor: none needed
+- commit: `182d498`
