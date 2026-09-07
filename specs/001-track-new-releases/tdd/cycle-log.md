@@ -318,3 +318,12 @@ failed before the implementation.
 - green: `ListAsync` adds `WHERE r.ownership_state <> 'Owned'`. Suite -> 56 passed, 0 failed
 - refactor: none needed
 - commit: `3383f83`
+
+## Cycle 36: U36 the list applies the enabled type set at read time (Album+Live absent by default, present as `Live` when enabled)
+
+- test: `Storage/ReleaseRepositoryTests.cs::ListAsync_AppliesTheEnabledTypeSetAtReadTime` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.ListAsync_AppliesTheEnabledTypeSetAtReadTime" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ / Expected: ["Studio"] / Actual: ["Live Set", "Studio"]` (1 failed)
+- green: `ListAsync` skips rows where `ReleaseTypeMapper.IsIncluded(primary, secondaries, filter.EnabledTypes)` is false. Suite -> 57 passed, 0 failed
+- refactor: `ReadListed` now receives the parsed types instead of re-parsing them; suite re-run green
+- commit: `2c4fe4c`
