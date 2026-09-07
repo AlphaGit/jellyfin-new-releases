@@ -660,3 +660,13 @@ failed before the implementation.
 - green: `LibraryScanner` fills `LibraryIds` from `GetCollectionFolders(album)` over the artist's albums, distinct. Suite -> 99 passed, 0 failed
 - refactor: none needed
 - commit: `e5af959`
+
+## Cycle 74: U72 two `MusicArtist` items sharing an MBID become one library artist holding both albums
+
+- test: `Library/LibraryScannerTests.cs::Scan_TwoArtistItemsSharingAnMbid_BecomeOneLibraryArtistWithBothAlbums` (new)
+- red: a first version used names differing only by case and passed at once because grouping by name is already case-insensitive — it did not exercise the identifier merge. Rewritten with distinct names (`Daft Punk`, `Daft Punk (duo)`) sharing one MBID:
+  `dotnet test --configuration Release --filter "FullyQualifiedName~LibraryScannerTests.Scan_TwoArtistItemsSharingAnMbid_BecomeOneLibraryArtistWithBothAlbums" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Single() Failure: The collection contained 2 items` (1 failed)
+- green: `LibraryScanner.Scan()` groups the per-name artists by `ArtistKey` and merges albums and library ids. Suite -> 100 passed, 0 failed
+- refactor: none needed
+- commit: `d5a1250`
