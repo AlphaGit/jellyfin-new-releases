@@ -21,6 +21,7 @@ public static class OwnershipMatcher
         }
 
         // Step 3: the edition whose track list overlaps the library album most; deterministic tie-breaks.
+        // ponytail: a trackless edition (source gave no tracks) has nothing missing and counts as Owned by album presence (data-model step 5).
         var owned = candidate.NormalizedTrackTitles.ToHashSet(StringComparer.Ordinal);
         var (edition, missing) = editions
             .Select(e => (Edition: e, Missing: e.Tracks.Where(t => !owned.Contains(t)).ToArray()))

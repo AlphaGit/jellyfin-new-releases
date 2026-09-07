@@ -122,4 +122,16 @@ public class OwnershipMatcherTests
 
         Assert.Equal(OwnershipState.Owned, result.State);
     }
+
+    /// <summary>Documented ceiling: a source that gives no track list cannot make the release Incomplete; album presence counts.</summary>
+    [Fact]
+    public void Decide_EditionsWithoutAnyTracks_AreOwnedByAlbumPresence()
+    {
+        var album = Album("Discovery", tracks: Discovery);
+
+        var result = OwnershipMatcher.Decide(Release(), [Edition(1, "deezer", "dz-1"), Edition(2, "musicbrainz", "rel-1")], [album]);
+
+        Assert.Equal((OwnershipState.Owned, 0), (result.State, result.MissingTracks.Count));
+        Assert.NotNull(result.EditionId);
+    }
 }
