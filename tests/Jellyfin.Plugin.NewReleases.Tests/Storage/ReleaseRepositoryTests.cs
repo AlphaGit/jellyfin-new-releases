@@ -6,6 +6,13 @@ namespace Jellyfin.Plugin.NewReleases.Tests.Storage;
 
 public sealed class ReleaseRepositoryTests : IAsyncLifetime
 {
+    private readonly Xunit.Abstractions.ITestOutputHelper _output;
+
+    public ReleaseRepositoryTests(Xunit.Abstractions.ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
     private static readonly DateTimeOffset Now = new(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
     private const long Run1 = 1;
 
@@ -273,5 +280,21 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         {
             Assert.Equal(1L, await _db.ScalarAsync<long>($"SELECT COUNT(*) FROM {kept}"));
         }
+    }
+
+    /// <summary>SC-005 target is 500 ms on the development machine; asserted at 2 000 ms so CI runners have headroom.</summary>
+    [Fact]
+    public async Task ListAsync_FiveHundredStoredReleases_ListsWithinBudget()
+    {
+        await SeedManyAsync(500);
+        await _db.Releases.ListAsync(DefaultFilter, CancellationToken.None); // warm the connection pool
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var rows = await _db.Releases.ListAsync(DefaultFilter, CancellationToken.None);
+        watch.Stop();
+
+        _output.WriteLine($"ListAsync with 500 releases: {watch.ElapsedMilliseconds} ms (target 500 ms, asserted 2000 ms)");
+        Assert.Equal(500, rows.Count);
+        Assert.InRange(watch.ElapsedMilliseconds, 0, 2_000);
     }
 }
