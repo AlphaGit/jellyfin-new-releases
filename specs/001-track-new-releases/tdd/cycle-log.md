@@ -721,3 +721,11 @@ failed before the implementation.
 - green: `Decide` returns `NeedsEditions: true` with the candidate and method when `editions.Count == 0`. Suite -> 106 passed, 0 failed
 - refactor: none needed
 - commit: `f4101ef`
+
+## Cycle 81: U98 every edition track matched by a library track → `Owned`
+
+- test: `Matching/OwnershipMatcherTests.cs::Decide_EveryEditionTrackMatchedByALibraryTrack_IsOwned` (new)
+- red: passed on first run (cycle 76's comparison). Deliberate mutant: verdict inverted -> `Expected: Tuple (Owned, 7, 0, False) / Actual:   Tuple (Incomplete, 7, 0, False)` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 107 passed, 0 failed
+- refactor: none needed
+- commit: `70fb672`
