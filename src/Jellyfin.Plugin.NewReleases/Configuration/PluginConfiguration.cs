@@ -1,3 +1,4 @@
+using Jellyfin.Plugin.NewReleases.Model;
 using MediaBrowser.Model.Plugins;
 
 namespace Jellyfin.Plugin.NewReleases.Configuration;
@@ -30,4 +31,26 @@ public class PluginConfiguration : BasePluginConfiguration
     public string ReleasedSince { get; set; } = string.Empty;
 
     public string UserAgentContact { get; set; } = string.Empty;
+
+    /// <summary>The admin's type selection as a set (FR-004).</summary>
+    public ISet<ReleaseType> EnabledReleaseTypes()
+    {
+        var enabled = new HashSet<ReleaseType>();
+        Add(IncludeAlbums, ReleaseType.Album);
+        Add(IncludeEps, ReleaseType.EP);
+        Add(IncludeSingles, ReleaseType.Single);
+        Add(IncludeCompilations, ReleaseType.Compilation);
+        Add(IncludeLive, ReleaseType.Live);
+        Add(IncludeRemixes, ReleaseType.Remix);
+        Add(IncludeSoundtracks, ReleaseType.Soundtrack);
+        return enabled;
+
+        void Add(bool include, ReleaseType type)
+        {
+            if (include)
+            {
+                enabled.Add(type);
+            }
+        }
+    }
 }

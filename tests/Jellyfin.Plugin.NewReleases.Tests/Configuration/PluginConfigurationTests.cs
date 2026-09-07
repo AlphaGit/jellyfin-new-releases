@@ -1,5 +1,6 @@
 using System.Xml.Serialization;
 using Jellyfin.Plugin.NewReleases.Configuration;
+using Jellyfin.Plugin.NewReleases.Model;
 using Xunit;
 
 namespace Jellyfin.Plugin.NewReleases.Tests.Configuration;
@@ -53,5 +54,20 @@ public class PluginConfigurationTests
         };
 
         Assert.Equal(Fields(changed), Fields(RoundTrip(changed)));
+    }
+
+    [Fact]
+    public void EnabledReleaseTypes_AlbumAndEpByDefault_ReflectsEachToggle()
+    {
+        Assert.Equal(new HashSet<ReleaseType> { ReleaseType.Album, ReleaseType.EP }, new PluginConfiguration().EnabledReleaseTypes());
+
+        var flipped = new PluginConfiguration
+        {
+            IncludeAlbums = false, IncludeEps = false, IncludeSingles = true, IncludeCompilations = true, IncludeLive = true, IncludeRemixes = true, IncludeSoundtracks = true,
+        };
+
+        Assert.Equal(
+            new HashSet<ReleaseType> { ReleaseType.Single, ReleaseType.Compilation, ReleaseType.Live, ReleaseType.Remix, ReleaseType.Soundtrack },
+            flipped.EnabledReleaseTypes());
     }
 }
