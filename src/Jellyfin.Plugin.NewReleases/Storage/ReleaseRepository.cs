@@ -141,6 +141,14 @@ public sealed class ReleaseRepository
             }
         }
 
+        await using (var orphans = connection.CreateCommand())
+        {
+            orphans.Transaction = transaction;
+            orphans.CommandText = "DELETE FROM release WHERE library_artist_id = @artistId AND NOT EXISTS (SELECT 1 FROM source_entry WHERE release_id = release.id)";
+            orphans.Parameters.AddWithValue("@artistId", artistId);
+            await orphans.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+        }
+
         foreach (var releaseId in touched)
         {
             await RecomputeCanonicalAsync(connection, transaction, releaseId, ct).ConfigureAwait(false);

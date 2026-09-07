@@ -113,7 +113,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U29 | Removing the MusicBrainz entry makes the Deezer entry canonical | FR-006a, R17 | example | DONE | `Storage/ReleaseRepositoryTests.cs::PruneEntriesAsync_RemovingTheMusicBrainzEntryMakesDeezerCanonical` |
 | U30 | A MusicBrainz entry without a date takes the Deezer entry's date | FR-006a | example | DONE | `Storage/ReleaseRepositoryTests.cs::UpsertFromSourceAsync_MusicBrainzWithoutDateTakesDeezerDate` |
 | U31 | Pruning for (artist, source, run) deletes only that pair's entries with `last_seen_run_id < run`; other artists and the other source are untouched | FR-014 | example | DONE | `Storage/ReleaseRepositoryTests.cs::PruneEntriesAsync_DeletesOnlyThePairsStaleEntries` |
-| U32 | A release left with zero entries after pruning is deleted; one with a remaining entry stays | FR-014 | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
+| U32 | A release left with zero entries after pruning is deleted; one with a remaining entry stays | FR-014 | example | DONE | `Storage/ReleaseRepositoryTests.cs::PruneEntriesAsync_DeletesReleasesLeftWithoutEntriesAndKeepsTheOthers` |
 | U33 | `date_sort` is `2024-00-00` for `2024`, `2024-05-00` for `2024-05`, `2024-05-17` for a full date, NULL for no date | R16, EC-4 | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
 | U34 | List order is `date_sort` descending, undated last, title as tiebreak; a year-only 2024 release sorts after `2024-01-01` | US1-AS2, EC-4 | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
 | U35 | Releases with ownership `Owned` are never returned by the list | FR-007 | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |

@@ -89,4 +89,17 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
             ["deezer:dz-s", "musicbrainz:rg-e", "musicbrainz:rg-f"],
             (await _db.ColumnAsync<string>("SELECT source || ':' || source_release_id FROM source_entry ORDER BY 1")));
     }
+
+    [Fact]
+    public async Task PruneEntriesAsync_DeletesReleasesLeftWithoutEntriesAndKeepsTheOthers()
+    {
+        var orphan = await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Orphan", "rg-o"), Run1, Now, CancellationToken.None);
+        var shared = await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Shared", "rg-sh"), Run1, Now, CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(_artist, "deezer", DeezerItem("Shared", "dz-sh"), Run1, Now, CancellationToken.None);
+
+        await _db.Releases.PruneEntriesAsync(_artist, "musicbrainz", Run1 + 1, CancellationToken.None);
+
+        Assert.Null(await _db.Releases.GetAsync(orphan, CancellationToken.None));
+        Assert.NotNull(await _db.Releases.GetAsync(shared, CancellationToken.None));
+    }
 }
