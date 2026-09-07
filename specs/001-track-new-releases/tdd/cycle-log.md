@@ -177,3 +177,11 @@ failed before the implementation.
 - green: `Storage/Migrations/001_initial.sql` (all nine tables, indexes, UNIQUE/CHECK/CASCADE from data-model.md; `schema_version` is created by code so it exists before the version query) and `PluginDatabase.MigrateAsync` behind a `Lazy<Task>`: applies embedded `NNN_*.sql` with version > MAX(schema_version), one transaction each. Suite -> 37 passed, 0 failed
 - refactor: none needed
 - commit: `574744b`
+
+## Cycle 20: U20 second open (fresh instance) applies no migration; `schema_version` keeps one row
+
+- test: `Storage/DatabaseTests.cs::OpenAsync_SecondOpenFromAFreshInstanceAppliesNothing` (new)
+- red: passed on first run. Deliberate mutant: pending filter `Version > applied` -> `Version >= 0` -> `SqliteException : SQLite Error 1: 'table library_artist already exists'` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 38 passed, 0 failed
+- refactor: none needed
+- commit: `650b01b`
