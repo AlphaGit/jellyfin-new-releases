@@ -443,3 +443,12 @@ failed before the implementation.
 - green: `SourceStateRepository.RecordFailureAsync` upsert incrementing `consecutive_failures`, setting `cooldown_until` when the new count reaches the threshold, storing `last_error`. Suite -> 70 passed, 0 failed
 - refactor: none needed
 - commit: `2f2bffd`
+
+## Cycle 50: U50 a success resets consecutive failures to 0 and clears the cooldown
+
+- test: `Storage/SourceStateRepositoryTests.cs::RecordSuccessAsync_ResetsFailuresClearsCooldownAndStampsLastSuccess` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceStateRepositoryTests.RecordSuccessAsync_ResetsFailuresClearsCooldownAndStampsLastSuccess" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: Tuple (0, null, 2026-09-06T23:59:00…) / Actual:   Tuple (5, 2026-09-07T05:59:00…, null)` (1 failed; no-op stub)
+- green: `SourceStateRepository.RecordSuccessAsync` upsert resetting failures, clearing `cooldown_until`, stamping `last_success_at`. Suite -> 71 passed, 0 failed
+- refactor: none needed
+- commit: `b1ff768`
