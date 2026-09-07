@@ -336,3 +336,12 @@ failed before the implementation.
 - green: `ListAsync` drops dated rows whose `date_sort` sorts before the cutoff (ordinal string compare on `yyyy-MM-dd`); undated rows pass. Suite -> 58 passed, 0 failed
 - refactor: none needed
 - commit: `702c689`
+
+## Cycle 38: U38 filters — `artistId`, `type` (display type), `state` (Upcoming = `date_sort > today`), inclusive `from`/`to` excluding undated rows
+
+- test: `Storage/ReleaseRepositoryTests.cs::ListAsync_FiltersByArtistTypeStateAndInclusiveDateRange` (new; seven assertions on one seeded set, one per filter)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.ListAsync_FiltersByArtistTypeStateAndInclusiveDateRange" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ / Expected: [···, "Missing Album", "Incomplete Album", "Undated"] / Actual: [···, "Other Artist Album", "Missing Album", "Incomplete Album", ···]` (1 failed; artist filter ignored)
+- green: `ListAsync` — `@artist` parameter in SQL; in C#: from/to on `date_sort` (undated skipped when a bound is set), `State` = Upcoming when `date_sort > today` else ownership, then `Type`/`State` equality filters. Suite -> 59 passed, 0 failed
+- refactor: `ReadListed` takes `today` and computes the state once; suite re-run green
+- commit: `54f5cbc`
