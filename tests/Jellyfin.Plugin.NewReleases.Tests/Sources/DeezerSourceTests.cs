@@ -17,7 +17,7 @@ public sealed class DeezerSourceTests : IAsyncLifetime
 
     public async Task DisposeAsync() => await _h.DisposeAsync();
 
-    private DeezerSource Source() => new(_h.HttpClient, NullLogger<DeezerSource>.Instance);
+    private DeezerSource Source() => new(_h.HttpClient, _h.Clock, NullLogger<DeezerSource>.Instance);
 
     private const string EmptyPage = "{\"data\":[],\"total\":0}";
 
@@ -117,5 +117,22 @@ public sealed class DeezerSourceTests : IAsyncLifetime
         Assert.Equal(("302127", "Discovery", 14), (edition.SourceEditionId, edition.Title, edition.NormalizedTrackTitles.Count));
         Assert.Equal("one more time", edition.NormalizedTrackTitles[0]);
         Assert.Equal("too long", edition.NormalizedTrackTitles[13]);
+    }
+
+    [Fact]
+    public async Task ErrorEnvelope_QuotaCode4IsRetriedAsTransient_OtherCodesThrow()
+    {
+        var quota = FixtureLoader.LoadText("deezer/error_quota.json");
+        var page = FixtureLoader.LoadText("deezer/artist_albums_page2.json");
+        _h.Http.OnUrlPattern(Albums27, (_, attempt) => new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new StringContent(attempt == 0 ? quota : page) });
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/99/albums\?", System.Net.HttpStatusCode.OK, "{\"error\":{\"type\":\"DataException\",\"message\":\"no data\",\"code\":800}}");
+        var source = Source();
+
+        var pending = source.FetchCataloguePageAsync("27", 0, CancellationToken.None);
+        var recovered = await _h.RunAdvancingAsync(pending, TimeSpan.FromSeconds(1));
+
+        Assert.Equal(4, recovered.Items.Count);
+        Assert.Equal(2, _h.RequestedUrls.Count(u => u.Contains("/artist/27/", StringComparison.Ordinal)));
+        await Assert.ThrowsAsync<HttpRequestException>(() => source.FetchCataloguePageAsync("99", 0, CancellationToken.None));
     }
 }

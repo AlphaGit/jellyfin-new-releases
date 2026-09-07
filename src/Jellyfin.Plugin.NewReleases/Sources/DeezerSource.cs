@@ -12,13 +12,17 @@ public sealed class DeezerSource : IReleaseSource
 {
     private const string Base = "https://api.deezer.com/";
     private const int AlbumPageSize = 100;
+    private const int QuotaExceededCode = 4;
+    private static readonly TimeSpan QuotaBackoff = TimeSpan.FromSeconds(5);
 
     private readonly SourceHttpClient _http;
+    private readonly TimeProvider _clock;
     private readonly ILogger<DeezerSource> _logger;
 
-    public DeezerSource(SourceHttpClient http, ILogger<DeezerSource> logger)
+    public DeezerSource(SourceHttpClient http, TimeProvider clock, ILogger<DeezerSource> logger)
     {
         _http = http;
+        _clock = clock;
         _logger = logger;
     }
 
@@ -102,6 +106,27 @@ public sealed class DeezerSource : IReleaseSource
         return [new EditionTrackList(sourceReleaseId, title, tracks)];
     }
 
+    /// <summary>Deezer answers HTTP 200 with an `error` envelope (R3): code 4 (quota) is transient and retried after a short backoff; anything else is a failure.</summary>
     private async Task<JsonDocument> GetJsonAsync(string url, CancellationToken ct)
-        => JsonDocument.Parse(await _http.GetStringAsync(Id, url, ct).ConfigureAwait(false));
+    {
+        for (var attempt = 0; ; attempt++)
+        {
+            var json = JsonDocument.Parse(await _http.GetStringAsync(Id, url, ct).ConfigureAwait(false));
+            if (!json.RootElement.TryGetProperty("error", out var error))
+            {
+                return json;
+            }
+
+            var code = error.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.Number ? c.GetInt32() : -1;
+            var message = error.TryGetProperty("message", out var m) ? m.GetString() : null;
+            json.Dispose();
+            if (code != QuotaExceededCode || attempt >= SourceLimits.RetryBackoffs.Length)
+            {
+                throw new HttpRequestException($"Deezer error {code}: {message}");
+            }
+
+            _logger.LogWarning("Deezer quota exceeded; retrying in {Delay}.", QuotaBackoff);
+            await Task.Delay(QuotaBackoff, _clock, ct).ConfigureAwait(false);
+        }
+    }
 }
