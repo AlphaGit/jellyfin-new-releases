@@ -159,4 +159,16 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         Assert.Equal(["Studio"], byDefault.Select(r => r.Title));
         Assert.Equal([("Live Set", ReleaseType.Live), ("Studio", ReleaseType.Album)], withLive.Select(r => (r.Title, r.Type)));
     }
+
+    [Fact]
+    public async Task ListAsync_ReleasedSinceIsInclusiveAndKeepsUndatedRows()
+    {
+        await Seed("On The Day", "2020-01-01", "rg-on");
+        await Seed("Day Before", "2019-12-31", "rg-before");
+        await Seed("Undated", null, "rg-undated");
+
+        var titles = (await _db.Releases.ListAsync(DefaultFilter with { ReleasedSince = new DateOnly(2020, 1, 1) }, CancellationToken.None)).Select(r => r.Title);
+
+        Assert.Equal(["On The Day", "Undated"], titles);
+    }
 }

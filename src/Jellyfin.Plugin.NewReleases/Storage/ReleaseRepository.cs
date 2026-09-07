@@ -203,6 +203,13 @@ public sealed class ReleaseRepository
                 continue;
             }
 
+            var dateSort = reader.IsDBNull(8) ? null : reader.GetString(8);
+            if (filter.ReleasedSince is { } since && dateSort is not null
+                && string.CompareOrdinal(dateSort, since.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)) < 0)
+            {
+                continue; // "released since" never cuts undated releases (data-model: Included)
+            }
+
             rows.Add(ReadListed(reader, primary, secondaries));
         }
 
