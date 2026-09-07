@@ -1145,3 +1145,20 @@ failed before the implementation.
 - green: `AdminController.GetStatusAsync` — health `Disabled`/`CoolingDown`/`Failing`/`Ok` from configuration and `source_state`, budget constants, latest run, `NextRunAt` from the first trigger (daily → next 03:00 local, interval → last end + interval), `ArtistRepository.GetCountsAsync`, and the FR-012 hint sentence. Suite -> 159 passed, 0 failed
 - refactor: none needed
 - commit: `4db8072`
+
+## Cycle 134: U126 `purge` empties release data, keeps decisions and artists, resets every `resume_offset` to 0
+
+- test: `Api/AdminControllerTests.cs::Purge_EmptiesReleaseData_KeepsDecisionsAndArtists_ResetsResumeOffsets` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Purge_EmptiesReleaseData_KeepsDecisionsAndArtists_ResetsResumeOffsets" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub)
+- green: `AdminController.PurgeAsync` = `ReleaseRepository.PurgeAsync` + new `ArtistRepository.ResetResumeOffsetsAsync` (offsets to 0, open passes forgotten) → 204. A first green attempt failed to compile (doc comments placed after attributes, CS1587); the helper script's docs commit `bbfb5ba` recorded the test-list state before the code landed — the code is in the commit below. Single test green; suite in cycle 135.
+- refactor: none needed
+
+## Cycle 135: U127 `clear-archive` empties decisions and leaves release rows untouched
+
+- test: `Api/AdminControllerTests.cs::ClearArchive_EmptiesDecisions_LeavesReleaseRowsUntouched` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.ClearArchive_EmptiesDecisions_LeavesReleaseRowsUntouched" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub)
+- green: `AdminController.ClearArchiveAsync` = `ArchiveRepository.ClearAsync` → 204. Suite -> 161 passed, 0 failed
+- refactor: none needed
+- commit: `e266094`
