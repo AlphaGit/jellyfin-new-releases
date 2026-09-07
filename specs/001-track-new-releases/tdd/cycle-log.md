@@ -27,3 +27,12 @@ failed before the implementation.
 - green: `TitleNormalizer.Base()` appends `.Replace("&", "and")`. Suite -> 4 passed, 0 failed
 - refactor: none needed
 - commit: `f87a0a9`
+
+## Cycle 3: U3 `A.B.  --  C!` normalizes to `ab c`
+
+- test: `Matching/TitleNormalizerTests.cs::NormalizeAlbum_RemovesPunctuationAndCollapsesWhitespace` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~TitleNormalizerTests.NormalizeAlbum_RemovesPunctuationAndCollapsesWhitespace" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: "ab c" / Actual:   "a.b.  --  c!"` (1 failed)
+- green: `TitleNormalizer.Finish()` keeps letters/digits, folds whitespace runs to one space, trims. Suite -> 5 passed, 0 failed
+- refactor: none needed
+- commit: `c44230f`
