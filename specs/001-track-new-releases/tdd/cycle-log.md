@@ -615,3 +615,12 @@ failed before the implementation.
 - green: `GetStringAsync` uses `SourceLimits.BySource.TryGetValue` and throws `ArgumentException` for an unknown id before any I/O. Suite -> 94 passed, 0 failed
 - refactor: none needed
 - commit: `75eaeb0`
+
+## Cycle 69: U67 two back-to-back MusicBrainz requests are at least ~1 s apart
+
+- test: `Sources/SourceHttpClientTests.cs::GetStringAsync_TwoMusicBrainzRequests_AreAtLeastOneSecondApart` (new; real wall clock, ~1 s, because `TokenBucketRateLimiter` has no `TimeProvider` seam)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceHttpClientTests.GetStringAsync_TwoMusicBrainzRequests_AreAtLeastOneSecondApart" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.InRange() Failure: Value not in range / Range:  (00:00:00.9000000 - 00:00:05) / Actual: 00:00:00.0086772` (1 failed)
+- green: one BCL `TokenBucketRateLimiter` per source (`RequestsPerSecond` tokens per 1 s period, oldest-first queue); a lease is acquired before every attempt; `IAsyncDisposable` disposes the limiters. Suite -> 95 passed, 0 failed
+- refactor: none needed
+- commit: `79959ef`
