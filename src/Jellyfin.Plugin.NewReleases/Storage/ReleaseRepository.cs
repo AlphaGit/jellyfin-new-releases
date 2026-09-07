@@ -190,9 +190,11 @@ public sealed class ReleaseRepository
             LEFT JOIN decision d ON d.artist_key = a.artist_key AND d.normalized_title = r.normalized_title
             WHERE r.ownership_state <> 'Owned'
               AND (@artist IS NULL OR a.jellyfin_id = @artist)
+              AND ((d.kind IS NOT NULL) = @archived)
             ORDER BY r.date_sort IS NULL, r.date_sort DESC, r.title
             """;
         command.Parameters.AddWithValue("@artist", (object?)filter.ArtistJellyfinId?.ToString("D") ?? DBNull.Value);
+        command.Parameters.AddWithValue("@archived", filter.Archived ? 1 : 0);
         var today = filter.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         var from = filter.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         var to = filter.To?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);

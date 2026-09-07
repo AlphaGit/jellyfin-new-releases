@@ -197,4 +197,22 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         Assert.Equal(["An EP", "Other Artist Album", "Missing Album"], await Titles(DefaultFilter with { From = new DateOnly(2020, 6, 1), To = new DateOnly(2020, 7, 1) }));
         Assert.Equal(ListState.Upcoming, (await _db.Releases.ListAsync(DefaultFilter with { State = ListState.Upcoming }, CancellationToken.None)).Single().State);
     }
+
+    [Fact]
+    public async Task ListAsync_ArchivedFlagSplitsDecidedRowsFromTheList()
+    {
+        await Seed("Kept", "2020-01-01", "rg-kept");
+        await Seed("Ignored Album", "2020-01-02", "rg-ign");
+        var user = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        await _db.ExecuteAsync($"INSERT INTO decision (artist_key, normalized_title, kind, user_id, decided_at) VALUES ('name:daft punk', 'ignored album', 'Ignore', '{user}', '2026-09-01T10:00:00Z')");
+
+        var list = await _db.Releases.ListAsync(DefaultFilter, CancellationToken.None);
+        var archive = await _db.Releases.ListAsync(DefaultFilter with { Archived = true }, CancellationToken.None);
+
+        Assert.Equal(["Kept"], list.Select(r => r.Title));
+        Assert.All(list, r => Assert.Null(r.Archived));
+        var archived = Assert.Single(archive);
+        Assert.Equal("Ignored Album", archived.Title);
+        Assert.Equal((DecisionKind.Ignore, user, new DateTimeOffset(2026, 9, 1, 10, 0, 0, TimeSpan.Zero)), (archived.Archived!.Kind, archived.Archived.UserId, archived.Archived.DecidedAt));
+    }
 }
