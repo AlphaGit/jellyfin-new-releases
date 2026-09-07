@@ -142,4 +142,26 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
         Assert.Equal("one more time", japan.NormalizedTrackTitles[14][..13]); // "(Romanthony's Unplugged)" is not a feat. segment and stays
         Assert.Equal("one more time romanthonys unplugged", japan.NormalizedTrackTitles[14]);
     }
+
+    /// <summary>FR-017: only artist names and public identifiers leave the server; the URLs are the contract's, nothing more.</summary>
+    [Fact]
+    public async Task Requests_UseExactlyTheContractEndpointsWithOnlyNamesAndIdsInTheQuery()
+    {
+        _h.Fixture(ArtistSearch, "musicbrainz/artist_search_confident.json");
+        _h.Fixture(ReleaseBrowse, "musicbrainz/releases_page1.json");
+        _h.Fixture(@"release\?release-group=", "musicbrainz/editions_two_official.json");
+        var source = Source();
+
+        await source.MatchArtistAsync(Artist("Daft Punk"), CancellationToken.None);
+        await source.FetchCataloguePageAsync(DaftPunkMbid, 0, CancellationToken.None);
+        await source.FetchEditionsAsync("48117b90-a16e-34ca-a514-19c702df1158", CancellationToken.None);
+
+        Assert.Equal(
+            [
+                "https://musicbrainz.org/ws/2/artist?query=artist:%22Daft%20Punk%22&limit=5&fmt=json",
+                $"https://musicbrainz.org/ws/2/release?artist={DaftPunkMbid}&status=official&inc=release-groups&limit=100&offset=0&fmt=json",
+                "https://musicbrainz.org/ws/2/release?release-group=48117b90-a16e-34ca-a514-19c702df1158&status=official&inc=recordings+media&limit=25&offset=0&fmt=json",
+            ],
+            _h.RequestedUrls);
+    }
 }

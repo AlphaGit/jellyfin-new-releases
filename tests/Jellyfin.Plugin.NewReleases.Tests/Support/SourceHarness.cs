@@ -42,7 +42,8 @@ internal sealed class SourceHarness : IAsyncDisposable
         return this;
     }
 
-    public IReadOnlyList<string> RequestedUrls => Http.ReceivedRequests.Select(r => r.RequestUri!.ToString()).ToList();
+    /// <summary>Wire form of every request URL, in order (`AbsoluteUri` keeps percent-escapes; `ToString()` would unescape them).</summary>
+    public IReadOnlyList<string> RequestedUrls => Http.ReceivedRequests.Select(r => r.RequestUri!.AbsoluteUri).ToList();
 
     public async ValueTask DisposeAsync()
     {
