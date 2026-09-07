@@ -139,7 +139,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U47 | Recording a call increments `calls_today`; when the stored day is not today (UTC) the counter restarts at 1 | FR-011 | example | DONE | `Storage/SourceStateRepositoryTests.cs::RecordCallAsync_IncrementsCallsToday_AndRestartsAtOneOnANewUtcDay` |
-| U48 | Remaining budget is budget minus calls today, never below 0 | FR-011 | example | PENDING | `Storage/SourceStateRepositoryTests.cs` |
+| U48 | Remaining budget is budget minus calls today, never below 0 | FR-011 | example | DONE | `Storage/SourceStateRepositoryTests.cs::GetRemainingBudgetAsync_IsBudgetMinusCallsToday_NeverBelowZero` |
 | U49 | Four consecutive failures set no cooldown; the fifth sets `cooldown_until = now + 6 h` | FR-011 | example | PENDING | `Storage/SourceStateRepositoryTests.cs` |
 | U50 | A success resets consecutive failures to 0 and clears the cooldown | FR-011 | example | PENDING | `Storage/SourceStateRepositoryTests.cs` |
 | U51 | In-cooldown is true one second before `cooldown_until` and false at it | FR-011 | example | PENDING | `Storage/SourceStateRepositoryTests.cs` |

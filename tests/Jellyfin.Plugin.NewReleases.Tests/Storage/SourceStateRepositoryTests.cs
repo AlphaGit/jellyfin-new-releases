@@ -28,4 +28,21 @@ public sealed class SourceStateRepositoryTests : IAsyncLifetime
         var state = (await _db.SourceState.GetAsync(MusicBrainz, CancellationToken.None))!;
         Assert.Equal((1, new DateOnly(2026, 9, 7)), (state.CallsToday, state.CallsDay));
     }
+
+    [Fact]
+    public async Task GetRemainingBudgetAsync_IsBudgetMinusCallsToday_NeverBelowZero()
+    {
+        Assert.Equal(3, await _db.SourceState.GetRemainingBudgetAsync(MusicBrainz, 3, CancellationToken.None));
+
+        for (var i = 0; i < 4; i++)
+        {
+            await _db.SourceState.RecordCallAsync(MusicBrainz, CancellationToken.None);
+        }
+
+        Assert.Equal(0, await _db.SourceState.GetRemainingBudgetAsync(MusicBrainz, 3, CancellationToken.None));
+        Assert.Equal(6, await _db.SourceState.GetRemainingBudgetAsync(MusicBrainz, 10, CancellationToken.None));
+
+        _clock.Advance(TimeSpan.FromMinutes(2)); // new UTC day: yesterday's calls no longer count
+        Assert.Equal(3, await _db.SourceState.GetRemainingBudgetAsync(MusicBrainz, 3, CancellationToken.None));
+    }
 }

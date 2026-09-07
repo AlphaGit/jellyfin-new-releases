@@ -33,6 +33,15 @@ public sealed class SourceStateRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
+    /// <summary>Budget left today: budget minus today's calls, never negative. Yesterday's counter does not count.</summary>
+    public async Task<int> GetRemainingBudgetAsync(string source, int dailyBudget, CancellationToken ct)
+    {
+        var state = await GetAsync(source, ct).ConfigureAwait(false);
+        var today = DateOnly.FromDateTime(_clock.GetUtcNow().UtcDateTime);
+        var spent = state is not null && state.CallsDay == today ? state.CallsToday : 0;
+        return Math.Max(0, dailyBudget - spent);
+    }
+
     public async Task<SourceState?> GetAsync(string source, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
