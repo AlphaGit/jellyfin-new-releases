@@ -1192,3 +1192,9 @@ failed before the implementation.
 - green: no production change. Suite -> 165 passed, 0 failed. US2 outer loop closed: A9–A13, A15 green (A14 dropped, R12).
 - refactor: none needed
 - commit: `bf638d3`
+
+## Correction to cycle 139 (A12 mutant evidence)
+
+- the mutant recorded in cycle 139 (`throw;` inside the catch) left unreachable statements, so with `TreatWarningsAsErrors` it did not compile and the test never ran; the filtered output was empty and the entry above overstated it. Re-run with a compile-safe mutant (catch filter `when (ex is null)`, so failures are not isolated):
+  `dotnet test --configuration Release --filter "FullyQualifiedName~ConfigureAndRunTests.A12_" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.Net.Http.HttpRequestException : Source 'musicbrainz' still answered 503 after 3 retries.` (1 failed). Code restored exactly (`git diff` empty), test green again. A12's evidence now stands.
