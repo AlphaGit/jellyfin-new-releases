@@ -261,4 +261,40 @@ public sealed class RefreshNewReleasesTaskTests : IAsyncLifetime
         await _deezer.Received(2).MatchArtistAsync(Arg.Any<LibraryArtistSnapshot>(), Arg.Any<CancellationToken>());
         await _musicBrainz.DidNotReceive().MatchArtistAsync(Arg.Any<LibraryArtistSnapshot>(), Arg.Any<CancellationToken>());
     }
+
+    /// <summary>INV-1 / SC-004: ownership is local; a release added to the library disappears within one cycle even with no source reachable.</summary>
+    [Fact]
+    public async Task Run_WithEverySourceUnavailable_StillRecomputesOwnershipFromStoredEditions()
+    {
+        _library.Artist("Daft Punk");
+        _library.Album("Discovery", "Daft Punk", Library, trackTitles: ["One More Time", "Aerodynamic"]); // now complete
+        _configuration.DeezerEnabled = false;
+        var artist = await _h.Db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:daft punk", Guid.NewGuid(), "Daft Punk", null, [Library], []), CancellationToken.None);
+        var release = await _h.Db.Releases.UpsertFromSourceAsync(artist, "musicbrainz", Item("musicbrainz", "rg-1", "Discovery"), 0, SourceHarness.Start, CancellationToken.None);
+        await _h.Db.Releases.UpsertEditionAsync(release, "musicbrainz", new EditionTrackList("rel-1", "Discovery", ["one more time", "aerodynamic"]), SourceHarness.Start, CancellationToken.None);
+        await _h.Db.Releases.WriteOwnershipAsync(release, new OwnershipResult(OwnershipState.Incomplete, "Title", Guid.NewGuid(), 1, ["aerodynamic"]), SourceHarness.Start, CancellationToken.None);
+        for (var i = 0; i < SourceLimits.FailureThreshold; i++)
+        {
+            await _h.Db.SourceState.RecordFailureAsync("musicbrainz", "503", SourceLimits.FailureThreshold, SourceLimits.Cooldown, CancellationToken.None);
+        }
+
+        await RunAsync();
+
+        Assert.Equal(OwnershipState.Owned, (await _h.Db.Releases.GetAsync(release, CancellationToken.None))!.OwnershipState);
+        await _musicBrainz.DidNotReceive().FetchEditionsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Run_UnmatchedArtist_IsMatchedAgainOnTheNextRun()
+    {
+        _library.Artist("Blur"); _library.Album("Parklife", "Blur", Library);
+        _configuration.DeezerEnabled = false;
+        _musicBrainz.MatchArtistAsync(Arg.Any<LibraryArtistSnapshot>(), Arg.Any<CancellationToken>()).Returns(ArtistMatch.Unmatched("ambiguous (score 100 vs 97)"));
+        _musicBrainz.FetchCataloguePageAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(EmptyPage);
+
+        await RunAsync();
+        await RunAsync();
+
+        await _musicBrainz.Received(2).MatchArtistAsync(Arg.Is<LibraryArtistSnapshot>(a => a.Name == "Blur"), Arg.Any<CancellationToken>());
+    }
 }
