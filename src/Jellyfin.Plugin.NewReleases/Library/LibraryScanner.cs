@@ -3,6 +3,7 @@ using Jellyfin.Plugin.NewReleases.Matching;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.NewReleases.Library;
@@ -35,16 +36,30 @@ public sealed class LibraryScanner
         foreach (var group in albums.SelectMany(album => album.AlbumArtists.Select(name => (Name: name, Album: album))).GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
         {
             var item = artistItems.FirstOrDefault(a => string.Equals(a.Name, group.Key, StringComparison.OrdinalIgnoreCase));
+            var mbid = ProviderId(item, MetadataProvider.MusicBrainzArtist)
+                ?? group.Select(x => ProviderId(x.Album, MetadataProvider.MusicBrainzAlbumArtist)).FirstOrDefault(id => id is not null);
             artists.Add(new LibraryArtistSnapshot(
-                "name:" + TitleNormalizer.NormalizeName(group.Key),
+                mbid ?? "name:" + TitleNormalizer.NormalizeName(group.Key),
                 item?.Id ?? Guid.Empty,
                 item?.Name ?? group.Key,
-                null,
+                mbid,
                 [],
                 []));
         }
 
         _logger.LogInformation("Library scan: {Artists} library artists across {Albums} albums.", artists.Count, albums.Count);
         return new LibrarySnapshot(artists);
+    }
+
+    /// <summary>First value of a provider id (Jellyfin may store several, comma-separated), or null.</summary>
+    private static string? ProviderId(BaseItem? item, MetadataProvider provider)
+    {
+        if (item is null || !item.ProviderIds.TryGetValue(provider.ToString(), out var raw) || string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+
+        var first = raw.Split(',', 2)[0].Trim();
+        return first.Length == 0 ? null : first;
     }
 }
