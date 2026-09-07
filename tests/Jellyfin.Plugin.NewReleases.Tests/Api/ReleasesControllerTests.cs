@@ -3,6 +3,7 @@ using Jellyfin.Plugin.NewReleases.Configuration;
 using Jellyfin.Plugin.NewReleases.Library;
 using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.Tests.Support;
+using Jellyfin.Plugin.NewReleases.ScheduledTasks;
 using MediaBrowser.Model.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -87,5 +88,35 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.Equal(["Cross"], Ok(await controller.GetReleasesAsync(type: "EP", cancellationToken: CancellationToken.None)).Items.Select(i => i.Title));
         Assert.Equal(["Future One"], Ok(await controller.GetReleasesAsync(state: "Upcoming", cancellationToken: CancellationToken.None)).Items.Select(i => i.Title));
         Assert.Equal(["Future One", "On The Day", "Day Before"], Ok(await controller.GetReleasesAsync(artistId: daftPunk, cancellationToken: CancellationToken.None)).Items.Select(i => i.Title));
+    }
+
+    private void TriggersAre(params TaskTriggerInfo[] triggers)
+    {
+        var worker = Substitute.For<IScheduledTaskWorker>();
+        worker.ScheduledTask.Returns(new RefreshNewReleasesTask(null!, null!, null!, null!, null!, [], null!, null!)); // only its type/key matter here
+        worker.Triggers.Returns(triggers);
+        _tasks.ScheduledTasks.Returns([worker]);
+    }
+
+    [Fact]
+    public async Task GetReleases_LastRefreshedAtIsTheLastCompletedRunsEnd_RefreshIntervalFollowsTheTrigger()
+    {
+        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        Assert.Equal((false, (DateTimeOffset?)null), (Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).HasCompletedRefresh, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).LastRefreshedAt));
+
+        var run = await _db.SourceState.StartRunAsync(CancellationToken.None);
+        _clock.Advance(TimeSpan.FromMinutes(5));
+        await _db.SourceState.FinishRunAsync(run, 1, 1, 0, 0, "Completed", CancellationToken.None);
+        var endedAt = _clock.GetUtcNow();
+
+        TriggersAre(new TaskTriggerInfo { Type = TaskTriggerInfoType.DailyTrigger, TimeOfDayTicks = TimeSpan.FromHours(3).Ticks });
+        var daily = Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None));
+        Assert.Equal((true, endedAt, 24), (daily.HasCompletedRefresh, daily.LastRefreshedAt, daily.RefreshIntervalHours));
+
+        TriggersAre(new TaskTriggerInfo { Type = TaskTriggerInfoType.IntervalTrigger, IntervalTicks = TimeSpan.FromHours(12).Ticks });
+        Assert.Equal(12, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).RefreshIntervalHours);
+
+        _tasks.ScheduledTasks.Returns([]);
+        Assert.Equal(24, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).RefreshIntervalHours);
     }
 }

@@ -3,6 +3,7 @@ using Jellyfin.Data;
 using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Plugin.NewReleases.Configuration;
 using Jellyfin.Plugin.NewReleases.Model;
+using Jellyfin.Plugin.NewReleases.ScheduledTasks;
 using Jellyfin.Plugin.NewReleases.Storage;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
@@ -88,7 +89,19 @@ public sealed class ReleasesController : ControllerBase
         var rows = await _releases.ListAsync(filter, cancellationToken).ConfigureAwait(false);
         var visible = rows.Where(access.CanSee).Select(ToDto).ToList();
         var lastRun = await _runs.GetLastCompletedRunAsync(cancellationToken).ConfigureAwait(false);
-        return new ListResponse(visible, visible.Count, lastRun is not null, lastRun?.EndedAt, 24, today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        return new ListResponse(visible, visible.Count, lastRun is not null, lastRun?.EndedAt, RefreshIntervalHours(), today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>Hours between refreshes from the task's triggers in Jellyfin (R15); 24 when no trigger is readable.</summary>
+    private int RefreshIntervalHours()
+    {
+        var trigger = _tasks.ScheduledTasks?.FirstOrDefault(w => w.ScheduledTask is RefreshNewReleasesTask)?.Triggers?.FirstOrDefault();
+        return trigger?.Type switch
+        {
+            TaskTriggerInfoType.IntervalTrigger when trigger.IntervalTicks is { } ticks && ticks > 0 => (int)Math.Max(1, Math.Round(TimeSpan.FromTicks(ticks).TotalHours)),
+            TaskTriggerInfoType.WeeklyTrigger => 24 * 7,
+            _ => 24,
+        };
     }
 
     /// <summary>The libraries the caller may see (FR-007, R4); null when Jellyfin does not know the user.</summary>
