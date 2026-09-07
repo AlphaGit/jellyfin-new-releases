@@ -1198,3 +1198,12 @@ failed before the implementation.
 - the mutant recorded in cycle 139 (`throw;` inside the catch) left unreachable statements, so with `TreatWarningsAsErrors` it did not compile and the test never ran; the filtered output was empty and the entry above overstated it. Re-run with a compile-safe mutant (catch filter `when (ex is null)`, so failures are not isolated):
   `dotnet test --configuration Release --filter "FullyQualifiedName~ConfigureAndRunTests.A12_" -- RunConfiguration.TreatNoTestsAsError=true`
   -> `System.Net.Http.HttpRequestException : Source 'musicbrainz' still answered 503 after 3 retries.` (1 failed). Code restored exactly (`git diff` empty), test green again. A12's evidence now stands.
+
+## Cycle 140: U120 `ignore` and `have-it` store a decision with the caller's user id and the injected clock; `restore` deletes it; each returns 204
+
+- test: `Api/ReleasesControllerTests.cs::Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleasesControllerTests.Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stubs)
+- green: `ReleasesController.DecideAsync` (shared by the three POST actions): release → artist (`ArtistRepository.GetByIdAsync` added) → natural key → `ArchiveRepository.SetAsync`/`RemoveAsync` with caller id and clock → 204. Suite -> 166 passed, 0 failed
+- refactor: none needed
+- commit: `b168f92`
