@@ -407,3 +407,11 @@ failed before the implementation.
 - green: `ArchiveRepository.RemoveAsync` (keyed DELETE) and `ClearAsync` (DELETE all). Suite -> 66 passed, 0 failed
 - refactor: none needed
 - commit: `51eb3cd`
+
+## Cycle 46: U46 a decision written before a purge still joins the release once the same title is upserted again
+
+- test: `Storage/ArchiveRepositoryTests.cs::Decision_SurvivesPurgeAndJoinsTheReleaseWhenItIsFetchedAgain` (new; purge, refetch with a new surrogate id, list vs Archive)
+- red: passed on first run (natural-key join from cycle 39 plus purge scope from cycle 42). Deliberate mutant: `PurgeAsync` also `DELETE FROM decision` -> `Assert.Empty() Failure: Collection was not empty` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 67 passed, 0 failed
+- refactor: none needed
+- commit: `534f5a4`
