@@ -193,7 +193,7 @@ back in the list in date position.
 - [ ] T071 [US3] Outer loop green: acceptance behavior [A16] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
 - [ ] T072 [US3] Outer loop green: acceptance behavior [A17] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
 - [ ] T073 [US3] Outer loop green: acceptance behavior [A18] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
-- [ ] T074 [US3] Outer loop green: acceptance behavior [A19] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
+- [X] T074 [US3] Outer loop green: acceptance behavior [A19] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
 
 **Checkpoint**: all three stories independently functional; every acceptance scenario in spec.md has a green test except US2 scenario 6 (not applicable in v1, research R12).
 

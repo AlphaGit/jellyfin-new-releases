@@ -1222,3 +1222,33 @@ failed before the implementation.
 - green: no production change. Suite -> 168 passed, 0 failed
 - refactor: none needed
 - commit: `bf0dd74`
+
+## Cycle 143: A16 `POST api/releases/{id}/ignore` removes the release from the list at once; still absent after a run; present in `?archived=true` with `kind=Ignore`
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ArchiveTests.cs::A16_IgnoreRemovesTheReleaseAtOnce_StillAbsentAfterARun_PresentInTheArchiveAsIgnore` (new)
+- red: passed on first run. Deliberate mutant: `ArchiveRepository.SetAsync` drops Ignore decisions -> `Assert.DoesNotContain() Failure: Filter matched in collection` (1 failed). Code restored exactly, test green again. Committed with cycles 144–146.
+- green: no production change.
+- refactor: none needed
+
+## Cycle 144: A17 `POST api/releases/{id}/restore` on an archived release puts it back in the list at its date position
+
+- test: `Acceptance/ArchiveTests.cs::A17_RestoreOnAnArchivedRelease_PutsItBackInTheListAtItsDatePosition` (new)
+- red: passed on first run. Deliberate mutant: `ArchiveRepository.RemoveAsync` does nothing -> `Assert.Equal() Failure: Collections differ` (only Alive 2007 listed) (1 failed). Code restored exactly, test green again.
+- green: no production change.
+- refactor: none needed
+
+## Cycle 145: A18 `have-it` on an `Incomplete` release archives it; after a later run that still finds tracks missing it remains archived with `kind=HaveIt`
+
+- test: `Acceptance/ArchiveTests.cs::A18_HaveItOnAnIncompleteRelease_StaysArchivedAfterARunThatStillFindsTracksMissing` (new)
+- red: passed on first run. Deliberate mutant: the Archive join counts only Ignore decisions -> `Assert.DoesNotContain() Failure` (Human After All back in the list) (1 failed). Code restored exactly, test green again.
+- green: no production change.
+- refactor: none needed
+
+## Cycle 146: A19 a `have-it` release whose library album later gains every track stays in the Archive; the decision is not reopened
+
+- test: `Acceptance/ArchiveTests.cs::A19_HaveItRelease_WhoseLibraryAlbumLaterGainsEveryTrack_StaysInTheArchive` (new; `LibraryFakes.SetTracks` simulates the library gaining the fourth track between runs)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArchiveTests.A19_" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.InvalidOperationException : Sequence contains no matching element` (1 failed): the Archive query excluded `Owned` rows, so the release disappeared from `?archived=true` once the library owned it — the acceptance test caught a real gap (data-model: the decision check precedes the Owned exclusion; U35's "never listed" applies to the list only).
+- green: `ReleaseRepository.ListAsync` — `WHERE (@archived = 1 OR r.ownership_state <> 'Owned')`. Suite -> 172 passed, 0 failed. US3 outer loop closed: A16–A19 green.
+- refactor: none needed
+- commit: `78ecfc9`
