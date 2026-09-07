@@ -354,3 +354,12 @@ failed before the implementation.
 - green: `ListAsync` adds `AND ((d.kind IS NOT NULL) = @archived)` on the LEFT JOIN to `decision`. Suite -> 60 passed, 0 failed
 - refactor: none needed
 - commit: `6df737f`
+
+## Cycle 40: U40 the list returns at most 5 000 rows
+
+- test: `Storage/ReleaseRepositoryTests.cs::ListAsync_ReturnsAtMostFiveThousandRows` (new; 5 001 rows seeded with a recursive CTE)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.ListAsync_ReturnsAtMostFiveThousandRows" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: 5000 / Actual:   5001` (1 failed)
+- green: `ReleaseRepository.MaxListRows = 5_000`; `ListAsync` stops reading once the cap is reached (after the read-time filters, so the cap counts listed rows). Suite -> 61 passed, 0 failed
+- refactor: none needed
+- commit: `c380143`
