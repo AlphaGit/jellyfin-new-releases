@@ -206,7 +206,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U85 | A candidate with the exact normalized name whose first albums page contains a library album title → `Matched(id)` | FR-002 | example | PENDING | `Sources/DeezerSourceTests.cs` |
+| U85 | A candidate with the exact normalized name whose first albums page contains a library album title → `Matched(id)` | FR-002 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_ExactNameWhoseFirstAlbumsPageContainsALibraryAlbum_IsMatched` |
 | U86 | A candidate with the exact name but no album matching the library → `Unmatched` with a "no corroborating album" reason | FR-002, EC-1 | example | PENDING | `Sources/DeezerSourceTests.cs` |
 | U87 | Two exact-name homonyms where only the second is corroborated → `Matched(second)` | FR-002, EC-1 | example | PENDING | `Sources/DeezerSourceTests.cs` |
 | U88 | No search results → `Unmatched` | FR-002, EC-2 | example | PENDING | `Sources/DeezerSourceTests.cs` |
