@@ -754,3 +754,11 @@ failed before the implementation.
 - green: no production change. Suite -> 110 passed, 0 failed
 - refactor: none needed
 - commit: `b530d24`
+
+## Cycle 85: U102 editions with no tracks at all yield `Owned` by album presence
+
+- test: `Matching/OwnershipMatcherTests.cs::Decide_EditionsWithoutAnyTracks_AreOwnedByAlbumPresence` (new)
+- red: passed on first run (empty edition ⇒ nothing missing). Deliberate mutant: trackless edition forced to `Incomplete` -> `Expected: Tuple (Owned, 0) / Actual:   Tuple (Incomplete, 0)` (1 failed). Code restored exactly, test green again.
+- green: no behavioural change; a `// ponytail:` comment names the ceiling (data-model step 5). Suite -> 111 passed, 0 failed
+- refactor: none needed
+- commit: `09199a4`
