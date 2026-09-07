@@ -111,4 +111,18 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
         Assert.Equal([ReleaseType.Other], page.Items.Single(i => i.Title.StartsWith("Generic Radio Interview")).SecondaryTypes);
         Assert.Equal(ReleaseType.Single, page.Items.Single(i => i.Title == "Da Funk").PrimaryType);
     }
+
+    [Fact]
+    public async Task FetchCataloguePageAsync_NextOffsetAdvancesBy100WhileTheCountExceedsIt_NullOnTheLastPage()
+    {
+        _h.Fixture(ReleaseBrowse + ".*offset=0&", "musicbrainz/releases_page1.json");   // release-count 110
+        _h.Fixture(ReleaseBrowse + ".*offset=100&", "musicbrainz/releases_page2.json"); // release-count 110
+        var source = Source();
+
+        var first = await source.FetchCataloguePageAsync(DaftPunkMbid, 0, CancellationToken.None);
+        var last = await source.FetchCataloguePageAsync(DaftPunkMbid, 100, CancellationToken.None);
+
+        Assert.Equal((100, 110), (first.NextOffset, first.Total));
+        Assert.Equal(((int?)null, 4), (last.NextOffset, last.Items.Count));
+    }
 }

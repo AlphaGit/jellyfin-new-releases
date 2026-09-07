@@ -84,7 +84,8 @@ public sealed class MusicBrainzSource : IReleaseSource
         }
 
         var total = json.RootElement.GetProperty("release-count").GetInt32();
-        return new CataloguePage(items, null, total);
+        var next = offset + CataloguePageSize;
+        return new CataloguePage(items, next < total ? next : null, total);
     }
 
     /// <summary>A string property, or null when absent or empty (MusicBrainz sends `""` for an unknown date).</summary>
