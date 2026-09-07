@@ -12,6 +12,7 @@ public sealed class MusicBrainzSource : IReleaseSource
     private const string Base = "https://musicbrainz.org/ws/2/";
     private const int MinimumScore = 85;
     private const int CataloguePageSize = 100;
+    private const int EditionPageSize = 25;
 
     private readonly SourceHttpClient _http;
     private readonly ILogger<MusicBrainzSource> _logger;
@@ -92,5 +93,31 @@ public sealed class MusicBrainzSource : IReleaseSource
     private static string? OptionalString(JsonElement element, string name)
         => element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String && value.GetString() is { Length: > 0 } text ? text : null;
 
-    public Task<IReadOnlyList<EditionTrackList>> FetchEditionsAsync(string sourceReleaseId, CancellationToken ct) => throw new NotImplementedException();
+    /// <summary>Official releases of a release group with recordings; every `media[].tracks[].title` becomes a normalized track (FR-005).</summary>
+    public async Task<IReadOnlyList<EditionTrackList>> FetchEditionsAsync(string sourceReleaseId, CancellationToken ct)
+    {
+        var editions = new List<EditionTrackList>();
+        for (var offset = 0; ;)
+        {
+            var url = $"{Base}release?release-group={Uri.EscapeDataString(sourceReleaseId)}&status=official&inc=recordings+media&limit={EditionPageSize}&offset={offset}&fmt=json";
+            var body = await _http.GetStringAsync(Id, url, ct).ConfigureAwait(false);
+            using var json = JsonDocument.Parse(body);
+            foreach (var release in json.RootElement.GetProperty("releases").EnumerateArray())
+            {
+                var tracks = release.TryGetProperty("media", out var media)
+                    ? media.EnumerateArray()
+                        .SelectMany(m => m.TryGetProperty("tracks", out var t) ? t.EnumerateArray() : Enumerable.Empty<JsonElement>())
+                        .Select(t => TitleNormalizer.NormalizeTrack(t.GetProperty("title").GetString() ?? string.Empty))
+                        .ToArray()
+                    : [];
+                editions.Add(new EditionTrackList(release.GetProperty("id").GetString()!, release.GetProperty("title").GetString()!, tracks));
+            }
+
+            offset += EditionPageSize;
+            if (offset >= json.RootElement.GetProperty("release-count").GetInt32())
+            {
+                return editions;
+            }
+        }
+    }
 }

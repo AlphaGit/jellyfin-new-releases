@@ -125,4 +125,21 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
         Assert.Equal((100, 110), (first.NextOffset, first.Total));
         Assert.Equal(((int?)null, 4), (last.NextOffset, last.Items.Count));
     }
+
+    [Fact]
+    public async Task FetchEditionsAsync_OneEditionPerOfficialReleaseWithAllMediaTracksNormalized()
+    {
+        _h.Fixture(@"musicbrainz\.org/ws/2/release\?release-group=", "musicbrainz/editions_two_official.json");
+
+        var editions = await Source().FetchEditionsAsync("48117b90-a16e-34ca-a514-19c702df1158", CancellationToken.None);
+
+        Assert.Equal(2, editions.Count);
+        var france = editions.Single(e => e.SourceEditionId == "d073287b-d1bd-4f11-a933-a4386f8cf701");
+        var japan = editions.Single(e => e.SourceEditionId == "51467269-3122-3d7e-92b2-0f0a694d30c1");
+        Assert.Equal(("Discovery", 14), (france.Title, france.NormalizedTrackTitles.Count));
+        Assert.Equal("harder better faster stronger", france.NormalizedTrackTitles[3]);
+        Assert.Equal(15, japan.NormalizedTrackTitles.Count);
+        Assert.Equal("one more time", japan.NormalizedTrackTitles[14][..13]); // "(Romanthony's Unplugged)" is not a feat. segment and stays
+        Assert.Equal("one more time romanthonys unplugged", japan.NormalizedTrackTitles[14]);
+    }
 }
