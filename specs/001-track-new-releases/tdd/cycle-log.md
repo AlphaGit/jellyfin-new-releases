@@ -846,3 +846,11 @@ failed before the implementation.
 - green: no production change. Suite -> 121 passed, 0 failed
 - refactor: none needed
 - commit: `9f5570a`
+
+## Cycle 96: U84 a persistent 503 surfaces as an exception, not as `Unmatched` or an empty page
+
+- test: `Sources/MusicBrainzSourceTests.cs::PersistentServiceUnavailable_SurfacesAsAnException` (new; ~7 s wall time: the MusicBrainz token bucket is real-time, 8 attempts across two calls)
+- red: first run timed out in the harness (fixed-step loop shorter than the token-bucket waits; `SourceHarness.RunAdvancingAsync` now runs to a wall-clock budget). Re-run passed on first run. Deliberate mutant: `MatchArtistAsync` catches `HttpRequestException` and returns `Unmatched("error")` -> `Assert.Throws() Failure: No exception was thrown` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change (`SourceHttpClient` already throws after its retries; the source lets it through). Suite -> 122 passed, 0 failed
+- refactor: none needed
+- commit: `0b0bb83`
