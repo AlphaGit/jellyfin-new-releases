@@ -123,3 +123,12 @@ failed before the implementation.
 - green: `IsIncluded` = `enabled.Contains(primary)` (fake-it step; secondaries come with U14). Suite -> 31 passed, 0 failed
 - refactor: none needed
 - commit: `2aca436`
+
+## Cycle 14: U14 Album + Live is excluded under the default selection
+
+- test: `Matching/ReleaseTypeMapperTests.cs::IsIncluded_AlbumPlusLive_IsExcludedByDefault` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseTypeMapperTests.IsIncluded_AlbumPlusLive_IsExcludedByDefault" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.False() Failure / Expected: False / Actual:   True` (1 failed)
+- green: `IsIncluded` adds `secondaries.All(enabled.Contains)`. Suite -> 32 passed, 0 failed
+- refactor: none needed
+- commit: `808678e`
