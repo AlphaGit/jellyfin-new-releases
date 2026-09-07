@@ -1090,3 +1090,18 @@ failed before the implementation.
 - green: no production change. Suite -> 151 passed, 0 failed
 - refactor: none needed
 - commit: `d6d538a`
+
+## Cycle 126: A4 every listed release carries one `sources[]` link per source that lists it, each an https URL on `musicbrainz.org` or `www.deezer.com`
+
+- test: `Acceptance/BrowseReleasesTests.cs::A4_EveryListedReleaseCarriesOneLinkPerListingSource_HttpsOnTheSourceHosts` (new; both real sources, one release listed by both and one by Deezer only)
+- red: passed on first run. Deliberate mutant: the list query emits only the canonical source's entry -> `Assert.Equal() Failure: Collections differ` (the Deezer link missing) (1 failed). Code restored exactly, test green again. Committed with cycle 127.
+- green: no production change.
+- refactor: none needed
+
+## Cycle 127: A5 with no completed run, the list response has `hasCompletedRefresh=false` and no items
+
+- test: `Acceptance/BrowseReleasesTests.cs::A5_NoCompletedRun_HasCompletedRefreshFalseAndNoItems` (new)
+- red: passed on first run. Deliberate mutant: `hasCompletedRefresh` forced to `true` -> `Assert.False() Failure` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 153 passed, 0 failed
+- refactor: none needed
+- commit: `712c900`
