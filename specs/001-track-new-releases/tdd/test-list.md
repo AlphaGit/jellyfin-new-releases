@@ -179,7 +179,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U68 | Album artists become library artists; an artist credited only as a featured track artist does not | FR-001 | example | PENDING | `Library/LibraryScannerTests.cs` |
+| U68 | Album artists become library artists; an artist credited only as a featured track artist does not | FR-001 | example | DONE | `Library/LibraryScannerTests.cs::Scan_AlbumArtistsBecomeLibraryArtists_FeaturedOnlyArtistsDoNot` |
 | U69 | MBID is read from the artist's `MusicBrainzArtist`, else the album's `MusicBrainzAlbumArtist`; with neither the key is `name:<normalized name>` | FR-002 | example | PENDING | `Library/LibraryScannerTests.cs` |
 | U70 | Each album snapshot carries `MusicBrainzAlbum`, `MusicBrainzReleaseGroup` and the normalized titles of its `Audio` children (queried by `ParentId`) | FR-005 | example | PENDING | `Library/LibraryScannerTests.cs` |
 | U71 | `LibraryIds` are the distinct collection folder ids of the artist's albums | FR-007 | example | PENDING | `Library/LibraryScannerTests.cs` |
