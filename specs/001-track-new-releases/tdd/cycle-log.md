@@ -1049,3 +1049,12 @@ failed before the implementation.
 - green: no production change. Suite -> 146 passed, 0 failed
 - refactor: none needed
 - commit: `868d88c`
+
+## Cycle 121: U118 `lastRefreshedAt` is the last completed run's end; `refreshIntervalHours` is 24 for a daily trigger, 12 for a 12-hour interval, 24 when no trigger is readable
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_LastRefreshedAtIsTheLastCompletedRunsEnd_RefreshIntervalFollowsTheTrigger` (new; `ITaskManager.ScheduledTasks` substituted with a worker for the real task type)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleasesControllerTests.GetReleases_LastRefreshedAtIsTheLastCompletedRunsEnd_RefreshIntervalFollowsTheTrigger" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: 12 / Actual:   24` (1 failed; interval hard-coded; the `lastRefreshedAt` half already held from cycle 119)
+- green: `ReleasesController.RefreshIntervalHours()` reads the first trigger of the worker whose task is `RefreshNewReleasesTask`: interval ticks → hours, weekly → 168, daily/none → 24. Suite -> 147 passed, 0 failed
+- refactor: none needed
+- commit: `d63b423`
