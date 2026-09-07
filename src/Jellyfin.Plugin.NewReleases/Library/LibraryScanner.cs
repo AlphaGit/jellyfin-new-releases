@@ -44,11 +44,26 @@ public sealed class LibraryScanner
                 item?.Name ?? group.Key,
                 mbid,
                 [],
-                []));
+                group.Select(x => SnapshotAlbum(x.Album)).ToArray()));
         }
 
         _logger.LogInformation("Library scan: {Artists} library artists across {Albums} albums.", artists.Count, albums.Count);
         return new LibrarySnapshot(artists);
+    }
+
+    private LibraryAlbumSnapshot SnapshotAlbum(MusicAlbum album)
+    {
+        // Audio children by ParentId rather than MusicAlbum.Tracks, which needs the static BaseItem.LibraryManager (R6).
+        var tracks = _library.GetItemList(new InternalItemsQuery { IncludeItemTypes = [BaseItemKind.Audio], ParentId = album.Id, Recursive = true })
+            .Select(track => TitleNormalizer.NormalizeTrack(track.Name))
+            .ToArray();
+        return new LibraryAlbumSnapshot(
+            album.Id,
+            album.Name,
+            TitleNormalizer.NormalizeAlbum(album.Name),
+            ProviderId(album, MetadataProvider.MusicBrainzAlbum),
+            ProviderId(album, MetadataProvider.MusicBrainzReleaseGroup),
+            tracks);
     }
 
     /// <summary>First value of a provider id (Jellyfin may store several, comma-separated), or null.</summary>

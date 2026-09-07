@@ -43,4 +43,24 @@ public class LibraryScannerTests
              ("Sigur Rós", null, "name:sigur ros")],
             snapshot.Artists.Select(a => (a.Name, a.Mbid, a.ArtistKey)));
     }
+
+    [Fact]
+    public void Scan_AlbumSnapshotsCarryIdentifiersAndNormalizedTrackTitles()
+    {
+        _library.Artist("Daft Punk");
+        var album = _library.Album(
+            "Discovery (Deluxe Edition)", "Daft Punk", Library,
+            mbAlbum: "d073287b-d1bd-4f11-a933-a4386f8cf701", mbReleaseGroup: "48117b90-a16e-34ca-a514-19c702df1158",
+            trackTitles: ["One More Time", "Digital Love (feat. Nobody)"]);
+        _library.Album("Homework", "Daft Punk", Library, trackTitles: ["Da Funk"]);
+
+        var artist = Assert.Single(Scan().Artists);
+
+        Assert.Equal(2, artist.Albums.Count);
+        var discovery = artist.Albums.Single(a => a.JellyfinId == album.Id);
+        Assert.Equal(("Discovery (Deluxe Edition)", "discovery", "d073287b-d1bd-4f11-a933-a4386f8cf701", "48117b90-a16e-34ca-a514-19c702df1158"),
+            (discovery.Title, discovery.NormalizedTitle, discovery.MusicBrainzReleaseId, discovery.MusicBrainzReleaseGroupId));
+        Assert.Equal(["one more time", "digital love"], discovery.NormalizedTrackTitles);
+        Assert.Equal(["da funk"], artist.Albums.Single(a => a.Title == "Homework").NormalizedTrackTitles);
+    }
 }
