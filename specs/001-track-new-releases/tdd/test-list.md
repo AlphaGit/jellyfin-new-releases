@@ -173,7 +173,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U64 | A failed request increments consecutive failures; a later success resets them | FR-011 | example | DONE | `Sources/SourceHttpClientTests.cs::GetStringAsync_FailureIncrementsConsecutiveFailures_LaterSuccessResetsThem` |
 | U65 | `IsAvailableAsync` is false during cooldown or before `next_allowed_at`, true otherwise | FR-011 | example | DONE | `Sources/SourceHttpClientTests.cs::IsAvailableAsync_FalseDuringCooldownOrBeforeNextAllowedAt_TrueOtherwise` |
 | U66 | An unknown source id throws `ArgumentException` | FR-011 | example | DONE | `Sources/SourceHttpClientTests.cs::GetStringAsync_UnknownSourceId_ThrowsArgumentException` |
-| U67 | Two back-to-back MusicBrainz requests are at least ~1 s apart (token bucket at 1 request/s) | FR-011 | example | PENDING | `Sources/SourceHttpClientTests.cs` |
+| U67 | Two back-to-back MusicBrainz requests are at least ~1 s apart (token bucket at 1 request/s) | FR-011 | example | DONE | `Sources/SourceHttpClientTests.cs::GetStringAsync_TwoMusicBrainzRequests_AreAtLeastOneSecondApart` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Library/LibraryScanner.cs`
 

@@ -188,4 +188,21 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
         await Assert.ThrowsAsync<ArgumentException>(() => Client().GetStringAsync("bandcamp", Url, CancellationToken.None));
         Assert.Empty(_http.ReceivedRequests);
     }
+
+    /// <summary>Real wall clock: <c>TokenBucketRateLimiter</c> replenishes on its own timer, so this test takes about one second.</summary>
+    [Fact]
+    public async Task GetStringAsync_TwoMusicBrainzRequests_AreAtLeastOneSecondApart()
+    {
+        _http.AlwaysReturn(HttpStatusCode.OK, "{}");
+        var client = Client();
+        const string musicBrainzUrl = "https://musicbrainz.org/ws/2/artist?query=artist:%22Daft%20Punk%22&limit=5&fmt=json";
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        await client.GetStringAsync("musicbrainz", musicBrainzUrl, CancellationToken.None);
+        await client.GetStringAsync("musicbrainz", musicBrainzUrl, CancellationToken.None);
+        watch.Stop();
+
+        Assert.Equal(2, _http.ReceivedRequests.Count);
+        Assert.InRange(watch.Elapsed, TimeSpan.FromMilliseconds(900), TimeSpan.FromSeconds(5));
+    }
 }

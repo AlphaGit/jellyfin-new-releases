@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Threading.RateLimiting;
 using Jellyfin.Plugin.NewReleases.Configuration;
 using Jellyfin.Plugin.NewReleases.Storage;
 using Microsoft.Extensions.Logging;
@@ -8,8 +10,10 @@ namespace Jellyfin.Plugin.NewReleases.Sources;
 /// The one way out to a source (FR-011, FR-018): per-source token bucket, daily budget, cooldown, `Retry-After`
 /// backoff and the identifying `User-Agent`. Sources never touch <see cref="HttpClient"/> directly.
 /// </summary>
-public sealed class SourceHttpClient
+public sealed class SourceHttpClient : IAsyncDisposable
 {
+    private readonly ConcurrentDictionary<string, TokenBucketRateLimiter> _limiters = new(StringComparer.Ordinal);
+
     public const string ClientName = "newreleases";
 
     /// <summary>Plugin version advertised in the User-Agent (three fields, from the assembly).</summary>
@@ -51,6 +55,7 @@ public sealed class SourceHttpClient
         for (var attempt = 0; ; attempt++)
         {
             await WaitForBackoffFloorAsync(source, ct).ConfigureAwait(false);
+            using var lease = await Limiter(source, limits.RequestsPerSecond).AcquireAsync(1, ct).ConfigureAwait(false);
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.TryAddWithoutValidation("User-Agent", UserAgentBuilder.Build(Version, _configuration().UserAgentContact));
             await _state.RecordCallAsync(source, ct).ConfigureAwait(false);
@@ -90,6 +95,26 @@ public sealed class SourceHttpClient
         var now = _clock.GetUtcNow();
         return !(state?.CooldownUntil > now) && !(state?.NextAllowedAt > now);
     }
+
+    public async ValueTask DisposeAsync()
+    {
+        foreach (var limiter in _limiters.Values)
+        {
+            await limiter.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>One token bucket per source: `RequestsPerSecond` tokens per one-second period (R10).</summary>
+    private TokenBucketRateLimiter Limiter(string source, double requestsPerSecond)
+        => _limiters.GetOrAdd(source, _ => new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
+        {
+            TokenLimit = Math.Max(1, (int)Math.Ceiling(requestsPerSecond)),
+            TokensPerPeriod = Math.Max(1, (int)Math.Ceiling(requestsPerSecond)),
+            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
+            AutoReplenishment = true,
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = int.MaxValue,
+        }));
 
     private async Task WaitForBackoffFloorAsync(string source, CancellationToken ct)
     {
