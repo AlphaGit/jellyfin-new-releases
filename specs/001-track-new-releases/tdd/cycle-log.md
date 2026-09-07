@@ -1105,3 +1105,25 @@ failed before the implementation.
 - green: no production change. Suite -> 153 passed, 0 failed
 - refactor: none needed
 - commit: `712c900`
+
+## Cycle 128: A6 Z is listed after run 1; Z appears in the library snapshot; after run 2 Z is absent from the list
+
+- test: `Acceptance/BrowseReleasesTests.cs::A6_ZListedAfterRunOne_ZAddedToTheLibrary_AbsentAfterRunTwo` (new; INV-1 / SC-004)
+- red: passed on first run. Deliberate mutant: the list no longer excludes `Owned` -> `Assert.Empty() Failure` (Z and X, Y listed) (1 failed). Code restored exactly, test green again. Committed with cycles 129–130.
+- green: no production change.
+- refactor: none needed
+
+## Cycle 129: A7 a release dated after `serverToday` is returned with `state=Upcoming`; `?state=Upcoming` returns only it
+
+- test: `Acceptance/BrowseReleasesTests.cs::A7_ReleaseDatedAfterToday_IsUpcoming_AndTheStateFilterReturnsOnlyIt` (new; stub clock 2026-09-06, release dated 2026-09-07)
+- red: passed on first run. Deliberate mutant: Upcoming never derived -> `Assert.Equal() Failure` (`("Tomorrow", "Missing")`) (1 failed). Code restored exactly, test green again.
+- green: no production change.
+- refactor: none needed
+
+## Cycle 130: A8 library album W holds 8 of the source edition's 10 tracks → W is listed `Incomplete` with exactly the 2 missing titles and `comparedEdition` naming source and edition
+
+- test: `Acceptance/BrowseReleasesTests.cs::A8_LibraryAlbumWith8Of10Tracks_IsIncompleteWithTheTwoMissingTitlesAndTheComparedEdition` (new)
+- red: passed on first run. Deliberate mutant: `comparedEdition` dropped from the DTO -> `Assert.Equal() Failure / Expected: ComparedEditionDto { Source = deezer, Title = W (Edition) } / Actual: null` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 156 passed, 0 failed. The US1 outer loop is closed: A1–A8 green.
+- refactor: none needed
+- commit: `a02354e`
