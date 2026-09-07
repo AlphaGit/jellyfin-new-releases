@@ -62,3 +62,11 @@ failed before the implementation.
 - green: `TitleNormalizer.NormalizeTrack()` removes one trailing featured-artist segment (regex `TrailingFeaturedArtist`) between rules 1–3 and 4–5. Suite -> 12 passed, 0 failed
 - refactor: none needed
 - commit: `a12881c`
+
+## Cycle 7: U7 track `Song (Deluxe)` keeps `deluxe`
+
+- test: `Matching/TitleNormalizerTests.cs::NormalizeTrack_KeepsEditionQualifier` (new)
+- red: passed on first run. Deliberate mutant: `NormalizeTrack` routed through `StripEditionQualifier` -> `Expected: "song deluxe" / Actual:   "song"` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 13 passed, 0 failed
+- refactor: none needed
+- commit: `1c8512d`
