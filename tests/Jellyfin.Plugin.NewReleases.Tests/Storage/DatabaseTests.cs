@@ -67,6 +67,23 @@ public sealed class DatabaseTests : IDisposable
         Assert.Equal(1L, await CountAsync(connection, "schema_version"));
     }
 
+    [Fact]
+    public async Task OpenAsync_TwoConcurrentFirstOpensRunTheMigrationOnce()
+    {
+        var db = NewDatabase();
+
+        // Task.Run: the SQLite driver is synchronous, so two plain awaits would never overlap.
+        var connections = await Task.WhenAll(
+            Enumerable.Range(0, 4).Select(_ => Task.Run(() => db.OpenAsync(CancellationToken.None))));
+
+        Assert.Equal(1, db.MigrationRuns);
+        Assert.Equal(1L, await CountAsync(connections[0], "schema_version"));
+        foreach (var connection in connections)
+        {
+            await connection.DisposeAsync();
+        }
+    }
+
     private static async Task<long> CountAsync(Microsoft.Data.Sqlite.SqliteConnection connection, string table)
     {
         await using var command = connection.CreateCommand();

@@ -29,6 +29,11 @@ public sealed partial class PluginDatabase
         _migration = new Lazy<Task>(MigrateAsync);
     }
 
+    /// <summary>How many times the migration routine has run on this instance; the test seam for the once-only guarantee.</summary>
+    internal int MigrationRuns => _migrationRuns;
+
+    private int _migrationRuns;
+
     public string DirectoryPath => Path.Combine(_paths.DataPath, "newreleases");
 
     public string DatabasePath => Path.Combine(DirectoryPath, "newreleases.db");
@@ -51,6 +56,7 @@ public sealed partial class PluginDatabase
 
     private async Task MigrateAsync()
     {
+        Interlocked.Increment(ref _migrationRuns);
         await using var connection = await OpenRawAsync(CancellationToken.None).ConfigureAwait(false);
         await ExecuteAsync(connection, "CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)").ConfigureAwait(false);
 
