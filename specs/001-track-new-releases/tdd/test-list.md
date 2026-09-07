@@ -252,7 +252,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U115 | A request without the `Jellyfin-UserId` claim gets 401 | FR-007 | example | PENDING | `Api/ReleasesControllerTests.cs` |
+| U115 | A request without the `Jellyfin-UserId` claim gets 401 | FR-007 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_WithoutTheUserIdClaim_Is401` |
 | U116 | A user with `EnableAllFolders` sees every release; a user whose `EnabledFolders` exclude the library sees none; including it sees them | FR-007, EC-11 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_FollowsTheCallersLibraryAccess` |
 | U117 | `from=2020-01-01` returns a release dated `2020-01-01` and not one dated `2019-12-31`; `type`, `state`, `artistId` are passed to the repository filter | FR-008 | example | PENDING | `Api/ReleasesControllerTests.cs` |
 | U118 | `lastRefreshedAt` is the last completed run's end; `refreshIntervalHours` is 24 for a daily trigger, 12 for a 12-hour interval trigger, 24 when no trigger is readable | FR-015 | example | PENDING | `Api/ReleasesControllerTests.cs` |
