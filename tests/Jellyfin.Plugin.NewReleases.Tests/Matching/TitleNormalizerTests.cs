@@ -59,4 +59,12 @@ public class TitleNormalizerTests
     {
         Assert.Equal("song deluxe", TitleNormalizer.NormalizeTrack("Song (Deluxe)"));
     }
+
+    [Theory]
+    [InlineData("The Album", "Album")]
+    [InlineData("Vol. 2", "Volume 2")]
+    public void NormalizeAlbum_KeepsArticlesAndAbbreviationsDistinct(string left, string right)
+    {
+        Assert.NotEqual(TitleNormalizer.NormalizeAlbum(left), TitleNormalizer.NormalizeAlbum(right));
+    }
 }
