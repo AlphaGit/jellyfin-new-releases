@@ -22,4 +22,10 @@ public class TitleNormalizerTests
     {
         Assert.Equal("rock and roll", TitleNormalizer.NormalizeAlbum("Rock & Roll"));
     }
+
+    [Fact]
+    public void NormalizeAlbum_RemovesPunctuationAndCollapsesWhitespace()
+    {
+        Assert.Equal("ab c", TitleNormalizer.NormalizeAlbum("A.B.  --  C!"));
+    }
 }
