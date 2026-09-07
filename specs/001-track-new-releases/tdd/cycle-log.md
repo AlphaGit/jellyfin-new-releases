@@ -811,3 +811,12 @@ failed before the implementation.
 - green: `MatchArtistAsync` returns `Unmatched("no result")` for an empty result set. Suite -> 117 passed, 0 failed
 - refactor: none needed
 - commit: `98426f6`
+
+## Cycle 92: U80 a catalogue page groups releases by release group, maps types, keeps `first-release-date` as given, links the release group
+
+- test: `Sources/MusicBrainzSourceTests.cs::FetchCataloguePageAsync_GroupsByReleaseGroupMapsTypesKeepsPartialDatesAndLinksTheReleaseGroup` (new; `releases_page1.json`: 8 releases / 7 groups incl. Live, Compilation, Remix, Interview→Other, year-only date)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests.FetchCataloguePageAsync_GroupsByReleaseGroupMapsTypesKeepsPartialDatesAndLinksTheReleaseGroup" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed)
+- green: `MusicBrainzSource.FetchCataloguePageAsync` — `release?artist=…&status=official&inc=release-groups&limit=100&offset=N&fmt=json`, first release per `release-group.id`, `ReleaseTypeMapper.MapMusicBrainz`, `first-release-date` (empty → null), release-group URL. `NextOffset` is still null (U81). Suite -> 118 passed, 0 failed
+- refactor: none needed
+- commit: `30ca229`
