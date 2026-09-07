@@ -53,4 +53,10 @@ public class TitleNormalizerTests
     {
         Assert.Equal(expected, TitleNormalizer.NormalizeTrack(input));
     }
+
+    [Fact]
+    public void NormalizeTrack_KeepsEditionQualifier()
+    {
+        Assert.Equal("song deluxe", TitleNormalizer.NormalizeTrack("Song (Deluxe)"));
+    }
 }
