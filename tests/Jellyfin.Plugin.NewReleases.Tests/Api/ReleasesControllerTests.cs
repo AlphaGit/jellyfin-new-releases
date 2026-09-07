@@ -74,4 +74,18 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.Equal(["Discovery"], some.Items.Select(i => i.Title));
         Assert.Equal(1, some.Total);
     }
+
+    [Fact]
+    public async Task GetReleases_PassesFromTypeStateAndArtistToTheFilter()
+    {
+        var daftPunk = await SeedArtistAsync("Daft Punk", Library, ("On The Day", "2020-01-01"), ("Day Before", "2019-12-31"), ("Future One", "2027-01-01"));
+        await SeedArtistAsync("Justice", Library, ("Cross", "2007-06-11"));
+        await _db.ExecuteAsync("UPDATE release SET primary_type = 'EP' WHERE title = 'Cross'");
+        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+
+        Assert.Equal(["Future One", "On The Day"], Ok(await controller.GetReleasesAsync(from: "2020-01-01", cancellationToken: CancellationToken.None)).Items.Select(i => i.Title));
+        Assert.Equal(["Cross"], Ok(await controller.GetReleasesAsync(type: "EP", cancellationToken: CancellationToken.None)).Items.Select(i => i.Title));
+        Assert.Equal(["Future One"], Ok(await controller.GetReleasesAsync(state: "Upcoming", cancellationToken: CancellationToken.None)).Items.Select(i => i.Title));
+        Assert.Equal(["Future One", "On The Day", "Day Before"], Ok(await controller.GetReleasesAsync(artistId: daftPunk, cancellationToken: CancellationToken.None)).Items.Select(i => i.Title));
+    }
 }
