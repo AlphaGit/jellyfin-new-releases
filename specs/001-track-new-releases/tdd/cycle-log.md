@@ -873,3 +873,18 @@ failed before the implementation.
 - green: `MatchArtistAsync` distinguishes "no result" (no exact-name candidate) from "no corroborating album". Suite -> 124 passed, 0 failed
 - refactor: none needed
 - commit: `162ff7a`
+
+## Cycle 99: U87 two exact-name homonyms where only the second is corroborated → `Matched(second)`
+
+- test: `Sources/DeezerSourceTests.cs::MatchArtistAsync_TwoExactNameHomonyms_OnlyTheSecondCorroborated_MatchesTheSecond` (new; `search_artist_homonyms.json`)
+- red: passed on first run (cycle 97 already iterates candidates). Deliberate mutant: `candidates.Take(1)` -> `Expected: … Matched, SourceArtistId = 278793911 / Actual: … Unmatched, Reason = no corroborating album` (1 failed). Code restored exactly, test green again. Committed with cycle 100 (both tests added in one edit).
+- green: no production change.
+- refactor: none needed
+
+## Cycle 100: U88 no search results → `Unmatched`
+
+- test: `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoSearchResults_IsUnmatched` (new; `search_artist_empty.json`; also asserts no albums request)
+- red: passed on first run. Deliberate mutant: empty search returns `Matched("0")` -> `Expected: Unmatched / Actual:   Matched` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 126 passed, 0 failed
+- refactor: an xUnit analyzer error (xUnit2029) in the new test was fixed before the first run (`Assert.DoesNotContain`)
+- commit: `fd86be6`
