@@ -87,3 +87,12 @@ failed before the implementation.
 - green: `TitleNormalizer.NormalizeName()` = `Finish(Base(name))`. Suite -> 18 passed, 0 failed
 - refactor: none needed; `Base`/`Finish` already shared by the three entry points
 - commit: `7fda815`
+
+## Cycle 10: U10 MusicBrainz primary types map to Album/EP/Single, unknown to Other
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Matching/ReleaseTypeMapperTests.cs::MapMusicBrainz_MapsPrimaryType` (new, Theory: Album, EP, Single, Broadcast, Other, null)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseTypeMapperTests.MapMusicBrainz_MapsPrimaryType" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: Album / Actual:   Other` (3 failed, 3 passed; stub returned Other for everything). `Model/Enums.cs` `ReleaseType` added as the declaration the test needs to compile.
+- green: `ReleaseTypeMapper.MapMusicBrainzPrimary()` switch. Suite -> 24 passed, 0 failed
+- refactor: none needed
+- commit: `24e7717`
