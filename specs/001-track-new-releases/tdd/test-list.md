@@ -210,7 +210,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U86 | A candidate with the exact name but no album matching the library → `Unmatched` with a "no corroborating album" reason | FR-002, EC-1 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_ExactNameWithoutACorroboratingAlbum_IsUnmatchedWithReason` |
 | U87 | Two exact-name homonyms where only the second is corroborated → `Matched(second)` | FR-002, EC-1 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_TwoExactNameHomonyms_OnlyTheSecondCorroborated_MatchesTheSecond` |
 | U88 | No search results → `Unmatched` | FR-002, EC-2 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoSearchResults_IsUnmatched` |
-| U89 | An albums page maps `record_type`, sets `NextOffset` from `next` when present and null when absent | FR-003, FR-004 | example | PENDING | `Sources/DeezerSourceTests.cs` |
+| U89 | An albums page maps `record_type`, sets `NextOffset` from `next` when present and null when absent | FR-003, FR-004 | example | DONE | `Sources/DeezerSourceTests.cs::FetchCataloguePageAsync_MapsRecordTypeAndTakesNextOffsetFromNext` |
 | U90 | `release_date` `0000-00-00` becomes a null date; `link` becomes the source URL | FR-003, EC-4 | example | PENDING | `Sources/DeezerSourceTests.cs` |
 | U91 | Album tracks spread over two `next` pages come back as one edition titled as the album | FR-005 | example | PENDING | `Sources/DeezerSourceTests.cs` |
 | U92 | An HTTP 200 body with `error.code = 4` is retried as transient; any other `error` code throws | FR-011, R3 | example | PENDING | `Sources/DeezerSourceTests.cs` |

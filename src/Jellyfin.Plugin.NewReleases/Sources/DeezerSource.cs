@@ -63,7 +63,21 @@ public sealed class DeezerSource : IReleaseSource
                 secondaries,
                 album.TryGetProperty("release_date", out var date) ? date.GetString() : null);
         }).ToList();
-        return new CataloguePage(items, null, json.RootElement.TryGetProperty("total", out var total) ? total.GetInt32() : items.Count);
+        return new CataloguePage(items, NextIndex(json.RootElement), json.RootElement.TryGetProperty("total", out var total) ? total.GetInt32() : items.Count);
+    }
+
+    /// <summary>Deezer pages with a `next` URL; its `index` query value is the next offset. Absent `next` = last page.</summary>
+    private static int? NextIndex(JsonElement page)
+    {
+        if (!page.TryGetProperty("next", out var next) || next.ValueKind != JsonValueKind.String || !Uri.TryCreate(next.GetString(), UriKind.Absolute, out var uri))
+        {
+            return null;
+        }
+
+        var index = uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Select(pair => pair.Split('=', 2))
+            .FirstOrDefault(kv => kv[0] == "index" && kv.Length == 2);
+        return index is not null && int.TryParse(index[1], NumberStyles.None, CultureInfo.InvariantCulture, out var value) ? value : null;
     }
 
     public Task<IReadOnlyList<EditionTrackList>> FetchEditionsAsync(string sourceReleaseId, CancellationToken ct) => throw new NotImplementedException();

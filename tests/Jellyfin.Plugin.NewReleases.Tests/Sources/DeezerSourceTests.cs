@@ -71,4 +71,24 @@ public sealed class DeezerSourceTests : IAsyncLifetime
         Assert.Equal(MatchStatus.Unmatched, match.Status);
         Assert.DoesNotContain(_h.RequestedUrls, u => u.Contains("/albums", StringComparison.Ordinal));
     }
+
+    private const string Albums27 = @"api\.deezer\.com/artist/27/albums\?";
+
+    [Fact]
+    public async Task FetchCataloguePageAsync_MapsRecordTypeAndTakesNextOffsetFromNext()
+    {
+        _h.Fixture(Albums27 + "index=0", "deezer/artist_albums_page1.json");  // next = …index=25, total 39
+        _h.Fixture(Albums27 + "index=25", "deezer/artist_albums_page2.json"); // no next
+        var source = Source();
+
+        var first = await source.FetchCataloguePageAsync("27", 0, CancellationToken.None);
+        var last = await source.FetchCataloguePageAsync("27", 25, CancellationToken.None);
+
+        Assert.Equal((25, 39), (first.NextOffset, first.Total));
+        Assert.Null(last.NextOffset);
+        Assert.Equal(ReleaseType.Album, first.Items.Single(i => i.Title == "Discovery").PrimaryType);
+        Assert.Equal(ReleaseType.EP, first.Items.Single(i => i.Title == "Revolution 909").PrimaryType);
+        Assert.Equal(ReleaseType.Single, first.Items.Single(i => i.Title.StartsWith("Get Lucky")).PrimaryType);
+        Assert.All(first.Items, i => Assert.Empty(i.SecondaryTypes));
+    }
 }
