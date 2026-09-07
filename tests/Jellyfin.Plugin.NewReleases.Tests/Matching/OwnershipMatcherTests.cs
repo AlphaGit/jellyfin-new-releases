@@ -52,4 +52,23 @@ public class OwnershipMatcherTests
 
         Assert.Equal((album.JellyfinId, "Title"), (result.LibraryAlbumId, result.MatchMethod));
     }
+
+    [Fact]
+    public void Decide_NoCandidate_IsMissingAndAsksForNoEditions()
+    {
+        var result = OwnershipMatcher.Decide(Release(), [], [Album("Homework", tracks: ["da funk"])]);
+
+        Assert.Equal((OwnershipState.Missing, false, (Guid?)null, (long?)null), (result.State, result.NeedsEditions, result.LibraryAlbumId, result.EditionId));
+    }
+
+    [Fact]
+    public void Decide_CandidateWithoutStoredEditions_AsksForEditionsInsteadOfDeciding()
+    {
+        var album = Album("Discovery", tracks: Discovery);
+
+        var result = OwnershipMatcher.Decide(Release(), [], [album]);
+
+        Assert.True(result.NeedsEditions);
+        Assert.Equal((album.JellyfinId, "Title"), (result.LibraryAlbumId, result.MatchMethod));
+    }
 }

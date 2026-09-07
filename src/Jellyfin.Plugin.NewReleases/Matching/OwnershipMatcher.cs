@@ -14,6 +14,12 @@ public static class OwnershipMatcher
             return OwnershipResult.Missing;
         }
 
+        if (editions.Count == 0)
+        {
+            // Step 2: the caller fetches editions (all sources listing the release), then calls again.
+            return new OwnershipResult(OwnershipState.Missing, method, candidate.JellyfinId, null, [], NeedsEditions: true);
+        }
+
         var edition = editions[0];
         var missing = edition.Tracks.Except(candidate.NormalizedTrackTitles, StringComparer.Ordinal).ToArray();
         return new OwnershipResult(missing.Length == 0 ? OwnershipState.Owned : OwnershipState.Incomplete, method, candidate.JellyfinId, edition.Id, missing);
