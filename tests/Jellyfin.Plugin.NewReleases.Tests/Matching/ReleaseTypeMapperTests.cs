@@ -80,4 +80,14 @@ public class ReleaseTypeMapperTests
         Assert.False(ReleaseTypeMapper.IsIncluded(ReleaseType.Other, [], everything));
         Assert.False(ReleaseTypeMapper.IsIncluded(ReleaseType.Album, [ReleaseType.Other], everything));
     }
+
+    [Fact]
+    public void DisplayType_FirstSecondaryByPrecedence_ElsePrimary()
+    {
+        Assert.Equal(ReleaseType.Live, ReleaseTypeMapper.DisplayType(ReleaseType.Album, [ReleaseType.Compilation, ReleaseType.Live]));
+        Assert.Equal(ReleaseType.Remix, ReleaseTypeMapper.DisplayType(ReleaseType.Album, [ReleaseType.Soundtrack, ReleaseType.Remix]));
+        Assert.Equal(ReleaseType.Soundtrack, ReleaseTypeMapper.DisplayType(ReleaseType.Album, [ReleaseType.Compilation, ReleaseType.Soundtrack]));
+        Assert.Equal(ReleaseType.Compilation, ReleaseTypeMapper.DisplayType(ReleaseType.Album, [ReleaseType.Compilation]));
+        Assert.Equal(ReleaseType.EP, ReleaseTypeMapper.DisplayType(ReleaseType.EP, []));
+    }
 }

@@ -83,7 +83,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U14 | Album + Live is excluded under the default selection (Live disabled) | FR-004 | example | DONE | `Matching/ReleaseTypeMapperTests.cs::IsIncluded_AlbumPlusLive_IsExcludedByDefault` |
 | U15 | Album + Live is included when Live is enabled; Album + Compilation + Live needs both enabled | FR-004 | example | DONE | `Matching/ReleaseTypeMapperTests.cs::IsIncluded_EverySecondaryMustBeEnabled` |
 | U16 | Any `Other` primary or secondary excludes the release whatever the selection | FR-004 | example | DONE | `Matching/ReleaseTypeMapperTests.cs::IsIncluded_AnyOtherType_ExcludesWhateverTheSelection` |
-| U17 | Display type is the first of Live, Remix, Soundtrack, Compilation present (Album+Compilation+Live → Live); with no secondaries it is the primary | FR-004 | example | PENDING | `Matching/ReleaseTypeMapperTests.cs` |
+| U17 | Display type is the first of Live, Remix, Soundtrack, Compilation present (Album+Compilation+Live → Live); with no secondaries it is the primary | FR-004 | example | DONE | `Matching/ReleaseTypeMapperTests.cs::DisplayType_FirstSecondaryByPrecedence_ElsePrimary` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Storage/Database.cs`
 

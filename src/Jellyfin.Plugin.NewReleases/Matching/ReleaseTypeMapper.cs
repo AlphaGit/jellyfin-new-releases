@@ -25,6 +25,12 @@ public static class ReleaseTypeMapper
             && enabled.Contains(primary)
             && secondaries.All(t => t != ReleaseType.Other && enabled.Contains(t));
 
+    private static readonly ReleaseType[] DisplayPrecedence = [ReleaseType.Live, ReleaseType.Remix, ReleaseType.Soundtrack, ReleaseType.Compilation];
+
+    /// <summary>The one badge a release shows: first secondary by precedence Live, Remix, Soundtrack, Compilation; else the primary.</summary>
+    public static ReleaseType DisplayType(ReleaseType primary, IReadOnlyList<ReleaseType> secondaries)
+        => DisplayPrecedence.FirstOrDefault(secondaries.Contains, primary);
+
     private static ReleaseType MapMusicBrainzPrimary(string? primary) => primary switch
     {
         "Album" => ReleaseType.Album,
