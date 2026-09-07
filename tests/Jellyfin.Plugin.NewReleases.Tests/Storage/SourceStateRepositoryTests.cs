@@ -1,3 +1,4 @@
+using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.Tests.Support;
 using Xunit;
 
@@ -93,5 +94,25 @@ public sealed class SourceStateRepositoryTests : IAsyncLifetime
 
         _clock.Set(LateEvening + SixHours);
         Assert.False(await _db.SourceState.IsInCooldownAsync(MusicBrainz, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Runs_StartAndFinishWithCounts_LatestCompletedAndLatestAreReadBack()
+    {
+        Assert.Null(await _db.SourceState.GetLatestRunAsync(CancellationToken.None));
+
+        var first = await _db.SourceState.StartRunAsync(CancellationToken.None);
+        _clock.Advance(TimeSpan.FromMinutes(10));
+        await _db.SourceState.FinishRunAsync(first, artistsProcessed: 12, releasesFound: 340, editionsFetched: 5, errors: 1, outcome: "Completed", CancellationToken.None);
+        var finishedAt = _clock.GetUtcNow();
+
+        _clock.Advance(TimeSpan.FromHours(1));
+        var second = await _db.SourceState.StartRunAsync(CancellationToken.None);
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        await _db.SourceState.FinishRunAsync(second, 3, 0, 0, 0, "Cancelled", CancellationToken.None);
+
+        Assert.Equal(new RefreshRun(first, LateEvening, finishedAt, 12, 340, 5, 1, "Completed"), await _db.SourceState.GetLastCompletedRunAsync(CancellationToken.None));
+        Assert.Equal(second, (await _db.SourceState.GetLatestRunAsync(CancellationToken.None))!.Id);
+        Assert.Equal("Cancelled", (await _db.SourceState.GetLatestRunAsync(CancellationToken.None))!.Outcome);
     }
 }

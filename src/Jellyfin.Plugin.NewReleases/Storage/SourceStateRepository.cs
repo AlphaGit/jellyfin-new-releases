@@ -84,6 +84,58 @@ public sealed class SourceStateRepository
         return state?.CooldownUntil is { } until && until > _clock.GetUtcNow();
     }
 
+    public async Task<long> StartRunAsync(CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO refresh_run (started_at) VALUES (@now) RETURNING id";
+        command.Parameters.AddWithValue("@now", _clock.GetUtcNow().ToString("O"));
+        return (long)(await command.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
+    }
+
+    public async Task FinishRunAsync(long runId, int artistsProcessed, int releasesFound, int editionsFetched, int errors, string outcome, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE refresh_run SET ended_at = @now, artists_processed = @artists, releases_found = @releases,
+                editions_fetched = @editions, errors = @errors, outcome = @outcome
+            WHERE id = @id
+            """;
+        command.Parameters.AddWithValue("@id", runId);
+        command.Parameters.AddWithValue("@now", _clock.GetUtcNow().ToString("O"));
+        command.Parameters.AddWithValue("@artists", artistsProcessed);
+        command.Parameters.AddWithValue("@releases", releasesFound);
+        command.Parameters.AddWithValue("@editions", editionsFetched);
+        command.Parameters.AddWithValue("@errors", errors);
+        command.Parameters.AddWithValue("@outcome", outcome);
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
+    /// <summary>The run behind `lastRefreshedAt` (FR-015): latest with outcome Completed.</summary>
+    public Task<RefreshRun?> GetLastCompletedRunAsync(CancellationToken ct) => QueryRunAsync("WHERE outcome = 'Completed' ORDER BY ended_at DESC, id DESC", ct);
+
+    public Task<RefreshRun?> GetLatestRunAsync(CancellationToken ct) => QueryRunAsync("ORDER BY id DESC", ct);
+
+    private async Task<RefreshRun?> QueryRunAsync(string tail, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT id, started_at, ended_at, artists_processed, releases_found, editions_fetched, errors, outcome FROM refresh_run " + tail + " LIMIT 1";
+        await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        return await reader.ReadAsync(ct).ConfigureAwait(false)
+            ? new RefreshRun(
+                reader.GetInt64(0),
+                DateTimeOffset.Parse(reader.GetString(1), CultureInfo.InvariantCulture),
+                Time(reader, 2),
+                reader.GetInt32(3),
+                reader.GetInt32(4),
+                reader.GetInt32(5),
+                reader.GetInt32(6),
+                reader.IsDBNull(7) ? null : reader.GetString(7))
+            : null;
+    }
+
     public async Task<SourceState?> GetAsync(string source, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
