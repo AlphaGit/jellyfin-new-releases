@@ -1075,3 +1075,18 @@ failed before the implementation.
 - green: no production change; the outer loop closes for US1-AS1. Suite -> 149 passed, 0 failed
 - refactor: none needed
 - commit: `ff9f08a`
+
+## Cycle 124: A2 releases from several years come back newest first with undated rows last, each carrying its date
+
+- test: `Acceptance/BrowseReleasesTests.cs::A2_SeveralYears_NewestFirst_UndatedLast_EachCarryingItsDate` (new; Deezer albums 2013/2007/2001/undated, library owns the 1997 one)
+- red: passed on first run. Deliberate mutant: `ReleaseRepository.ListAsync` orders `date_sort ASC` -> `Assert.Equal() Failure: Collections differ` (2001 first) (1 failed). Code restored exactly, test green again. Committed with cycle 125 (both tests added in one edit).
+- green: no production change.
+- refactor: none needed
+
+## Cycle 125: A3 with 40 releases, `?artistId=` returns only that artist's rows; the same call without the filter returns all 40
+
+- test: `Acceptance/BrowseReleasesTests.cs::A3_FortyReleases_ArtistFilterNarrows_ClearingRestoresAll` (new; two Deezer artists, 25 + 15 missing releases)
+- red: passed on first run. Deliberate mutant: controller passes `null` as the artist -> `Expected: 25 / Actual: 40` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 151 passed, 0 failed
+- refactor: none needed
+- commit: `d6d538a`
