@@ -906,3 +906,13 @@ failed before the implementation.
 - green: `FetchCataloguePageAsync` maps `0000-00-00` (and empty) to a null date; `link` was already the URL. Suite -> 128 passed, 0 failed
 - refactor: none needed
 - commit: `bb0189b`
+
+## Cycle 103: U91 album tracks spread over two `next` pages come back as one edition titled as the album
+
+- test: `Sources/DeezerSourceTests.cs::FetchEditionsAsync_TracksAcrossTwoPages_ComeBackAsOneEditionTitledAsTheAlbum` (new; `album.json` + `album_tracks_page1/2.json`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DeezerSourceTests.FetchEditionsAsync_TracksAcrossTwoPages_ComeBackAsOneEditionTitledAsTheAlbum" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed)
+- green: `DeezerSource.FetchEditionsAsync` — `album/<id>` for the title (contract addition: the tracks endpoint has no album title), then `album/<id>/tracks?limit=100` following `next`; tracks through `NormalizeTrack`. Suite -> 129 passed, 0 failed
+- refactor: none needed
+- deviation: contracts/release-source.md lists only `album/<id>/tracks` for editions; the title requires one extra `album/<id>` call per candidate (ids only leave the server, FR-017 intact). To be folded into the contract by `/speckit-implement`.
+- commit: `5909b83`
