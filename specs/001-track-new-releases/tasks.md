@@ -159,9 +159,9 @@ Defaults and persistence (scenarios 1–2) are already covered by T022/T023 in P
 
 - [X] T065 [US2] Outer loop green: acceptance behavior [A9] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
 - [X] T066 [US2] Outer loop green: acceptance behavior [A10] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
-- [ ] T067 [US2] Outer loop green: acceptance behavior [A11] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
+- [X] T067 [US2] Outer loop green: acceptance behavior [A11] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
 - [ ] T068 [US2] Outer loop green: acceptance behavior [A12] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
-- [ ] T069 [US2] Outer loop green: acceptance behavior [A13] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
+- [X] T069 [US2] Outer loop green: acceptance behavior [A13] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
 - [X] T070 [US2] Outer loop green: acceptance behavior [A15] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
 
 **Checkpoint**: admin page configures, runs, purges and clears; source failure is visible and isolated.
