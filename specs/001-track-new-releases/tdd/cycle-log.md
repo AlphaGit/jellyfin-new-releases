@@ -18,3 +18,12 @@ failed before the implementation.
 - green: `src/Jellyfin.Plugin.NewReleases/Matching/TitleNormalizer.cs` `Base()`: NFKD, drop NonSpacingMark, ligature map (ø, æ, ß, …), lower-case, NFKC. Suite -> 3 passed, 0 failed
 - refactor: none needed
 - commit: `d777ef5`
+
+## Cycle 2: U2 `Rock & Roll` normalizes to `rock and roll`
+
+- test: `Matching/TitleNormalizerTests.cs::NormalizeAlbum_ReplacesAmpersandWithAnd` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~TitleNormalizerTests.NormalizeAlbum_ReplacesAmpersandWithAnd" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: "rock and roll" / Actual:   "rock & roll"` (1 failed)
+- green: `TitleNormalizer.Base()` appends `.Replace("&", "and")`. Suite -> 4 passed, 0 failed
+- refactor: none needed
+- commit: `f87a0a9`
