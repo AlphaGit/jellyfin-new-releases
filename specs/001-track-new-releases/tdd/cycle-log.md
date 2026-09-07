@@ -550,3 +550,12 @@ failed before the implementation.
 - green: `SourceHttpClient.GetStringAsync` calls `SourceStateRepository.RecordCallAsync(source)` before each send. Suite -> 86 passed, 0 failed
 - refactor: none needed
 - commit: `24482c0`
+
+## Cycle 62: U60 with 1 call of budget left the request is sent; with 0 left `DailyBudgetExhaustedException` is thrown and nothing is sent
+
+- test: `Sources/SourceHttpClientTests.cs::GetStringAsync_LastUnitOfBudgetIsSent_ExhaustedBudgetThrowsWithoutSending` (new; budget seeded with one SQL row after a first version spent it with 19 999 repository calls in 6 s)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceHttpClientTests.GetStringAsync_LastUnitOfBudgetIsSent_ExhaustedBudgetThrowsWithoutSending" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Throws() Failure: No exception was thrown / Expected: typeof(…DailyBudgetExhaustedException)` (1 failed). `DailyBudgetExhaustedException` declared for compilation.
+- green: `GetStringAsync` checks `GetRemainingBudgetAsync(source, SourceLimits.BySource[source].DailyBudget) <= 0` before building the request. Suite -> 87 passed, 0 failed
+- refactor: none needed
+- commit: `4b3760c`
