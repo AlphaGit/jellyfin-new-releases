@@ -1,0 +1,152 @@
+{
+  "release-count": 2,
+  "release-offset": 0,
+  "releases": [
+    {
+      "id": "d073287b-d1bd-4f11-a933-a4386f8cf701",
+      "title": "Discovery",
+      "status": "Official",
+      "date": "2001-02-26",
+      "country": "FR",
+      "media": [
+        {
+          "format": "CD",
+          "position": 1,
+          "tracks": [
+            {
+              "position": 1,
+              "title": "One More Time"
+            },
+            {
+              "position": 2,
+              "title": "Aerodynamic"
+            },
+            {
+              "position": 3,
+              "title": "Digital Love"
+            },
+            {
+              "position": 4,
+              "title": "Harder, Better, Faster, Stronger"
+            },
+            {
+              "position": 5,
+              "title": "Crescendolls"
+            },
+            {
+              "position": 6,
+              "title": "Nightvision"
+            },
+            {
+              "position": 7,
+              "title": "Superheroes"
+            },
+            {
+              "position": 8,
+              "title": "High Life"
+            },
+            {
+              "position": 9,
+              "title": "Something About Us"
+            },
+            {
+              "position": 10,
+              "title": "Voyager"
+            },
+            {
+              "position": 11,
+              "title": "Veridis Quo"
+            },
+            {
+              "position": 12,
+              "title": "Short Circuit"
+            },
+            {
+              "position": 13,
+              "title": "Face to Face"
+            },
+            {
+              "position": 14,
+              "title": "Too Long"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "51467269-3122-3d7e-92b2-0f0a694d30c1",
+      "title": "Discovery",
+      "status": "Official",
+      "date": "2001-03-10",
+      "country": "JP",
+      "media": [
+        {
+          "format": "CD",
+          "position": 1,
+          "tracks": [
+            {
+              "position": 1,
+              "title": "One More Time"
+            },
+            {
+              "position": 2,
+              "title": "Aerodynamic"
+            },
+            {
+              "position": 3,
+              "title": "Digital Love"
+            },
+            {
+              "position": 4,
+              "title": "Harder, Better, Faster, Stronger"
+            },
+            {
+              "position": 5,
+              "title": "Crescendolls"
+            },
+            {
+              "position": 6,
+              "title": "Nightvision"
+            },
+            {
+              "position": 7,
+              "title": "Superheroes"
+            },
+            {
+              "position": 8,
+              "title": "High Life"
+            },
+            {
+              "position": 9,
+              "title": "Something About Us"
+            },
+            {
+              "position": 10,
+              "title": "Voyager"
+            },
+            {
+              "position": 11,
+              "title": "Veridis Quo"
+            },
+            {
+              "position": 12,
+              "title": "Short Circuit"
+            },
+            {
+              "position": 13,
+              "title": "Face to Face"
+            },
+            {
+              "position": 14,
+              "title": "Too Long"
+            },
+            {
+              "position": 15,
+              "title": "One More Time (Romanthony's Unplugged)"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

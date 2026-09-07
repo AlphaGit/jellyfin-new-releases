@@ -1,0 +1,88 @@
+{
+  "release-count": 110,
+  "release-offset": 100,
+  "releases": [
+    {
+      "id": "024f5045-d0b0-4d12-9b4e-498c340a9b54",
+      "title": "TRON: Legacy R3C0NF1GUR3D",
+      "status": "Official",
+      "date": "2011-04-04",
+      "country": null,
+      "release-group": {
+        "secondary-type-ids": [
+          "22a628ad-c082-3c4f-b1b6-d41665107b88",
+          "0c60f497-ff81-3818-befd-abfc84a4858b"
+        ],
+        "id": "bc49de56-46c7-4250-b987-a0cd43e73279",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-types": [
+          "Soundtrack",
+          "Remix"
+        ],
+        "disambiguation": "",
+        "primary-type": "Album",
+        "first-release-date": "2011-04-04",
+        "title": "TRON: Legacy R3C0NF1GUR3D"
+      }
+    },
+    {
+      "id": "0443ddba-cc5d-347c-9859-d72a70eab674",
+      "title": "Human After All",
+      "status": "Official",
+      "date": "2005-03-14",
+      "country": "FR",
+      "release-group": {
+        "id": "f9e8042a-674e-3f01-80ec-7f0ab1c537df",
+        "secondary-type-ids": [],
+        "secondary-types": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "first-release-date": "2005-03-01",
+        "primary-type": "Album",
+        "disambiguation": "",
+        "title": "Human After All"
+      }
+    },
+    {
+      "id": "098aa10b-fd81-4b68-a1a6-7e6fa1cb6780",
+      "title": "TRON: Legacy (Original Motion Picture Soundtrack)",
+      "status": "Official",
+      "date": "2010-12-08",
+      "country": "XE",
+      "release-group": {
+        "title": "TRON: Legacy",
+        "first-release-date": "2010-12-03",
+        "disambiguation": "",
+        "primary-type": "Album",
+        "secondary-types": [
+          "Soundtrack"
+        ],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "id": "b585e56e-69cb-4f53-9597-320af5e5f541",
+        "secondary-type-ids": [
+          "22a628ad-c082-3c4f-b1b6-d41665107b88"
+        ]
+      }
+    },
+    {
+      "id": "09da477a-40cd-4ad2-a21a-b013f346e2db",
+      "title": "Alive 2007",
+      "status": "Official",
+      "date": "2007-11-19",
+      "country": "XW",
+      "release-group": {
+        "secondary-types": [
+          "Live"
+        ],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "id": "4bac3d70-deea-3d80-85c4-8be9f90558e6",
+        "secondary-type-ids": [
+          "6fd474e2-6b58-3102-9d17-d6f7eb7da0a0"
+        ],
+        "title": "Alive 2007",
+        "first-release-date": "2007-11-14",
+        "primary-type": "Album",
+        "disambiguation": ""
+      }
+    }
+  ]
+}

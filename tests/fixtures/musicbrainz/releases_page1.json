@@ -1,0 +1,158 @@
+{
+  "release-count": 110,
+  "release-offset": 0,
+  "releases": [
+    {
+      "id": "098060d4-ba3c-469d-88b0-08642261c7ab",
+      "title": "Discovery",
+      "status": "Official",
+      "date": "2001-03-12",
+      "country": "XE",
+      "release-group": {
+        "title": "Discovery",
+        "disambiguation": "",
+        "primary-type": "Album",
+        "first-release-date": "2001-02-26",
+        "secondary-types": [],
+        "secondary-type-ids": [],
+        "id": "48117b90-a16e-34ca-a514-19c702df1158",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc"
+      }
+    },
+    {
+      "id": "0bf152ba-ac90-45d6-9e08-59d712eb2cb5",
+      "title": "Homework / Discovery",
+      "status": "Official",
+      "date": "2001-10-15",
+      "country": "FR",
+      "release-group": {
+        "first-release-date": "2001-10-15",
+        "secondary-types": [
+          "Compilation"
+        ],
+        "id": "1ed45c8c-9abd-4ec3-9ff6-43d264f0e6b7",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-type-ids": [
+          "dd2a21e1-0c00-3729-a7a0-de60b84eb5d1"
+        ],
+        "primary-type": "Album",
+        "title": "Homework / Discovery",
+        "disambiguation": ""
+      }
+    },
+    {
+      "id": "145a413d-9f58-468d-b522-06226b49521b",
+      "title": "Alive 1997",
+      "status": "Official",
+      "date": "2001-10-01",
+      "country": "XE",
+      "release-group": {
+        "id": "8093fc8c-942c-30f3-a224-49dbc718f8e4",
+        "secondary-type-ids": [
+          "6fd474e2-6b58-3102-9d17-d6f7eb7da0a0"
+        ],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-types": [
+          "Live"
+        ],
+        "first-release-date": "1998",
+        "primary-type": "Album",
+        "disambiguation": "",
+        "title": "Alive 1997"
+      }
+    },
+    {
+      "id": "29437381-b2f4-4d1f-9cc7-e64d186abb99",
+      "title": "Da Funk",
+      "status": "Official",
+      "date": "1997-02-03",
+      "country": "GB",
+      "release-group": {
+        "title": "Da Funk",
+        "disambiguation": "",
+        "primary-type": "Single",
+        "secondary-types": [],
+        "first-release-date": "1995-12-07",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "id": "d86198a6-29e6-3748-93a8-1a4a0fadef57",
+        "secondary-type-ids": []
+      }
+    },
+    {
+      "id": "30e45d86-707d-4042-9df5-93724557aadb",
+      "title": "Discovery",
+      "status": "Official",
+      "date": "2001",
+      "country": "XE",
+      "release-group": {
+        "primary-type": "Album",
+        "disambiguation": "",
+        "title": "Discovery",
+        "secondary-type-ids": [],
+        "id": "48117b90-a16e-34ca-a514-19c702df1158",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "first-release-date": "2001-02-26",
+        "secondary-types": []
+      }
+    },
+    {
+      "id": "32385e9e-51cd-3d5e-8d56-2fdc354a166a",
+      "title": "Homework",
+      "status": "Official",
+      "date": "1997-01-20",
+      "country": "FR",
+      "release-group": {
+        "first-release-date": "1997-01-20",
+        "secondary-types": [],
+        "id": "00054665-89fa-33d5-a8f0-1728ea8c32c3",
+        "secondary-type-ids": [],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "primary-type": "Album",
+        "title": "Homework",
+        "disambiguation": ""
+      }
+    },
+    {
+      "id": "3992a2e2-21b0-4ec1-9615-dae4bbbc57ed",
+      "title": "Daft Club",
+      "status": "Official",
+      "date": "2003-11-27",
+      "country": "JP",
+      "release-group": {
+        "first-release-date": "2003-11-27",
+        "secondary-types": [
+          "Remix"
+        ],
+        "id": "1fd2e0fe-90f6-35ca-92c0-d816ab3bb79c",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "secondary-type-ids": [
+          "0c60f497-ff81-3818-befd-abfc84a4858b"
+        ],
+        "primary-type": "Album",
+        "title": "Daft Club",
+        "disambiguation": ""
+      }
+    },
+    {
+      "id": "c23e1ae8-a66e-4d4a-b545-7f40a5416c06",
+      "title": "Generic Radio Interview w/ Thomas Bangalter",
+      "status": "Official",
+      "date": "2001",
+      "country": "US",
+      "release-group": {
+        "disambiguation": "",
+        "title": "Generic Radio Interview w/ Thomas Bangalter",
+        "primary-type": "Album",
+        "id": "2462008f-216b-4c2d-bb9d-642eb02492d3",
+        "secondary-type-ids": [
+          "12af3f5e-ce2a-3941-8b93-d482884031e5"
+        ],
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+        "first-release-date": "2001",
+        "secondary-types": [
+          "Interview"
+        ]
+      }
+    }
+  ]
+}
