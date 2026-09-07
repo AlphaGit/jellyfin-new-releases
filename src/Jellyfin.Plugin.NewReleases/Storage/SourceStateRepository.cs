@@ -42,6 +42,27 @@ public sealed class SourceStateRepository
         return Math.Max(0, dailyBudget - spent);
     }
 
+    /// <summary>One more consecutive failure; at <paramref name="threshold"/> the source cools down for <paramref name="cooldown"/> (FR-011).</summary>
+    public async Task RecordFailureAsync(string source, string error, int threshold, TimeSpan cooldown, CancellationToken ct)
+    {
+        var now = _clock.GetUtcNow();
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO source_state (source, consecutive_failures, cooldown_until, last_error)
+            VALUES (@source, 1, CASE WHEN 1 >= @threshold THEN @cooldownUntil END, @error)
+            ON CONFLICT (source) DO UPDATE SET
+                consecutive_failures = source_state.consecutive_failures + 1,
+                cooldown_until = CASE WHEN source_state.consecutive_failures + 1 >= @threshold THEN @cooldownUntil ELSE source_state.cooldown_until END,
+                last_error = excluded.last_error
+            """;
+        command.Parameters.AddWithValue("@source", source);
+        command.Parameters.AddWithValue("@threshold", threshold);
+        command.Parameters.AddWithValue("@cooldownUntil", (now + cooldown).ToString("O"));
+        command.Parameters.AddWithValue("@error", error);
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
     public async Task<SourceState?> GetAsync(string source, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);

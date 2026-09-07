@@ -45,4 +45,29 @@ public sealed class SourceStateRepositoryTests : IAsyncLifetime
         _clock.Advance(TimeSpan.FromMinutes(2)); // new UTC day: yesterday's calls no longer count
         Assert.Equal(3, await _db.SourceState.GetRemainingBudgetAsync(MusicBrainz, 3, CancellationToken.None));
     }
+
+    private static readonly TimeSpan SixHours = TimeSpan.FromHours(6);
+    private const int FiveFailures = 5;
+
+    private async Task FailAsync(int times)
+    {
+        for (var i = 0; i < times; i++)
+        {
+            await _db.SourceState.RecordFailureAsync(MusicBrainz, "503 Service Unavailable", FiveFailures, SixHours, CancellationToken.None);
+        }
+    }
+
+    [Fact]
+    public async Task RecordFailureAsync_FourFailuresNoCooldown_FifthSetsCooldownSixHoursFromNow()
+    {
+        await FailAsync(4);
+        var afterFour = await _db.SourceState.GetAsync(MusicBrainz, CancellationToken.None);
+        Assert.NotNull(afterFour);
+        Assert.Equal((4, (DateTimeOffset?)null, "503 Service Unavailable"), (afterFour.ConsecutiveFailures, afterFour.CooldownUntil, afterFour.LastError));
+
+        await FailAsync(1);
+
+        var afterFive = (await _db.SourceState.GetAsync(MusicBrainz, CancellationToken.None))!;
+        Assert.Equal((5, LateEvening + SixHours), (afterFive.ConsecutiveFailures, afterFive.CooldownUntil));
+    }
 }
