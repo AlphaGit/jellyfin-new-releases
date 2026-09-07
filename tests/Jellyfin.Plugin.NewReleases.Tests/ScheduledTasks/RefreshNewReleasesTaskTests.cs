@@ -168,4 +168,27 @@ public sealed class RefreshNewReleasesTaskTests : IAsyncLifetime
         Assert.Contains("503", state.LastError);
         Assert.Equal(["From An Earlier Run"], await StoredTitlesAsync());
     }
+
+    [Fact]
+    public async Task Run_EditionRequestsAreIssuedOnlyForReleasesWithALibraryAlbumCandidate()
+    {
+        _library.Artist("Daft Punk");
+        _library.Album("Discovery", "Daft Punk", Library, trackTitles: ["One More Time", "Aerodynamic"]);
+        _library.Album("Homework (Deluxe)", "Daft Punk", Library, trackTitles: ["Da Funk"]);
+        _configuration.DeezerEnabled = false;
+        MatchEverything(_musicBrainz, "mb:");
+        _musicBrainz.FetchCataloguePageAsync(Arg.Any<string>(), 0, Arg.Any<CancellationToken>()).Returns(new CataloguePage(
+            [Item("musicbrainz", "rg-disc", "Discovery"), Item("musicbrainz", "rg-home", "Homework"), Item("musicbrainz", "rg-alive", "Alive 1997"), Item("musicbrainz", "rg-human", "Human After All")], null, 4));
+        _musicBrainz.FetchEditionsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(call => new[] { new EditionTrackList("rel-" + call.Arg<string>(), "Edition", ["one more time", "aerodynamic"]) });
+
+        await RunAsync();
+
+        var requested = _musicBrainz.ReceivedCalls()
+            .Where(c => c.GetMethodInfo().Name == nameof(IReleaseSource.FetchEditionsAsync))
+            .Select(c => (string)c.GetArguments()[0]!)
+            .OrderBy(id => id)
+            .ToArray();
+        Assert.Equal(["rg-disc", "rg-home"], requested); // two candidates, two requests; Alive 1997 / Human After All never fetched
+    }
 }

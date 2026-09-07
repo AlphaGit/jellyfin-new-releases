@@ -345,6 +345,39 @@ public sealed class ReleaseRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
+    public async Task<IReadOnlyList<Release>> GetByArtistAsync(long artistId, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = ReleaseColumns + " FROM release WHERE library_artist_id = @artistId ORDER BY id";
+        command.Parameters.AddWithValue("@artistId", artistId);
+        var result = new List<Release>();
+        await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
+        {
+            result.Add(ReadRelease(reader));
+        }
+
+        return result;
+    }
+
+    /// <summary>(source, source release id) of every entry of a release — what the edition fetch needs.</summary>
+    public async Task<IReadOnlyList<(string Source, string SourceReleaseId)>> GetSourceEntriesAsync(long releaseId, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT source, source_release_id FROM source_entry WHERE release_id = @id ORDER BY source";
+        command.Parameters.AddWithValue("@id", releaseId);
+        var result = new List<(string, string)>();
+        await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
+        {
+            result.Add((reader.GetString(0), reader.GetString(1)));
+        }
+
+        return result;
+    }
+
     public async Task<Release?> GetAsync(long releaseId, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);

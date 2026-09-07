@@ -1,5 +1,6 @@
 using Jellyfin.Plugin.NewReleases.Configuration;
 using Jellyfin.Plugin.NewReleases.Library;
+using Jellyfin.Plugin.NewReleases.Matching;
 using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.Sources;
 using Jellyfin.Plugin.NewReleases.Storage;
@@ -129,6 +130,53 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
             }
 
             progress.Report(100.0 * ++done / Math.Max(1, rotation.Count));
+        }
+
+        // 4. Ownership for every artist, from stored editions plus the fresh snapshot; editions fetched only for candidates (R11, EC-7).
+        foreach (var stored in rotation)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await DecideOwnershipAsync(stored.Id, snapshots[stored.ArtistKey], enabledSources, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task DecideOwnershipAsync(long artistId, LibraryArtistSnapshot artist, IReadOnlyList<IReleaseSource> enabledSources, CancellationToken ct)
+    {
+        foreach (var release in await _releases.GetByArtistAsync(artistId, ct).ConfigureAwait(false))
+        {
+            var editions = await _releases.GetEditionsAsync(release.Id, ct).ConfigureAwait(false);
+            var result = OwnershipMatcher.Decide(release, editions, artist.Albums);
+            if (result.NeedsEditions)
+            {
+                foreach (var (sourceId, sourceReleaseId) in await _releases.GetSourceEntriesAsync(release.Id, ct).ConfigureAwait(false))
+                {
+                    var source = enabledSources.FirstOrDefault(s => s.Id == sourceId);
+                    if (source is null || !await _http.IsAvailableAsync(sourceId, ct).ConfigureAwait(false))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        foreach (var edition in await source.FetchEditionsAsync(sourceReleaseId, ct).ConfigureAwait(false))
+                        {
+                            await _releases.UpsertEditionAsync(release.Id, sourceId, edition, _clock.GetUtcNow(), ct).ConfigureAwait(false);
+                        }
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        _logger.LogWarning(ex, "Source {Source}: edition fetch failed for release {Release}.", sourceId, release.Title);
+                    }
+                }
+
+                editions = await _releases.GetEditionsAsync(release.Id, ct).ConfigureAwait(false);
+                result = OwnershipMatcher.Decide(release, editions, artist.Albums);
+            }
+
+            if (!result.NeedsEditions)
+            {
+                await _releases.WriteOwnershipAsync(release.Id, result, _clock.GetUtcNow(), ct).ConfigureAwait(false);
+            }
         }
     }
 
