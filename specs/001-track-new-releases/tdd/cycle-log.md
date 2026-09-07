@@ -1136,3 +1136,12 @@ failed before the implementation.
 - green: `Api/AdminController.cs` declares `[Authorize(Policy = Policies.RequiresElevation)]`. Suite -> 157 passed, 0 failed
 - refactor: none needed
 - commit: `e60ead3`
+
+## Cycle 133: U125 status reports per-source health, `callsToday`, `dailyBudget`, `lastError`, `lastRun`, `nextRunAt` from triggers, artist counts, and each unmatched artist with its reasons and the hint sentence
+
+- test: `Api/AdminControllerTests.cs::Status_ReportsSourceHealthRunTriggerArtistCountsAndUnmatchedArtistsWithHint` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_ReportsSourceHealthRunTriggerArtistCountsAndUnmatchedArtistsWithHint" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub). Cycle 132's commit was blocked by a misplaced XML comment (compile error) and then by this red, so U124 and U125 are committed together here. Admin DTOs added to `Api/Dtos.cs`.
+- green: `AdminController.GetStatusAsync` — health `Disabled`/`CoolingDown`/`Failing`/`Ok` from configuration and `source_state`, budget constants, latest run, `NextRunAt` from the first trigger (daily → next 03:00 local, interval → last end + interval), `ArtistRepository.GetCountsAsync`, and the FR-012 hint sentence. Suite -> 159 passed, 0 failed
+- refactor: none needed
+- commit: `4db8072`
