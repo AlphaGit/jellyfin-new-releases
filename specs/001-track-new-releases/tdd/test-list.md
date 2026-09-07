@@ -268,7 +268,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U123 | The controller carries `[Authorize(Policy = Policies.RequiresElevation)]` | FR-013 | example | DONE | `Api/AdminControllerTests.cs::Controller_RequiresElevation` |
 | U124 | `run-now` calls `QueueScheduledTask<RefreshNewReleasesTask>()` and returns 202; when the worker reports running it returns 409 without queueing | FR-009 | example | DONE | `Api/AdminControllerTests.cs::RunNow_QueuesTheTaskAndReturns202_Returns409WithoutQueueingWhileRunning` |
 | U125 | Status reports per source `Ok`/`Failing`/`CoolingDown`/`Disabled`, `callsToday`, `dailyBudget`, `lastError`, plus `lastRun`, `nextRunAt` from triggers, artist counts, and each unmatched artist with `jellyfinId`, per-source reasons and the hint sentence | FR-012 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsSourceHealthRunTriggerArtistCountsAndUnmatchedArtistsWithHint` |
-| U126 | `purge` empties release data, keeps decisions and artists, resets every `resume_offset` to 0 | FR-013 | example | PENDING | `Api/AdminControllerTests.cs` |
+| U126 | `purge` empties release data, keeps decisions and artists, resets every `resume_offset` to 0 | FR-013 | example | DONE | `Api/AdminControllerTests.cs::Purge_EmptiesReleaseData_KeepsDecisionsAndArtists_ResetsResumeOffsets` |
 | U127 | `clear-archive` empties decisions and leaves release rows untouched | FR-013 | example | PENDING | `Api/AdminControllerTests.cs` |
 
 ## Invariants and edge cases still to place

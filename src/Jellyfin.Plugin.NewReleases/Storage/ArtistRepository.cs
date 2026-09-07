@@ -201,6 +201,15 @@ public sealed class ArtistRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
+    /// <summary>After Purge release data (FR-013): every open paging pass is forgotten so the next run refetches from the start.</summary>
+    public async Task ResetResumeOffsetsAsync(CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE artist_source SET resume_offset = 0, pass_run_id = NULL";
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
     /// <summary>Refresh order: never refreshed first, then oldest first, ties by name (edge case: rotation, no starvation).</summary>
     public Task<IReadOnlyList<LibraryArtist>> GetRotationAsync(CancellationToken ct)
         => QueryArtistsAsync("ORDER BY last_refreshed_at IS NOT NULL, last_refreshed_at, name", ct);

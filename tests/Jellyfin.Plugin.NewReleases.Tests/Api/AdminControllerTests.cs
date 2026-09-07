@@ -102,4 +102,43 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal((blurId, "Blur", Hint), (unmatched.JellyfinId, unmatched.Name, unmatched.Hint));
         Assert.Equal([("musicbrainz", "ambiguous (score 100 vs 97)")], unmatched.Sources.Select(s => (s.Source, s.Reason)));
     }
+
+    private async Task<long> SeedReleaseDataAsync()
+    {
+        var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:daft punk", Guid.NewGuid(), "Daft Punk", null, [Library], []), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(artist, "musicbrainz", ArtistMatch.Matched("mbid-1"), CancellationToken.None);
+        await _db.Artists.SetFetchOutcomeAsync(artist, "musicbrainz", FetchOutcome.Partial, 100, null, _clock.GetUtcNow(), CancellationToken.None);
+        var release = await _db.Releases.UpsertFromSourceAsync(artist, "musicbrainz", new CatalogueItem("rg-1", "Discovery", "https://musicbrainz.org/release-group/rg-1", ReleaseType.Album, [], "2001-03-12"), 1, _clock.GetUtcNow(), CancellationToken.None);
+        await _db.Releases.UpsertEditionAsync(release, "musicbrainz", new EditionTrackList("rel-1", "Discovery", ["one more time"]), _clock.GetUtcNow(), CancellationToken.None);
+        await _db.Archive.SetAsync("name:daft punk", "discovery", DecisionKind.Ignore, Guid.NewGuid(), _clock.GetUtcNow(), CancellationToken.None);
+        return artist;
+    }
+
+    [Fact]
+    public async Task Purge_EmptiesReleaseData_KeepsDecisionsAndArtists_ResetsResumeOffsets()
+    {
+        var artist = await SeedReleaseDataAsync();
+
+        Assert.IsType<NoContentResult>(await Controller().PurgeAsync(CancellationToken.None));
+
+        foreach (var emptied in new[] { "release", "source_entry", "edition" })
+        {
+            Assert.Equal(0L, await _db.ScalarAsync<long>($"SELECT COUNT(*) FROM {emptied}"));
+        }
+
+        Assert.Equal(1L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision"));
+        var state = (await _db.Artists.GetSourceStateAsync(artist, "musicbrainz", CancellationToken.None))!;
+        Assert.Equal((MatchStatus.Matched, "mbid-1", 0), (state.Status, state.SourceArtistId, state.ResumeOffset));
+    }
+
+    [Fact]
+    public async Task ClearArchive_EmptiesDecisions_LeavesReleaseRowsUntouched()
+    {
+        await SeedReleaseDataAsync();
+
+        Assert.IsType<NoContentResult>(await Controller().ClearArchiveAsync(CancellationToken.None));
+
+        Assert.Equal(0L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision"));
+        Assert.Equal((1L, 1L, 1L), (await _db.ScalarAsync<long>("SELECT COUNT(*) FROM release"), await _db.ScalarAsync<long>("SELECT COUNT(*) FROM source_entry"), await _db.ScalarAsync<long>("SELECT COUNT(*) FROM edition")));
+    }
 }

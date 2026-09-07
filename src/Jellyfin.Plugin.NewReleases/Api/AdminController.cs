@@ -98,6 +98,27 @@ public sealed class AdminController : ControllerBase
             counts.Unmatched.Select(u => new UnmatchedArtistDto(u.JellyfinId, u.Name, u.Sources.Select(s => new UnmatchedSourceDto(s.Source, s.Reason)).ToList(), UnmatchedHint)).ToList());
     }
 
+    [HttpPost("purge")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    /// <summary>Purge release data (FR-013): releases, entries, editions and ownership go; decisions, artists and match state stay; paging passes restart.</summary>
+    public async Task<ActionResult> PurgeAsync(CancellationToken cancellationToken = default)
+    {
+        await _releases.PurgeAsync(cancellationToken).ConfigureAwait(false);
+        await _artists.ResetResumeOffsetsAsync(cancellationToken).ConfigureAwait(false);
+        _logger.LogWarning("Release data purged by an administrator.");
+        return NoContent();
+    }
+
+    [HttpPost("clear-archive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    /// <summary>Clear Archive (FR-013): every Ignore and Have-it decision; release rows untouched.</summary>
+    public async Task<ActionResult> ClearArchiveAsync(CancellationToken cancellationToken = default)
+    {
+        await _archive.ClearAsync(cancellationToken).ConfigureAwait(false);
+        _logger.LogWarning("Archive cleared by an administrator.");
+        return NoContent();
+    }
+
     /// <summary>FR-012: the fix is made in Jellyfin, never in the plugin.</summary>
     public const string UnmatchedHint = "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin picks it up on the next refresh.";
 
