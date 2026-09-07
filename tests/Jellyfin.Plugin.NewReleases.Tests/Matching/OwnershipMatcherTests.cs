@@ -112,4 +112,14 @@ public class OwnershipMatcherTests
         // still equal → lowest source edition id
         Assert.Equal(8L, OwnershipMatcher.Decide(release, [Edition(7, "musicbrainz", "rel-b", "a", "b", "c"), Edition(8, "musicbrainz", "rel-a", "a", "b", "c")], [album]).EditionId);
     }
+
+    [Fact]
+    public void Decide_ExtraLibraryTracksBeyondTheEdition_DoNotPreventOwned()
+    {
+        var album = Album("Discovery", tracks: [.. Discovery, "bonus remix", "hidden track"]);
+
+        var result = OwnershipMatcher.Decide(Release(), [Edition(1, "musicbrainz", "rel-1", Discovery)], [album]);
+
+        Assert.Equal(OwnershipState.Owned, result.State);
+    }
 }
