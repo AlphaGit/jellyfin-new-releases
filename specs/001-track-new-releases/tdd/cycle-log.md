@@ -984,3 +984,11 @@ failed before the implementation.
 - green: `RefreshNewReleasesTask.DecideOwnershipAsync` — per release: `OwnershipMatcher.Decide` on stored editions; when it asks for editions, fetch from each enabled and available source listing the release, store them, decide again; write the result. `ReleaseRepository.GetByArtistAsync` and `GetSourceEntriesAsync` added. Suite -> 137 passed, 0 failed
 - refactor: none needed
 - commit: `8d067af`
+
+## Cycle 112: U109 an artist missing from the snapshot loses its releases after the run
+
+- test: `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_ArtistMissingFromTheSnapshot_LosesItsReleases` (new)
+- red: passed on first run (cycle 106's `DeleteMissingAsync` + the schema cascade). Deliberate mutant: the delete removed -> the run fails with `KeyNotFoundException : The given key 'name:gone' was not present` (the stale artist is still in the rotation) (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 138 passed, 0 failed
+- refactor: none needed
+- commit: `66538aa`
