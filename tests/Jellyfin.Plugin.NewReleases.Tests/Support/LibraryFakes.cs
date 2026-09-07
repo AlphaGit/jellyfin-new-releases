@@ -67,6 +67,13 @@ internal sealed class LibraryFakes
         return album;
     }
 
+    /// <summary>Replaces an album's tracks — the library gained (or lost) files between two runs.</summary>
+    public void SetTracks(MusicAlbum album, params string[] trackTitles)
+    {
+        _tracks.RemoveAll(t => t.ParentId == album.Id);
+        _tracks.AddRange(trackTitles.Select(title => new Audio { Id = Guid.NewGuid(), Name = title, ParentId = album.Id }));
+    }
+
     private List<BaseItem> Answer(InternalItemsQuery query)
     {
         var kinds = query.IncludeItemTypes ?? [];

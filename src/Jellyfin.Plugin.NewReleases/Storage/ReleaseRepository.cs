@@ -191,7 +191,7 @@ public sealed class ReleaseRepository
             JOIN library_artist a ON a.id = r.library_artist_id
             LEFT JOIN edition e ON e.id = r.compared_edition_id
             LEFT JOIN decision d ON d.artist_key = a.artist_key AND d.normalized_title = r.normalized_title
-            WHERE r.ownership_state <> 'Owned'
+            WHERE (@archived = 1 OR r.ownership_state <> 'Owned')
               AND (@artist IS NULL OR a.jellyfin_id = @artist)
               AND ((d.kind IS NOT NULL) = @archived)
             ORDER BY r.date_sort IS NULL, r.date_sort DESC, r.title

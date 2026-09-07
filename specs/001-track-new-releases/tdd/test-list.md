@@ -51,7 +51,7 @@ the web pages are checked manually (see Out of scope).
 | A16 | `POST api/releases/{id}/ignore` removes the release from the list at once; it is still absent after a run and present in `?archived=true` with `kind=Ignore` | US3-AS1 | example | PENDING | `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ArchiveTests.cs` |
 | A17 | `POST api/releases/{id}/restore` on an archived release puts it back in the list at its date position | US3-AS2 | example | PENDING | `Acceptance/ArchiveTests.cs` |
 | A18 | `have-it` on an `Incomplete` release archives it; after a later run that still finds tracks missing it remains archived with `kind=HaveIt` | US3-AS3 | example | PENDING | `Acceptance/ArchiveTests.cs` |
-| A19 | A `have-it` release whose library album later gains every track stays in the Archive; the decision is not reopened | US3-AS4 | example | PENDING | `Acceptance/ArchiveTests.cs` |
+| A19 | A `have-it` release whose library album later gains every track stays in the Archive; the decision is not reopened | US3-AS4 | example | DONE | `Acceptance/ArchiveTests.cs::A19_HaveItRelease_WhoseLibraryAlbumLaterGainsEveryTrack_StaysInTheArchive` |
 
 ## Inner loop: unit behaviors
 
