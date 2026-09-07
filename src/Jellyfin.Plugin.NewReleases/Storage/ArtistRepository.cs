@@ -41,6 +41,16 @@ public sealed class ArtistRepository
         return (long)(await command.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
     }
 
+    /// <summary>Deletes artists whose key is not in the snapshot; <c>ON DELETE CASCADE</c> removes their source, release, entry and edition rows (FR-014).</summary>
+    public async Task DeleteMissingAsync(IReadOnlyCollection<string> presentKeys, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM library_artist WHERE artist_key NOT IN (SELECT value FROM json_each(@keys))";
+        command.Parameters.AddWithValue("@keys", JsonSerializer.Serialize(presentKeys));
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
     public async Task<IReadOnlyList<LibraryArtist>> GetAllAsync(CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);

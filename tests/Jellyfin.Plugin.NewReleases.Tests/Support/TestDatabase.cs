@@ -42,6 +42,15 @@ internal sealed class TestDatabase : IAsyncDisposable
         return new TestDatabase(dataPath, database, clock);
     }
 
+    /// <summary>Runs raw SQL against the file to seed rows that no repository writes yet.</summary>
+    public async Task ExecuteAsync(string sql)
+    {
+        await using var connection = await Database.OpenAsync(CancellationToken.None);
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        await command.ExecuteNonQueryAsync();
+    }
+
     /// <summary>Runs a scalar query against the file for assertions that no repository exposes.</summary>
     public async Task<T?> ScalarAsync<T>(string sql)
     {
