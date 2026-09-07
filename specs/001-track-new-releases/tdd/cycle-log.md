@@ -78,3 +78,12 @@ failed before the implementation.
 - green: no production change. Suite -> 15 passed, 0 failed
 - refactor: none needed
 - commit: `142b4de`
+
+## Cycle 9: U9 artist names get rules 1–5 only
+
+- test: `Matching/TitleNormalizerTests.cs::NormalizeName_AppliesBaseRulesOnly` (new, Theory: `Sigur Rós`, `Artist (Deluxe Edition)`, `Duo feat. Guest`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~TitleNormalizerTests.NormalizeName_AppliesBaseRulesOnly" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: "artist deluxe edition" / Actual:   "artist"` (1 failed; stub routed names through `NormalizeAlbum`)
+- green: `TitleNormalizer.NormalizeName()` = `Finish(Base(name))`. Suite -> 18 passed, 0 failed
+- refactor: none needed; `Base`/`Finish` already shared by the three entry points
+- commit: `7fda815`
