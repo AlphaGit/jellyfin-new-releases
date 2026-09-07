@@ -120,4 +120,52 @@ public sealed class BrowseReleasesTests : IAsyncLifetime
         Assert.Null(list.LastRefreshedAt);
         Assert.Empty(list.Items);
     }
+
+    [Fact]
+    public async Task A6_ZListedAfterRunOne_ZAddedToTheLibrary_AbsentAfterRunTwo()
+    {
+        LibraryHasXY_SourceListsXYZ();
+        await _rig.RunAsync();
+        Assert.Equal(["Alive 2007"], (await _rig.ListAsync()).Items.Select(i => i.Title));
+
+        _rig.Library_.Album("Alive 2007", "Daft Punk", AcceptanceRig.Library, trackTitles: ["Robot Rock / Oh Yeah", "Touch It / Technologic"]);
+        await _rig.RunAsync();
+
+        Assert.Empty((await _rig.ListAsync()).Items);
+    }
+
+    [Fact]
+    public async Task A7_ReleaseDatedAfterToday_IsUpcoming_AndTheStateFilterReturnsOnlyIt()
+    {
+        _rig.Harness.Configuration.MusicBrainzEnabled = false;
+        _rig.Library_.Artist("Daft Punk");
+        _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.DeezerArtist(27, "Daft Punk", (2, "Homework", "album", "1997-01-16"), (3, "Alive 2007", "album", "2007-11-16"), (9, "Tomorrow", "album", "2026-09-07"))
+            .DeezerAlbum(2, "Homework", Homework);
+
+        await _rig.RunAsync();
+        var list = await _rig.ListAsync();
+        var upcoming = await _rig.ListAsync(state: "Upcoming");
+
+        Assert.Equal("2026-09-06", list.ServerToday);
+        Assert.Equal([("Tomorrow", "Upcoming"), ("Alive 2007", "Missing")], list.Items.Select(i => (i.Title, i.State)));
+        Assert.Equal(["Tomorrow"], upcoming.Items.Select(i => i.Title));
+    }
+
+    [Fact]
+    public async Task A8_LibraryAlbumWith8Of10Tracks_IsIncompleteWithTheTwoMissingTitlesAndTheComparedEdition()
+    {
+        _rig.Harness.Configuration.MusicBrainzEnabled = false;
+        var ten = Enumerable.Range(1, 10).Select(i => $"Track {i}").ToArray();
+        _rig.Library_.Artist("Daft Punk");
+        _rig.Library_.Album("W", "Daft Punk", AcceptanceRig.Library, trackTitles: ten.Take(8).ToArray());
+        _rig.DeezerArtist(27, "Daft Punk", (11, "W", "album", "2005-03-14")).DeezerAlbum(11, "W (Edition)", ten);
+
+        await _rig.RunAsync();
+        var w = Assert.Single((await _rig.ListAsync()).Items);
+
+        Assert.Equal(("W", "Incomplete"), (w.Title, w.State));
+        Assert.Equal(["track 9", "track 10"], w.MissingTracks);
+        Assert.Equal(new Jellyfin.Plugin.NewReleases.Api.ComparedEditionDto("deezer", "W (Edition)"), w.ComparedEdition);
+    }
 }
