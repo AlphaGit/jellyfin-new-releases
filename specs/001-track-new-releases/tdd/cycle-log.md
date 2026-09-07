@@ -202,3 +202,12 @@ failed before the implementation.
 - green: `ArtistRepository.UpsertAsync` = `INSERT … ON CONFLICT (artist_key) DO UPDATE … RETURNING id`; `GetAllAsync` reads rows back. Suite -> 40 passed, 0 failed
 - refactor: none needed
 - commit: `2e08b54`
+
+## Cycle 23: U23 deleting artists absent from the snapshot removes their `artist_source`, `release`, `source_entry`, `edition` rows
+
+- test: `Storage/ArtistRepositoryTests.cs::DeleteMissingAsync_RemovesArtistsAbsentFromTheSnapshotWithTheirRows` (new; dependent rows seeded with raw SQL via `TestDatabase.ExecuteAsync`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.DeleteMissingAsync_RemovesArtistsAbsentFromTheSnapshotWithTheirRows" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Single() Failure: The collection contained 2 items` (1 failed; no-op stub)
+- green: `ArtistRepository.DeleteMissingAsync` = `DELETE FROM library_artist WHERE artist_key NOT IN (json_each(@keys))`; cascades come from the schema (`Foreign Keys=True` in the connection string). Suite -> 41 passed, 0 failed
+- refactor: none needed
+- commit: `86e2522`
