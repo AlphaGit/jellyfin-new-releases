@@ -231,4 +231,17 @@ public sealed class RefreshNewReleasesTaskTests : IAsyncLifetime
 
         Assert.Equal("Cancelled", (await _h.Db.SourceState.GetLatestRunAsync(CancellationToken.None))!.Outcome);
     }
+
+    [Fact]
+    public async Task Run_SourceDisabledInConfiguration_ReceivesNoRequest()
+    {
+        _library.Artist("Daft Punk"); _library.Album("Discovery", "Daft Punk", Library);
+        MatchEverything(_musicBrainz, "mb:"); MatchEverything(_deezer, "dz:");
+        _configuration.DeezerEnabled = false;
+
+        await RunAsync();
+
+        await _musicBrainz.Received(1).MatchArtistAsync(Arg.Any<LibraryArtistSnapshot>(), Arg.Any<CancellationToken>());
+        Assert.DoesNotContain(_deezer.ReceivedCalls(), c => c.GetMethodInfo().Name != "get_Id" && c.GetMethodInfo().Name != "get_DisplayName");
+    }
 }
