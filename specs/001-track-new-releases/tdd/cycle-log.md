@@ -96,3 +96,12 @@ failed before the implementation.
 - green: `ReleaseTypeMapper.MapMusicBrainzPrimary()` switch. Suite -> 24 passed, 0 failed
 - refactor: none needed
 - commit: `24e7717`
+
+## Cycle 11: U11 MusicBrainz secondaries map by name, the rest to Other
+
+- test: `Matching/ReleaseTypeMapperTests.cs::MapMusicBrainz_MapsSecondaryTypesByNameAndUnknownToOther` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseTypeMapperTests.MapMusicBrainz_MapsSecondaryTypesByNameAndUnknownToOther" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: [Compilation, Live, Remix, Soundtrack, Other, ···] / Actual:   ReleaseType[] []` (1 failed)
+- green: `ReleaseTypeMapper.MapMusicBrainzSecondary()` switch applied to every secondary. Suite -> 25 passed, 0 failed
+- refactor: none needed
+- commit: `b8cfcc7`
