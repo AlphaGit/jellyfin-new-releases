@@ -234,7 +234,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U103 | Task `Name` is `Refresh new releases`, `Category` is `New Releases`, `Key` is `NewReleases.Refresh`, default trigger is daily at 03:00 | FR-009 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
+| U103 | Task `Name` is `Refresh new releases`, `Category` is `New Releases`, `Key` is `NewReleases.Refresh`, default trigger is daily at 03:00 | FR-009 | example | DONE | `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Metadata_NameCategoryKeyAndDailyTriggerAtThree` |
 | U104 | Artists are processed in rotation order and `last_refreshed_at` advances only when every enabled source was attempted for the artist | EC-6 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
 | U105 | A Complete fetch removes the source's entries the page set no longer contains and deletes the releases left without entries | FR-014 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
 | U106 | Budget exhausted after page 1 of 2 → outcome `Partial`, `resume_offset = 100`, nothing removed; the next run fetches from offset 100 | FR-014, EC-5, EC-8 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
