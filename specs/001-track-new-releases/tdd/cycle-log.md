@@ -415,3 +415,12 @@ failed before the implementation.
 - green: no production change. Suite -> 67 passed, 0 failed
 - refactor: none needed
 - commit: `534f5a4`
+
+## Cycle 47: U47 recording a call increments `calls_today`; when the stored day is not today (UTC) the counter restarts at 1
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/SourceStateRepositoryTests.cs::RecordCallAsync_IncrementsCallsToday_AndRestartsAtOneOnANewUtcDay` (new; `TimeProviderStub` advanced across midnight)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceStateRepositoryTests.RecordCallAsync_IncrementsCallsToday_AndRestartsAtOneOnANewUtcDay" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub). Declarations added: `SourceState`, `RefreshRun` records; `TestDatabase.SourceState` (clock-aware).
+- green: `SourceStateRepository.RecordCallAsync` upsert with `CASE WHEN calls_day = today THEN calls_today + 1 ELSE 1`; `GetAsync` reads the row. Suite -> 68 passed, 0 failed
+- refactor: none needed
+- commit: `4c65ed3`
