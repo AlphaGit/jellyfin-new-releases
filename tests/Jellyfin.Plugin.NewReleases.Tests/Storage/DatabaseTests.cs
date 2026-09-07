@@ -55,6 +55,25 @@ public sealed class DatabaseTests : IDisposable
         Assert.Equal(1L, await version.ExecuteScalarAsync());
     }
 
+    [Fact]
+    public async Task OpenAsync_SecondOpenFromAFreshInstanceAppliesNothing()
+    {
+        await using (await NewDatabase().OpenAsync(CancellationToken.None))
+        {
+        }
+
+        await using var connection = await NewDatabase().OpenAsync(CancellationToken.None);
+
+        Assert.Equal(1L, await CountAsync(connection, "schema_version"));
+    }
+
+    private static async Task<long> CountAsync(Microsoft.Data.Sqlite.SqliteConnection connection, string table)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"SELECT COUNT(*) FROM {table}";
+        return (long)(await command.ExecuteScalarAsync())!;
+    }
+
     public void Dispose()
     {
         SqliteConnectionPoolReset();
