@@ -1127,3 +1127,12 @@ failed before the implementation.
 - green: no production change. Suite -> 156 passed, 0 failed. The US1 outer loop is closed: A1–A8 green.
 - refactor: none needed
 - commit: `a02354e`
+
+## Cycle 131: U123 the admin controller carries `[Authorize(Policy = Policies.RequiresElevation)]`
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Api/AdminControllerTests.cs::Controller_RequiresElevation` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Controller_RequiresElevation" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Contains() Failure: Filter not matched in collection` (1 failed; skeleton had a plain `[Authorize]`)
+- green: `Api/AdminController.cs` declares `[Authorize(Policy = Policies.RequiresElevation)]`. Suite -> 157 passed, 0 failed
+- refactor: none needed
+- commit: `e60ead3`
