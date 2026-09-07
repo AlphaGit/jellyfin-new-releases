@@ -863,3 +863,13 @@ failed before the implementation.
 - green: `DeezerSource.MatchArtistAsync` — `search/artist?q=<name>&limit=25`, candidates by equal `NormalizeName`, first `artist/<id>/albums?index=0&limit=100` page checked against the library's normalized album titles; `FetchCataloguePageAsync` maps `record_type` via `ReleaseTypeMapper.MapDeezer` (NextOffset/date rules follow in U89/U90). Suite -> 123 passed, 0 failed
 - refactor: none needed
 - commit: `66919ed`
+
+## Cycle 98: U86 a candidate with the exact name but no album matching the library → `Unmatched` with a "no corroborating album" reason
+
+- test: `Sources/DeezerSourceTests.cs::MatchArtistAsync_ExactNameWithoutACorroboratingAlbum_IsUnmatchedWithReason` (new; the recorded search holds two exact-name candidates, the second gets an empty albums page)
+- red: first run hit `HttpRequestException : Source 'deezer' answered 404.` because the second candidate's albums page was not stubbed (test setup gap, fixed). Re-run:
+  `dotnet test --configuration Release --filter "FullyQualifiedName~DeezerSourceTests.MatchArtistAsync_ExactNameWithoutACorroboratingAlbum_IsUnmatchedWithReason" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: ArtistMatch { Status = Unmatched, …, Reason = no corroborating album } / Actual: ArtistMatch { Status = Unmatched, …, Reason = no result }` (1 failed)
+- green: `MatchArtistAsync` distinguishes "no result" (no exact-name candidate) from "no corroborating album". Suite -> 124 passed, 0 failed
+- refactor: none needed
+- commit: `162ff7a`
