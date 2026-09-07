@@ -389,3 +389,12 @@ failed before the implementation.
 - green: no production change. Suite -> 64 passed, 0 failed
 - refactor: none needed
 - commit: `e83e8cd`
+
+## Cycle 44: U44 setting a decision inserts it; setting again for the same key replaces kind, user and time
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ArchiveRepositoryTests.cs::SetAsync_InsertsThenReplacesKindUserAndTime` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArchiveRepositoryTests.SetAsync_InsertsThenReplacesKindUserAndTime" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub). `TestDatabase.Archive` added.
+- green: `ArchiveRepository.SetAsync` (upsert on the natural-key PK) and `GetAsync`. Suite -> 65 passed, 0 failed
+- refactor: none needed
+- commit: `b7411ca`
