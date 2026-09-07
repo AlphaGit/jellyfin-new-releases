@@ -174,6 +174,9 @@ public sealed class ReleaseRepository
     /// The list (or the Archive): joined rows in display order. Ordering is `date_sort` descending with undated rows
     /// last and title as tiebreak (R16). Read-time rules (types, released-since, state, Archive) are applied here.
     /// </summary>
+    // ponytail: no paging; the API returns all matching rows up to this cap and the client groups (R16). Upgrade: cursor paging by date_sort.
+    public const int MaxListRows = 5_000;
+
     public async Task<IReadOnlyList<ListedRelease>> ListAsync(ReleaseFilter filter, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
@@ -234,6 +237,10 @@ public sealed class ReleaseRepository
             }
 
             rows.Add(row);
+            if (rows.Count == MaxListRows)
+            {
+                break;
+            }
         }
 
         return rows;

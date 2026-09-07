@@ -215,4 +215,20 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         Assert.Equal("Ignored Album", archived.Title);
         Assert.Equal((DecisionKind.Ignore, user, new DateTimeOffset(2026, 9, 1, 10, 0, 0, TimeSpan.Zero)), (archived.Archived!.Kind, archived.Archived.UserId, archived.Archived.DecidedAt));
     }
+
+    private Task SeedManyAsync(int count) => _db.ExecuteAsync($"""
+        WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < {count})
+        INSERT INTO release (library_artist_id, normalized_title, title, canonical_source, canonical_source_id, primary_type, secondary_types, release_date, date_sort, first_seen_at, last_seen_at, ownership_state)
+        SELECT {_artist}, 'title ' || i, 'Title ' || i, 'musicbrainz', 'rg-' || i, 'Album', '[]', '2020-01-01', '2020-01-01', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z', 'Missing' FROM n;
+        INSERT INTO source_entry (release_id, source, source_release_id, url, source_title, last_seen_run_id)
+        SELECT id, 'musicbrainz', canonical_source_id, 'https://musicbrainz.org/release-group/' || canonical_source_id, title, 1 FROM release;
+        """);
+
+    [Fact]
+    public async Task ListAsync_ReturnsAtMostFiveThousandRows()
+    {
+        await SeedManyAsync(5_001);
+
+        Assert.Equal(5_000, (await _db.Releases.ListAsync(DefaultFilter, CancellationToken.None)).Count);
+    }
 }
