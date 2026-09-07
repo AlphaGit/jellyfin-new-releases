@@ -624,3 +624,12 @@ failed before the implementation.
 - green: one BCL `TokenBucketRateLimiter` per source (`RequestsPerSecond` tokens per 1 s period, oldest-first queue); a lease is acquired before every attempt; `IAsyncDisposable` disposes the limiters. Suite -> 95 passed, 0 failed
 - refactor: none needed
 - commit: `79959ef`
+
+## Cycle 70: U68 album artists become library artists; an artist credited only as a featured track artist does not
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Library/LibraryScannerTests.cs::Scan_AlbumArtistsBecomeLibraryArtists_FeaturedOnlyArtistsDoNot` (new; `tests/Support/LibraryFakes.cs` (T028 helper) builds `MusicArtist`/`MusicAlbum`/`Audio` items behind a substituted `ILibraryManager`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~LibraryScannerTests.Scan_AlbumArtistsBecomeLibraryArtists_FeaturedOnlyArtistsDoNot" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ / Expected: ["Daft Punk"] / Actual: string[] []` (1 failed; stub returned an empty snapshot)
+- green: `LibraryScanner.Scan()` lists `MusicArtist` and `MusicAlbum` items once each, groups albums by `AlbumArtists` name and yields one artist per credited name with a `name:<normalized>` key. Suite -> 96 passed, 0 failed
+- refactor: none needed
+- commit: `abf8954`
