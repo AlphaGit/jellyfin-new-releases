@@ -1,0 +1,39 @@
+using Jellyfin.Plugin.NewReleases.Model;
+using Jellyfin.Plugin.NewReleases.Tests.Support;
+using Xunit;
+
+namespace Jellyfin.Plugin.NewReleases.Tests.Storage;
+
+public sealed class ReleaseRepositoryTests : IAsyncLifetime
+{
+    private static readonly DateTimeOffset Now = new(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
+    private const long Run1 = 1;
+
+    private TestDatabase _db = null!;
+    private long _artist;
+
+    public async Task InitializeAsync()
+    {
+        _db = await TestDatabase.CreateAsync();
+        _artist = await _db.Artists.UpsertAsync(ArtistRepositoryTests.Artist("name:daft punk", "Daft Punk"), CancellationToken.None);
+    }
+
+    public async Task DisposeAsync() => await _db.DisposeAsync();
+
+    internal static CatalogueItem MusicBrainzItem(string title, string id = "rg-1", string? date = "2001-03-12", ReleaseType primary = ReleaseType.Album, params ReleaseType[] secondaries)
+        => new(id, title, $"https://musicbrainz.org/release-group/{id}", primary, secondaries, date);
+
+    internal static CatalogueItem DeezerItem(string title, string id = "dz-1", string? date = "2001-03-12", ReleaseType primary = ReleaseType.Album)
+        => new(id, title, $"https://www.deezer.com/album/{id}", primary, [], date);
+
+    [Fact]
+    public async Task UpsertFromSourceAsync_SameNormalizedTitleFromTwoSources_OneReleaseTwoEntries()
+    {
+        var fromMusicBrainz = await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Discovery"), Run1, Now, CancellationToken.None);
+        var fromDeezer = await _db.Releases.UpsertFromSourceAsync(_artist, "deezer", DeezerItem("DISCOVERY (Deluxe Edition)"), Run1, Now, CancellationToken.None);
+
+        Assert.Equal(fromMusicBrainz, fromDeezer);
+        Assert.Equal(1L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM release"));
+        Assert.Equal(2L, await _db.ScalarAsync<long>($"SELECT COUNT(*) FROM source_entry WHERE release_id = {fromMusicBrainz}"));
+    }
+}

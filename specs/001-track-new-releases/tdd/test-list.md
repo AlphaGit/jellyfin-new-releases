@@ -108,7 +108,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U27 | Upserting the same normalized title from two sources yields one `release` with two `source_entry` rows | FR-006a | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
+| U27 | Upserting the same normalized title from two sources yields one `release` with two `source_entry` rows | FR-006a | example | DONE | `Storage/ReleaseRepositoryTests.cs::UpsertFromSourceAsync_SameNormalizedTitleFromTwoSources_OneReleaseTwoEntries` |
 | U28 | When a MusicBrainz entry exists, canonical source, id, types and date come from it | FR-006a, R17 | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
 | U29 | Removing the MusicBrainz entry makes the Deezer entry canonical | FR-006a, R17 | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
 | U30 | A MusicBrainz entry without a date takes the Deezer entry's date | FR-006a | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |

@@ -30,3 +30,24 @@ public sealed record ArtistCounts(int LibraryArtists, IReadOnlyDictionary<string
 public sealed record UnmatchedArtist(Guid JellyfinId, string Name, IReadOnlyList<UnmatchedAt> Sources);
 
 public sealed record UnmatchedAt(string Source, string Reason);
+
+/// <summary>Row of <c>release</c>.</summary>
+public sealed record Release(
+    long Id,
+    long LibraryArtistId,
+    string NormalizedTitle,
+    string Title,
+    string CanonicalSource,
+    string CanonicalSourceId,
+    ReleaseType PrimaryType,
+    IReadOnlyList<ReleaseType> SecondaryTypes,
+    string? ReleaseDate,
+    string? DateSort,
+    DateTimeOffset FirstSeenAt,
+    DateTimeOffset LastSeenAt,
+    OwnershipState OwnershipState,
+    string? MatchMethod,
+    Guid? LibraryAlbumId,
+    long? ComparedEditionId,
+    IReadOnlyList<string> MissingTracks,
+    DateTimeOffset? OwnershipCheckedAt);
