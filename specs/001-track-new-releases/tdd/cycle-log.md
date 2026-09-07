@@ -1207,3 +1207,18 @@ failed before the implementation.
 - green: `ReleasesController.DecideAsync` (shared by the three POST actions): release → artist (`ArtistRepository.GetByIdAsync` added) → natural key → `ArchiveRepository.SetAsync`/`RemoveAsync` with caller id and clock → 204. Suite -> 166 passed, 0 failed
 - refactor: none needed
 - commit: `b168f92`
+
+## Cycle 141: U121 a decision on an unknown release id → 404; on a release outside the caller's libraries → 403 and no decision written
+
+- test: `Api/ReleasesControllerTests.cs::Decisions_UnknownReleaseIs404_ReleaseOutsideTheCallersLibrariesIs403WithNothingWritten` (new)
+- red: passed on first run (cycle 140's `DecideAsync` already checks both). Deliberate mutant: visibility check removed -> `Assert.IsType() Failure: Expected ForbidResult, Actual NoContentResult` (1 failed). Code restored exactly, test green again. Committed with cycle 142 (both tests added in one edit).
+- green: no production change.
+- refactor: none needed
+
+## Cycle 142: U122 a second user's `?archived=true` shows the first user's decision with kind and decided-at
+
+- test: `Api/ReleasesControllerTests.cs::Decisions_AreSharedServerWide_ASecondUserSeesTheFirstUsersDecisionInTheArchive` (new)
+- red: passed on first run. Deliberate mutant: the list hides archived rows decided by another user -> `Assert.Single() Failure: The collection was empty` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 168 passed, 0 failed
+- refactor: none needed
+- commit: `bf0dd74`
