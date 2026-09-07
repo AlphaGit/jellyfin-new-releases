@@ -133,4 +133,24 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.Equal(["Daft Punk", "Justice"], all.Value!.Items.Select(a => a.Name));
         Assert.IsType<UnauthorizedResult>((await Controller(null).GetArtistsAsync(CancellationToken.None)).Result);
     }
+
+    [Fact]
+    public async Task Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204()
+    {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"), ("Homework", "1997-01-20"));
+        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        var ids = Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.ToDictionary(i => i.Title, i => i.Id);
+
+        Assert.IsType<NoContentResult>(await controller.IgnoreAsync(ids["Discovery"], CancellationToken.None));
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        Assert.IsType<NoContentResult>(await controller.HaveItAsync(ids["Homework"], CancellationToken.None));
+
+        Assert.Equal(new Decision("name:daft punk", "discovery", DecisionKind.Ignore, Alice, _clock.GetUtcNow() - TimeSpan.FromMinutes(1)), await _db.Archive.GetAsync("name:daft punk", "discovery", CancellationToken.None));
+        Assert.Equal(new Decision("name:daft punk", "homework", DecisionKind.HaveIt, Alice, _clock.GetUtcNow()), await _db.Archive.GetAsync("name:daft punk", "homework", CancellationToken.None));
+
+        Assert.IsType<NoContentResult>(await controller.RestoreAsync(ids["Discovery"], CancellationToken.None));
+
+        Assert.Null(await _db.Archive.GetAsync("name:daft punk", "discovery", CancellationToken.None));
+        Assert.NotNull(await _db.Archive.GetAsync("name:daft punk", "homework", CancellationToken.None));
+    }
 }

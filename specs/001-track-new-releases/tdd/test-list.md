@@ -257,7 +257,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U117 | `from=2020-01-01` returns a release dated `2020-01-01` and not one dated `2019-12-31`; `type`, `state`, `artistId` are passed to the repository filter | FR-008 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_PassesFromTypeStateAndArtistToTheFilter` |
 | U118 | `lastRefreshedAt` is the last completed run's end; `refreshIntervalHours` is 24 for a daily trigger, 12 for a 12-hour interval trigger, 24 when no trigger is readable | FR-015 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_LastRefreshedAtIsTheLastCompletedRunsEnd_RefreshIntervalFollowsTheTrigger` |
 | U119 | `GET api/artists` returns only artists in libraries the caller may access | FR-007 | example | DONE | `Api/ReleasesControllerTests.cs::GetArtists_ReturnsOnlyArtistsInLibrariesTheCallerMayAccess` |
-| U120 | `ignore` and `have-it` store a decision with the caller's user id and the injected clock; `restore` deletes it; each returns 204 | FR-016 | example | PENDING | `Api/ReleasesControllerTests.cs` |
+| U120 | `ignore` and `have-it` store a decision with the caller's user id and the injected clock; `restore` deletes it; each returns 204 | FR-016 | example | DONE | `Api/ReleasesControllerTests.cs::Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204` |
 | U121 | A decision on an unknown release id → 404; on a release outside the caller's libraries → 403 and no decision written | FR-007, FR-016 | example | PENDING | `Api/ReleasesControllerTests.cs` |
 | U122 | A second user's `?archived=true` shows the first user's decision with kind and decided-at | FR-016 | example | PENDING | `Api/ReleasesControllerTests.cs` |
 

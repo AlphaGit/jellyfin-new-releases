@@ -106,6 +106,50 @@ public sealed class ReleasesController : ControllerBase
         return new ArtistsResponse(artists.Where(a => access.CanSee(a.LibraryIds)).Select(a => new ArtistDto(a.JellyfinId, a.Name)).ToList());
     }
 
+    [HttpPost("releases/{id:long}/ignore")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public Task<ActionResult> IgnoreAsync(long id, CancellationToken cancellationToken = default) => DecideAsync(id, DecisionKind.Ignore, cancellationToken);
+
+    [HttpPost("releases/{id:long}/have-it")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public Task<ActionResult> HaveItAsync(long id, CancellationToken cancellationToken = default) => DecideAsync(id, DecisionKind.HaveIt, cancellationToken);
+
+    [HttpPost("releases/{id:long}/restore")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public Task<ActionResult> RestoreAsync(long id, CancellationToken cancellationToken = default) => DecideAsync(id, null, cancellationToken);
+
+    /// <summary>Ignore / Have it (upsert) or Restore (delete) on the release's natural key with the caller's id (FR-005b, FR-016). Visibility is checked before writing (FR-007).</summary>
+    private async Task<ActionResult> DecideAsync(long id, DecisionKind? kind, CancellationToken ct)
+    {
+        if (CallerId() is not { } userId || AccessOf(userId) is not { } access)
+        {
+            return Unauthorized();
+        }
+
+        var release = await _releases.GetAsync(id, ct).ConfigureAwait(false);
+        var artist = release is null ? null : await _artists.GetByIdAsync(release.LibraryArtistId, ct).ConfigureAwait(false);
+        if (release is null || artist is null)
+        {
+            return NotFound();
+        }
+
+        if (!access.CanSee(artist.LibraryIds))
+        {
+            return Forbid();
+        }
+
+        if (kind is { } decision)
+        {
+            await _archive.SetAsync(artist.ArtistKey, release.NormalizedTitle, decision, userId, _clock.GetUtcNow(), ct).ConfigureAwait(false);
+        }
+        else
+        {
+            await _archive.RemoveAsync(artist.ArtistKey, release.NormalizedTitle, ct).ConfigureAwait(false);
+        }
+
+        return NoContent();
+    }
+
     /// <summary>Small status for the fragment header (also embedded in the list response; kept for polling).</summary>
     [HttpGet("status")]
     [ProducesResponseType(typeof(StatusResponse), StatusCodes.Status200OK)]

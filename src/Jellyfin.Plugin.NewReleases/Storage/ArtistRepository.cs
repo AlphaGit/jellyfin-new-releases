@@ -216,6 +216,9 @@ public sealed class ArtistRepository
 
     public Task<IReadOnlyList<LibraryArtist>> GetAllAsync(CancellationToken ct) => QueryArtistsAsync("ORDER BY name", ct);
 
+    public async Task<LibraryArtist?> GetByIdAsync(long id, CancellationToken ct)
+        => (await QueryArtistsAsync($"WHERE id = {id}", ct).ConfigureAwait(false)).FirstOrDefault();
+
     private async Task<IReadOnlyList<LibraryArtist>> QueryArtistsAsync(string orderBy, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
