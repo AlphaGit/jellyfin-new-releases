@@ -18,6 +18,8 @@
   <ItemGroup>
     <!-- Embed web UI pages (admin config page, user view fragment) as assembly resources. -->
     <EmbeddedResource Include="Web/*.html;Web/*.js;Web/*.css" />
+    <!-- Numbered SQL migrations applied by Storage/Database.cs on first open. -->
+    <EmbeddedResource Include="Storage/Migrations/*.sql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,6 +32,8 @@
       <ExcludeAssets>runtime</ExcludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- SQLite persistence. Exact pin (constitution VI); native libe_sqlite3 ships via build.yaml artifacts. -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.19" />
   </ItemGroup>
 
 </Project>

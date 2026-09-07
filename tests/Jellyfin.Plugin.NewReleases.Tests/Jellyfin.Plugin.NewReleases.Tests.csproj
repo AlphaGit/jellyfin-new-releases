@@ -19,6 +19,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.19" />
     <!-- Test host needs the Jellyfin DLLs in the output dir, so no ExcludeAssets=runtime here. -->
     <PackageReference Include="Jellyfin.Controller" Version="10.11.11">
       <PrivateAssets>all</PrivateAssets>

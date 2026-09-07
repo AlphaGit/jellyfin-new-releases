@@ -21,7 +21,10 @@ stacks:
     test_glob: "tests/Jellyfin.Plugin.NewReleases.Tests/**/*Tests.cs"
     exemplar:
       unit: tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs
-    helpers: []
+    helpers:
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Support/StubHttpMessageHandler.cs
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Support/FixtureLoader.cs
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Support/TimeProviderStub.cs
 verified: [single, suite]
 suite_baseline: green
 suite_seconds: 2
