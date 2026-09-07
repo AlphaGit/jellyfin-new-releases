@@ -43,7 +43,7 @@ public sealed class LibraryScanner
                 item?.Id ?? Guid.Empty,
                 item?.Name ?? group.Key,
                 mbid,
-                [],
+                group.SelectMany(x => _library.GetCollectionFolders(x.Album)).Select(folder => folder.Id).Distinct().ToArray(),
                 group.Select(x => SnapshotAlbum(x.Album)).ToArray()));
         }
 

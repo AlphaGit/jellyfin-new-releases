@@ -63,4 +63,18 @@ public class LibraryScannerTests
         Assert.Equal(["one more time", "digital love"], discovery.NormalizedTrackTitles);
         Assert.Equal(["da funk"], artist.Albums.Single(a => a.Title == "Homework").NormalizedTrackTitles);
     }
+
+    [Fact]
+    public void Scan_LibraryIdsAreTheDistinctCollectionFoldersOfTheArtistsAlbums()
+    {
+        var secondLibrary = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000002");
+        _library.Artist("Daft Punk");
+        _library.Album("Discovery", "Daft Punk", Library);
+        _library.Album("Homework", "Daft Punk", Library);
+        _library.Album("Alive 2007", "Daft Punk", secondLibrary);
+
+        var artist = Assert.Single(Scan().Artists);
+
+        Assert.Equal([Library, secondLibrary], artist.LibraryIds.OrderBy(id => id));
+    }
 }
