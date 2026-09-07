@@ -1067,3 +1067,11 @@ failed before the implementation.
 - green: `ReleasesController.GetArtistsAsync` reuses `LibraryAccess.CanSee` over `library_artist.library_ids`. `GetStatusAsync` (contract `GET api/status`, part of T039, no behaviour of its own on the list) added in the same commit. Suite -> 148 passed, 0 failed
 - refactor: `LibraryAccess.CanSee` overload on a library-id list shared by both actions; suite re-run green
 - commit: `3e3717e`
+
+## Cycle 123: A1 library has A with X, Y; source lists X, Y, Z → after a run `GET api/releases` lists Z under A and neither X nor Y
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/BrowseReleasesTests.cs::A1_ZIsListedUnderA_XAndYAreNot` (new; `Acceptance/AcceptanceRig.cs` composes the real task, both real sources over the stub handler, and the real controller; `Support/SourceJson.cs` builds bodies in the recorded shapes)
+- red: the first run was red for a harness reason — the stub handler matches `Uri.ToString()` (unescaped), so a `%20` in the rig's search pattern never matched and Deezer answered 404 (`artist_source … Failed Source 'deezer' answered 404.`); rig pattern fixed. Re-run passed (all units already in place). Deliberate mutant: the task never writes ownership -> `Assert.Single() Failure: The collection contained 3 items` (X and Y listed as Missing) (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change; the outer loop closes for US1-AS1. Suite -> 149 passed, 0 failed
+- refactor: none needed
+- commit: `ff9f08a`
