@@ -142,6 +142,8 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
             next = page.NextOffset;
         }
 
+        // Complete: only now may this source's entries the run did not return be dropped (FR-014).
+        await _releases.PruneEntriesAsync(artistId, source.Id, runId, ct).ConfigureAwait(false);
         await _artists.SetFetchOutcomeAsync(artistId, source.Id, FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), ct).ConfigureAwait(false);
     }
 

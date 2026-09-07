@@ -98,4 +98,26 @@ public sealed class RefreshNewReleasesTaskTests : IAsyncLifetime
 
         Assert.All(await _h.Db.Artists.GetAllAsync(CancellationToken.None), a => Assert.Equal(_h.Clock.GetUtcNow(), a.LastRefreshedAt));
     }
+
+    private async Task<string[]> StoredTitlesAsync() => (await _h.Db.ColumnAsync<string>("SELECT title FROM release ORDER BY title")).ToArray();
+
+    [Fact]
+    public async Task Run_CompleteFetch_RemovesEntriesThePageSetNoLongerContains_AndOrphanReleases()
+    {
+        _library.Artist("Daft Punk"); _library.Album("Homework", "Daft Punk", Library);
+        _configuration.DeezerEnabled = false;
+        MatchEverything(_musicBrainz, "mb:");
+        _musicBrainz.FetchCataloguePageAsync(Arg.Any<string>(), 0, Arg.Any<CancellationToken>())
+            .Returns(new CataloguePage([Item("musicbrainz", "rg-1", "Discovery"), Item("musicbrainz", "rg-2", "Alive 1997")], null, 2));
+        await RunAsync();
+        Assert.Equal(["Alive 1997", "Discovery"], await StoredTitlesAsync());
+
+        // Run 2: MusicBrainz no longer lists Alive 1997.
+        _musicBrainz.FetchCataloguePageAsync(Arg.Any<string>(), 0, Arg.Any<CancellationToken>())
+            .Returns(new CataloguePage([Item("musicbrainz", "rg-1", "Discovery")], null, 1));
+        await RunAsync();
+
+        Assert.Equal(["Discovery"], await StoredTitlesAsync());
+        Assert.Equal(1L, await _h.Db.ScalarAsync<long>("SELECT COUNT(*) FROM source_entry"));
+    }
 }
