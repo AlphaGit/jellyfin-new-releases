@@ -780,3 +780,12 @@ failed before the implementation.
 - green: `MatchArtistAsync` searches `artist?query=artist:"<name>"&limit=5&fmt=json` through `SourceHttpClient` and returns the top result's id (fake-it: the score rules come with U76–U79). Suite -> 113 passed, 0 failed
 - refactor: none needed
 - commit: `a15687e`
+
+## Cycle 88: U76 top score 90 with the runner-up at 85 (5 points) → `Unmatched` with an "ambiguous" reason
+
+- test: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_RunnerUpWithinFivePoints_IsUnmatchedAsAmbiguous` (new; `artist_search_ambiguous.json`, 100 vs 96)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests.MatchArtistAsync_RunnerUpWithinFivePoints_IsUnmatchedAsAmbiguous" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: Unmatched / Actual:   Matched` (1 failed)
+- green: `MatchArtistAsync` orders candidates by score and returns `Unmatched("ambiguous (score A vs B)")` when the gap is 5 or less. Suite -> 114 passed, 0 failed
+- refactor: none needed
+- commit: `3619873`
