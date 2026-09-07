@@ -1032,3 +1032,12 @@ failed before the implementation.
 - green: no production change. Suite -> 143 passed, 0 failed
 - refactor: none needed
 - commit: `1c6371b`
+
+## Cycle 119: U116 `EnableAllFolders` sees every release; `EnabledFolders` excluding the library sees none; including it sees them
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_FollowsTheCallersLibraryAccess` (new; two artists in two libraries, three callers)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleasesControllerTests.GetReleases_FollowsTheCallersLibraryAccess" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ / Expected: ["Cross", "Discovery"] / Actual: string[] []` (1 failed; cycle 118's placeholder response). Cycle 118's commit was blocked by this red (both tests were in the file), so U115 and U116 are committed together here.
+- green: `GetReleasesAsync` builds a `ReleaseFilter` from the query and configuration, lists, keeps rows whose artist libraries intersect the caller's (`LibraryAccess` from `HasPermission(EnableAllFolders)` / `GetPreferenceValues<Guid>(EnabledFolders)`), maps `ReleaseDto`s, and fills `hasCompletedRefresh`/`lastRefreshedAt` from the last completed run. Suite -> 145 passed, 0 failed
+- refactor: none needed
+- commit: `b10100e`
