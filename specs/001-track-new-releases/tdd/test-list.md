@@ -183,7 +183,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U69 | MBID is read from the artist's `MusicBrainzArtist`, else the album's `MusicBrainzAlbumArtist`; with neither the key is `name:<normalized name>` | FR-002 | example | DONE | `Library/LibraryScannerTests.cs::Scan_MbidFromArtistThenAlbumArtistProviderId_ElseNameKey` |
 | U70 | Each album snapshot carries `MusicBrainzAlbum`, `MusicBrainzReleaseGroup` and the normalized titles of its `Audio` children (queried by `ParentId`) | FR-005 | example | DONE | `Library/LibraryScannerTests.cs::Scan_AlbumSnapshotsCarryIdentifiersAndNormalizedTrackTitles` |
 | U71 | `LibraryIds` are the distinct collection folder ids of the artist's albums | FR-007 | example | DONE | `Library/LibraryScannerTests.cs::Scan_LibraryIdsAreTheDistinctCollectionFoldersOfTheArtistsAlbums` |
-| U72 | Two `MusicArtist` items sharing an MBID become one library artist holding both albums | EC-10 | example | PENDING | `Library/LibraryScannerTests.cs` |
+| U72 | Two `MusicArtist` items sharing an MBID become one library artist holding both albums | EC-10 | example | DONE | `Library/LibraryScannerTests.cs::Scan_TwoArtistItemsSharingAnMbid_BecomeOneLibraryArtistWithBothAlbums` |
 | U73 | The scanner never calls `ILibraryManager.GetArtist(string)` | R6 | example | PENDING | `Library/LibraryScannerTests.cs` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Sources/MusicBrainzSource.cs`

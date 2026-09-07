@@ -47,8 +47,18 @@ public sealed class LibraryScanner
                 group.Select(x => SnapshotAlbum(x.Album)).ToArray()));
         }
 
-        _logger.LogInformation("Library scan: {Artists} library artists across {Albums} albums.", artists.Count, albums.Count);
-        return new LibrarySnapshot(artists);
+        // Entries sharing a key (the same MBID) are one library artist: the first entry's identity, all albums and libraries.
+        var merged = artists
+            .GroupBy(a => a.ArtistKey, StringComparer.Ordinal)
+            .Select(g => g.First() with
+            {
+                LibraryIds = g.SelectMany(a => a.LibraryIds).Distinct().ToArray(),
+                Albums = g.SelectMany(a => a.Albums).ToArray(),
+            })
+            .ToList();
+
+        _logger.LogInformation("Library scan: {Artists} library artists across {Albums} albums.", merged.Count, albums.Count);
+        return new LibrarySnapshot(merged);
     }
 
     private LibraryAlbumSnapshot SnapshotAlbum(MusicAlbum album)

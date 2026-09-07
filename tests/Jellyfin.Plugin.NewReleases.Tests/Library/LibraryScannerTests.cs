@@ -77,4 +77,19 @@ public class LibraryScannerTests
 
         Assert.Equal([Library, secondLibrary], artist.LibraryIds.OrderBy(id => id));
     }
+
+    [Fact]
+    public void Scan_TwoArtistItemsSharingAnMbid_BecomeOneLibraryArtistWithBothAlbums()
+    {
+        const string mbid = "056e4f3e-d505-4dad-8ec1-d04f521cbb56";
+        _library.Artist("Daft Punk", mbid);
+        _library.Artist("Daft Punk (duo)", mbid); // second entry with a different spelling but the same identifier
+        _library.Album("Discovery", "Daft Punk", Library);
+        _library.Album("Homework", "Daft Punk (duo)", Library);
+
+        var artist = Assert.Single(Scan().Artists);
+
+        Assert.Equal(mbid, artist.ArtistKey);
+        Assert.Equal(["Discovery", "Homework"], artist.Albums.Select(a => a.Title).OrderBy(t => t));
+    }
 }
