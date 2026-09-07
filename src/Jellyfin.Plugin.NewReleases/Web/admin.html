@@ -14,11 +14,64 @@
         <div class="content-primary">
             <form id="nr-config-form">
                 <h1>New Releases</h1>
-                <p>Configuration fields are defined by the spec. Nothing to configure yet.</p>
-                <button is="emby-button" type="submit" class="raised button-submit block">
-                    <span>Save</span>
-                </button>
+                <p>Releases by your library artists that the library does not contain yet. A daily Refresh reads the enabled sources; the list is shown in the web client's New Releases view.</p>
+
+                <h2>Sources</h2>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label><input is="emby-checkbox" type="checkbox" id="nr-musicbrainz" /><span>MusicBrainz</span></label>
+                    <div class="fieldDescription" id="nr-health-musicbrainz"></div>
+                </div>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label><input is="emby-checkbox" type="checkbox" id="nr-deezer" /><span>Deezer</span></label>
+                    <div class="fieldDescription" id="nr-health-deezer"></div>
+                </div>
+
+                <h2>Release types</h2>
+                <div class="checkboxList" id="nr-types">
+                    <label><input is="emby-checkbox" type="checkbox" data-field="IncludeAlbums" /><span>Album</span></label>
+                    <label><input is="emby-checkbox" type="checkbox" data-field="IncludeEps" /><span>EP</span></label>
+                    <label><input is="emby-checkbox" type="checkbox" data-field="IncludeSingles" /><span>Single</span></label>
+                    <label><input is="emby-checkbox" type="checkbox" data-field="IncludeCompilations" /><span>Compilation</span></label>
+                    <label><input is="emby-checkbox" type="checkbox" data-field="IncludeLive" /><span>Live</span></label>
+                    <label><input is="emby-checkbox" type="checkbox" data-field="IncludeRemixes" /><span>Remix</span></label>
+                    <label><input is="emby-checkbox" type="checkbox" data-field="IncludeSoundtracks" /><span>Soundtrack</span></label>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="nr-released-since">Released since</label>
+                    <input is="emby-input" type="date" id="nr-released-since" />
+                    <div class="fieldDescription">Leave empty to include the whole catalogue of every library artist.</div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="nr-contact">Contact for User-Agent</label>
+                    <input is="emby-input" type="text" id="nr-contact" placeholder="you@example.org or https://…" />
+                    <div class="fieldDescription">Sent to MusicBrainz and Deezer as the operator's contact. Nothing else about your server leaves it.</div>
+                </div>
+
+                <button is="emby-button" type="submit" class="raised button-submit block"><span>Save</span></button>
             </form>
+
+            <h2>Status</h2>
+            <dl id="nr-status">
+                <dt>Last refresh</dt><dd id="nr-last-refresh">–</dd>
+                <dt>Next refresh</dt><dd id="nr-next-refresh">–</dd>
+                <dt>Artists processed</dt><dd id="nr-artists-processed">–</dd>
+                <dt>Releases found</dt><dd id="nr-releases-found">–</dd>
+            </dl>
+            <p>The refresh interval is changed in Dashboard → Scheduled Tasks → New Releases → Refresh new releases.</p>
+            <div>
+                <button is="emby-button" type="button" class="raised" id="nr-run-now"><span>Run now</span></button>
+                <button is="emby-button" type="button" class="raised" id="nr-purge"><span>Purge release data</span></button>
+                <button is="emby-button" type="button" class="raised" id="nr-clear-archive"><span>Clear Archive</span></button>
+            </div>
+
+            <h2>Unmatched artists</h2>
+            <p id="nr-unmatched-empty" hidden>Every library artist is matched at every enabled source.</p>
+            <table class="detailTable" id="nr-unmatched" hidden>
+                <thead><tr><th>Artist</th><th>Sources</th><th>How to fix</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
 
@@ -26,27 +79,114 @@
         (function () {
             'use strict';
             var PLUGIN_ID = 'b8a15db8-e368-42c4-9048-390faf0094db';
+            var API = 'Plugins/NewReleases/api/admin/';
             var page = document.querySelector('#newreleasesConfigPage');
+
+            function api(method, path) {
+                return ApiClient.ajax({ type: method, url: ApiClient.getUrl(API + path), dataType: method === 'GET' ? 'json' : undefined });
+            }
+
+            function esc(text) {
+                return String(text == null ? '' : text).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
+            function when(iso) { return iso ? new Date(iso).toLocaleString() : '–'; }
+
+            function fill(cfg) {
+                page.querySelector('#nr-musicbrainz').checked = cfg.MusicBrainzEnabled;
+                page.querySelector('#nr-deezer').checked = cfg.DeezerEnabled;
+                page.querySelectorAll('#nr-types input').forEach(function (box) { box.checked = !!cfg[box.dataset.field]; });
+                page.querySelector('#nr-released-since').value = cfg.ReleasedSince || '';
+                page.querySelector('#nr-contact').value = cfg.UserAgentContact || '';
+            }
+
+            function read(cfg) {
+                cfg.MusicBrainzEnabled = page.querySelector('#nr-musicbrainz').checked;
+                cfg.DeezerEnabled = page.querySelector('#nr-deezer').checked;
+                page.querySelectorAll('#nr-types input').forEach(function (box) { cfg[box.dataset.field] = box.checked; });
+                cfg.ReleasedSince = page.querySelector('#nr-released-since').value || '';
+                cfg.UserAgentContact = page.querySelector('#nr-contact').value.trim();
+                return cfg;
+            }
+
+            function healthText(s) {
+                var text = s.health;
+                if (s.health === 'CoolingDown') text += ' until ' + when(s.cooldownUntil);
+                if (s.lastError && s.health !== 'Ok' && s.health !== 'Disabled') text += ' — ' + s.lastError;
+                return text + ' · ' + s.callsToday + ' / ' + s.dailyBudget + ' requests today';
+            }
+
+            function renderStatus(status) {
+                status.sources.forEach(function (s) {
+                    var line = page.querySelector('#nr-health-' + s.id);
+                    if (line) line.textContent = healthText(s);
+                });
+                var run = status.lastRun;
+                page.querySelector('#nr-last-refresh').textContent = run ? when(run.endedAt) + (run.outcome ? ' (' + run.outcome + (run.errors ? ', ' + run.errors + ' error' + (run.errors === 1 ? '' : 's') : '') + ')' : ' (running)') : '–';
+                page.querySelector('#nr-next-refresh').textContent = status.isRunning ? 'Running now' : when(status.nextRunAt);
+                page.querySelector('#nr-artists-processed').textContent = run ? run.artistsProcessed + ' of ' + status.libraryArtists : '–';
+                page.querySelector('#nr-releases-found').textContent = run ? String(run.releasesFound) : '–';
+
+                var table = page.querySelector('#nr-unmatched'), empty = page.querySelector('#nr-unmatched-empty');
+                var body = table.querySelector('tbody');
+                body.innerHTML = '';
+                status.unmatched.forEach(function (u) {
+                    var link = '#/details?id=' + encodeURIComponent(u.jellyfinId) + '&serverId=' + encodeURIComponent(ApiClient.serverId());
+                    var sources = u.sources.map(function (s) { return esc(s.source) + ': ' + esc(s.reason); }).join('<br>');
+                    body.insertAdjacentHTML('beforeend', '<tr><td><a is="emby-linkbutton" class="button-link" href="' + link + '">' + esc(u.name) + '</a></td><td>' + sources + '</td><td>' + esc(u.hint) + '</td></tr>');
+                });
+                table.hidden = status.unmatched.length === 0;
+                empty.hidden = status.unmatched.length !== 0;
+            }
+
+            function refreshStatus() {
+                return api('GET', 'status').then(renderStatus).catch(function () { /* status is best effort */ });
+            }
 
             page.addEventListener('pageshow', function () {
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (cfg) {
-                    // populate form from cfg
+                    fill(cfg);
                     Dashboard.hideLoadingMsg();
                 }).catch(function () { Dashboard.hideLoadingMsg(); });
+                refreshStatus();
             });
 
             page.querySelector('#nr-config-form').addEventListener('submit', function (e) {
                 e.preventDefault();
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (cfg) {
-                    // read form into cfg
-                    return ApiClient.updatePluginConfiguration(PLUGIN_ID, cfg);
+                    return ApiClient.updatePluginConfiguration(PLUGIN_ID, read(cfg));
                 }).then(function (result) {
                     Dashboard.hideLoadingMsg();
                     Dashboard.processPluginConfigurationUpdateResult(result);
+                    refreshStatus();
                 }).catch(function () { Dashboard.hideLoadingMsg(); });
                 return false;
+            });
+
+            function confirmed(text, title, path, done) {
+                Dashboard.confirm(text, title, function (ok) {
+                    if (!ok) return;
+                    api('POST', path).then(function () {
+                        Dashboard.alert({ message: done });
+                        refreshStatus();
+                    }).catch(function (err) {
+                        Dashboard.alert({ message: (err && err.status === 409) ? 'A refresh is already running.' : 'The request failed.' });
+                    });
+                });
+            }
+
+            page.querySelector('#nr-run-now').addEventListener('click', function () {
+                confirmed('Start a refresh now? It reads the enabled sources for every library artist.', 'Run now', 'run-now', 'Refresh queued.');
+            });
+            page.querySelector('#nr-purge').addEventListener('click', function () {
+                confirmed('Delete all stored releases and ownership results? The Archive is kept. The next refresh rebuilds the list.', 'Purge release data', 'purge', 'Release data purged.');
+            });
+            page.querySelector('#nr-clear-archive').addEventListener('click', function () {
+                confirmed('Remove every Ignore and Have it decision? Archived releases reappear in the list.', 'Clear Archive', 'clear-archive', 'Archive cleared.');
             });
         })();
     </script>

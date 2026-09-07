@@ -1,12 +1,214 @@
 <div id="nr-user-view">
+    <style>
+        #nr-user-view h1 { margin: 0 0 .5em; font-size: 1.5em; font-weight: 700; }
+        #nr-user-view h2 { font-size: 1.05em; font-weight: 700; margin: 1.25em 0 .35em; padding-bottom: .3em; border-bottom: 1px solid rgba(127,127,127,.35); }
+        #nr-user-view .nr-status { opacity: .75; font-size: .9em; margin-bottom: .75em; }
+        #nr-user-view [role="tablist"] { display: flex; gap: .4em; margin-bottom: 1em; }
+        #nr-user-view [role="tab"] { padding: .45em 1em; border-radius: 4px; border: 1px solid rgba(127,127,127,.4); background: transparent; color: inherit; cursor: pointer; }
+        #nr-user-view [role="tab"][aria-selected="true"] { background: rgba(127,127,127,.25); font-weight: 700; }
+        #nr-user-view .nr-filters { display: flex; flex-wrap: wrap; gap: .6em 1em; align-items: flex-end; margin-bottom: 1em; padding: .75em 1em; background: rgba(127,127,127,.08); border: 1px solid rgba(127,127,127,.25); border-radius: 6px; }
+        #nr-user-view .nr-filter { min-width: 140px; flex: 1 1 140px; }
+        #nr-user-view .nr-filter label { display: block; font-size: .78em; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; opacity: .7; margin-bottom: .25em; }
+        #nr-user-view .nr-filter select, #nr-user-view .nr-filter input { width: 100%; box-sizing: border-box; padding: .4em .55em; border-radius: 4px; border: 1px solid rgba(127,127,127,.4); background: rgba(0,0,0,.25); color: inherit; font-size: .9em; }
+        #nr-user-view .nr-list { display: flex; flex-direction: column; gap: .5em; }
+        #nr-user-view .nr-row { display: grid; grid-template-columns: 1fr auto; gap: .25em 1em; padding: .7em 1em; background: rgba(127,127,127,.08); border: 1px solid rgba(127,127,127,.25); border-radius: 6px; }
+        #nr-user-view .nr-title { font-size: 1.1em; font-weight: 700; }
+        #nr-user-view .nr-artist a { color: inherit; }
+        #nr-user-view .nr-meta { display: flex; flex-wrap: wrap; gap: .4em .8em; align-items: center; font-size: .85em; opacity: .9; }
+        #nr-user-view .nr-badge { display: inline-block; font-size: .72em; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .18em .55em; border-radius: 10px; background: #3a3a3a; color: #ddd; }
+        #nr-user-view .nr-badge-state { background: #24405c; }
+        #nr-user-view .nr-actions { display: flex; flex-direction: column; gap: .4em; align-items: flex-end; }
+        #nr-user-view .nr-actions button { padding: .35em .8em; border-radius: 4px; border: 1px solid rgba(127,127,127,.4); background: transparent; color: inherit; cursor: pointer; }
+        #nr-user-view .nr-links a { margin-right: .6em; }
+        #nr-user-view details { margin-top: .3em; font-size: .88em; }
+        #nr-user-view .nr-empty { padding: 3em 1em; text-align: center; opacity: .8; }
+        #nr-user-view .nr-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+        #nr-user-view :focus-visible { outline: 2px solid #52b54b; outline-offset: 2px; }
+    </style>
+
     <h1>New Releases</h1>
-    <p>Releases by your library's artists that you do not have yet. View is defined by the spec.</p>
+    <p class="nr-status" id="nr-staleness" hidden></p>
+
+    <div role="tablist" aria-label="New Releases views">
+        <button type="button" role="tab" id="nr-tab-list" aria-selected="true" aria-controls="nr-panel">List</button>
+        <button type="button" role="tab" id="nr-tab-archive" aria-selected="false" aria-controls="nr-panel">Archive</button>
+    </div>
+
+    <form class="nr-filters" role="search" aria-label="Filter releases" id="nr-filters">
+        <div class="nr-filter"><label for="nr-f-artist">Artist</label><select id="nr-f-artist"><option value="">All artists</option></select></div>
+        <div class="nr-filter"><label for="nr-f-type">Type</label>
+            <select id="nr-f-type"><option value="">All types</option><option>Album</option><option>EP</option><option>Single</option><option>Compilation</option><option>Live</option><option>Remix</option><option>Soundtrack</option></select></div>
+        <div class="nr-filter"><label for="nr-f-state">State</label>
+            <select id="nr-f-state"><option value="">All states</option><option>Missing</option><option>Incomplete</option><option>Upcoming</option></select></div>
+        <div class="nr-filter"><label for="nr-f-from">From</label><input type="date" id="nr-f-from"></div>
+        <div class="nr-filter"><label for="nr-f-to">To</label><input type="date" id="nr-f-to"></div>
+        <div class="nr-filter"><button type="button" id="nr-f-clear">Clear</button></div>
+    </form>
+
+    <div id="nr-panel" role="tabpanel" aria-labelledby="nr-tab-list"></div>
+    <div id="nr-announce" aria-live="polite" class="nr-visually-hidden"></div>
+
     <script>
         (function () {
             'use strict';
             var root = document.getElementById('nr-user-view');
-            if (!root) return;
-            // Fetch from Plugins/NewReleases/api via ApiClient.ajax once the API exists.
+            if (!root || root.dataset.nrReady) return;
+            root.dataset.nrReady = '1';
+
+            var API = 'Plugins/NewReleases/api/';
+            var panel = root.querySelector('#nr-panel');
+            var announce = root.querySelector('#nr-announce');
+            var tabs = { list: root.querySelector('#nr-tab-list'), archive: root.querySelector('#nr-tab-archive') };
+            var filters = { artist: root.querySelector('#nr-f-artist'), type: root.querySelector('#nr-f-type'), state: root.querySelector('#nr-f-state'), from: root.querySelector('#nr-f-from'), to: root.querySelector('#nr-f-to') };
+            var archived = false;
+
+            function api(method, path) {
+                return ApiClient.ajax({ type: method, url: ApiClient.getUrl(API + path), dataType: method === 'GET' ? 'json' : undefined });
+            }
+
+            function esc(text) {
+                return String(text == null ? '' : text).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
+            function query() {
+                var q = [];
+                if (filters.artist.value) q.push('artistId=' + encodeURIComponent(filters.artist.value));
+                if (filters.type.value) q.push('type=' + encodeURIComponent(filters.type.value));
+                if (filters.state.value) q.push('state=' + encodeURIComponent(filters.state.value));
+                if (filters.from.value) q.push('from=' + filters.from.value);
+                if (filters.to.value) q.push('to=' + filters.to.value);
+                if (archived) q.push('archived=true');
+                return q.length ? '?' + q.join('&') : '';
+            }
+
+            function groupOf(item) {
+                if (item.state === 'Upcoming') return 'Upcoming';
+                if (!item.date) return 'Undated';
+                return item.date.slice(0, 4);
+            }
+
+            function staleness(data) {
+                var line = root.querySelector('#nr-staleness');
+                if (!data.lastRefreshedAt) { line.hidden = true; return; }
+                var ageHours = (Date.now() - new Date(data.lastRefreshedAt).getTime()) / 36e5;
+                if (ageHours <= data.refreshIntervalHours) { line.hidden = true; return; }
+                var rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+                var text = ageHours < 48 ? rtf.format(-Math.round(ageHours), 'hour') : rtf.format(-Math.round(ageHours / 24), 'day');
+                line.textContent = 'Last refreshed ' + text.replace(/ ago$/, '') + ' ago.';
+                line.hidden = false;
+            }
+
+            function artistLink(item) {
+                return '#/details?id=' + encodeURIComponent(item.artistJellyfinId) + '&serverId=' + encodeURIComponent(ApiClient.serverId());
+            }
+
+            function row(item) {
+                var html = '<article class="nr-row" data-id="' + item.id + '" data-title="' + esc(item.title) + '">';
+                html += '<div><div class="nr-title">' + esc(item.title) + '</div>';
+                html += '<div class="nr-artist"><a href="' + artistLink(item) + '">' + esc(item.artistName) + '</a></div>';
+                html += '<div class="nr-meta"><span class="nr-badge">' + esc(item.type) + '</span>';
+                html += '<span>' + (item.date ? esc(item.date) : 'Undated') + '</span>';
+                html += '<span class="nr-badge nr-badge-state" role="status">' + (item.state === 'Upcoming' ? 'Upcoming, not yet released' : esc(item.state)) + '</span>';
+                if (archived && item.archived) html += '<span class="nr-badge">' + (item.archived.kind === 'HaveIt' ? 'Have it, In library' : 'Ignored') + '</span>';
+                html += '</div>';
+                if (item.state === 'Incomplete' && item.missingTracks) {
+                    html += '<details><summary>' + item.missingTracks.length + ' missing track' + (item.missingTracks.length === 1 ? '' : 's') + '</summary><ul>';
+                    item.missingTracks.forEach(function (t) { html += '<li>' + esc(t) + '</li>'; });
+                    html += '</ul>';
+                    if (item.comparedEdition) html += '<p>compared with ' + esc(item.comparedEdition.title) + ' from ' + esc(item.comparedEdition.source) + '</p>';
+                    html += '</details>';
+                }
+                html += '<div class="nr-links">';
+                (item.sources || []).forEach(function (s) {
+                    html += '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + (s.source === 'musicbrainz' ? 'MusicBrainz' : s.source === 'deezer' ? 'Deezer' : esc(s.source)) + '</a>';
+                });
+                html += '</div></div><div class="nr-actions">';
+                if (archived) {
+                    html += '<button type="button" data-action="restore" aria-label="Restore ' + esc(item.title) + '">Restore</button>';
+                } else {
+                    html += '<button type="button" data-action="ignore" aria-label="Ignore ' + esc(item.title) + '">Ignore</button>';
+                    html += '<button type="button" data-action="have-it" aria-label="Mark ' + esc(item.title) + ' as Have it">Have it</button>';
+                }
+                return html + '</div></article>';
+            }
+
+            function render(data) {
+                staleness(data);
+                if (!data.hasCompletedRefresh && !archived) {
+                    panel.innerHTML = '<p class="nr-empty">No data yet. New Releases is waiting for its first refresh.</p>';
+                    return;
+                }
+                if (!data.items.length) {
+                    panel.innerHTML = '<p class="nr-empty">' + (archived ? 'The Archive is empty.' : 'Nothing missing for this selection.') + '</p>';
+                    return;
+                }
+                var groups = {}, order = [];
+                data.items.forEach(function (item) {
+                    var g = groupOf(item);
+                    if (!groups[g]) { groups[g] = []; order.push(g); }
+                    groups[g].push(item);
+                });
+                var html = '<div class="nr-list">';
+                order.forEach(function (g) {
+                    html += '<h2>' + esc(g) + '</h2>';
+                    groups[g].forEach(function (item) { html += row(item); });
+                });
+                panel.innerHTML = html + '</div>';
+            }
+
+            function load() {
+                return api('GET', 'releases' + query()).then(render).catch(function () {
+                    panel.innerHTML = '<p class="nr-empty">Could not load New Releases.</p>';
+                });
+            }
+
+            function loadArtists() {
+                return api('GET', 'artists').then(function (data) {
+                    data.items.forEach(function (a) {
+                        var option = document.createElement('option');
+                        option.value = a.jellyfinId;
+                        option.textContent = a.name;
+                        filters.artist.appendChild(option);
+                    });
+                }).catch(function () { /* the filter simply stays empty */ });
+            }
+
+            function selectTab(name) {
+                archived = name === 'archive';
+                tabs.list.setAttribute('aria-selected', String(!archived));
+                tabs.archive.setAttribute('aria-selected', String(archived));
+                panel.setAttribute('aria-labelledby', archived ? 'nr-tab-archive' : 'nr-tab-list');
+                load();
+            }
+
+            tabs.list.addEventListener('click', function () { selectTab('list'); });
+            tabs.archive.addEventListener('click', function () { selectTab('archive'); });
+            Object.keys(filters).forEach(function (key) { filters[key].addEventListener('change', load); });
+            root.querySelector('#nr-f-clear').addEventListener('click', function () {
+                Object.keys(filters).forEach(function (key) { filters[key].value = ''; });
+                load();
+            });
+            root.querySelector('#nr-filters').addEventListener('submit', function (e) { e.preventDefault(); load(); });
+
+            panel.addEventListener('click', function (e) {
+                var button = e.target.closest('button[data-action]');
+                if (!button) return;
+                var article = button.closest('.nr-row');
+                var id = article.dataset.id, title = article.dataset.title, action = button.dataset.action;
+                button.disabled = true;
+                api('POST', 'releases/' + id + '/' + action).then(function () {
+                    article.remove(); // optimistic removal, then reload
+                    announce.textContent = action === 'ignore' ? 'Ignored ' + title : action === 'have-it' ? 'Marked ' + title + ' as Have it' : 'Restored ' + title;
+                    return load();
+                }).catch(function () {
+                    button.disabled = false;
+                    announce.textContent = 'Could not update ' + title;
+                });
+            });
+
+            loadArtists().then(load);
         })();
     </script>
 </div>
