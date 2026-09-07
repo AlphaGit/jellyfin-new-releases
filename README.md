@@ -1,52 +1,72 @@
 # Jellyfin New Releases
 
-A Jellyfin server plugin that tracks new releases by the artists in your music library that the
-library does not yet contain, and shows them inside the Jellyfin web client.
+A Jellyfin plugin that tracks releases by the **library artists** in your music library that the
+library does not contain yet — "new" as in *new to your library*. It reads two open catalogue
+sources, decides ownership by comparing track lists, and shows the result in the web client.
 
-Sibling of [jellyfin-concert-radar](../jellyfin-concert-radar): same plugin shape, same
-[Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) hamburger-menu entry.
+## What it does
 
-**Status:** scaffold only. Behaviour is being specified with [Spec Kit](https://github.com/github/spec-kit)
-under `specs/`. Nothing fetches releases yet.
+- A daily **Refresh** (scheduled task "Refresh new releases", category "New Releases") reads the
+  music library, matches each library artist at **MusicBrainz** and **Deezer**, and pulls the
+  artist's whole catalogue.
+- Listings of the same **Release** from both sources are merged. MusicBrainz identity and typing
+  are canonical when MusicBrainz lists the release.
+- Ownership is decided per release by comparing the library album's track titles with the
+  best-overlapping Official **Edition**: **Missing** (library has none of it), **Incomplete**
+  (library album lacks tracks, listed with the missing titles), or In library (not listed).
+  Releases dated in the future are shown as **Upcoming**.
+- Users open **New Releases** from the web client's side menu (through the optional
+  [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) integration), filter by
+  artist, type, state and date range, and can **Ignore** a release or mark it **Have it**. Those
+  decisions move it to the shared **Archive**; **Restore** undoes them. Decisions are shared by
+  every user of the server.
+- Users see releases only for artists in music libraries they are allowed to access.
 
-**Roadmap:** https://github.com/users/AlphaGit/projects/2 — public board mirrored from the
-specs in this repo. The repo is the source of truth; the board is read-only.
+## What leaves the server
 
-## Layout
+Only what a source needs: artist names and public identifiers (MusicBrainz ids, Deezer ids).
+Requests carry the `User-Agent` `JellyfinNewReleases/<version> ( <contact> )`, with the contact
+you configure. No library contents, user identities or usage data are sent. Both sources are
+open APIs; the plugin enforces their request rates and a daily budget per source, and stops
+using a source for six hours after five consecutive failures.
 
-```
-build.yaml                                  JPRM packaging manifest (plugin GUID, ABI, artifacts)
-Jellyfin.Plugin.NewReleases.sln
-src/Jellyfin.Plugin.NewReleases/
-  Plugin.cs                                 Entry point; registers the Plugin Pages menu entry
-  PluginServiceRegistrator.cs               DI registrations (empty until the spec lands)
-  Configuration/PluginConfiguration.cs      XML-serialized settings (empty until the spec lands)
-  Api/UserViewController.cs                 Serves Web/user-view.html to Plugin Pages
-  Web/admin.html                            Dashboard → Plugins config page
-  Web/user-view.html                        User-facing fragment (hamburger menu → New Releases)
-tests/Jellyfin.Plugin.NewReleases.Tests/    xunit + NSubstitute; no live network calls
-tests/fixtures/                             Recorded, scrubbed HTTP responses
-.specify/  .claude/skills/speckit-*/        Spec Kit workflow (constitution → specify → plan → tasks)
-.github/workflows/                          build (PR/main) and package (v* tags, JPRM)
-```
+## Configuration (Dashboard → Plugins → New Releases)
+
+| Field | Default | Meaning |
+| --- | --- | --- |
+| MusicBrainz / Deezer | both on | Sources to read |
+| Release types | Album, EP | Types listed; a release counts only when its primary and every secondary type are enabled |
+| Released since | empty | Optional cutoff (`yyyy-MM-dd`); undated releases are always kept |
+| Contact for User-Agent | empty | Your e-mail or URL for the sources' operators |
+
+The page also shows each source's health, the last and next refresh, artists processed,
+releases found, and the **Unmatched artists** list with a link to each artist's Jellyfin page.
+To fix an unmatched artist, set its MusicBrainz artist ID in Jellyfin's metadata editor or
+`artist.nfo`; the plugin picks it up on the next refresh.
+
+Admin actions: **Run now**, **Purge release data** (keeps the Archive), **Clear Archive**. The
+refresh interval is changed in Dashboard → Scheduled Tasks, not in the plugin.
 
 ## Requirements
 
-- Jellyfin 10.11.x (targets `Jellyfin.Controller` 10.11.11).
-- .NET 9 SDK to build.
-- Optional, for the user-facing menu entry: `File Transformation` + `Plugin Pages` from
-  `https://www.iamparadox.dev/jellyfin/plugins/manifest.json`. Without them the admin page still works.
+Jellyfin 10.11.x. Plugin Pages is optional: without it the admin page, API and task work; the
+user view is simply not linked from the menu. Data lives in `<data>/newreleases/newreleases.db`
+(SQLite).
 
-## Build
+## Build and test
+
+Needs the .NET 9 SDK.
 
 ```bash
 dotnet build --configuration Release
-dotnet test
+dotnet test --configuration Release
+jprm plugin build . --version X.Y.Z --output ./artifacts   # packaging (CI does this on v* tags)
 ```
 
-## Open design questions (for the spec)
+Tests make no network calls: source responses are recorded fixtures under `tests/fixtures/`.
 
-- Release source: MusicBrainz release-groups is the obvious no-key candidate. Others need keys or scraping.
-- "Library does not contain" match rule: by MusicBrainz release-group ID, or by normalized album title?
-- Artist-page section: Jellyfin has no plugin hook inside the artist detail view. Injecting one needs the
-  `File Transformation` plugin to patch the web client bundle. Decide whether the menu view is enough for v1.
+## Development
+
+Specs live in `specs/` (Spec Kit). Every behaviour is test-driven; the evidence per feature is in
+`specs/<feature>/tdd/cycle-log.md`. Sibling project and reference implementation:
+[jellyfin-concert-radar](https://github.com/AlphaGit/jellyfin-concert-radar).

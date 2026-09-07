@@ -20,7 +20,8 @@ stacks:
     contract: null
     test_glob: "tests/Jellyfin.Plugin.NewReleases.Tests/**/*Tests.cs"
     exemplar:
-      unit: tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs
+      unit: tests/Jellyfin.Plugin.NewReleases.Tests/Matching/TitleNormalizerTests.cs
+      acceptance: tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/BrowseReleasesTests.cs
     helpers:
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/StubHttpMessageHandler.cs
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/FixtureLoader.cs
@@ -28,9 +29,12 @@ stacks:
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/TestDatabase.cs
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/LibraryFakes.cs
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/SourceHarness.cs
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Support/ControllerContextFactory.cs
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Support/SourceJson.cs
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/AcceptanceRig.cs
 verified: [single, suite]
 suite_baseline: green
-suite_seconds: 2
+suite_seconds: 10
 ---
 
 # TDD Stack Profile

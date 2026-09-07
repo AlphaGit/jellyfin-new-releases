@@ -106,7 +106,7 @@ src/Jellyfin.Plugin.NewReleases/
 │   ├── UserViewController.cs          # exists; serves Web/user-view.html
 │   ├── ReleasesController.cs          # [Authorize]  GET releases/artists/status, POST ignore|have-it|restore
 │   ├── AdminController.cs             # [RequiresElevation] GET status, POST run-now|purge|clear-archive
-│   └── Dtos/                          # ReleaseDto, ArtistDto, ListResponse, AdminStatusDto, …
+│   └── Dtos.cs                        # ReleaseDto, ArtistDto, ListResponse, AdminStatusResponse, … (one file)
 ├── Library/
 │   ├── LibraryScanner.cs              # ILibraryManager → LibrarySnapshot (read-only)
 │   └── LibrarySnapshot.cs             # records: LibraryArtistSnapshot, LibraryAlbumSnapshot
@@ -123,7 +123,7 @@ src/Jellyfin.Plugin.NewReleases/
 │   ├── SourceLimits.cs                # per-source constants (rps, daily budget, cooldown)
 │   └── UserAgentBuilder.cs
 ├── Storage/
-│   ├── Database.cs                    # path, connection string, lazy one-time migration
+│   ├── PluginDatabase.cs              # path, connection string, lazy one-time migration (`Database` collides with the Jellyfin.Database namespace)
 │   ├── Migrations/001_initial.sql
 │   ├── ArtistRepository.cs            # library_artist, artist_source
 │   ├── ReleaseRepository.cs           # release, source_entry, edition, ownership columns

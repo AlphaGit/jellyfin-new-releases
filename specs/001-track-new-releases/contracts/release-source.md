@@ -39,7 +39,7 @@ surface as **Partial** when they interrupt paging.
 | `Url` | `https://musicbrainz.org/release-group/<id>` | `link` |
 | Types | `primary-type` → Album/EP/Single/Other; `secondary-types[]` → Compilation/Live/Remix/Soundtrack/Other | `record_type`: album→Album, ep→EP, single→Single, compile→Compilation (as primary); no secondaries |
 | Date | `first-release-date` (may be `YYYY`, `YYYY-MM`, empty) | `release_date` (`0000-00-00` → null) |
-| Editions | `release?release-group=<id>&status=official&inc=recordings+media&limit=25&offset=N`; each release → one edition; tracks = all `media[].tracks[].title` normalized as tracks | `album/<id>/tracks?limit=100` (+`next`); one edition = the album; title = album title |
+| Editions | `release?release-group=<id>&status=official&inc=recordings+media&limit=25&offset=N`; each release → one edition; tracks = all `media[].tracks[].title` normalized as tracks | `album/<id>` for the title (the tracks endpoint carries none), then `album/<id>/tracks?limit=100` (+`next`); one edition = the album |
 | Error handling | 503/429 → `Retry-After` → backoff; 404 on artist → `Unmatched("not found")` | HTTP 200 with `error.code 4` → transient (backoff 5 s); other `error` → Failed |
 
 ## Fixtures (`tests/fixtures/`)
@@ -56,4 +56,4 @@ nothing personal), one file per scenario:
 - `deezer/search_artist_exact.json`, `search_artist_homonyms.json`, `search_artist_empty.json`
 - `deezer/artist_albums_page1.json`, `artist_albums_page2.json` (with `next`),
   `artist_albums_unknown_date.json`
-- `deezer/album_tracks.json`, `error_quota.json`
+- `deezer/album.json`, `album_tracks.json`, `album_tracks_page1.json`, `album_tracks_page2.json`, `error_quota.json`
