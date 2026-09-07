@@ -746,3 +746,11 @@ failed before the implementation.
 - green: `Decide` orders editions by matched count desc, missing count asc, MusicBrainz first, `SourceEditionId` ordinal. Suite -> 109 passed, 0 failed
 - refactor: none needed
 - commit: `c29a1dc`
+
+## Cycle 84: U101 extra library tracks beyond the edition do not prevent `Owned`
+
+- test: `Matching/OwnershipMatcherTests.cs::Decide_ExtraLibraryTracksBeyondTheEdition_DoNotPreventOwned` (new)
+- red: passed on first run (missing is edition-minus-library by construction). Deliberate mutant: missing computed as the symmetric difference -> `Expected: Owned / Actual:   Incomplete` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 110 passed, 0 failed
+- refactor: none needed
+- commit: `b530d24`
