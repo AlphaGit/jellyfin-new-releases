@@ -29,4 +29,25 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
         Assert.Equal(ArtistMatch.Matched(DaftPunkMbid), match);
         Assert.Empty(_h.RequestedUrls);
     }
+
+    private const string ArtistSearch = @"musicbrainz\.org/ws/2/artist\?query=";
+
+    private static string Search(params (string Name, int Score)[] artists)
+        => System.Text.Json.JsonSerializer.Serialize(new
+        {
+            created = "2026-09-06T12:00:00Z",
+            count = artists.Length,
+            offset = 0,
+            artists = artists.Select((a, i) => new { id = $"mbid-{i + 1}", name = a.Name, score = a.Score }),
+        });
+
+    [Fact]
+    public async Task MatchArtistAsync_ConfidentTopResult_IsMatched()
+    {
+        _h.Fixture(ArtistSearch, "musicbrainz/artist_search_confident.json"); // Daft Punk 100, runner-up 66
+
+        var match = await Source().MatchArtistAsync(Artist("Daft Punk"), CancellationToken.None);
+
+        Assert.Equal(ArtistMatch.Matched(DaftPunkMbid), match);
+    }
 }
