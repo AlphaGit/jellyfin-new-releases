@@ -31,4 +31,15 @@ public class OwnershipMatcherTests
 
         Assert.Equal((album.JellyfinId, "Identifier"), (result.LibraryAlbumId, result.MatchMethod));
     }
+
+    [Fact]
+    public void Decide_AlbumWhoseReleaseIdIsAStoredMusicBrainzEdition_IsTheCandidateByIdentifier()
+    {
+        var album = Album("Retitled Discovery", mbAlbum: "rel-jp", tracks: Discovery);
+        var editions = new[] { Edition(1, "musicbrainz", "rel-fr", Discovery), Edition(2, "musicbrainz", "rel-jp", Discovery) };
+
+        var result = OwnershipMatcher.Decide(Release(), editions, [Album("Discovery", tracks: Discovery), album]);
+
+        Assert.Equal((album.JellyfinId, "Identifier"), (result.LibraryAlbumId, result.MatchMethod));
+    }
 }

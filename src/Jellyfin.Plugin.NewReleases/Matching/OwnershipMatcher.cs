@@ -8,7 +8,7 @@ public static class OwnershipMatcher
 {
     public static OwnershipResult Decide(Release release, IReadOnlyList<Edition> editions, IReadOnlyList<LibraryAlbumSnapshot> albums)
     {
-        var (candidate, method) = FindCandidate(release, albums);
+        var (candidate, method) = FindCandidate(release, editions, albums);
         if (candidate is null)
         {
             return OwnershipResult.Missing;
@@ -19,18 +19,13 @@ public static class OwnershipMatcher
         return new OwnershipResult(missing.Length == 0 ? OwnershipState.Owned : OwnershipState.Incomplete, method, candidate.JellyfinId, edition.Id, missing);
     }
 
-    /// <summary>Step 1: identifier match first (MusicBrainz release group), else nothing yet.</summary>
-    private static (LibraryAlbumSnapshot? Album, string? Method) FindCandidate(Release release, IReadOnlyList<LibraryAlbumSnapshot> albums)
+    /// <summary>Step 1: identifier match (canonical MusicBrainz release group, or a stored MusicBrainz edition id), else nothing yet.</summary>
+    private static (LibraryAlbumSnapshot? Album, string? Method) FindCandidate(Release release, IReadOnlyList<Edition> editions, IReadOnlyList<LibraryAlbumSnapshot> albums)
     {
-        if (release.CanonicalSource == "musicbrainz")
-        {
-            var byReleaseGroup = albums.FirstOrDefault(a => a.MusicBrainzReleaseGroupId == release.CanonicalSourceId);
-            if (byReleaseGroup is not null)
-            {
-                return (byReleaseGroup, "Identifier");
-            }
-        }
-
-        return (null, null);
+        var editionIds = editions.Where(e => e.Source == "musicbrainz").Select(e => e.SourceEditionId).ToHashSet(StringComparer.Ordinal);
+        var byIdentifier = albums.FirstOrDefault(a =>
+            (release.CanonicalSource == "musicbrainz" && a.MusicBrainzReleaseGroupId == release.CanonicalSourceId)
+            || (a.MusicBrainzReleaseId is not null && editionIds.Contains(a.MusicBrainzReleaseId)));
+        return byIdentifier is not null ? (byIdentifier, "Identifier") : (null, null);
     }
 }
