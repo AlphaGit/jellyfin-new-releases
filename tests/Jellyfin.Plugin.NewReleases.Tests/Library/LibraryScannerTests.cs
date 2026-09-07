@@ -1,6 +1,7 @@
 using Jellyfin.Plugin.NewReleases.Library;
 using Jellyfin.Plugin.NewReleases.Tests.Support;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 using Xunit;
 
 namespace Jellyfin.Plugin.NewReleases.Tests.Library;
@@ -91,5 +92,18 @@ public class LibraryScannerTests
 
         Assert.Equal(mbid, artist.ArtistKey);
         Assert.Equal(["Discovery", "Homework"], artist.Albums.Select(a => a.Title).OrderBy(t => t));
+    }
+
+    /// <summary>`ILibraryManager.GetArtist(string)` creates the artist item when missing; a read-only scan must never call it (R6).</summary>
+    [Fact]
+    public void Scan_NeverCallsGetArtistByName()
+    {
+        _library.Artist("Daft Punk");
+        _library.Album("Discovery", "Daft Punk", Library, trackTitles: ["One More Time"]);
+        _library.Album("Orphan Album", "Unknown Artist Without Item", Library);
+
+        Scan();
+
+        _library.Manager.DidNotReceive().GetArtist(Arg.Any<string>());
     }
 }
