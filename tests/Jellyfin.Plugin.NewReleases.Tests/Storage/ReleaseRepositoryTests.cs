@@ -134,4 +134,16 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
 
         Assert.Equal(["New Year 2024", "Year Only 2024", "Alpha 2023", "Beta 2023", "Undated"], titles);
     }
+
+    [Fact]
+    public async Task ListAsync_NeverReturnsOwnedReleases()
+    {
+        var owned = await Seed("In Library", "2020-01-01", "rg-owned");
+        await Seed("Missing One", "2020-01-02", "rg-missing");
+        await _db.ExecuteAsync($"UPDATE release SET ownership_state = 'Owned' WHERE id = {owned}");
+
+        var titles = (await _db.Releases.ListAsync(DefaultFilter, CancellationToken.None)).Select(r => r.Title);
+
+        Assert.Equal(["Missing One"], titles);
+    }
 }
