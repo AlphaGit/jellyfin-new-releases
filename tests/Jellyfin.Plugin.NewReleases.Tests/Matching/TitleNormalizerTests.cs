@@ -37,4 +37,12 @@ public class TitleNormalizerTests
     {
         Assert.Equal(expected, TitleNormalizer.NormalizeAlbum(input));
     }
+
+    [Theory]
+    [InlineData("X (Deluxe) (Remastered)", "x deluxe")]
+    [InlineData("Deluxe Edition Blues", "deluxe edition blues")]
+    public void NormalizeAlbum_RemovesAtMostOneQualifierFromTheEndOnly(string input, string expected)
+    {
+        Assert.Equal(expected, TitleNormalizer.NormalizeAlbum(input));
+    }
 }

@@ -66,7 +66,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U2 | `Rock & Roll` normalizes to `rock and roll` (case-fold, `&` → `and`) | FR-005c | example | DONE | `Matching/TitleNormalizerTests.cs::NormalizeAlbum_ReplacesAmpersandWithAnd` |
 | U3 | `A.B.  --  C!` normalizes to `ab c` (punctuation removed, whitespace collapsed, trimmed) | FR-005c | example | DONE | `Matching/TitleNormalizerTests.cs::NormalizeAlbum_RemovesPunctuationAndCollapsesWhitespace` |
 | U4 | Album `TANZNEID (24-bit HD audio)`, `Random Access Memories [Explicit]`, `Album - 10th Anniversary Edition` each lose their trailing qualifier | FR-005c, EC-3 | example | DONE | `Matching/TitleNormalizerTests.cs::NormalizeAlbum_RemovesTrailingEditionQualifier` |
-| U5  | Album `X (Deluxe) (Remastered)` loses only the last qualifier → `x deluxe`; `Deluxe Edition Blues` keeps its words | FR-005c | example | PENDING | `Matching/TitleNormalizerTests.cs` |
+| U5 | Album `X (Deluxe) (Remastered)` loses only the last qualifier → `x deluxe`; `Deluxe Edition Blues` keeps its words | FR-005c | example | DONE | `Matching/TitleNormalizerTests.cs::NormalizeAlbum_RemovesAtMostOneQualifierFromTheEndOnly` |
 | U6  | Track `Get Lucky (feat. Pharrell Williams)` and `Get Lucky ft. Pharrell` normalize to `get lucky` | FR-005c | example | PENDING | `Matching/TitleNormalizerTests.cs` |
 | U7  | Track `Song (Deluxe)` keeps `deluxe` (album qualifier rule does not apply to tracks) | FR-005c | example | PENDING | `Matching/TitleNormalizerTests.cs` |
 | U8  | `The Album` ≠ `Album` and `Vol. 2` ≠ `Volume 2` after normalization | FR-005c | example | PENDING | `Matching/TitleNormalizerTests.cs` |
