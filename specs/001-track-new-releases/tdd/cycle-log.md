@@ -687,3 +687,12 @@ failed before the implementation.
 - green: `OwnershipMatcher.FindCandidate()` matches `MusicBrainzReleaseGroupId` against the canonical MusicBrainz id; `Decide` compares the first edition's tracks (fake-it for the edition choice, generalized by U100). Suite -> 102 passed, 0 failed
 - refactor: none needed
 - commit: `842068e`
+
+## Cycle 77: U94 an album whose `MusicBrainzAlbum` equals a stored MusicBrainz edition id is the candidate with method `Identifier`
+
+- test: `Matching/OwnershipMatcherTests.cs::Decide_AlbumWhoseReleaseIdIsAStoredMusicBrainzEdition_IsTheCandidateByIdentifier` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~OwnershipMatcherTests.Decide_AlbumWhoseReleaseIdIsAStoredMusicBrainzEdition_IsTheCandidateByIdentifier" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: Tuple (fb7619d8-…, "Identifier") / Actual:   Tuple (null, null)` (1 failed)
+- green: `FindCandidate` also accepts an album whose `MusicBrainzReleaseId` is among the stored MusicBrainz editions' ids. Suite -> 103 passed, 0 failed
+- refactor: none needed
+- commit: `e886884`
