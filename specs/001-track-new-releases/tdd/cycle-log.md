@@ -372,3 +372,12 @@ failed before the implementation.
 - green: `ReleaseRepository.UpsertEditionAsync` (`ON CONFLICT (source, source_edition_id) … RETURNING id`), `GetEditionsAsync`, `WriteOwnershipAsync`. Suite -> 62 passed, 0 failed
 - refactor: none needed
 - commit: `0264e18`
+
+## Cycle 42: U42 purge empties `release`, `source_entry`, `edition` and leaves `decision`, `library_artist`, `artist_source`
+
+- test: `Storage/ReleaseRepositoryTests.cs::PurgeAsync_EmptiesReleaseDataAndKeepsDecisionsArtistsAndSourceState` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.PurgeAsync_EmptiesReleaseDataAndKeepsDecisionsArtistsAndSourceState" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: 0 / Actual:   1` (1 failed; no-op stub)
+- green: `ReleaseRepository.PurgeAsync` = `DELETE FROM edition; DELETE FROM source_entry; DELETE FROM release;`. Suite -> 63 passed, 0 failed
+- refactor: none needed
+- commit: `cac1786`
