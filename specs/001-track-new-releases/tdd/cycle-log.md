@@ -888,3 +888,12 @@ failed before the implementation.
 - green: no production change. Suite -> 126 passed, 0 failed
 - refactor: an xUnit analyzer error (xUnit2029) in the new test was fixed before the first run (`Assert.DoesNotContain`)
 - commit: `fd86be6`
+
+## Cycle 101: U89 an albums page maps `record_type` and sets `NextOffset` from `next` (null when absent)
+
+- test: `Sources/DeezerSourceTests.cs::FetchCataloguePageAsync_MapsRecordTypeAndTakesNextOffsetFromNext` (new; pages 1 and 2 of the artist-27 fixture)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DeezerSourceTests.FetchCataloguePageAsync_MapsRecordTypeAndTakesNextOffsetFromNext" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: Tuple (25, 39) / Actual:   Tuple (null, 39)` (1 failed)
+- green: `DeezerSource.NextIndex()` reads the `index` query value of the `next` URL; type mapping was already in place from cycle 97. Suite -> 127 passed, 0 failed
+- refactor: none needed
+- commit: `f660389`
