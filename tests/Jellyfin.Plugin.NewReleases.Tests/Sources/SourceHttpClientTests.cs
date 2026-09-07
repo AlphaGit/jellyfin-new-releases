@@ -41,4 +41,19 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
         var request = Assert.Single(_http.ReceivedRequests);
         Assert.Equal($"JellyfinNewReleases/{typeof(Plugin).Assembly.GetName().Version!.ToString(3)} ( ops@example.org )", request.Headers.UserAgent.ToString());
     }
+
+    [Fact]
+    public async Task GetStringAsync_RecordsOneCallPerHttpRequestForThatSource()
+    {
+        _http.AlwaysReturn(HttpStatusCode.OK, "{}");
+        var client = Client();
+
+        await client.GetStringAsync(Deezer, Url, CancellationToken.None);
+        await client.GetStringAsync(Deezer, Url, CancellationToken.None);
+
+        var state = await _db.SourceState.GetAsync(Deezer, CancellationToken.None);
+        Assert.NotNull(state);
+        Assert.Equal(2, state.CallsToday);
+        Assert.Null(await _db.SourceState.GetAsync("musicbrainz", CancellationToken.None));
+    }
 }

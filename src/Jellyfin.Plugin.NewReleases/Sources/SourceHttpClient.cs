@@ -40,6 +40,7 @@ public sealed class SourceHttpClient
         using var client = _factory.CreateClient(ClientName);
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.TryAddWithoutValidation("User-Agent", UserAgentBuilder.Build(Version, _configuration().UserAgentContact));
+        await _state.RecordCallAsync(source, ct).ConfigureAwait(false);
         using var response = await client.SendAsync(request, ct).ConfigureAwait(false);
         return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
     }
