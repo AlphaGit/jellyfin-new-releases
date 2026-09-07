@@ -8,6 +8,17 @@ public static class ReleaseTypeMapper
     public static (ReleaseType Primary, IReadOnlyList<ReleaseType> Secondaries) MapMusicBrainz(string? primary, IEnumerable<string> secondaries)
         => (MapMusicBrainzPrimary(primary), secondaries.Select(MapMusicBrainzSecondary).ToArray());
 
+    /// <summary>Deezer <c>record_type</c>; Deezer expresses no secondary types.</summary>
+    public static (ReleaseType Primary, IReadOnlyList<ReleaseType> Secondaries) MapDeezer(string? recordType)
+        => (recordType switch
+        {
+            "album" => ReleaseType.Album,
+            "ep" => ReleaseType.EP,
+            "single" => ReleaseType.Single,
+            "compile" => ReleaseType.Compilation,
+            _ => ReleaseType.Other,
+        }, Array.Empty<ReleaseType>());
+
     private static ReleaseType MapMusicBrainzPrimary(string? primary) => primary switch
     {
         "Album" => ReleaseType.Album,

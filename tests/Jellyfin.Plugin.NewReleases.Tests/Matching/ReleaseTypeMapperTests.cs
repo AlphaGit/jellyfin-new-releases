@@ -32,4 +32,18 @@ public class ReleaseTypeMapperTests
             [ReleaseType.Compilation, ReleaseType.Live, ReleaseType.Remix, ReleaseType.Soundtrack, ReleaseType.Other, ReleaseType.Other, ReleaseType.Other, ReleaseType.Other],
             secondaries);
     }
+
+    [Theory]
+    [InlineData("album", ReleaseType.Album)]
+    [InlineData("ep", ReleaseType.EP)]
+    [InlineData("single", ReleaseType.Single)]
+    [InlineData("compile", ReleaseType.Compilation)]
+    [InlineData("mixtape", ReleaseType.Other)]
+    public void MapDeezer_MapsRecordTypeAsPrimaryWithNoSecondaries(string recordType, ReleaseType expected)
+    {
+        var (primary, secondaries) = ReleaseTypeMapper.MapDeezer(recordType);
+
+        Assert.Equal(expected, primary);
+        Assert.Empty(secondaries);
+    }
 }
