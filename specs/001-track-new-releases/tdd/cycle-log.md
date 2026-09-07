@@ -1001,3 +1001,11 @@ failed before the implementation.
 - green: `RunCounts` (artists processed = at least one source attempted, entries upserted, editions fetched, errors); `FinishRunAsync` with `Completed`, or `Cancelled`/`Failed` from catch blocks that rethrow. Suite -> 139 passed, 0 failed
 - refactor: none needed
 - commit: `4dc6d0f`
+
+## Cycle 114: U111 a source disabled in configuration receives no request
+
+- test: `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_SourceDisabledInConfiguration_ReceivesNoRequest` (new; xUnit2029 fixed to `DoesNotContain` before the first run)
+- red: passed on first run (cycle 106 filtered sources by configuration). Deliberate mutant: enabled filter removed -> `Assert.DoesNotContain() Failure` (Deezer received `MatchArtistAsync`) (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 140 passed, 0 failed
+- refactor: none needed
+- commit: `28c06e8`
