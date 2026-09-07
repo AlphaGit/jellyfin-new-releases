@@ -81,4 +81,17 @@ public sealed class SourceStateRepositoryTests : IAsyncLifetime
         var state = (await _db.SourceState.GetAsync(MusicBrainz, CancellationToken.None))!;
         Assert.Equal((0, (DateTimeOffset?)null, (DateTimeOffset?)LateEvening), (state.ConsecutiveFailures, state.CooldownUntil, state.LastSuccessAt));
     }
+
+    [Fact]
+    public async Task IsInCooldownAsync_TrueOneSecondBeforeCooldownUntil_FalseAtIt()
+    {
+        Assert.False(await _db.SourceState.IsInCooldownAsync(MusicBrainz, CancellationToken.None));
+        await FailAsync(5); // cooldown_until = LateEvening + 6 h
+
+        _clock.Set(LateEvening + SixHours - TimeSpan.FromSeconds(1));
+        Assert.True(await _db.SourceState.IsInCooldownAsync(MusicBrainz, CancellationToken.None));
+
+        _clock.Set(LateEvening + SixHours);
+        Assert.False(await _db.SourceState.IsInCooldownAsync(MusicBrainz, CancellationToken.None));
+    }
 }

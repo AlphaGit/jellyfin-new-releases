@@ -77,6 +77,13 @@ public sealed class SourceStateRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
+    /// <summary>True while <c>cooldown_until</c> lies strictly in the future.</summary>
+    public async Task<bool> IsInCooldownAsync(string source, CancellationToken ct)
+    {
+        var state = await GetAsync(source, ct).ConfigureAwait(false);
+        return state?.CooldownUntil is { } until && until > _clock.GetUtcNow();
+    }
+
     public async Task<SourceState?> GetAsync(string source, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);

@@ -142,7 +142,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U48 | Remaining budget is budget minus calls today, never below 0 | FR-011 | example | DONE | `Storage/SourceStateRepositoryTests.cs::GetRemainingBudgetAsync_IsBudgetMinusCallsToday_NeverBelowZero` |
 | U49 | Four consecutive failures set no cooldown; the fifth sets `cooldown_until = now + 6 h` | FR-011 | example | DONE | `Storage/SourceStateRepositoryTests.cs::RecordFailureAsync_FourFailuresNoCooldown_FifthSetsCooldownSixHoursFromNow` |
 | U50 | A success resets consecutive failures to 0 and clears the cooldown | FR-011 | example | DONE | `Storage/SourceStateRepositoryTests.cs::RecordSuccessAsync_ResetsFailuresClearsCooldownAndStampsLastSuccess` |
-| U51 | In-cooldown is true one second before `cooldown_until` and false at it | FR-011 | example | PENDING | `Storage/SourceStateRepositoryTests.cs` |
+| U51 | In-cooldown is true one second before `cooldown_until` and false at it | FR-011 | example | DONE | `Storage/SourceStateRepositoryTests.cs::IsInCooldownAsync_TrueOneSecondBeforeCooldownUntil_FalseAtIt` |
 | U52 | Runs are started and finished with counts and outcome; latest completed run and latest run are read back | FR-012, FR-015 | example | PENDING | `Storage/SourceStateRepositoryTests.cs` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Configuration/PluginConfiguration.cs`
