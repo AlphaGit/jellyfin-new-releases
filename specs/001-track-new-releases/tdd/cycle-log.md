@@ -729,3 +729,11 @@ failed before the implementation.
 - green: no production change. Suite -> 107 passed, 0 failed
 - refactor: none needed
 - commit: `70fb672`
+
+## Cycle 82: U99 8 of 10 matched → `Incomplete` listing the 2 missing titles, the edition and its source
+
+- test: `Matching/OwnershipMatcherTests.cs::Decide_EightOfTenTracksMatched_IsIncompleteNamingTheTwoMissingTitlesAndTheEdition` (new; the edition's source travels with `EditionId` through the `edition` row)
+- red: passed on first run. Deliberate mutant: missing titles replaced by `[]` -> `Assert.Equal() Failure: Collections differ / Expected: ["track 9", "track 10"] / Actual: string[] []` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 108 passed, 0 failed
+- refactor: none needed
+- commit: `8aace0b`
