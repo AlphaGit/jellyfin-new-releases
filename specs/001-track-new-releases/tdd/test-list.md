@@ -37,7 +37,7 @@ the web pages are checked manually (see Out of scope).
 | A2 | Releases from several years come back ordered newest first with undated rows last, each carrying its year in `date` | US1-AS2 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A2_SeveralYears_NewestFirst_UndatedLast_EachCarryingItsDate` |
 | A3 | With 40 releases, `?artistId=` returns only that artist's rows; the same call without the filter returns all 40 | US1-AS3 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A3_FortyReleases_ArtistFilterNarrows_ClearingRestoresAll` |
 | A4  | Every listed release carries one `sources[]` link per source that lists it, each an `https` URL on `musicbrainz.org` or `www.deezer.com` | US1-AS4 | example | PENDING | `Acceptance/BrowseReleasesTests.cs` |
-| A5  | With no completed run, the list response has `hasCompletedRefresh=false` and no items | US1-AS5 | example | PENDING | `Acceptance/BrowseReleasesTests.cs` |
+| A5 | With no completed run, the list response has `hasCompletedRefresh=false` and no items | US1-AS5 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A5_NoCompletedRun_HasCompletedRefreshFalseAndNoItems` |
 | A6  | Z is listed after run 1; Z appears in the library snapshot; after run 2 Z is absent from the list | US1-AS6, INV-1 | example | PENDING | `Acceptance/BrowseReleasesTests.cs` |
 | A7  | A release dated after `serverToday` is returned with `state=Upcoming`; `?state=Upcoming` returns only it | US1-AS7 | example | PENDING | `Acceptance/BrowseReleasesTests.cs` |
 | A8  | Library album W holds 8 of the source edition's 10 tracks → W is listed `Incomplete` with exactly the 2 missing titles and `comparedEdition` naming the source and edition | US1-AS8 | example | PENDING | `Acceptance/BrowseReleasesTests.cs` |

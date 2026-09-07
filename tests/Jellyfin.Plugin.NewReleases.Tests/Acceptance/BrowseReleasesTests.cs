@@ -83,4 +83,41 @@ public sealed class BrowseReleasesTests : IAsyncLifetime
         Assert.All(filtered.Items, i => Assert.Equal("Daft Punk", i.ArtistName));
         Assert.Equal(40, cleared.Total);
     }
+
+    private const string DaftPunkMbid = "056e4f3e-d505-4dad-8ec1-d04f521cbb56";
+
+    /// <summary>Both sources list the same missing release; MusicBrainz is used here (1 req/s), so this test takes a few seconds.</summary>
+    [Fact]
+    public async Task A4_EveryListedReleaseCarriesOneLinkPerListingSource_HttpsOnTheSourceHosts()
+    {
+        _rig.Library_.Artist("Daft Punk", DaftPunkMbid);
+        _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.MusicBrainzCatalogue(DaftPunkMbid, ("rg-home", "Homework", "Album", [], "1997-01-20"), ("rg-ram", "Random Access Memories", "Album", [], "2013-05-17"))
+            .MusicBrainzEditions("rg-home", ("rel-home", "Homework", Homework));
+        _rig.DeezerArtist(27, "Daft Punk", (2, "Homework", "album", "1997-01-16"), (5, "Random Access Memories", "album", "2013-05-17"), (3, "Alive 2007", "album", "2007-11-16"))
+            .DeezerAlbum(2, "Homework", Homework);
+
+        await _rig.RunAsync();
+        var list = await _rig.ListAsync();
+
+        var ram = list.Items.Single(i => i.Title == "Random Access Memories");
+        Assert.Equal([("deezer", "https://www.deezer.com/album/5"), ("musicbrainz", "https://musicbrainz.org/release-group/rg-ram")], ram.Sources.Select(s => (s.Source, s.Url)));
+        Assert.Equal([("deezer", "https://www.deezer.com/album/3")], list.Items.Single(i => i.Title == "Alive 2007").Sources.Select(s => (s.Source, s.Url)));
+        Assert.All(list.Items.SelectMany(i => i.Sources), s =>
+        {
+            var uri = new Uri(s.Url);
+            Assert.Equal("https", uri.Scheme);
+            Assert.Contains(uri.Host, new[] { "musicbrainz.org", "www.deezer.com" });
+        });
+    }
+
+    [Fact]
+    public async Task A5_NoCompletedRun_HasCompletedRefreshFalseAndNoItems()
+    {
+        var list = await _rig.ListAsync();
+
+        Assert.False(list.HasCompletedRefresh);
+        Assert.Null(list.LastRefreshedAt);
+        Assert.Empty(list.Items);
+    }
 }
