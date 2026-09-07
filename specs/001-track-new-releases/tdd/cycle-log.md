@@ -696,3 +696,12 @@ failed before the implementation.
 - green: `FindCandidate` also accepts an album whose `MusicBrainzReleaseId` is among the stored MusicBrainz editions' ids. Suite -> 103 passed, 0 failed
 - refactor: none needed
 - commit: `e886884`
+
+## Cycle 78: U95 with no identifier match, an album titled `Album (Deluxe Edition)` is the candidate for release `Album` with method `Title`
+
+- test: `Matching/OwnershipMatcherTests.cs::Decide_WithoutIdentifierMatch_AlbumTitledWithAnEditionQualifier_IsTheCandidateByTitle` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~OwnershipMatcherTests.Decide_WithoutIdentifierMatch_AlbumTitledWithAnEditionQualifier_IsTheCandidateByTitle" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: Tuple (0c9f1340-…, "Title") / Actual:   Tuple (null, null)` (1 failed)
+- green: `FindCandidate` falls back to equal `NormalizedTitle` with method `Title`. Suite -> 104 passed, 0 failed
+- refactor: none needed
+- commit: `bf4737e`
