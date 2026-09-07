@@ -48,6 +48,7 @@ Removal: artists absent from the snapshot are deleted; `ON DELETE CASCADE` remov
 | source_artist_id | TEXT | MBID or Deezer artist id when Matched |
 | unmatched_reason | TEXT | e.g. `no result`, `ambiguous (score 88 vs 86)`, `no corroborating album` |
 | resume_offset | INTEGER NOT NULL DEFAULT 0 | next catalogue page offset; 0 after a Complete fetch |
+| pass_run_id | INTEGER | run in which the current paging pass started (kept across Partial outcomes); NULL when no pass is open. Pruning after a Complete uses this run, so entries seen on an earlier page of a resumed pass survive |
 | last_outcome | TEXT | `Complete` \| `Partial` \| `Failed` (admin run status) |
 | last_complete_at | TEXT | last run in which this source's catalogue fetch completed |
 | last_error | TEXT | redacted message |

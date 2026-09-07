@@ -72,6 +72,25 @@ public sealed class ArtistRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Opens or continues a paging pass for (artist, source) and returns the run it started in. A pass spans runs while
+    /// outcomes are Partial; pruning after the Complete uses that first run so earlier pages' entries survive (FR-014).
+    /// </summary>
+    public async Task<long> BeginPassAsync(long artistId, string source, long runId, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO artist_source (library_artist_id, source, status, pass_run_id) VALUES (@artistId, @source, 'Pending', @runId)
+            ON CONFLICT (library_artist_id, source) DO UPDATE SET pass_run_id = COALESCE(artist_source.pass_run_id, excluded.pass_run_id)
+            RETURNING pass_run_id
+            """;
+        command.Parameters.AddWithValue("@artistId", artistId);
+        command.Parameters.AddWithValue("@source", source);
+        command.Parameters.AddWithValue("@runId", runId);
+        return (long)(await command.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
+    }
+
     /// <summary>Records a catalogue fetch outcome. <see cref="FetchOutcome.Complete"/> resets the resume offset and stamps <c>last_complete_at</c>.</summary>
     public async Task SetFetchOutcomeAsync(long artistId, string source, FetchOutcome outcome, int resumeOffset, string? error, DateTimeOffset now, CancellationToken ct)
     {
@@ -83,6 +102,7 @@ public sealed class ArtistRepository
             VALUES (@artistId, @source, 'Pending', @offset, @outcome, @completeAt, @error)
             ON CONFLICT (library_artist_id, source) DO UPDATE SET
                 resume_offset = excluded.resume_offset,
+                pass_run_id = CASE WHEN @complete THEN NULL ELSE artist_source.pass_run_id END,
                 last_outcome = excluded.last_outcome,
                 last_complete_at = COALESCE(excluded.last_complete_at, artist_source.last_complete_at),
                 last_error = excluded.last_error
@@ -90,6 +110,7 @@ public sealed class ArtistRepository
         command.Parameters.AddWithValue("@artistId", artistId);
         command.Parameters.AddWithValue("@source", source);
         command.Parameters.AddWithValue("@offset", complete ? 0 : resumeOffset);
+        command.Parameters.AddWithValue("@complete", complete ? 1 : 0);
         command.Parameters.AddWithValue("@outcome", outcome.ToString());
         command.Parameters.AddWithValue("@completeAt", complete ? now.ToString("O") : DBNull.Value);
         command.Parameters.AddWithValue("@error", (object?)error ?? DBNull.Value);

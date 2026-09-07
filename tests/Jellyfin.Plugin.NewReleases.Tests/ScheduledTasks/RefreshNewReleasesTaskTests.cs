@@ -120,4 +120,52 @@ public sealed class RefreshNewReleasesTaskTests : IAsyncLifetime
         Assert.Equal(["Discovery"], await StoredTitlesAsync());
         Assert.Equal(1L, await _h.Db.ScalarAsync<long>("SELECT COUNT(*) FROM source_entry"));
     }
+
+    [Fact]
+    public async Task Run_BudgetExhaustedAfterPageOneOfTwo_IsPartialKeepsOffsetRemovesNothing_NextRunResumesAtOffset()
+    {
+        _library.Artist("Daft Punk"); _library.Album("Homework", "Daft Punk", Library);
+        _configuration.DeezerEnabled = false;
+        MatchEverything(_musicBrainz, "mb:");
+        var seeded = await _h.Db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:daft punk", Guid.NewGuid(), "Daft Punk", null, [Library], []), CancellationToken.None);
+        await _h.Db.Releases.UpsertFromSourceAsync(seeded, "musicbrainz", Item("musicbrainz", "rg-old", "From An Earlier Run"), 0, SourceHarness.Start, CancellationToken.None);
+        _musicBrainz.FetchCataloguePageAsync(Arg.Any<string>(), 0, Arg.Any<CancellationToken>())
+            .Returns(new CataloguePage([Item("musicbrainz", "rg-1", "Discovery")], 100, 150));
+        _musicBrainz.FetchCataloguePageAsync(Arg.Any<string>(), 100, Arg.Any<CancellationToken>())
+            .Returns<CataloguePage>(_ => throw new DailyBudgetExhaustedException("musicbrainz"));
+
+        await RunAsync();
+
+        var state = (await _h.Db.Artists.GetSourceStateAsync(seeded, "musicbrainz", CancellationToken.None))!;
+        Assert.Equal((FetchOutcome.Partial, 100), (state.LastOutcome, state.ResumeOffset));
+        Assert.Equal(["Discovery", "From An Earlier Run"], await StoredTitlesAsync());
+
+        // Next run: budget back, page 2 is the last one.
+        _musicBrainz.FetchCataloguePageAsync(Arg.Any<string>(), 100, Arg.Any<CancellationToken>())
+            .Returns(new CataloguePage([Item("musicbrainz", "rg-2", "Alive 1997")], null, 150));
+        await RunAsync();
+
+        Assert.Equal(1, _musicBrainz.ReceivedCalls().Count(c => c.GetMethodInfo().Name == nameof(IReleaseSource.FetchCataloguePageAsync) && (int)c.GetArguments()[1]! == 0));
+        Assert.Equal(FetchOutcome.Complete, (await _h.Db.Artists.GetSourceStateAsync(seeded, "musicbrainz", CancellationToken.None))!.LastOutcome);
+        Assert.Equal(["Alive 1997", "Discovery"], await StoredTitlesAsync()); // the pre-existing entry was pruned only by the Complete run
+    }
+
+    [Fact]
+    public async Task Run_FetchThatThrows_IsFailedWithLastErrorAndRemovesNothing()
+    {
+        _library.Artist("Daft Punk"); _library.Album("Homework", "Daft Punk", Library);
+        _configuration.DeezerEnabled = false;
+        MatchEverything(_musicBrainz, "mb:");
+        var seeded = await _h.Db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:daft punk", Guid.NewGuid(), "Daft Punk", null, [Library], []), CancellationToken.None);
+        await _h.Db.Releases.UpsertFromSourceAsync(seeded, "musicbrainz", Item("musicbrainz", "rg-old", "From An Earlier Run"), 0, SourceHarness.Start, CancellationToken.None);
+        _musicBrainz.FetchCataloguePageAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns<CataloguePage>(_ => throw new HttpRequestException("Source 'musicbrainz' still answered 503 after 3 retries."));
+
+        await RunAsync();
+
+        var state = (await _h.Db.Artists.GetSourceStateAsync(seeded, "musicbrainz", CancellationToken.None))!;
+        Assert.Equal(FetchOutcome.Failed, state.LastOutcome);
+        Assert.Contains("503", state.LastError);
+        Assert.Equal(["From An Earlier Run"], await StoredTitlesAsync());
+    }
 }

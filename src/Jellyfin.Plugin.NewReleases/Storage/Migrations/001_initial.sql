@@ -20,6 +20,7 @@ CREATE TABLE artist_source (
     source_artist_id  TEXT,
     unmatched_reason  TEXT,
     resume_offset     INTEGER NOT NULL DEFAULT 0,
+    pass_run_id       INTEGER,
     last_outcome      TEXT    CHECK (last_outcome IN ('Complete', 'Partial', 'Failed')),
     last_complete_at  TEXT,
     last_error        TEXT,

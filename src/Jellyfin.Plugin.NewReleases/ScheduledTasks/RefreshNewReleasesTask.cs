@@ -106,7 +106,21 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
                     continue;
                 }
 
-                await RefreshArtistAtSourceAsync(stored.Id, artist, source, runId, cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    await RefreshArtistAtSourceAsync(stored.Id, artist, source, runId, cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    // Failed: record, remove nothing, continue with the next source or artist (FR-014, contract failure semantics).
+                    _logger.LogWarning(ex, "Source {Source} failed for {Artist}.", source.Id, artist.Name);
+                    var state = await _artists.GetSourceStateAsync(stored.Id, source.Id, cancellationToken).ConfigureAwait(false);
+                    await _artists.SetFetchOutcomeAsync(stored.Id, source.Id, FetchOutcome.Failed, state?.ResumeOffset ?? 0, ex.Message, _clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+                }
             }
 
             if (everySourceAttempted)
@@ -131,9 +145,22 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
         }
 
         var offset = state?.ResumeOffset ?? 0;
+        var passStartedIn = await _artists.BeginPassAsync(artistId, source.Id, runId, ct).ConfigureAwait(false);
         for (int? next = offset; next is not null;)
         {
-            var page = await source.FetchCataloguePageAsync(match.SourceArtistId!, next.Value, ct).ConfigureAwait(false);
+            CataloguePage page;
+            try
+            {
+                page = await source.FetchCataloguePageAsync(match.SourceArtistId!, next.Value, ct).ConfigureAwait(false);
+            }
+            catch (DailyBudgetExhaustedException)
+            {
+                // Partial: keep the offset for the next run and remove nothing (FR-014, edge cases 5 and 8).
+                _logger.LogInformation("Source {Source}: budget exhausted at offset {Offset} for {Artist}; resuming next run.", source.Id, next, artist.Name);
+                await _artists.SetFetchOutcomeAsync(artistId, source.Id, FetchOutcome.Partial, next.Value, null, _clock.GetUtcNow(), ct).ConfigureAwait(false);
+                return;
+            }
+
             foreach (var item in page.Items)
             {
                 await _releases.UpsertFromSourceAsync(artistId, source.Id, item, runId, _clock.GetUtcNow(), ct).ConfigureAwait(false);
@@ -142,8 +169,8 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
             next = page.NextOffset;
         }
 
-        // Complete: only now may this source's entries the run did not return be dropped (FR-014).
-        await _releases.PruneEntriesAsync(artistId, source.Id, runId, ct).ConfigureAwait(false);
+        // Complete: only now may this source's entries be dropped, and only those not seen since the paging pass began (FR-014).
+        await _releases.PruneEntriesAsync(artistId, source.Id, passStartedIn, ct).ConfigureAwait(false);
         await _artists.SetFetchOutcomeAsync(artistId, source.Id, FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), ct).ConfigureAwait(false);
     }
 

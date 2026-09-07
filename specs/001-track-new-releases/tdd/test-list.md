@@ -103,6 +103,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U24 | Rotation returns artists with NULL `last_refreshed_at` first, then oldest first, ties by name | EC-6 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetRotationAsync_NeverRefreshedFirstThenOldestThenName` |
 | U25 | `artist_source` upsert stores status, source artist id, unmatched reason, outcome, `resume_offset`; a Complete outcome resets the offset to 0 | FR-002, FR-014 | example | DONE | `Storage/ArtistRepositoryTests.cs::ArtistSource_UpsertStoresMatchAndOutcome_CompleteResetsOffset` |
 | U26 | Admin counts return total library artists, matched per source, and the unmatched list with each source's reason | FR-012 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_ReportsTotalsMatchedPerSourceAndUnmatchedReasons` |
+| U128 | A paging pass keeps the run it started in across Partial outcomes and forgets it on Complete (discovered in cycle 108: pruning after a resumed Complete must not drop entries seen on an earlier page) | FR-014, EC-5 | example | PENDING | `Storage/ArtistRepositoryTests.cs` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Storage/ReleaseRepository.cs`
 
@@ -238,7 +239,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U104 | Artists are processed in rotation order and `last_refreshed_at` advances only when every enabled source was attempted for the artist | EC-6 | example | DONE | `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_ProcessesArtistsInRotationOrder_AdvancesLastRefreshedOnlyWhenEverySourceWasAttempted` |
 | U105 | A Complete fetch removes the source's entries the page set no longer contains and deletes the releases left without entries | FR-014 | example | DONE | `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_CompleteFetch_RemovesEntriesThePageSetNoLongerContains_AndOrphanReleases` |
 | U106 | Budget exhausted after page 1 of 2 → outcome `Partial`, `resume_offset = 100`, nothing removed; the next run fetches from offset 100 | FR-014, EC-5, EC-8 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
-| U107 | A fetch that throws → outcome `Failed`, `last_error` recorded, nothing removed | FR-014, EC-5 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
+| U107 | A fetch that throws → outcome `Failed`, `last_error` recorded, nothing removed | FR-014, EC-5 | example | DONE | `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_FetchThatThrows_IsFailedWithLastErrorAndRemovesNothing` |
 | U108 | Edition requests are issued only for releases with a library album candidate (request count equals candidates) | EC-7 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
 | U109 | An artist missing from the snapshot loses its releases after the run | FR-014, EC-9 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
 | U110 | A completed run writes one `refresh_run` row with counts and `Completed`; a cancelled run writes `Cancelled` | FR-012 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
