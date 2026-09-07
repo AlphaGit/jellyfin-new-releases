@@ -129,4 +129,19 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
             ],
             counts.Unmatched.SelectMany(u => u.Sources.OrderBy(s => s.Source).Select(s => (u.JellyfinId, u.Name, s.Source, s.Reason))));
     }
+
+    [Fact]
+    public async Task BeginPassAsync_KeepsTheStartingRunAcrossPartialOutcomes_ForgetsItOnComplete()
+    {
+        var now = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+
+        Assert.Equal(1L, await _db.Artists.BeginPassAsync(id, "musicbrainz", runId: 1, CancellationToken.None));
+        await _db.Artists.SetFetchOutcomeAsync(id, "musicbrainz", FetchOutcome.Partial, 100, null, now, CancellationToken.None);
+        Assert.Equal(1L, await _db.Artists.BeginPassAsync(id, "musicbrainz", runId: 2, CancellationToken.None));
+
+        await _db.Artists.SetFetchOutcomeAsync(id, "musicbrainz", FetchOutcome.Complete, 0, null, now, CancellationToken.None);
+
+        Assert.Equal(3L, await _db.Artists.BeginPassAsync(id, "musicbrainz", runId: 3, CancellationToken.None));
+    }
 }

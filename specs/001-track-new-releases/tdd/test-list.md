@@ -103,7 +103,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U24 | Rotation returns artists with NULL `last_refreshed_at` first, then oldest first, ties by name | EC-6 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetRotationAsync_NeverRefreshedFirstThenOldestThenName` |
 | U25 | `artist_source` upsert stores status, source artist id, unmatched reason, outcome, `resume_offset`; a Complete outcome resets the offset to 0 | FR-002, FR-014 | example | DONE | `Storage/ArtistRepositoryTests.cs::ArtistSource_UpsertStoresMatchAndOutcome_CompleteResetsOffset` |
 | U26 | Admin counts return total library artists, matched per source, and the unmatched list with each source's reason | FR-012 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_ReportsTotalsMatchedPerSourceAndUnmatchedReasons` |
-| U128 | A paging pass keeps the run it started in across Partial outcomes and forgets it on Complete (discovered in cycle 108: pruning after a resumed Complete must not drop entries seen on an earlier page) | FR-014, EC-5 | example | PENDING | `Storage/ArtistRepositoryTests.cs` |
+| U128 | A paging pass keeps the run it started in across Partial outcomes and forgets it on Complete (discovered in cycle 108: pruning after a resumed Complete must not drop entries seen on an earlier page) | FR-014, EC-5 | example | DONE | `Storage/ArtistRepositoryTests.cs::BeginPassAsync_KeepsTheStartingRunAcrossPartialOutcomes_ForgetsItOnComplete` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Storage/ReleaseRepository.cs`
 
