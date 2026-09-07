@@ -71,4 +71,13 @@ public class ReleaseTypeMapperTests
         Assert.False(ReleaseTypeMapper.IsIncluded(ReleaseType.Album, [ReleaseType.Compilation, ReleaseType.Live], withLive));
         Assert.True(ReleaseTypeMapper.IsIncluded(ReleaseType.Album, [ReleaseType.Compilation, ReleaseType.Live], withLiveAndCompilation));
     }
+
+    [Fact]
+    public void IsIncluded_AnyOtherType_ExcludesWhateverTheSelection()
+    {
+        HashSet<ReleaseType> everything = [.. Enum.GetValues<ReleaseType>()];
+
+        Assert.False(ReleaseTypeMapper.IsIncluded(ReleaseType.Other, [], everything));
+        Assert.False(ReleaseTypeMapper.IsIncluded(ReleaseType.Album, [ReleaseType.Other], everything));
+    }
 }

@@ -19,8 +19,11 @@ public static class ReleaseTypeMapper
             _ => ReleaseType.Other,
         }, Array.Empty<ReleaseType>());
 
+    /// <summary>Included only when the primary and every secondary type are enabled; <see cref="ReleaseType.Other"/> anywhere excludes.</summary>
     public static bool IsIncluded(ReleaseType primary, IReadOnlyList<ReleaseType> secondaries, ISet<ReleaseType> enabled)
-        => enabled.Contains(primary) && secondaries.All(enabled.Contains);
+        => primary != ReleaseType.Other
+            && enabled.Contains(primary)
+            && secondaries.All(t => t != ReleaseType.Other && enabled.Contains(t));
 
     private static ReleaseType MapMusicBrainzPrimary(string? primary) => primary switch
     {
