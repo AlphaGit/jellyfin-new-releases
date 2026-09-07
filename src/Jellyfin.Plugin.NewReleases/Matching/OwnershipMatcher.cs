@@ -26,6 +26,12 @@ public static class OwnershipMatcher
         var byIdentifier = albums.FirstOrDefault(a =>
             (release.CanonicalSource == "musicbrainz" && a.MusicBrainzReleaseGroupId == release.CanonicalSourceId)
             || (a.MusicBrainzReleaseId is not null && editionIds.Contains(a.MusicBrainzReleaseId)));
-        return byIdentifier is not null ? (byIdentifier, "Identifier") : (null, null);
+        if (byIdentifier is not null)
+        {
+            return (byIdentifier, "Identifier");
+        }
+
+        var byTitle = albums.FirstOrDefault(a => a.NormalizedTitle == release.NormalizedTitle);
+        return byTitle is not null ? (byTitle, "Title") : (null, null);
     }
 }
