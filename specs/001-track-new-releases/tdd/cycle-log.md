@@ -345,3 +345,12 @@ failed before the implementation.
 - green: `ListAsync` — `@artist` parameter in SQL; in C#: from/to on `date_sort` (undated skipped when a bound is set), `State` = Upcoming when `date_sort > today` else ownership, then `Type`/`State` equality filters. Suite -> 59 passed, 0 failed
 - refactor: `ReadListed` takes `today` and computes the state once; suite re-run green
 - commit: `54f5cbc`
+
+## Cycle 39: U39 `archived=false` omits rows with a decision; `archived=true` returns only those, with kind and decided-at
+
+- test: `Storage/ReleaseRepositoryTests.cs::ListAsync_ArchivedFlagSplitsDecidedRowsFromTheList` (new; decision seeded by SQL)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.ListAsync_ArchivedFlagSplitsDecidedRowsFromTheList" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: ["Kept"] / Actual: ["Ignored Album", "Kept"]` (1 failed)
+- green: `ListAsync` adds `AND ((d.kind IS NOT NULL) = @archived)` on the LEFT JOIN to `decision`. Suite -> 60 passed, 0 failed
+- refactor: none needed
+- commit: `6df737f`
