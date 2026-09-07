@@ -1184,3 +1184,11 @@ failed before the implementation.
 - green: no production change. Suite -> 164 passed, 0 failed
 - refactor: none needed
 - commit: `0f0f729`
+
+## Cycle 139: A12 MusicBrainz answers 503 to every call while Deezer succeeds → admin status shows MusicBrainz `CoolingDown` with `lastError`, and Deezer's releases are listed
+
+- test: `Acceptance/ConfigureAndRunTests.cs::A12_MusicBrainz503OnEveryCall_WhileDeezerSucceeds_StatusShowsCoolingDownWithLastError_DeezerReleasesListed` (new; four failures on record from earlier runs, the fifth in this run; retries driven through the stub clock, ~3 s of real token-bucket time)
+- red: passed on first run. Deliberate mutant: the per-source catch rethrows -> the run fails before Deezer is processed (`HttpRequestException` surfaces) (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 165 passed, 0 failed. US2 outer loop closed: A9–A13, A15 green (A14 dropped, R12).
+- refactor: none needed
+- commit: `bf638d3`
