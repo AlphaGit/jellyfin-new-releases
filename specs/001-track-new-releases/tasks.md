@@ -117,14 +117,14 @@ without access to that library gets an empty list.
 
 ### Outer-loop gate for User Story 1
 
-- [ ] T057 [US1] Outer loop green: acceptance behavior [A1] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
-- [ ] T058 [US1] Outer loop green: acceptance behavior [A2] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
-- [ ] T059 [US1] Outer loop green: acceptance behavior [A3] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
-- [ ] T060 [US1] Outer loop green: acceptance behavior [A4] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
-- [ ] T061 [US1] Outer loop green: acceptance behavior [A5] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
-- [ ] T062 [US1] Outer loop green: acceptance behavior [A6] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
-- [ ] T063 [US1] Outer loop green: acceptance behavior [A7] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
-- [ ] T064 [US1] Outer loop green: acceptance behavior [A8] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
+- [X] T057 [US1] Outer loop green: acceptance behavior [A1] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
+- [X] T058 [US1] Outer loop green: acceptance behavior [A2] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
+- [X] T059 [US1] Outer loop green: acceptance behavior [A3] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
+- [X] T060 [US1] Outer loop green: acceptance behavior [A4] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
+- [X] T061 [US1] Outer loop green: acceptance behavior [A5] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
+- [X] T062 [US1] Outer loop green: acceptance behavior [A6] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
+- [X] T063 [US1] Outer loop green: acceptance behavior [A7] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
+- [X] T064 [US1] Outer loop green: acceptance behavior [A8] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US1 is called complete
 
 **Checkpoint**: `dotnet test` green; the manual smoke run (quickstart.md steps 1, 3, 4) shows the populated list in the web client. MVP done.
 
@@ -157,8 +157,8 @@ Defaults and persistence (scenarios 1–2) are already covered by T022/T023 in P
 
 ### Outer-loop gate for User Story 2
 
-- [ ] T065 [US2] Outer loop green: acceptance behavior [A9] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
-- [ ] T066 [US2] Outer loop green: acceptance behavior [A10] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
+- [X] T065 [US2] Outer loop green: acceptance behavior [A9] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
+- [X] T066 [US2] Outer loop green: acceptance behavior [A10] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
 - [ ] T067 [US2] Outer loop green: acceptance behavior [A11] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
 - [ ] T068 [US2] Outer loop green: acceptance behavior [A12] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
 - [ ] T069 [US2] Outer loop green: acceptance behavior [A13] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US2 is called complete
