@@ -651,3 +651,12 @@ failed before the implementation.
 - green: `LibraryScanner.SnapshotAlbum()` — `Audio` children via `GetItemList(ParentId = album.Id)`, track titles through `NormalizeTrack`, album title through `NormalizeAlbum`, both MusicBrainz provider ids. Suite -> 98 passed, 0 failed
 - refactor: none needed
 - commit: `8c1b0a8`
+
+## Cycle 73: U71 `LibraryIds` are the distinct collection folder ids of the artist's albums
+
+- test: `Library/LibraryScannerTests.cs::Scan_LibraryIdsAreTheDistinctCollectionFoldersOfTheArtistsAlbums` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~LibraryScannerTests.Scan_LibraryIdsAreTheDistinctCollectionFoldersOfTheArtistsAlbums" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ / Expected: [aaaaaaaa-…, bbbbbbbb-…] / Actual: []` (1 failed)
+- green: `LibraryScanner` fills `LibraryIds` from `GetCollectionFolders(album)` over the artist's albums, distinct. Suite -> 99 passed, 0 failed
+- refactor: none needed
+- commit: `e5af959`
