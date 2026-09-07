@@ -16,4 +16,10 @@ public class TitleNormalizerTests
     {
         Assert.Equal(expected, TitleNormalizer.NormalizeAlbum(input));
     }
+
+    [Fact]
+    public void NormalizeAlbum_ReplacesAmpersandWithAnd()
+    {
+        Assert.Equal("rock and roll", TitleNormalizer.NormalizeAlbum("Rock & Roll"));
+    }
 }

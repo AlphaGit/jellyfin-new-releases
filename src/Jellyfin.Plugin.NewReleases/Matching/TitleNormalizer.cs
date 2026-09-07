@@ -17,7 +17,7 @@ public static class TitleNormalizer
 
     public static string NormalizeAlbum(string title) => Base(title);
 
-    /// <summary>Rules 1–2: NFKC, strip diacritics, case-fold.</summary>
+    /// <summary>Rules 1–3: NFKC, strip diacritics, case-fold, <c>&amp;</c> → <c>and</c>.</summary>
     private static string Base(string text)
     {
         var decomposed = text.Normalize(NormalizationForm.FormKD).ToLowerInvariant();
@@ -32,6 +32,6 @@ public static class TitleNormalizer
             sb.Append(Ligatures.TryGetValue(ch, out var plain) ? plain : ch.ToString());
         }
 
-        return sb.ToString().Normalize(NormalizationForm.FormKC);
+        return sb.ToString().Normalize(NormalizationForm.FormKC).Replace("&", "and", StringComparison.Ordinal);
     }
 }
