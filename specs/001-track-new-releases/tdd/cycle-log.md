@@ -381,3 +381,11 @@ failed before the implementation.
 - green: `ReleaseRepository.PurgeAsync` = `DELETE FROM edition; DELETE FROM source_entry; DELETE FROM release;`. Suite -> 63 passed, 0 failed
 - refactor: none needed
 - commit: `cac1786`
+
+## Cycle 43: U43 listing 500 stored releases completes within budget (target 500 ms, asserted 2 000 ms)
+
+- test: `Storage/ReleaseRepositoryTests.cs::ListAsync_FiveHundredStoredReleases_ListsWithinBudget` (new; writes the measured time to the test output)
+- red: passed on first run (a performance ceiling on existing code). Deliberate mutant: `await Task.Delay(2_500)` at the top of `ListAsync` -> `Assert.InRange() Failure: Value not in range / Range:  (0 - 2000) / Actual: 2526` (1 failed). Code restored exactly (`git diff` empty). Measured on this machine after restore: `ListAsync with 500 releases: 3 ms`.
+- green: no production change. Suite -> 64 passed, 0 failed
+- refactor: none needed
+- commit: `e83e8cd`
