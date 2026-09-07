@@ -934,3 +934,12 @@ failed before the implementation.
 - green: `RefreshNewReleasesTask` metadata and a `DailyTrigger` at 03:00. Suite -> 131 passed, 0 failed
 - refactor: none needed
 - commit: `d3e38a5`
+
+## Cycle 106: U104 artists are processed in rotation order and `last_refreshed_at` advances only when every enabled source was attempted
+
+- test: `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_ProcessesArtistsInRotationOrder_AdvancesLastRefreshedOnlyWhenEverySourceWasAttempted` (new; Deezer behind a `next_allowed_at` floor in run 1, available in run 2)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RefreshNewReleasesTaskTests.Run_ProcessesArtistsInRotationOrder_AdvancesLastRefreshedOnlyWhenEverySourceWasAttempted" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; `ExecuteAsync` stub)
+- green: `RefreshNewReleasesTask.ExecuteAsync` core — scan, upsert/delete-missing artists, start a run, walk `GetRotationAsync`, skip a source when `SourceHttpClient.IsAvailableAsync` is false, `RefreshArtistAtSourceAsync` (reuse a stored Matched id else match; page from `resume_offset`; upsert items; record Complete), `SetLastRefreshedAsync` only when every enabled source was attempted; `ArtistRepository.SetLastRefreshedAsync` added. Prune, Partial/Failed outcomes, ownership and the run row follow in U105–U113. Suite -> 132 passed, 0 failed
+- refactor: none needed
+- commit: `ba02242`
