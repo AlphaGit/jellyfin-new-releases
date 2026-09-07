@@ -13,4 +13,10 @@ public class UserAgentBuilderTests
     {
         Assert.Equal("JellyfinNewReleases/0.1.0", UserAgentBuilder.Build("0.1.0", contact));
     }
+
+    [Fact]
+    public void Build_WithContact_AppendsTrimmedContactInParentheses()
+    {
+        Assert.Equal("JellyfinNewReleases/0.1.0 ( me@example.org )", UserAgentBuilder.Build("0.1.0", " me@example.org "));
+    }
 }

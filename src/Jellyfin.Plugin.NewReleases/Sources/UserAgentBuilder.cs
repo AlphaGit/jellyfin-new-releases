@@ -5,5 +5,10 @@ public static class UserAgentBuilder
 {
     public const string ProductName = "JellyfinNewReleases";
 
-    public static string Build(string version, string? contact) => $"{ProductName}/{version}";
+    /// <summary>`JellyfinNewReleases/&lt;version&gt;` or `JellyfinNewReleases/&lt;version&gt; ( &lt;contact&gt; )`; never a hard-coded contact.</summary>
+    public static string Build(string version, string? contact)
+    {
+        var trimmed = contact?.Trim();
+        return string.IsNullOrEmpty(trimmed) ? $"{ProductName}/{version}" : $"{ProductName}/{version} ( {trimmed} )";
+    }
 }

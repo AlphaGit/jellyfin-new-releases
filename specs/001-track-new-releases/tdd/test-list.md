@@ -158,7 +158,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U56 | Without a contact the User-Agent is `JellyfinNewReleases/<version>` | FR-018 | example | DONE | `Sources/UserAgentBuilderTests.cs::Build_WithoutContact_IsProductAndVersion` |
-| U57 | With contact ` me@example.org ` the User-Agent is `JellyfinNewReleases/<version> ( me@example.org )` | FR-018 | example | PENDING | `Sources/UserAgentBuilderTests.cs` |
+| U57 | With contact ` me@example.org ` the User-Agent is `JellyfinNewReleases/<version> ( me@example.org )` | FR-018 | example | DONE | `Sources/UserAgentBuilderTests.cs::Build_WithContact_AppendsTrimmedContactInParentheses` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Sources/SourceHttpClient.cs`
 
