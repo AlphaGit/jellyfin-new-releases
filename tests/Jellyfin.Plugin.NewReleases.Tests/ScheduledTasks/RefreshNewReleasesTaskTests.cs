@@ -191,4 +191,19 @@ public sealed class RefreshNewReleasesTaskTests : IAsyncLifetime
             .ToArray();
         Assert.Equal(["rg-disc", "rg-home"], requested); // two candidates, two requests; Alive 1997 / Human After All never fetched
     }
+
+    [Fact]
+    public async Task Run_ArtistMissingFromTheSnapshot_LosesItsReleases()
+    {
+        _library.Artist("Keeper"); _library.Album("K1", "Keeper", Library);
+        _configuration.DeezerEnabled = false;
+        MatchEverything(_musicBrainz, "mb:");
+        var gone = await _h.Db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:gone", Guid.NewGuid(), "Gone", null, [Library], []), CancellationToken.None);
+        await _h.Db.Releases.UpsertFromSourceAsync(gone, "musicbrainz", Item("musicbrainz", "rg-g", "Gone Album"), 0, SourceHarness.Start, CancellationToken.None);
+
+        await RunAsync();
+
+        Assert.Equal(["Keeper"], (await _h.Db.Artists.GetAllAsync(CancellationToken.None)).Select(a => a.Name));
+        Assert.Empty(await StoredTitlesAsync());
+    }
 }
