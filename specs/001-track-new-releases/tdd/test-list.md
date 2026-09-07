@@ -90,7 +90,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U18 | Database path is `{DataPath}/newreleases/newreleases.db` and the directory is created on first open | FR-006 | example | DONE | `Storage/DatabaseTests.cs::OpenAsync_UsesNewReleasesFileUnderDataPathAndCreatesTheDirectory` |
-| U19 | First open applies `001_initial.sql`: every table from data-model.md exists and `schema_version` is 1 | FR-006 | example | PENDING | `Storage/DatabaseTests.cs` |
+| U19 | First open applies `001_initial.sql`: every table from data-model.md exists and `schema_version` is 1 | FR-006 | example | DONE | `Storage/DatabaseTests.cs::OpenAsync_FirstOpenAppliesTheInitialMigration` |
 | U20 | Second open applies no migration and `schema_version` still has one row | FR-006 | example | PENDING | `Storage/DatabaseTests.cs` |
 | U21 | Two concurrent first opens run the migration once | R13 | example | PENDING | `Storage/DatabaseTests.cs` |
 

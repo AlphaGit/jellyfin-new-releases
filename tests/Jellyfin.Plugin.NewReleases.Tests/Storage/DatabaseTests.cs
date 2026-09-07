@@ -29,6 +29,32 @@ public sealed class DatabaseTests : IDisposable
         Assert.True(Directory.Exists(Path.Combine(_dataPath, "newreleases")));
     }
 
+    private static readonly string[] SchemaTables =
+        ["library_artist", "artist_source", "release", "source_entry", "edition", "decision", "source_state", "refresh_run", "schema_version"];
+
+    [Fact]
+    public async Task OpenAsync_FirstOpenAppliesTheInitialMigration()
+    {
+        await using var connection = await NewDatabase().OpenAsync(CancellationToken.None);
+
+        await using var tables = connection.CreateCommand();
+        tables.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table'";
+        var names = new List<string>();
+        await using (var reader = await tables.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                names.Add(reader.GetString(0));
+            }
+        }
+
+        Assert.Superset(SchemaTables.ToHashSet(), names.ToHashSet());
+
+        await using var version = connection.CreateCommand();
+        version.CommandText = "SELECT MAX(version) FROM schema_version";
+        Assert.Equal(1L, await version.ExecuteScalarAsync());
+    }
+
     public void Dispose()
     {
         SqliteConnectionPoolReset();
