@@ -102,4 +102,16 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         Assert.Null(await _db.Releases.GetAsync(orphan, CancellationToken.None));
         Assert.NotNull(await _db.Releases.GetAsync(shared, CancellationToken.None));
     }
+
+    [Theory]
+    [InlineData("2024", "2024-00-00")]
+    [InlineData("2024-05", "2024-05-00")]
+    [InlineData("2024-05-17", "2024-05-17")]
+    [InlineData(null, null)]
+    public async Task UpsertFromSourceAsync_PadsDateSortAndLeavesUndatedNull(string? date, string? expectedSort)
+    {
+        var id = await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Dated " + (date ?? "none"), "rg-" + (date ?? "none"), date), Run1, Now, CancellationToken.None);
+
+        Assert.Equal(expectedSort, (await _db.Releases.GetAsync(id, CancellationToken.None))!.DateSort);
+    }
 }

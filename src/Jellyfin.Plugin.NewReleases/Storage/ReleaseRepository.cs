@@ -110,6 +110,19 @@ public sealed class ReleaseRepository
             """;
         command.Parameters.AddWithValue("@id", releaseId);
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+
+        // date_sort: partial dates padded with 00 so a year-only release sorts after that year's dated ones (R16).
+        await using var sort = connection.CreateCommand();
+        sort.Transaction = transaction;
+        sort.CommandText = """
+            UPDATE release SET date_sort = CASE length(release_date)
+                WHEN 4 THEN release_date || '-00-00'
+                WHEN 7 THEN release_date || '-00'
+                ELSE release_date END
+            WHERE id = @id
+            """;
+        sort.Parameters.AddWithValue("@id", releaseId);
+        await sort.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     /// <summary>
