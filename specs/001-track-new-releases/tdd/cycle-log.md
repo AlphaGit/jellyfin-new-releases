@@ -975,3 +975,12 @@ failed before the implementation.
 - green: no production change. Suite -> 136 passed, 0 failed
 - refactor: none needed
 - commit: `c1e054e`
+
+## Cycle 111: U108 edition requests are issued only for releases with a library album candidate
+
+- test: `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_EditionRequestsAreIssuedOnlyForReleasesWithALibraryAlbumCandidate` (new; 4 catalogue releases, 2 library albums → exactly 2 edition requests)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RefreshNewReleasesTaskTests.Run_EditionRequestsAreIssuedOnlyForReleasesWithALibraryAlbumCandidate" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ / Expected: ["rg-disc", "rg-home"] / Actual:   []` (1 failed; no ownership step yet)
+- green: `RefreshNewReleasesTask.DecideOwnershipAsync` — per release: `OwnershipMatcher.Decide` on stored editions; when it asks for editions, fetch from each enabled and available source listing the release, store them, decide again; write the result. `ReleaseRepository.GetByArtistAsync` and `GetSourceEntriesAsync` added. Suite -> 137 passed, 0 failed
+- refactor: none needed
+- commit: `8d067af`
