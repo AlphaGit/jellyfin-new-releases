@@ -12,3 +12,34 @@ public enum ReleaseType
     Soundtrack,
     Other,
 }
+
+/// <summary>Result of the automatic ownership check. <c>Owned</c> is shown to users as "In library" (never listed).</summary>
+public enum OwnershipState
+{
+    Missing,
+    Incomplete,
+    Owned,
+}
+
+/// <summary>A user's decision on a release; both send it to the Archive.</summary>
+public enum DecisionKind
+{
+    Ignore,
+    HaveIt,
+}
+
+/// <summary>Outcome of one (artist, source) catalogue fetch. Only <c>Complete</c> may prune source entries (FR-014).</summary>
+public enum FetchOutcome
+{
+    Complete,
+    Partial,
+    Failed,
+}
+
+/// <summary>Match state of a library artist at one source (FR-002).</summary>
+public enum MatchStatus
+{
+    Pending,
+    Matched,
+    Unmatched,
+}
