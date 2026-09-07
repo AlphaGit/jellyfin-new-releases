@@ -559,3 +559,12 @@ failed before the implementation.
 - green: `GetStringAsync` checks `GetRemainingBudgetAsync(source, SourceLimits.BySource[source].DailyBudget) <= 0` before building the request. Suite -> 87 passed, 0 failed
 - refactor: none needed
 - commit: `4b3760c`
+
+## Cycle 63: U61 a 503 with `Retry-After: 2` sets `next_allowed_at = now + 2 s`, waits, retries, and returns the later 200 body
+
+- test: `Sources/SourceHttpClientTests.cs::GetStringAsync_503WithRetryAfter_SetsNextAllowedAtWaitsRetriesAndReturnsTheLaterBody` (new; the pending task is observed before the stub clock is advanced)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceHttpClientTests.GetStringAsync_503WithRetryAfter_SetsNextAllowedAtWaitsRetriesAndReturnsTheLaterBody" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.False() Failure / Expected: False / Actual:   True` (1 failed; the client returned the 503 body immediately)
+- green: `GetStringAsync` retry loop — non-success: `Retry-After` (delta or date) becomes the delay and is persisted via new `SourceStateRepository.SetNextAllowedAtAsync`; `Task.Delay(delay, clock)`; each attempt first waits for a stored `next_allowed_at` floor. Suite -> 88 passed, 0 failed
+- refactor: none needed
+- commit: `7a7073b`
