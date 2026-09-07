@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Jellyfin.Plugin.NewReleases.Matching;
 
@@ -7,7 +8,7 @@ namespace Jellyfin.Plugin.NewReleases.Matching;
 /// Deterministic title normalization from <c>docs/domain_knowledge/title-normalization.md</c>.
 /// Two titles match only when their normalized forms are equal; there is no fuzzy matching.
 /// </summary>
-public static class TitleNormalizer
+public static partial class TitleNormalizer
 {
     // Letters NFKD does not decompose into base + combining mark.
     private static readonly Dictionary<char, string> Ligatures = new()
@@ -15,7 +16,29 @@ public static class TitleNormalizer
         ['ø'] = "o", ['æ'] = "ae", ['œ'] = "oe", ['ß'] = "ss", ['ł'] = "l", ['đ'] = "d", ['ð'] = "d", ['þ'] = "th",
     };
 
-    public static string NormalizeAlbum(string title) => Finish(Base(title));
+    // Rule 6: one trailing "(…)", "[…]" or " - …" segment that names an edition.
+    private const string QualifierWords =
+        @"\b(deluxe|remaster(ed)?|expanded|anniversary|explicit|bonus|edition|version|special|collector|limited|24-bit|hd)\b";
+
+    [GeneratedRegex(@"\s*(\(([^()]*)\)|\[([^\[\]]*)\]|\s-\s([^-]*))\s*$")]
+    private static partial Regex TrailingSegment();
+
+    [GeneratedRegex(QualifierWords)]
+    private static partial Regex QualifierWord();
+
+    public static string NormalizeAlbum(string title) => Finish(StripEditionQualifier(Base(title)));
+
+    private static string StripEditionQualifier(string text)
+    {
+        var m = TrailingSegment().Match(text);
+        if (!m.Success)
+        {
+            return text;
+        }
+
+        var segment = m.Groups[2].Success ? m.Groups[2].Value : m.Groups[3].Success ? m.Groups[3].Value : m.Groups[4].Value;
+        return QualifierWord().IsMatch(segment) ? text[..m.Index] : text;
+    }
 
     /// <summary>Rules 1–3: NFKC, strip diacritics, case-fold, <c>&amp;</c> → <c>and</c>.</summary>
     private static string Base(string text)

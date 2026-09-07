@@ -28,4 +28,13 @@ public class TitleNormalizerTests
     {
         Assert.Equal("ab c", TitleNormalizer.NormalizeAlbum("A.B.  --  C!"));
     }
+
+    [Theory]
+    [InlineData("TANZNEID (24-bit HD audio)", "tanzneid")]
+    [InlineData("Random Access Memories [Explicit]", "random access memories")]
+    [InlineData("Album - 10th Anniversary Edition", "album")]
+    public void NormalizeAlbum_RemovesTrailingEditionQualifier(string input, string expected)
+    {
+        Assert.Equal(expected, TitleNormalizer.NormalizeAlbum(input));
+    }
 }
