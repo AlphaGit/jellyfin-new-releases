@@ -522,3 +522,12 @@ failed before the implementation.
 - green: `UserAgentBuilder.Build` = `$"{ProductName}/{version}"`. Suite -> 83 passed, 0 failed
 - refactor: none needed
 - commit: `e56d37b`
+
+## Cycle 59: U57 with contact ` me@example.org ` the User-Agent is `JellyfinNewReleases/<version> ( me@example.org )`
+
+- test: `Sources/UserAgentBuilderTests.cs::Build_WithContact_AppendsTrimmedContactInParentheses` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~UserAgentBuilderTests.Build_WithContact_AppendsTrimmedContactInParentheses" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: ···"lyfinNewReleases/0.1.0 ( me@example.org )" / Actual:   "JellyfinNewReleases/0.1.0"` (1 failed)
+- green: `UserAgentBuilder.Build` appends ` ( <trimmed contact> )` when non-blank. `Sources/SourceLimits.cs` constants (R10) added in the same commit: the non-behavioural half of T075 that the HTTP client cycles need next. Suite -> 84 passed, 0 failed
+- refactor: none needed
+- commit: `4c9ec03`
