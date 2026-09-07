@@ -81,4 +81,17 @@ public class PluginConfigurationTests
 
         Assert.Equal(year is null ? null : new DateOnly(year.Value, month!.Value, day!.Value), configuration.ReleasedSinceDate());
     }
+
+    [Fact]
+    public void Deserialize_XmlWithoutAnyElement_YieldsTheDefaults()
+    {
+        const string olderConfig = "<?xml version=\"1.0\"?><PluginConfiguration xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" />";
+        var serializer = new XmlSerializer(typeof(PluginConfiguration));
+
+        using var reader = new StringReader(olderConfig);
+        var configuration = (PluginConfiguration)serializer.Deserialize(reader)!;
+
+        // Literal contract defaults, not `new PluginConfiguration()`: a constructor bug would hide in both sides.
+        Assert.Equal((true, true, true, true, false, false, false, false, false, "", ""), Fields(configuration));
+    }
 }
