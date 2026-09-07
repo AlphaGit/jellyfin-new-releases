@@ -67,4 +67,13 @@ public class TitleNormalizerTests
     {
         Assert.NotEqual(TitleNormalizer.NormalizeAlbum(left), TitleNormalizer.NormalizeAlbum(right));
     }
+
+    [Theory]
+    [InlineData("Sigur Rós", "sigur ros")]
+    [InlineData("Artist (Deluxe Edition)", "artist deluxe edition")]
+    [InlineData("Duo feat. Guest", "duo feat guest")]
+    public void NormalizeName_AppliesBaseRulesOnly(string input, string expected)
+    {
+        Assert.Equal(expected, TitleNormalizer.NormalizeName(input));
+    }
 }

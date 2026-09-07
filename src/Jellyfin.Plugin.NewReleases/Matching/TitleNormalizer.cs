@@ -34,6 +34,9 @@ public static partial class TitleNormalizer
 
     public static string NormalizeTrack(string title) => Finish(TrailingFeaturedArtist().Replace(Base(title), string.Empty, 1));
 
+    /// <summary>Artist names: rules 1–5 only (no qualifier or featured-artist removal).</summary>
+    public static string NormalizeName(string name) => Finish(Base(name));
+
     private static string StripEditionQualifier(string text)
     {
         var m = TrailingSegment().Match(text);

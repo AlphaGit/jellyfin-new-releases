@@ -70,7 +70,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U6 | Track `Get Lucky (feat. Pharrell Williams)` and `Get Lucky ft. Pharrell` normalize to `get lucky` | FR-005c | example | DONE | `Matching/TitleNormalizerTests.cs::NormalizeTrack_RemovesTrailingFeaturedArtist` |
 | U7 | Track `Song (Deluxe)` keeps `deluxe` (album qualifier rule does not apply to tracks) | FR-005c | example | DONE | `Matching/TitleNormalizerTests.cs::NormalizeTrack_KeepsEditionQualifier` |
 | U8 | `The Album` ≠ `Album` and `Vol. 2` ≠ `Volume 2` after normalization | FR-005c | example | DONE | `Matching/TitleNormalizerTests.cs::NormalizeAlbum_KeepsArticlesAndAbbreviationsDistinct` |
-| U9  | Artist name normalization applies rules 1–5 only (`Sigur Rós` → `sigur ros`, no qualifier or feat. removal) | FR-002 | example | PENDING | `Matching/TitleNormalizerTests.cs` |
+| U9 | Artist name normalization applies rules 1–5 only (`Sigur Rós` → `sigur ros`, no qualifier or feat. removal) | FR-002 | example | DONE | `Matching/TitleNormalizerTests.cs::NormalizeName_AppliesBaseRulesOnly` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Matching/ReleaseTypeMapper.cs`
 
