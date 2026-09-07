@@ -943,3 +943,12 @@ failed before the implementation.
 - green: `RefreshNewReleasesTask.ExecuteAsync` core — scan, upsert/delete-missing artists, start a run, walk `GetRotationAsync`, skip a source when `SourceHttpClient.IsAvailableAsync` is false, `RefreshArtistAtSourceAsync` (reuse a stored Matched id else match; page from `resume_offset`; upsert items; record Complete), `SetLastRefreshedAsync` only when every enabled source was attempted; `ArtistRepository.SetLastRefreshedAsync` added. Prune, Partial/Failed outcomes, ownership and the run row follow in U105–U113. Suite -> 132 passed, 0 failed
 - refactor: none needed
 - commit: `ba02242`
+
+## Cycle 107: U105 a Complete fetch removes the source's entries the page set no longer contains and deletes releases left without entries
+
+- test: `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_CompleteFetch_RemovesEntriesThePageSetNoLongerContains_AndOrphanReleases` (new; two runs, second page set drops one release)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RefreshNewReleasesTaskTests.Run_CompleteFetch_RemovesEntriesThePageSetNoLongerContains_AndOrphanReleases" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ / Expected: ["Discovery"] / Actual:   ["Alive 1997", "Discovery"]` (1 failed)
+- green: `RefreshArtistAtSourceAsync` calls `ReleaseRepository.PruneEntriesAsync(artist, source, runId)` before recording the Complete outcome. Suite -> 133 passed, 0 failed
+- refactor: none needed
+- commit: `2effcbe`
