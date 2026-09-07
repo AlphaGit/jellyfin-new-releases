@@ -54,6 +54,22 @@ internal sealed class TestDatabase : IAsyncDisposable
         await command.ExecuteNonQueryAsync();
     }
 
+    /// <summary>Reads the first column of every row.</summary>
+    public async Task<List<T>> ColumnAsync<T>(string sql)
+    {
+        await using var connection = await Database.OpenAsync(CancellationToken.None);
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        var result = new List<T>();
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            result.Add((T)Convert.ChangeType(reader.GetValue(0), typeof(T), System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        return result;
+    }
+
     /// <summary>Runs a scalar query against the file for assertions that no repository exposes.</summary>
     public async Task<T?> ScalarAsync<T>(string sql)
     {

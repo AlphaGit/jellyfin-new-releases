@@ -72,4 +72,21 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         var release = (await _db.Releases.GetAsync(id, CancellationToken.None))!;
         Assert.Equal(("musicbrainz", "2005-03-14"), (release.CanonicalSource, release.ReleaseDate));
     }
+
+    [Fact]
+    public async Task PruneEntriesAsync_DeletesOnlyThePairsStaleEntries()
+    {
+        var other = await _db.Artists.UpsertAsync(ArtistRepositoryTests.Artist("name:other", "Other"), CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Stale", "rg-s"), Run1, Now, CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Fresh", "rg-f"), Run1, Now, CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(_artist, "deezer", DeezerItem("Stale", "dz-s"), Run1, Now, CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(other, "musicbrainz", MusicBrainzItem("Elsewhere", "rg-e"), Run1, Now, CancellationToken.None);
+
+        await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Fresh", "rg-f"), Run1 + 1, Now, CancellationToken.None);
+        await _db.Releases.PruneEntriesAsync(_artist, "musicbrainz", Run1 + 1, CancellationToken.None);
+
+        Assert.Equal(
+            ["deezer:dz-s", "musicbrainz:rg-e", "musicbrainz:rg-f"],
+            (await _db.ColumnAsync<string>("SELECT source || ':' || source_release_id FROM source_entry ORDER BY 1")));
+    }
 }
