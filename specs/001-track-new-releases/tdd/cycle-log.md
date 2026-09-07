@@ -479,3 +479,11 @@ failed before the implementation.
 - green: `PluginConfiguration` initializers `= true` on `MusicBrainzEnabled`, `DeezerEnabled`, `IncludeAlbums`, `IncludeEps`. Suite -> 74 passed, 0 failed
 - refactor: none needed
 - commit: `205293b`
+
+## Cycle 54: A10 a fully changed configuration serialized with `XmlSerializer` and read back is equal field by field
+
+- test: `Configuration/PluginConfigurationTests.cs::XmlRoundTrip_FullyChangedConfiguration_IsEqualFieldByField` (new)
+- red: passed on first run (scalar auto-properties round-trip by construction). Deliberate mutant: `[XmlIgnore]` on `ReleasedSince` -> `Expected: Tuple (…, "2020-01-01", "admin@example.org") / Actual:   Tuple (…, "", "admin@example.org")` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 75 passed, 0 failed
+- refactor: none needed
+- commit: `056c563`
