@@ -829,3 +829,12 @@ failed before the implementation.
 - green: `FetchCataloguePageAsync` sets `NextOffset = offset + 100 < release-count ? offset + 100 : null`. Suite -> 119 passed, 0 failed
 - refactor: none needed
 - commit: `5daf18f`
+
+## Cycle 94: U82 editions come back one per Official release with all `media[].tracks[].title` normalized as tracks
+
+- test: `Sources/MusicBrainzSourceTests.cs::FetchEditionsAsync_OneEditionPerOfficialReleaseWithAllMediaTracksNormalized` (new; `editions_two_official.json`, 14 and 15 tracks)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests.FetchEditionsAsync_OneEditionPerOfficialReleaseWithAllMediaTracksNormalized" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed)
+- green: `MusicBrainzSource.FetchEditionsAsync` pages `release?release-group=…&status=official&inc=recordings+media&limit=25&offset=N&fmt=json` until `release-count`, flattening media tracks through `NormalizeTrack`. Suite -> 120 passed, 0 failed
+- refactor: none needed
+- commit: `869af8d`
