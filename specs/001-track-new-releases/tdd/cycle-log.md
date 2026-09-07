@@ -578,3 +578,13 @@ failed before the implementation.
 - green: `GetStringAsync` throws `HttpRequestException` (with the status code) once `attempt >= RetryBackoffs.Length`; backoff for attempt *n* is `RetryBackoffs[n]`. Suite -> 89 passed, 0 failed
 - refactor: none needed
 - commit: `536c702`
+
+## Cycle 65: U63 a 404 or 400 throws immediately with no retry
+
+- test: `Sources/SourceHttpClientTests.cs::GetStringAsync_ClientError_ThrowsImmediatelyWithoutRetry` (new, Theory: 404, 400)
+- red: first run failed with `TimeoutException` because the clock helper raced the thread pool (`Task.Yield` did not let the continuation register its next timer); helper changed to a 15 ms poll and cycle 64's test re-verified green. Re-run:
+  `dotnet test --configuration Release --filter "FullyQualifiedName~SourceHttpClientTests.GetStringAsync_ClientError_ThrowsImmediatelyWithoutRetry" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Single() Failure: The collection contained 4 items` (2 failed; every non-success was retried)
+- green: `GetStringAsync` treats only 429 and 5xx as transient; any other non-success throws `HttpRequestException` with the status before the retry bound. Suite -> 91 passed, 0 failed
+- refactor: none needed
+- commit: `4206a1b`
