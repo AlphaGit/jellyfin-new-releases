@@ -762,3 +762,12 @@ failed before the implementation.
 - green: no behavioural change; a `// ponytail:` comment names the ceiling (data-model step 5). Suite -> 111 passed, 0 failed
 - refactor: none needed
 - commit: `09199a4`
+
+## Cycle 86: U74 an artist snapshot with an MBID is `Matched(mbid)` with zero HTTP requests
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_SnapshotWithMbid_IsMatchedWithoutAnyRequest` (new; `tests/Support/SourceHarness.cs` helper wires stub handler, temp database, stub clock and the real `SourceHttpClient`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests.MatchArtistAsync_SnapshotWithMbid_IsMatchedWithoutAnyRequest" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub). Declarations added: `Sources/IReleaseSource.cs` (contract), `Sources/MusicBrainzSource.cs` skeleton.
+- green: `MusicBrainzSource.MatchArtistAsync` returns `Matched(artist.Mbid)` when the snapshot has one. Suite -> 112 passed, 0 failed
+- refactor: none needed
+- commit: `ace71f7`
