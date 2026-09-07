@@ -531,3 +531,12 @@ failed before the implementation.
 - green: `UserAgentBuilder.Build` appends ` ( <trimmed contact> )` when non-blank. `Sources/SourceLimits.cs` constants (R10) added in the same commit: the non-behavioural half of T075 that the HTTP client cycles need next. Suite -> 84 passed, 0 failed
 - refactor: none needed
 - commit: `4c9ec03`
+
+## Cycle 60: U58 every request carries the User-Agent from `UserAgentBuilder`
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Sources/SourceHttpClientTests.cs::GetStringAsync_EveryRequestCarriesThePluginUserAgent` (new; `StubHttpMessageHandler`, `TestDatabase`, `TimeProviderStub`, configuration delegate)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceHttpClientTests.GetStringAsync_EveryRequestCarriesThePluginUserAgent" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Strings differ / Expected: "JellyfinNewReleases/0.1.0 ( ops@example.o"··· / Actual:   ""` (1 failed; skeleton sent a bare `GetAsync`)
+- green: `Sources/SourceHttpClient.cs` builds an `HttpRequestMessage` with `User-Agent = UserAgentBuilder.Build(Version, configuration.UserAgentContact)`; version read from the assembly; configuration through an injectable delegate defaulting to `Plugin.Instance`. Suite -> 85 passed, 0 failed
+- refactor: none needed
+- commit: `8e35979`
