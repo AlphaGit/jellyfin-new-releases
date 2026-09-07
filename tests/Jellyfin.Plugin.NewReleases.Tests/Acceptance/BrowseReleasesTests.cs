@@ -38,4 +38,49 @@ public sealed class BrowseReleasesTests : IAsyncLifetime
         var only = Assert.Single(list.Items);
         Assert.Equal(("Alive 2007", "Daft Punk", "Missing"), (only.Title, only.ArtistName, only.State));
     }
+
+    [Fact]
+    public async Task A2_SeveralYears_NewestFirst_UndatedLast_EachCarryingItsDate()
+    {
+        _rig.Harness.Configuration.MusicBrainzEnabled = false;
+        _rig.Library_.Artist("Daft Punk");
+        _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.DeezerArtist(27, "Daft Punk",
+            (2, "Homework", "album", "1997-01-16"),
+            (4, "Alive 1997", "album", "2001-10-01"),
+            (3, "Alive 2007", "album", "2007-11-16"),
+            (5, "Random Access Memories", "album", "2013-05-17"),
+            (6, "Lost Tapes", "album", "0000-00-00"))
+            .DeezerAlbum(2, "Homework", Homework);
+
+        await _rig.RunAsync();
+        var list = await _rig.ListAsync();
+
+        Assert.Equal(
+            [("Random Access Memories", "2013-05-17", "Day"), ("Alive 2007", "2007-11-16", "Day"), ("Alive 1997", "2001-10-01", "Day"), ("Lost Tapes", null, "None")],
+            list.Items.Select(i => (i.Title, i.Date, i.DatePrecision)));
+    }
+
+    [Fact]
+    public async Task A3_FortyReleases_ArtistFilterNarrows_ClearingRestoresAll()
+    {
+        _rig.Harness.Configuration.MusicBrainzEnabled = false;
+        _rig.Library_.Artist("Daft Punk"); _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.Library_.Artist("Justice"); _rig.Library_.Album("Cross", "Justice", AcceptanceRig.Library, trackTitles: ["Genesis"]);
+        var daftPunkAlbums = Enumerable.Range(1, 25).Select(i => ((long)(100 + i), $"Daft Album {i:00}", "album", $"20{i:00}-01-01")).Prepend((2L, "Homework", "album", "1997-01-16")).ToArray();
+        var justiceAlbums = Enumerable.Range(1, 15).Select(i => ((long)(200 + i), $"Justice Album {i:00}", "album", $"20{i:00}-06-01")).Prepend((7L, "Cross", "album", "2007-06-11")).ToArray();
+        _rig.DeezerArtist(27, "Daft Punk", daftPunkAlbums).DeezerAlbum(2, "Homework", Homework);
+        _rig.DeezerArtist(28, "Justice", justiceAlbums).DeezerAlbum(7, "Cross", "Genesis");
+
+        await _rig.RunAsync();
+        var all = await _rig.ListAsync();
+        var daftPunkId = (await _rig.ControllerFor(AcceptanceRig.Alice).GetArtistsAsync(CancellationToken.None)).Value!.Items.Single(a => a.Name == "Daft Punk").JellyfinId;
+        var filtered = await _rig.ListAsync(artistId: daftPunkId);
+        var cleared = await _rig.ListAsync();
+
+        Assert.Equal(40, all.Total);
+        Assert.Equal(25, filtered.Total);
+        Assert.All(filtered.Items, i => Assert.Equal("Daft Punk", i.ArtistName));
+        Assert.Equal(40, cleared.Total);
+    }
 }
