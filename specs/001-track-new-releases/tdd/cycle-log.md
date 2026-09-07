@@ -789,3 +789,25 @@ failed before the implementation.
 - green: `MatchArtistAsync` orders candidates by score and returns `Unmatched("ambiguous (score A vs B)")` when the gap is 5 or less. Suite -> 114 passed, 0 failed
 - refactor: none needed
 - commit: `3619873`
+
+## Cycle 89: U77 top score 90 with the runner-up at 84 (6 points) → `Matched`
+
+- test: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_RunnerUpSixPointsBehind_IsMatched` (new; synthetic search body 90/84)
+- red: passed on first run (cycle 88's `<= 5`). Deliberate mutant: gap threshold `<= 6` -> `Expected: Matched / Actual: Unmatched` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Committed together with cycles 90–91 (the three tests were added in one edit).
+- refactor: none needed
+
+## Cycle 90: U78 top score 84 → `Unmatched` with a "low score" reason
+
+- test: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_TopScoreBelow85_IsUnmatchedAsLowScore` (new; `artist_search_low_score.json`)
+- red: `dotnet test … --filter "FullyQualifiedName~MusicBrainzSourceTests.MatchArtistAsync_TopScoreBelow85_IsUnmatchedAsLowScore"` -> `Assert.Equal() Failure: Values differ / Expected: Unmatched / Actual:   Matched` (1 failed)
+- green: `MatchArtistAsync` returns `Unmatched("low score (N)")` when the top score is below 85. Single test green; suite in cycle 91.
+- refactor: none needed
+
+## Cycle 91: U79 an empty `artists` array → `Unmatched` with a "no result" reason
+
+- test: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_NoResults_IsUnmatchedAsNoResult` (new; `artist_search_empty.json`)
+- red: `dotnet test … --filter "FullyQualifiedName~MusicBrainzSourceTests.MatchArtistAsync_NoResults_IsUnmatchedAsNoResult"` -> `System.ArgumentOutOfRangeException : Index was out of range.` (1 failed; `candidates[0]` on an empty list)
+- green: `MatchArtistAsync` returns `Unmatched("no result")` for an empty result set. Suite -> 117 passed, 0 failed
+- refactor: none needed
+- commit: `98426f6`
