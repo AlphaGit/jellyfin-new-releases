@@ -37,6 +37,12 @@ public sealed class SourceHttpClient
 
     public async Task<string> GetStringAsync(string source, string url, CancellationToken ct)
     {
+        var limits = SourceLimits.BySource[source];
+        if (await _state.GetRemainingBudgetAsync(source, limits.DailyBudget, ct).ConfigureAwait(false) <= 0)
+        {
+            throw new DailyBudgetExhaustedException(source);
+        }
+
         using var client = _factory.CreateClient(ClientName);
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.TryAddWithoutValidation("User-Agent", UserAgentBuilder.Build(Version, _configuration().UserAgentContact));
@@ -44,4 +50,10 @@ public sealed class SourceHttpClient
         using var response = await client.SendAsync(request, ct).ConfigureAwait(false);
         return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
     }
+}
+
+/// <summary>Thrown before sending when the source's daily budget is spent (FR-011). The caller records a Partial outcome.</summary>
+public sealed class DailyBudgetExhaustedException(string source) : Exception($"Daily request budget for source '{source}' is exhausted.")
+{
+    public string SourceId { get; } = source;
 }

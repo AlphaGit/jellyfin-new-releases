@@ -56,4 +56,22 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
         Assert.Equal(2, state.CallsToday);
         Assert.Null(await _db.SourceState.GetAsync("musicbrainz", CancellationToken.None));
     }
+
+    private Task SpendBudgetAsync(string source, int calls)
+        => _db.ExecuteAsync($"INSERT INTO source_state (source, calls_today, calls_day) VALUES ('{source}', {calls}, '{Start:yyyy-MM-dd}')");
+
+    [Fact]
+    public async Task GetStringAsync_LastUnitOfBudgetIsSent_ExhaustedBudgetThrowsWithoutSending()
+    {
+        _http.AlwaysReturn(HttpStatusCode.OK, "{}");
+        var budget = SourceLimits.BySource[Deezer].DailyBudget;
+        await SpendBudgetAsync(Deezer, budget - 1);
+        var client = Client();
+
+        await client.GetStringAsync(Deezer, Url, CancellationToken.None);
+        Assert.Single(_http.ReceivedRequests);
+
+        await Assert.ThrowsAsync<DailyBudgetExhaustedException>(() => client.GetStringAsync(Deezer, Url, CancellationToken.None));
+        Assert.Single(_http.ReceivedRequests);
+    }
 }
