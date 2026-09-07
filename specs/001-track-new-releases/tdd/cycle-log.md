@@ -967,3 +967,11 @@ failed before the implementation.
 - green: `ExecuteAsync` wraps each (artist, source) in try/catch (cancellation rethrown): records `Failed` with the message and the unchanged offset, no prune, continues. Suite -> 135 passed, 0 failed
 - refactor: none needed
 - commit: `2683fc6`
+
+## Cycle 110: U128 a paging pass keeps the run it started in across Partial outcomes and forgets it on Complete
+
+- test: `Storage/ArtistRepositoryTests.cs::BeginPassAsync_KeepsTheStartingRunAcrossPartialOutcomes_ForgetsItOnComplete` (new; behaviour discovered in cycle 108)
+- red: passed on first run (implemented as part of cycle 108's fix). Deliberate mutant: `pass_run_id = excluded.pass_run_id` (restart every run) -> `Expected: 1 / Actual:   2` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 136 passed, 0 failed
+- refactor: none needed
+- commit: `c1e054e`
