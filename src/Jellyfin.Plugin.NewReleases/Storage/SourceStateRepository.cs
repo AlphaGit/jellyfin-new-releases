@@ -84,6 +84,20 @@ public sealed class SourceStateRepository
         return state?.CooldownUntil is { } until && until > _clock.GetUtcNow();
     }
 
+    /// <summary>Backoff floor from a `Retry-After` header; requests wait until this instant.</summary>
+    public async Task SetNextAllowedAtAsync(string source, DateTimeOffset until, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO source_state (source, next_allowed_at) VALUES (@source, @until)
+            ON CONFLICT (source) DO UPDATE SET next_allowed_at = excluded.next_allowed_at
+            """;
+        command.Parameters.AddWithValue("@source", source);
+        command.Parameters.AddWithValue("@until", until.ToString("O"));
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
     public async Task<long> StartRunAsync(CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);

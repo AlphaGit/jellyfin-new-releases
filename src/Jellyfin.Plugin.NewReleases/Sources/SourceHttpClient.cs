@@ -44,11 +44,37 @@ public sealed class SourceHttpClient
         }
 
         using var client = _factory.CreateClient(ClientName);
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.TryAddWithoutValidation("User-Agent", UserAgentBuilder.Build(Version, _configuration().UserAgentContact));
-        await _state.RecordCallAsync(source, ct).ConfigureAwait(false);
-        using var response = await client.SendAsync(request, ct).ConfigureAwait(false);
-        return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        for (var attempt = 0; ; attempt++)
+        {
+            await WaitForBackoffFloorAsync(source, ct).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.TryAddWithoutValidation("User-Agent", UserAgentBuilder.Build(Version, _configuration().UserAgentContact));
+            await _state.RecordCallAsync(source, ct).ConfigureAwait(false);
+            using var response = await client.SendAsync(request, ct).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            }
+
+            var retryAfter = response.Headers.RetryAfter?.Delta ?? (response.Headers.RetryAfter?.Date is { } date ? date - _clock.GetUtcNow() : null);
+            var delay = retryAfter ?? SourceLimits.RetryBackoffs[Math.Min(attempt, SourceLimits.RetryBackoffs.Length - 1)];
+            if (retryAfter is not null)
+            {
+                await _state.SetNextAllowedAtAsync(source, _clock.GetUtcNow() + delay, ct).ConfigureAwait(false);
+            }
+
+            _logger.LogWarning("Source {Source} answered {Status}; retrying in {Delay}.", source, (int)response.StatusCode, delay);
+            await Task.Delay(delay, _clock, ct).ConfigureAwait(false);
+        }
+    }
+
+    private async Task WaitForBackoffFloorAsync(string source, CancellationToken ct)
+    {
+        var state = await _state.GetAsync(source, ct).ConfigureAwait(false);
+        if (state?.NextAllowedAt is { } floor && floor > _clock.GetUtcNow())
+        {
+            await Task.Delay(floor - _clock.GetUtcNow(), _clock, ct).ConfigureAwait(false);
+        }
     }
 }
 

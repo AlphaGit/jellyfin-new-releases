@@ -74,4 +74,43 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
         await Assert.ThrowsAsync<DailyBudgetExhaustedException>(() => client.GetStringAsync(Deezer, Url, CancellationToken.None));
         Assert.Single(_http.ReceivedRequests);
     }
+
+    /// <summary>Drives a task that waits on the stub clock: advance in steps until it completes (bounded).</summary>
+    private async Task<T> RunAdvancingAsync<T>(Task<T> task, TimeSpan step, int maxSteps = 20)
+    {
+        for (var i = 0; i < maxSteps && !task.IsCompleted; i++)
+        {
+            _clock.Advance(step);
+            await Task.Yield();
+        }
+
+        return await task;
+    }
+
+    private static HttpResponseMessage Response(HttpStatusCode status, string body, int? retryAfterSeconds = null)
+    {
+        var response = new HttpResponseMessage(status) { Content = new StringContent(body) };
+        if (retryAfterSeconds is { } seconds)
+        {
+            response.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.FromSeconds(seconds));
+        }
+
+        return response;
+    }
+
+    [Fact]
+    public async Task GetStringAsync_503WithRetryAfter_SetsNextAllowedAtWaitsRetriesAndReturnsTheLaterBody()
+    {
+        _http.OnUrlPattern(".*", (_, attempt) => attempt == 0 ? Response(HttpStatusCode.ServiceUnavailable, "busy", retryAfterSeconds: 2) : Response(HttpStatusCode.OK, "{\"ok\":true}"));
+        var client = Client();
+
+        var pending = client.GetStringAsync(Deezer, Url, CancellationToken.None);
+        Assert.False(pending.IsCompleted);
+        Assert.Equal(Start + TimeSpan.FromSeconds(2), (await _db.SourceState.GetAsync(Deezer, CancellationToken.None))!.NextAllowedAt);
+
+        var body = await RunAdvancingAsync(pending, TimeSpan.FromSeconds(1));
+
+        Assert.Equal("{\"ok\":true}", body);
+        Assert.Equal(2, _http.ReceivedRequests.Count);
+    }
 }
