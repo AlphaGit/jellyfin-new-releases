@@ -19,6 +19,8 @@ public sealed class DeezerSourceTests : IAsyncLifetime
 
     private DeezerSource Source() => new(_h.HttpClient, NullLogger<DeezerSource>.Instance);
 
+    private const string EmptyPage = "{\"data\":[],\"total\":0}";
+
     private static LibraryArtistSnapshot Artist(string name, params string[] albumTitles)
         => new("name:" + TitleNormalizer.NormalizeName(name), Guid.NewGuid(), name, null, [],
             albumTitles.Select(t => new LibraryAlbumSnapshot(Guid.NewGuid(), t, TitleNormalizer.NormalizeAlbum(t), null, null, [])).ToArray());
@@ -32,5 +34,17 @@ public sealed class DeezerSourceTests : IAsyncLifetime
         var match = await Source().MatchArtistAsync(Artist("Daft Punk", "Discovery (Deluxe Edition)"), CancellationToken.None);
 
         Assert.Equal(ArtistMatch.Matched("27"), match);
+    }
+
+    [Fact]
+    public async Task MatchArtistAsync_ExactNameWithoutACorroboratingAlbum_IsUnmatchedWithReason()
+    {
+        _h.Fixture(Search, "deezer/search_artist_exact.json"); // exact-name candidates: 27 and 412557421
+        _h.Fixture(@"api\.deezer\.com/artist/27/albums\?", "deezer/artist_albums_page1.json");
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/412557421/albums\?", System.Net.HttpStatusCode.OK, EmptyPage);
+
+        var match = await Source().MatchArtistAsync(Artist("Daft Punk", "Some Album The Library Made Up"), CancellationToken.None);
+
+        Assert.Equal(ArtistMatch.Unmatched("no corroborating album"), match);
     }
 }
