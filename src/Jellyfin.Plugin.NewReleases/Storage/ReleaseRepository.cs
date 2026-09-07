@@ -87,8 +87,29 @@ public sealed class ReleaseRepository
             await entry.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         }
 
+        await RecomputeCanonicalAsync(connection, transaction, releaseId, ct).ConfigureAwait(false);
         await transaction.CommitAsync(ct).ConfigureAwait(false);
         return releaseId;
+    }
+
+    /// <summary>Canonical identity, types and date come from the MusicBrainz entry when one exists, else from Deezer (R17).</summary>
+    private static async Task RecomputeCanonicalAsync(SqliteConnection connection, SqliteTransaction transaction, long releaseId, CancellationToken ct)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = """
+            UPDATE release SET
+                canonical_source = e.source,
+                canonical_source_id = e.source_release_id,
+                title = e.source_title,
+                primary_type = COALESCE(e.source_primary_type, 'Other'),
+                secondary_types = COALESCE(e.source_secondary_types, '[]'),
+                release_date = e.source_date
+            FROM (SELECT * FROM source_entry WHERE release_id = @id ORDER BY CASE source WHEN 'musicbrainz' THEN 0 ELSE 1 END LIMIT 1) AS e
+            WHERE release.id = @id
+            """;
+        command.Parameters.AddWithValue("@id", releaseId);
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     public async Task<Release?> GetAsync(long releaseId, CancellationToken ct)

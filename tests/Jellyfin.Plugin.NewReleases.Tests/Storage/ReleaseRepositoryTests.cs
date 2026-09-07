@@ -36,4 +36,16 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         Assert.Equal(1L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM release"));
         Assert.Equal(2L, await _db.ScalarAsync<long>($"SELECT COUNT(*) FROM source_entry WHERE release_id = {fromMusicBrainz}"));
     }
+
+    [Fact]
+    public async Task UpsertFromSourceAsync_MusicBrainzEntryIsCanonicalForSourceIdTypesAndDate()
+    {
+        var id = await _db.Releases.UpsertFromSourceAsync(_artist, "deezer", DeezerItem("Alive 1997", "dz-9", "2001-10-01", ReleaseType.Album), Run1, Now, CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Alive 1997", "rg-9", "2001-10-02", ReleaseType.Album, ReleaseType.Live), Run1, Now, CancellationToken.None);
+
+        var release = (await _db.Releases.GetAsync(id, CancellationToken.None))!;
+
+        Assert.Equal(("musicbrainz", "rg-9", ReleaseType.Album, "2001-10-02"), (release.CanonicalSource, release.CanonicalSourceId, release.PrimaryType, release.ReleaseDate));
+        Assert.Equal([ReleaseType.Live], release.SecondaryTypes);
+    }
 }

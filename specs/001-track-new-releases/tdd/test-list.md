@@ -109,7 +109,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U27 | Upserting the same normalized title from two sources yields one `release` with two `source_entry` rows | FR-006a | example | DONE | `Storage/ReleaseRepositoryTests.cs::UpsertFromSourceAsync_SameNormalizedTitleFromTwoSources_OneReleaseTwoEntries` |
-| U28 | When a MusicBrainz entry exists, canonical source, id, types and date come from it | FR-006a, R17 | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
+| U28 | When a MusicBrainz entry exists, canonical source, id, types and date come from it | FR-006a, R17 | example | DONE | `Storage/ReleaseRepositoryTests.cs::UpsertFromSourceAsync_MusicBrainzEntryIsCanonicalForSourceIdTypesAndDate` |
 | U29 | Removing the MusicBrainz entry makes the Deezer entry canonical | FR-006a, R17 | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
 | U30 | A MusicBrainz entry without a date takes the Deezer entry's date | FR-006a | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
 | U31 | Pruning for (artist, source, run) deletes only that pair's entries with `last_seen_run_id < run`; other artists and the other source are untouched | FR-014 | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
