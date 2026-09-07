@@ -185,3 +185,11 @@ failed before the implementation.
 - green: no production change. Suite -> 38 passed, 0 failed
 - refactor: none needed
 - commit: `650b01b`
+
+## Cycle 21: U21 two concurrent first opens run the migration once
+
+- test: `Storage/DatabaseTests.cs::OpenAsync_TwoConcurrentFirstOpensRunTheMigrationOnce` (new; four `Task.Run` opens on one instance)
+- red: first version of the test (two plain awaited `OpenAsync`, asserting one `schema_version` row) passed on first run **and** survived the mutant (three runs): the SQLite driver is synchronous, so the awaits never overlapped and the second open simply saw version 1. Rewritten per the playbook: `Task.Run` ×4 for real parallelism, and an `internal int MigrationRuns` counter on `PluginDatabase` as the observable for "once". Deliberate mutant: `OpenAsync` calls `MigrateAsync()` directly instead of awaiting the shared `Lazy<Task>` -> `Assert.Equal() Failure / Expected: 1 / Actual:   4` (1 failed). Code restored exactly, test green again.
+- green: production change limited to the counter seam (`Interlocked.Increment` in `MigrateAsync`); the `Lazy<Task>` from cycle 19 already provides the behaviour. Suite -> 39 passed, 0 failed
+- refactor: none needed
+- commit: `023dbbc`
