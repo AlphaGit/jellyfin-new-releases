@@ -39,7 +39,17 @@ public sealed class MusicBrainzSource : IReleaseSource
             .Select(a => (Id: a.GetProperty("id").GetString()!, Score: a.GetProperty("score").GetInt32()))
             .OrderByDescending(a => a.Score)
             .ToList();
+        if (candidates.Count == 0)
+        {
+            return ArtistMatch.Unmatched("no result");
+        }
+
         var top = candidates[0];
+        if (top.Score < MinimumScore)
+        {
+            return ArtistMatch.Unmatched($"low score ({top.Score})");
+        }
+
         if (candidates.Count > 1 && top.Score - candidates[1].Score <= 5)
         {
             return ArtistMatch.Unmatched($"ambiguous (score {top.Score} vs {candidates[1].Score})");

@@ -195,7 +195,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U76 | Top score 90 with the runner-up at 85 (5 points) → `Unmatched` with an "ambiguous" reason | FR-002, EC-1 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_RunnerUpWithinFivePoints_IsUnmatchedAsAmbiguous` |
 | U77 | Top score 90 with the runner-up at 84 (6 points) → `Matched` | FR-002 | example | PENDING | `Sources/MusicBrainzSourceTests.cs` |
 | U78 | Top score 84 → `Unmatched` with a "low score" reason | FR-002 | example | PENDING | `Sources/MusicBrainzSourceTests.cs` |
-| U79 | An empty `artists` array → `Unmatched` with a "no result" reason | FR-002, EC-2 | example | PENDING | `Sources/MusicBrainzSourceTests.cs` |
+| U79 | An empty `artists` array → `Unmatched` with a "no result" reason | FR-002, EC-2 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_NoResults_IsUnmatchedAsNoResult` |
 | U80 | A catalogue page groups releases by release group, maps primary and secondary types, keeps `first-release-date` as `2013`, `2013-05` or `2013-05-17`, and links `https://musicbrainz.org/release-group/<id>` | FR-003, FR-004 | example | PENDING | `Sources/MusicBrainzSourceTests.cs` |
 | U81 | `NextOffset` is `offset + 100` while `release-count` exceeds it and null on the last page | FR-003 | example | PENDING | `Sources/MusicBrainzSourceTests.cs` |
 | U82 | Editions come back one per Official release with all `media[].tracks[].title` normalized as tracks | FR-005 | example | PENDING | `Sources/MusicBrainzSourceTests.cs` |

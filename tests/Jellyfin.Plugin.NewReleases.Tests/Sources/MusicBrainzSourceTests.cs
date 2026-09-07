@@ -61,4 +61,33 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
         Assert.Equal(MatchStatus.Unmatched, match.Status);
         Assert.Equal("ambiguous (score 100 vs 96)", match.Reason);
     }
+
+    [Fact]
+    public async Task MatchArtistAsync_RunnerUpSixPointsBehind_IsMatched()
+    {
+        _h.Http.OnUrlPattern(ArtistSearch, System.Net.HttpStatusCode.OK, Search(("Blur", 90), ("Blur Tribute", 84)));
+
+        Assert.Equal(ArtistMatch.Matched("mbid-1"), await Source().MatchArtistAsync(Artist("Blur"), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task MatchArtistAsync_TopScoreBelow85_IsUnmatchedAsLowScore()
+    {
+        _h.Fixture(ArtistSearch, "musicbrainz/artist_search_low_score.json"); // 84 and 40
+
+        var match = await Source().MatchArtistAsync(Artist("Daft Punkk Orchestra Zzz"), CancellationToken.None);
+
+        Assert.Equal(MatchStatus.Unmatched, match.Status);
+        Assert.Equal("low score (84)", match.Reason);
+    }
+
+    [Fact]
+    public async Task MatchArtistAsync_NoResults_IsUnmatchedAsNoResult()
+    {
+        _h.Fixture(ArtistSearch, "musicbrainz/artist_search_empty.json");
+
+        var match = await Source().MatchArtistAsync(Artist("zzqxjv nonexistent artist qqq"), CancellationToken.None);
+
+        Assert.Equal(ArtistMatch.Unmatched("no result"), match);
+    }
 }
