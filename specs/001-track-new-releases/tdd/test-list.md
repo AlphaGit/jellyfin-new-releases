@@ -244,7 +244,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U109 | An artist missing from the snapshot loses its releases after the run | FR-014, EC-9 | example | DONE | `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_ArtistMissingFromTheSnapshot_LosesItsReleases` |
 | U110 | A completed run writes one `refresh_run` row with counts and `Completed`; a cancelled run writes `Cancelled` | FR-012 | example | DONE | `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_WritesOneRefreshRunRowWithCountsAndCompleted_CancelledRunWritesCancelled` |
 | U111 | A source disabled in configuration receives no request | FR-010 | example | DONE | `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_SourceDisabledInConfiguration_ReceivesNoRequest` |
-| U112 | A source in cooldown is skipped for every artist while the other source is processed | FR-011, EC-5 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
+| U112 | A source in cooldown is skipped for every artist while the other source is processed | FR-011, EC-5 | example | DONE | `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_SourceInCooldown_IsSkippedForEveryArtistWhileTheOtherIsProcessed` |
 | U113 | With every source unavailable, ownership is still recomputed from stored editions so a newly complete library album becomes `Owned` | INV-1 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
 | U114 | An `Unmatched` artist is matched again on the next run | EC-2 | example | PENDING | `ScheduledTasks/RefreshNewReleasesTaskTests.cs` |
 

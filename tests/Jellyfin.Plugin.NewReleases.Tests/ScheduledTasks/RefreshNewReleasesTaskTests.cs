@@ -244,4 +244,21 @@ public sealed class RefreshNewReleasesTaskTests : IAsyncLifetime
         await _musicBrainz.Received(1).MatchArtistAsync(Arg.Any<LibraryArtistSnapshot>(), Arg.Any<CancellationToken>());
         Assert.DoesNotContain(_deezer.ReceivedCalls(), c => c.GetMethodInfo().Name != "get_Id" && c.GetMethodInfo().Name != "get_DisplayName");
     }
+
+    [Fact]
+    public async Task Run_SourceInCooldown_IsSkippedForEveryArtistWhileTheOtherIsProcessed()
+    {
+        _library.Artist("A"); _library.Album("A1", "A", Library);
+        _library.Artist("B"); _library.Album("B1", "B", Library);
+        MatchEverything(_musicBrainz, "mb:"); MatchEverything(_deezer, "dz:");
+        for (var i = 0; i < SourceLimits.FailureThreshold; i++)
+        {
+            await _h.Db.SourceState.RecordFailureAsync("musicbrainz", "503", SourceLimits.FailureThreshold, SourceLimits.Cooldown, CancellationToken.None);
+        }
+
+        await RunAsync();
+
+        await _deezer.Received(2).MatchArtistAsync(Arg.Any<LibraryArtistSnapshot>(), Arg.Any<CancellationToken>());
+        await _musicBrainz.DidNotReceive().MatchArtistAsync(Arg.Any<LibraryArtistSnapshot>(), Arg.Any<CancellationToken>());
+    }
 }
