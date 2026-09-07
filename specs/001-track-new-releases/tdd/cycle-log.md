@@ -158,3 +158,13 @@ failed before the implementation.
 - green: `ReleaseTypeMapper.DisplayType()` = first of `DisplayPrecedence` contained in secondaries, else primary. Suite -> 35 passed, 0 failed
 - refactor: none needed
 - commit: `8ed7a3c`
+
+## Cycle 18: U18 database path is `{DataPath}/newreleases/newreleases.db`, directory created on first open
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/DatabaseTests.cs::OpenAsync_UsesNewReleasesFileUnderDataPathAndCreatesTheDirectory` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DatabaseTests.OpenAsync_UsesNewReleasesFileUnderDataPathAndCreatesTheDirectory" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Strings differ / Expected: ···"…/newreleases/newreleases.db" / Actual:   ···"…/newreleases.db"` (1 failed; stub placed the file directly under DataPath)
+- green: `Storage/PluginDatabase.cs` — `DirectoryPath`, `DatabasePath`, `ConnectionString` (`Foreign Keys=True`), `OpenAsync` creates the directory and opens a `SqliteConnection`. Suite -> 36 passed, 0 failed
+- refactor: none needed
+- deviation: class and file are `PluginDatabase` instead of plan.md's `Database`: the name `Database` resolves to the `Jellyfin.Database` namespace from every `Jellyfin.Plugin.NewReleases.*` namespace except `Storage` (CS0118 in the test project). Setup tasks T001–T003 (SQLite package pin, build.yaml artifacts, ported helpers) were done before this cycle as non-behavioural scaffolding, commit `e16967c`.
+- commit: `f36f2ba`
