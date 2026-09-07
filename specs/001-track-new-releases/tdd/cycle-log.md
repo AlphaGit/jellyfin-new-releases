@@ -820,3 +820,12 @@ failed before the implementation.
 - green: `MusicBrainzSource.FetchCataloguePageAsync` — `release?artist=…&status=official&inc=release-groups&limit=100&offset=N&fmt=json`, first release per `release-group.id`, `ReleaseTypeMapper.MapMusicBrainz`, `first-release-date` (empty → null), release-group URL. `NextOffset` is still null (U81). Suite -> 118 passed, 0 failed
 - refactor: none needed
 - commit: `30ca229`
+
+## Cycle 93: U81 `NextOffset` is `offset + 100` while `release-count` exceeds it and null on the last page
+
+- test: `Sources/MusicBrainzSourceTests.cs::FetchCataloguePageAsync_NextOffsetAdvancesBy100WhileTheCountExceedsIt_NullOnTheLastPage` (new; pages 1 and 2 of the 110-release fixture)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests.FetchCataloguePageAsync_NextOffsetAdvancesBy100WhileTheCountExceedsIt_NullOnTheLastPage" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: Tuple (100, 110) / Actual:   Tuple (null, 110)` (1 failed)
+- green: `FetchCataloguePageAsync` sets `NextOffset = offset + 100 < release-count ? offset + 100 : null`. Suite -> 119 passed, 0 failed
+- refactor: none needed
+- commit: `5daf18f`
