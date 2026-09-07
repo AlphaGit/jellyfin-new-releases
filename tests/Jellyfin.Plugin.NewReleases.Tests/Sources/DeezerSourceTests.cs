@@ -47,4 +47,28 @@ public sealed class DeezerSourceTests : IAsyncLifetime
 
         Assert.Equal(ArtistMatch.Unmatched("no corroborating album"), match);
     }
+
+    [Fact]
+    public async Task MatchArtistAsync_TwoExactNameHomonyms_OnlyTheSecondCorroborated_MatchesTheSecond()
+    {
+        _h.Fixture(Search, "deezer/search_artist_homonyms.json"); // exact "Nirvana": 415 then 278793911
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/415/albums\?", System.Net.HttpStatusCode.OK, EmptyPage);
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/278793911/albums\?", System.Net.HttpStatusCode.OK,
+            "{\"data\":[{\"id\":1,\"title\":\"Nevermind\",\"link\":\"https://www.deezer.com/album/1\",\"record_type\":\"album\",\"release_date\":\"1991-09-24\"}],\"total\":1}");
+
+        var match = await Source().MatchArtistAsync(Artist("Nirvana", "Nevermind"), CancellationToken.None);
+
+        Assert.Equal(ArtistMatch.Matched("278793911"), match);
+    }
+
+    [Fact]
+    public async Task MatchArtistAsync_NoSearchResults_IsUnmatched()
+    {
+        _h.Fixture(Search, "deezer/search_artist_empty.json");
+
+        var match = await Source().MatchArtistAsync(Artist("zzqxjv nonexistent artist qqq", "Anything"), CancellationToken.None);
+
+        Assert.Equal(MatchStatus.Unmatched, match.Status);
+        Assert.DoesNotContain(_h.RequestedUrls, u => u.Contains("/albums", StringComparison.Ordinal));
+    }
 }
