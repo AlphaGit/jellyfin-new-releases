@@ -45,3 +45,11 @@ failed before the implementation.
 - green: `TitleNormalizer.StripEditionQualifier()` — regex for one trailing `(…)`/`[…]`/` - …` segment, removed when it contains a qualifier word (rule 6 list); runs after rules 1–3, before rules 4–5 so brackets are still visible. Suite -> 8 passed, 0 failed
 - refactor: none needed
 - commit: `b432af4`
+
+## Cycle 5: U5 only the last qualifier is removed; `Deluxe Edition Blues` keeps its words
+
+- test: `Matching/TitleNormalizerTests.cs::NormalizeAlbum_RemovesAtMostOneQualifierFromTheEndOnly` (new, Theory: `X (Deluxe) (Remastered)` -> `x deluxe`, `Deluxe Edition Blues` unchanged)
+- red: passed on first run (behaviour already produced by cycle 4's single-match regex). Deliberate mutant: `StripEditionQualifier` made recursive -> `Expected: "x deluxe" / Actual:   "x"` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 10 passed, 0 failed
+- refactor: none needed
+- commit: `6696b03`
