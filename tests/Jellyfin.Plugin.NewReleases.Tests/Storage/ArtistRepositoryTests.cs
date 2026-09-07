@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.NewReleases.Library;
+using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.Tests.Support;
 using Xunit;
 
@@ -77,5 +78,24 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
         var rotation = await _db.Artists.GetRotationAsync(CancellationToken.None);
 
         Assert.Equal(["Amy Never", "Zed Never", "Old", "Recent"], rotation.Select(a => a.Name));
+    }
+
+    [Fact]
+    public async Task ArtistSource_UpsertStoresMatchAndOutcome_CompleteResetsOffset()
+    {
+        var now = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Matched("mbid-1"), CancellationToken.None);
+        await _db.Artists.SetFetchOutcomeAsync(id, "musicbrainz", FetchOutcome.Partial, resumeOffset: 100, error: null, now, CancellationToken.None);
+        var partial = await _db.Artists.GetSourceStateAsync(id, "musicbrainz", CancellationToken.None);
+
+        Assert.Equal(new ArtistSourceState(id, "musicbrainz", MatchStatus.Matched, "mbid-1", null, 100, FetchOutcome.Partial, null, null), partial);
+
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+        await _db.Artists.SetFetchOutcomeAsync(id, "musicbrainz", FetchOutcome.Complete, resumeOffset: 100, error: null, now, CancellationToken.None);
+        var complete = await _db.Artists.GetSourceStateAsync(id, "musicbrainz", CancellationToken.None);
+
+        Assert.Equal(new ArtistSourceState(id, "musicbrainz", MatchStatus.Unmatched, null, "no result", 0, FetchOutcome.Complete, now, null), complete);
     }
 }
