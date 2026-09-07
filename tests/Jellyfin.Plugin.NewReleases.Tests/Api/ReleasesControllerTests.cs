@@ -119,4 +119,18 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         _tasks.ScheduledTasks.Returns([]);
         Assert.Equal(24, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).RefreshIntervalHours);
     }
+
+    [Fact]
+    public async Task GetArtists_ReturnsOnlyArtistsInLibrariesTheCallerMayAccess()
+    {
+        await SeedArtistAsync("Daft Punk", Library);
+        await SeedArtistAsync("Justice", OtherLibrary);
+
+        var limited = await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: false, Library)).GetArtistsAsync(CancellationToken.None);
+        var all = await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetArtistsAsync(CancellationToken.None);
+
+        Assert.Equal(["Daft Punk"], limited.Value!.Items.Select(a => a.Name));
+        Assert.Equal(["Daft Punk", "Justice"], all.Value!.Items.Select(a => a.Name));
+        Assert.IsType<UnauthorizedResult>((await Controller(null).GetArtistsAsync(CancellationToken.None)).Result);
+    }
 }

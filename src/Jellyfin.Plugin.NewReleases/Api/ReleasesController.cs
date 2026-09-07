@@ -92,6 +92,30 @@ public sealed class ReleasesController : ControllerBase
         return new ListResponse(visible, visible.Count, lastRun is not null, lastRun?.EndedAt, RefreshIntervalHours(), today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
     }
 
+    [HttpGet("artists")]
+    [ProducesResponseType(typeof(ArtistsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ArtistsResponse>> GetArtistsAsync(CancellationToken cancellationToken = default)
+    {
+        if (CallerId() is not { } userId || AccessOf(userId) is not { } access)
+        {
+            return Unauthorized();
+        }
+
+        var artists = await _artists.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        return new ArtistsResponse(artists.Where(a => access.CanSee(a.LibraryIds)).Select(a => new ArtistDto(a.JellyfinId, a.Name)).ToList());
+    }
+
+    /// <summary>Small status for the fragment header (also embedded in the list response; kept for polling).</summary>
+    [HttpGet("status")]
+    [ProducesResponseType(typeof(StatusResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<StatusResponse>> GetStatusAsync(CancellationToken cancellationToken = default)
+    {
+        var lastRun = await _runs.GetLastCompletedRunAsync(cancellationToken).ConfigureAwait(false);
+        var latest = await _runs.GetLatestRunAsync(cancellationToken).ConfigureAwait(false);
+        return new StatusResponse(lastRun is not null, lastRun?.EndedAt, RefreshIntervalHours(), latest is { EndedAt: null });
+    }
+
     /// <summary>Hours between refreshes from the task's triggers in Jellyfin (R15); 24 when no trigger is readable.</summary>
     private int RefreshIntervalHours()
     {
@@ -115,7 +139,9 @@ public sealed class ReleasesController : ControllerBase
 
     private sealed record LibraryAccess(bool AllLibraries, ISet<Guid> Libraries)
     {
-        public bool CanSee(ListedRelease release) => AllLibraries || release.ArtistLibraryIds.Any(Libraries.Contains);
+        public bool CanSee(ListedRelease release) => CanSee(release.ArtistLibraryIds);
+
+        public bool CanSee(IReadOnlyList<Guid> libraryIds) => AllLibraries || libraryIds.Any(Libraries.Contains);
     }
 
     private static DateOnly? ParseDate(string? text)
