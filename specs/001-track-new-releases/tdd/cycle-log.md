@@ -229,3 +229,12 @@ failed before the implementation.
 - green: `ArtistRepository.SetMatchAsync` / `SetFetchOutcomeAsync` (upserts on the pair PK; Complete -> offset 0 and `last_complete_at = now`) / `GetSourceStateAsync`. Suite -> 43 passed, 0 failed
 - refactor: none needed
 - commit: `7102e7b`
+
+## Cycle 26: U26 admin counts return total library artists, matched per source, and the unmatched list with reasons
+
+- test: `Storage/ArtistRepositoryTests.cs::GetCountsAsync_ReportsTotalsMatchedPerSourceAndUnmatchedReasons` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.GetCountsAsync_ReportsTotalsMatchedPerSourceAndUnmatchedReasons" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub). Declarations added: `ArtistCounts`, `UnmatchedArtist`, `UnmatchedAt` records.
+- green: `ArtistRepository.GetCountsAsync` — COUNT(*), GROUP BY source on Matched, and a joined Unmatched query folded per artist. First suite run after the implementation still failed on this test: the assertion compared `UnmatchedArtist` records whose `Sources` list property compares by reference (test defect, same expected values). Test fixed to compare flattened (artist, source, reason) tuples; no assertion dropped. Suite -> 44 passed, 0 failed
+- refactor: none needed
+- commit: `a17bdca`
