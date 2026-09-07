@@ -678,3 +678,12 @@ failed before the implementation.
 - green: no production change. Suite -> 101 passed, 0 failed
 - refactor: none needed
 - commit: `1b10343`
+
+## Cycle 76: U93 an album whose `MusicBrainzReleaseGroup` equals the canonical id is the candidate with method `Identifier`
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Matching/OwnershipMatcherTests.cs::Decide_AlbumWithTheCanonicalReleaseGroupId_IsTheCandidateByIdentifier` (new; a same-titled decoy album is listed first)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~OwnershipMatcherTests.Decide_AlbumWithTheCanonicalReleaseGroupId_IsTheCandidateByIdentifier" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: Tuple (853cfe6b-…, "Identifier") / Actual:   Tuple (null, null)` (1 failed; stub returned Missing)
+- green: `OwnershipMatcher.FindCandidate()` matches `MusicBrainzReleaseGroupId` against the canonical MusicBrainz id; `Decide` compares the first edition's tracks (fake-it for the edition choice, generalized by U100). Suite -> 102 passed, 0 failed
+- refactor: none needed
+- commit: `842068e`
