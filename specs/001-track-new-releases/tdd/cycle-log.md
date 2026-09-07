@@ -540,3 +540,13 @@ failed before the implementation.
 - green: `Sources/SourceHttpClient.cs` builds an `HttpRequestMessage` with `User-Agent = UserAgentBuilder.Build(Version, configuration.UserAgentContact)`; version read from the assembly; configuration through an injectable delegate defaulting to `Plugin.Instance`. Suite -> 85 passed, 0 failed
 - refactor: none needed
 - commit: `8e35979`
+
+## Cycle 61: U59 each HTTP request records one call in `source_state` for that source
+
+- test: `Sources/SourceHttpClientTests.cs::GetStringAsync_RecordsOneCallPerHttpRequestForThatSource` (new)
+- red: first run died with `System.NullReferenceException` (no `source_state` row); test tightened with `Assert.NotNull` (same expectations), re-run:
+  `dotnet test --configuration Release --filter "FullyQualifiedName~SourceHttpClientTests.GetStringAsync_RecordsOneCallPerHttpRequestForThatSource" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.NotNull() Failure: Value is null` (1 failed)
+- green: `SourceHttpClient.GetStringAsync` calls `SourceStateRepository.RecordCallAsync(source)` before each send. Suite -> 86 passed, 0 failed
+- refactor: none needed
+- commit: `24482c0`
