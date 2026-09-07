@@ -180,8 +180,8 @@ back in the list in date position.
 ### Tests for User Story 3 (mandatory, write first, observe the red before implementing)
 
 - [X] T046 [P] [US3] Add failing tests to `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs` for `POST api/releases/{id}/ignore|have-it|restore`: scenario 1 ignore → 204, absent from the list, present in `?archived=true` with `archived.kind == "Ignore"` and `decidedAt`; have-it → `"HaveIt"`; scenario 2 restore → 204 and the release returns in date order; unknown id → 404; release of an artist outside the caller's libraries → 403 (FR-007); missing claim → 401; a second user sees the same Archive (FR-016) Behaviors: [U120] [U121] [U122]
-- [ ] T056 [P] [US3] Write failing outer-loop acceptance tests `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ArchiveTests.cs` through `ReleasesController`: ignore removes the release from the list at once and shows it in `?archived=true` with `kind=Ignore` (A16, first half); restore puts it back at its date position (A17), per `specs/001-track-new-releases/tdd/test-list.md` Behaviors: [A16] [A17]
-- [ ] T047 [P] [US3] Add failing run-spanning acceptance tests to `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ArchiveTests.cs`: an ignored release is still absent from the list and present in the Archive after a refresh (US3 scenario 1, second half); Have it on an `Incomplete` release keeps it archived after a run that still finds tracks missing (scenario 3); the library later gains the full track list → ownership becomes `Owned`, the decision remains, `?archived=true` still lists it (scenario 4, FR-005b) Behaviors: [A16] [A18] [A19]
+- [X] T056 [P] [US3] Write failing outer-loop acceptance tests `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ArchiveTests.cs` through `ReleasesController`: ignore removes the release from the list at once and shows it in `?archived=true` with `kind=Ignore` (A16, first half); restore puts it back at its date position (A17), per `specs/001-track-new-releases/tdd/test-list.md` Behaviors: [A16] [A17]
+- [X] T047 [P] [US3] Add failing run-spanning acceptance tests to `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ArchiveTests.cs`: an ignored release is still absent from the list and present in the Archive after a refresh (US3 scenario 1, second half); Have it on an `Incomplete` release keeps it archived after a run that still finds tracks missing (scenario 3); the library later gains the full track list → ownership becomes `Owned`, the decision remains, `?archived=true` still lists it (scenario 4, FR-005b) Behaviors: [A16] [A18] [A19]
 
 ### Implementation for User Story 3
 
@@ -190,9 +190,9 @@ back in the list in date position.
 
 ### Outer-loop gate for User Story 3
 
-- [ ] T071 [US3] Outer loop green: acceptance behavior [A16] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
-- [ ] T072 [US3] Outer loop green: acceptance behavior [A17] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
-- [ ] T073 [US3] Outer loop green: acceptance behavior [A18] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
+- [X] T071 [US3] Outer loop green: acceptance behavior [A16] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
+- [X] T072 [US3] Outer loop green: acceptance behavior [A17] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
+- [X] T073 [US3] Outer loop green: acceptance behavior [A18] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
 - [X] T074 [US3] Outer loop green: acceptance behavior [A19] passes in the full suite (`dotnet test --configuration Release`) and its red is recorded in `specs/001-track-new-releases/tdd/cycle-log.md` before US3 is called complete
 
 **Checkpoint**: all three stories independently functional; every acceptance scenario in spec.md has a green test except US2 scenario 6 (not applicable in v1, research R12).
