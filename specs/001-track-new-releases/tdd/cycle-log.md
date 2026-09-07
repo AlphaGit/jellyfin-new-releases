@@ -487,3 +487,12 @@ failed before the implementation.
 - green: no production change. Suite -> 75 passed, 0 failed
 - refactor: none needed
 - commit: `056c563`
+
+## Cycle 55: U53 `EnabledReleaseTypes()` is {Album, EP} by default and reflects each toggled flag
+
+- test: `Configuration/PluginConfigurationTests.cs::EnabledReleaseTypes_AlbumAndEpByDefault_ReflectsEachToggle` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~PluginConfigurationTests.EnabledReleaseTypes_AlbumAndEpByDefault_ReflectsEachToggle" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: HashSets differ / Expected: [Album, EP] / Actual:   []` (1 failed; stub returned an empty set)
+- green: `PluginConfiguration.EnabledReleaseTypes()` maps the seven flags. Suite -> 76 passed, 0 failed
+- refactor: none needed
+- commit: `d29dbc7`
