@@ -168,3 +168,12 @@ failed before the implementation.
 - refactor: none needed
 - deviation: class and file are `PluginDatabase` instead of plan.md's `Database`: the name `Database` resolves to the `Jellyfin.Database` namespace from every `Jellyfin.Plugin.NewReleases.*` namespace except `Storage` (CS0118 in the test project). Setup tasks T001–T003 (SQLite package pin, build.yaml artifacts, ported helpers) were done before this cycle as non-behavioural scaffolding, commit `e16967c`.
 - commit: `f36f2ba`
+
+## Cycle 19: U19 first open applies `001_initial.sql`; every table exists and `schema_version` is 1
+
+- test: `Storage/DatabaseTests.cs::OpenAsync_FirstOpenAppliesTheInitialMigration` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DatabaseTests.OpenAsync_FirstOpenAppliesTheInitialMigration" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Superset() Failure: Value is not a superset / Expected: ["library_artist", "artist_source", "release", …] / Actual:   []` (1 failed)
+- green: `Storage/Migrations/001_initial.sql` (all nine tables, indexes, UNIQUE/CHECK/CASCADE from data-model.md; `schema_version` is created by code so it exists before the version query) and `PluginDatabase.MigrateAsync` behind a `Lazy<Task>`: applies embedded `NNN_*.sql` with version > MAX(schema_version), one transaction each. Suite -> 37 passed, 0 failed
+- refactor: none needed
+- commit: `574744b`
