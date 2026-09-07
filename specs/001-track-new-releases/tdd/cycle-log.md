@@ -363,3 +363,12 @@ failed before the implementation.
 - green: `ReleaseRepository.MaxListRows = 5_000`; `ListAsync` stops reading once the cap is reached (after the read-time filters, so the cap counts listed rows). Suite -> 61 passed, 0 failed
 - refactor: none needed
 - commit: `c380143`
+
+## Cycle 41: U41 edition upsert is unique on (source, source edition id); ownership write stores state, method, album, edition, missing tracks
+
+- test: `Storage/ReleaseRepositoryTests.cs::Editions_UpsertIsUniquePerSourceEditionId_AndOwnershipColumnsAreStored` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.Editions_UpsertIsUniquePerSourceEditionId_AndOwnershipColumnsAreStored" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stubs). Declarations added: `Edition` record, `Model/OwnershipResult.cs`.
+- green: `ReleaseRepository.UpsertEditionAsync` (`ON CONFLICT (source, source_edition_id) … RETURNING id`), `GetEditionsAsync`, `WriteOwnershipAsync`. Suite -> 62 passed, 0 failed
+- refactor: none needed
+- commit: `0264e18`
