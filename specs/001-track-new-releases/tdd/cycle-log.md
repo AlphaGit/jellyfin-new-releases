@@ -1058,3 +1058,12 @@ failed before the implementation.
 - green: `ReleasesController.RefreshIntervalHours()` reads the first trigger of the worker whose task is `RefreshNewReleasesTask`: interval ticks → hours, weekly → 168, daily/none → 24. Suite -> 147 passed, 0 failed
 - refactor: none needed
 - commit: `d63b423`
+
+## Cycle 122: U119 `GET api/artists` returns only artists in libraries the caller may access
+
+- test: `Api/ReleasesControllerTests.cs::GetArtists_ReturnsOnlyArtistsInLibrariesTheCallerMayAccess` (new; also 401 without a claim)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleasesControllerTests.GetArtists_ReturnsOnlyArtistsInLibrariesTheCallerMayAccess" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub)
+- green: `ReleasesController.GetArtistsAsync` reuses `LibraryAccess.CanSee` over `library_artist.library_ids`. `GetStatusAsync` (contract `GET api/status`, part of T039, no behaviour of its own on the list) added in the same commit. Suite -> 148 passed, 0 failed
+- refactor: `LibraryAccess.CanSee` overload on a library-id list shared by both actions; suite re-run green
+- commit: `3e3717e`
