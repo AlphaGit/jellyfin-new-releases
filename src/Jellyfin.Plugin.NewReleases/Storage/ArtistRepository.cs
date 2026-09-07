@@ -51,11 +51,17 @@ public sealed class ArtistRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyList<LibraryArtist>> GetAllAsync(CancellationToken ct)
+    /// <summary>Refresh order: never refreshed first, then oldest first, ties by name (edge case: rotation, no starvation).</summary>
+    public Task<IReadOnlyList<LibraryArtist>> GetRotationAsync(CancellationToken ct)
+        => QueryArtistsAsync("ORDER BY last_refreshed_at IS NOT NULL, last_refreshed_at, name", ct);
+
+    public Task<IReadOnlyList<LibraryArtist>> GetAllAsync(CancellationToken ct) => QueryArtistsAsync("ORDER BY name", ct);
+
+    private async Task<IReadOnlyList<LibraryArtist>> QueryArtistsAsync(string orderBy, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT id, artist_key, jellyfin_id, name, mbid, library_ids, album_count, last_refreshed_at FROM library_artist ORDER BY name";
+        command.CommandText = "SELECT id, artist_key, jellyfin_id, name, mbid, library_ids, album_count, last_refreshed_at FROM library_artist " + orderBy;
         var result = new List<LibraryArtist>();
         await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
         while (await reader.ReadAsync(ct).ConfigureAwait(false))

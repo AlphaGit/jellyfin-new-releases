@@ -64,4 +64,18 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
             Assert.Equal(1L, await _db.ScalarAsync<long>($"SELECT COUNT(*) FROM {table}"));
         }
     }
+
+    [Fact]
+    public async Task GetRotationAsync_NeverRefreshedFirstThenOldestThenName()
+    {
+        var old = await _db.Artists.UpsertAsync(Artist("name:old", "Old"), CancellationToken.None);
+        var recent = await _db.Artists.UpsertAsync(Artist("name:recent", "Recent"), CancellationToken.None);
+        await _db.Artists.UpsertAsync(Artist("name:zed never", "Zed Never"), CancellationToken.None);
+        await _db.Artists.UpsertAsync(Artist("name:amy never", "Amy Never"), CancellationToken.None);
+        await _db.ExecuteAsync($"UPDATE library_artist SET last_refreshed_at = '2026-01-01T00:00:00Z' WHERE id = {old}; UPDATE library_artist SET last_refreshed_at = '2026-06-01T00:00:00Z' WHERE id = {recent};");
+
+        var rotation = await _db.Artists.GetRotationAsync(CancellationToken.None);
+
+        Assert.Equal(["Amy Never", "Zed Never", "Old", "Recent"], rotation.Select(a => a.Name));
+    }
 }
