@@ -291,3 +291,12 @@ failed before the implementation.
 - green: `PruneEntriesAsync` deletes the artist's releases with no remaining `source_entry` before recomputing canonicals. Suite -> 50 passed, 0 failed
 - refactor: none needed
 - commit: `cf7f3b2`
+
+## Cycle 33: U33 `date_sort` is `2024-00-00` for `2024`, `2024-05-00` for `2024-05`, the full date for a full date, NULL for none
+
+- test: `Storage/ReleaseRepositoryTests.cs::UpsertFromSourceAsync_PadsDateSortAndLeavesUndatedNull` (new, Theory ×4)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.UpsertFromSourceAsync_PadsDateSortAndLeavesUndatedNull" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Strings differ / Expected: "2024-00-00" / Actual:   null` (3 failed, 1 passed)
+- green: `RecomputeCanonicalAsync` pads `date_sort` by `length(release_date)` (4 -> `-00-00`, 7 -> `-00`, else as is; NULL stays NULL). Suite -> 54 passed, 0 failed
+- refactor: none needed
+- commit: `ff14519`
