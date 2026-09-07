@@ -505,3 +505,11 @@ failed before the implementation.
 - green: `PluginConfiguration.ReleasedSinceDate()` = `DateOnly.TryParseExact("yyyy-MM-dd")`. Suite -> 79 passed, 0 failed
 - refactor: none needed
 - commit: `2a997d9`
+
+## Cycle 57: U55 deserializing XML that lacks every element yields the defaults (forward migration)
+
+- test: `Configuration/PluginConfigurationTests.cs::Deserialize_XmlWithoutAnyElement_YieldsTheDefaults` (new)
+- red: passed on first run. First mutant check (constructor sets `IncludeEps = false`) **survived** because the test compared against `new PluginConfiguration()`, which carried the same mutation — a tautology. Test rewritten to assert the contract's literal defaults; mutant re-run -> `Expected: Tuple (True, True, True, True, False, …) / Actual:   Tuple (True, True, True, False, False, …)` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 80 passed, 0 failed
+- refactor: none needed
+- commit: `1980c13`
