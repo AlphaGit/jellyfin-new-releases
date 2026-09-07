@@ -274,3 +274,11 @@ failed before the implementation.
 - green: `RecomputeCanonicalAsync` sets `release_date = COALESCE(canonical.source_date, any dated entry)`. Suite -> 48 passed, 0 failed
 - refactor: none needed
 - commit: `4c427ce`
+
+## Cycle 31: U31 pruning (artist, source, run) deletes only that pair's stale entries
+
+- test: `Storage/ReleaseRepositoryTests.cs::PruneEntriesAsync_DeletesOnlyThePairsStaleEntries` (new; other artist and other source untouched)
+- red: passed on first run (cycle 29's query already scoped both). Deliberate mutants: (A) artist scope removed -> `Actual: ["deezer:dz-s", "musicbrainz:rg-f"]` (other artist's entry lost); (B) source scope removed -> `Actual: ["musicbrainz:rg-e", "musicbrainz:rg-f"]` (Deezer entry lost). Both 1 failed. Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 49 passed, 0 failed
+- refactor: none needed
+- commit: `c298a15`
