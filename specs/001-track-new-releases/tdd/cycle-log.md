@@ -398,3 +398,12 @@ failed before the implementation.
 - green: `ArchiveRepository.SetAsync` (upsert on the natural-key PK) and `GetAsync`. Suite -> 65 passed, 0 failed
 - refactor: none needed
 - commit: `b7411ca`
+
+## Cycle 45: U45 removing a decision deletes only that key; clearing deletes all
+
+- test: `Storage/ArchiveRepositoryTests.cs::RemoveAsync_DeletesOnlyThatKey_ClearAsync_DeletesAll` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArchiveRepositoryTests.RemoveAsync_DeletesOnlyThatKey_ClearAsync_DeletesAll" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Null() Failure: Value is not null / Expected: null / Actual:   Decision { ArtistKey = name:a, NormalizedTitle = one, … }` (1 failed; no-op stubs)
+- green: `ArchiveRepository.RemoveAsync` (keyed DELETE) and `ClearAsync` (DELETE all). Suite -> 66 passed, 0 failed
+- refactor: none needed
+- commit: `51eb3cd`
