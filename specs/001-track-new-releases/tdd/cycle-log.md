@@ -1017,3 +1017,18 @@ failed before the implementation.
 - green: no production change. Suite -> 141 passed, 0 failed
 - refactor: none needed
 - commit: `4c833bb`
+
+## Cycle 116: U113 with every source unavailable, ownership is still recomputed from stored editions so a newly complete library album becomes `Owned`
+
+- test: `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_WithEverySourceUnavailable_StillRecomputesOwnershipFromStoredEditions` (new; INV-1)
+- red: passed on first run (cycle 111's ownership step runs for every artist regardless of fetch outcomes). Deliberate mutant: ownership loop skipped when no artist was processed -> `Expected: Owned / Actual:   Incomplete` (1 failed). Code restored exactly, test green again. Committed with cycle 117 (both tests added in one edit).
+- green: no production change.
+- refactor: none needed
+
+## Cycle 117: U114 an `Unmatched` artist is matched again on the next run
+
+- test: `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_UnmatchedArtist_IsMatchedAgainOnTheNextRun` (new)
+- red: passed on first run (only a stored `Matched` id is reused). Deliberate mutant: a stored `Unmatched` state reused without asking the source -> `ReceivedCallsException` (expected 2 `MatchArtistAsync` calls, received 1) (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 143 passed, 0 failed
+- refactor: none needed
+- commit: `1c6371b`
