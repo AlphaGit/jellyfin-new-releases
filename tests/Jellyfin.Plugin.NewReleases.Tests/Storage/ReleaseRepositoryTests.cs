@@ -253,4 +253,25 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         Assert.Equal((OwnershipState.Incomplete, "Title", album, first, Now), (stored.OwnershipState, stored.MatchMethod, stored.LibraryAlbumId, stored.ComparedEditionId, stored.OwnershipCheckedAt));
         Assert.Equal(["derezzed"], stored.MissingTracks);
     }
+
+    [Fact]
+    public async Task PurgeAsync_EmptiesReleaseDataAndKeepsDecisionsArtistsAndSourceState()
+    {
+        var release = await Seed("Purged", "2020-01-01", "rg-p");
+        await _db.Releases.UpsertEditionAsync(release, "musicbrainz", new EditionTrackList("rel-p", "Purged", ["a"]), Now, CancellationToken.None);
+        await _db.Artists.SetMatchAsync(_artist, "musicbrainz", ArtistMatch.Matched("mb-1"), CancellationToken.None);
+        await _db.ExecuteAsync("INSERT INTO decision (artist_key, normalized_title, kind, user_id, decided_at) VALUES ('name:daft punk', 'purged', 'Ignore', 'u', '2026-09-01T10:00:00Z')");
+
+        await _db.Releases.PurgeAsync(CancellationToken.None);
+
+        foreach (var emptied in new[] { "release", "source_entry", "edition" })
+        {
+            Assert.Equal(0L, await _db.ScalarAsync<long>($"SELECT COUNT(*) FROM {emptied}"));
+        }
+
+        foreach (var kept in new[] { "decision", "library_artist", "artist_source" })
+        {
+            Assert.Equal(1L, await _db.ScalarAsync<long>($"SELECT COUNT(*) FROM {kept}"));
+        }
+    }
 }

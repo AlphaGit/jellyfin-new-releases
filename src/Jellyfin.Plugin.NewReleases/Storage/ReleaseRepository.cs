@@ -336,6 +336,15 @@ public sealed class ReleaseRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
+    /// <summary>Purge release data (FR-013): releases, entries and editions go; decisions, artists and their match state stay.</summary>
+    public async Task PurgeAsync(CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM edition; DELETE FROM source_entry; DELETE FROM release;";
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
     public async Task<Release?> GetAsync(long releaseId, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);

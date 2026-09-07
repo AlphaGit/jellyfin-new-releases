@@ -123,7 +123,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U39 | `archived=false` omits rows that have a decision; `archived=true` returns only those, with kind and decided-at | FR-008, FR-016 | example | DONE | `Storage/ReleaseRepositoryTests.cs::ListAsync_ArchivedFlagSplitsDecidedRowsFromTheList` |
 | U40 | The list returns at most 5 000 rows | R16 | example | DONE | `Storage/ReleaseRepositoryTests.cs::ListAsync_ReturnsAtMostFiveThousandRows` |
 | U41 | Edition upsert is unique on (source, source edition id); writing ownership stores state, method, library album id, compared edition id, missing tracks | FR-005, FR-005a | example | DONE | `Storage/ReleaseRepositoryTests.cs::Editions_UpsertIsUniquePerSourceEditionId_AndOwnershipColumnsAreStored` |
-| U42 | Purge empties `release`, `source_entry`, `edition` and leaves `decision`, `library_artist`, `artist_source` rows in place | FR-013 | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
+| U42 | Purge empties `release`, `source_entry`, `edition` and leaves `decision`, `library_artist`, `artist_source` rows in place | FR-013 | example | DONE | `Storage/ReleaseRepositoryTests.cs::PurgeAsync_EmptiesReleaseDataAndKeepsDecisionsArtistsAndSourceState` |
 | U43 | Listing 500 stored releases completes within 500 ms on the development machine (asserted at 2 000 ms in the suite for CI headroom; the measured time is written to the test output) | SC-005 | example | PENDING | `Storage/ReleaseRepositoryTests.cs` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Storage/ArchiveRepository.cs`
