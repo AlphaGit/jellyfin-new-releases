@@ -81,4 +81,31 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         Assert.Equal(["Alive 2007", "Human After All"], (await _rig.ListAsync()).Items.Select(i => i.Title));
         Assert.Equal(storedBefore, await _rig.Harness.Db.ScalarAsync<long>("SELECT COUNT(*) FROM release"));
     }
+
+    /// <summary>MusicBrainz fails on every call (four failures already on record from earlier runs), Deezer works: the failing source is isolated.</summary>
+    [Fact]
+    public async Task A12_MusicBrainz503OnEveryCall_WhileDeezerSucceeds_StatusShowsCoolingDownWithLastError_DeezerReleasesListed()
+    {
+        const string mbid = "056e4f3e-d505-4dad-8ec1-d04f521cbb56";
+        _rig.Library_.Artist("Daft Punk", mbid);
+        _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.Harness.Http.OnUrlPattern(@"musicbrainz\.org", System.Net.HttpStatusCode.ServiceUnavailable, "{\"error\":\"busy\"}");
+        _rig.DeezerArtist(27, "Daft Punk", (2, "Homework", "album", "1997-01-16"), (3, "Alive 2007", "album", "2007-11-16")).DeezerAlbum(2, "Homework", Homework);
+        for (var i = 0; i < Jellyfin.Plugin.NewReleases.Sources.SourceLimits.FailureThreshold - 1; i++)
+        {
+            await _rig.Harness.Db.SourceState.RecordFailureAsync("musicbrainz", "503", Jellyfin.Plugin.NewReleases.Sources.SourceLimits.FailureThreshold, Jellyfin.Plugin.NewReleases.Sources.SourceLimits.Cooldown, CancellationToken.None);
+        }
+
+        await _rig.Harness.RunAdvancingAsync(_rig.RunAsync(), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30));
+        var status = await _rig.AdminStatusAsync();
+        var list = await _rig.ListAsync();
+
+        var musicBrainz = status.Sources.Single(s => s.Id == "musicbrainz");
+        Assert.Equal("CoolingDown", musicBrainz.Health);
+        Assert.Contains("503", musicBrainz.LastError);
+        Assert.Equal("Ok", status.Sources.Single(s => s.Id == "deezer").Health);
+        Assert.Equal(["Alive 2007"], list.Items.Select(i => i.Title));
+        Assert.Equal("Completed", status.LastRun!.Outcome);
+        Assert.Equal(1, status.LastRun.Errors);
+    }
 }
