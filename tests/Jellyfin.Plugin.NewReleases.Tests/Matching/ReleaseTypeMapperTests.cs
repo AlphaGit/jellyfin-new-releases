@@ -21,4 +21,15 @@ public class ReleaseTypeMapperTests
         Assert.Equal(expected, mapped);
         Assert.Empty(secondaries);
     }
+
+    [Fact]
+    public void MapMusicBrainz_MapsSecondaryTypesByNameAndUnknownToOther()
+    {
+        var (_, secondaries) = ReleaseTypeMapper.MapMusicBrainz(
+            "Album", ["Compilation", "Live", "Remix", "Soundtrack", "DJ-mix", "Mixtape/Street", "Demo", "Audiobook"]);
+
+        Assert.Equal(
+            [ReleaseType.Compilation, ReleaseType.Live, ReleaseType.Remix, ReleaseType.Soundtrack, ReleaseType.Other, ReleaseType.Other, ReleaseType.Other, ReleaseType.Other],
+            secondaries);
+    }
 }

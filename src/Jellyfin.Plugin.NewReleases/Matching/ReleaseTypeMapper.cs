@@ -6,13 +6,22 @@ namespace Jellyfin.Plugin.NewReleases.Matching;
 public static class ReleaseTypeMapper
 {
     public static (ReleaseType Primary, IReadOnlyList<ReleaseType> Secondaries) MapMusicBrainz(string? primary, IEnumerable<string> secondaries)
-        => (MapMusicBrainzPrimary(primary), Array.Empty<ReleaseType>());
+        => (MapMusicBrainzPrimary(primary), secondaries.Select(MapMusicBrainzSecondary).ToArray());
 
     private static ReleaseType MapMusicBrainzPrimary(string? primary) => primary switch
     {
         "Album" => ReleaseType.Album,
         "EP" => ReleaseType.EP,
         "Single" => ReleaseType.Single,
+        _ => ReleaseType.Other,
+    };
+
+    private static ReleaseType MapMusicBrainzSecondary(string secondary) => secondary switch
+    {
+        "Compilation" => ReleaseType.Compilation,
+        "Live" => ReleaseType.Live,
+        "Remix" => ReleaseType.Remix,
+        "Soundtrack" => ReleaseType.Soundtrack,
         _ => ReleaseType.Other,
     };
 }
