@@ -282,3 +282,12 @@ failed before the implementation.
 - green: no production change. Suite -> 49 passed, 0 failed
 - refactor: none needed
 - commit: `c298a15`
+
+## Cycle 32: U32 a release left with zero entries after pruning is deleted; one with a remaining entry stays
+
+- test: `Storage/ReleaseRepositoryTests.cs::PruneEntriesAsync_DeletesReleasesLeftWithoutEntriesAndKeepsTheOthers` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.PruneEntriesAsync_DeletesReleasesLeftWithoutEntriesAndKeepsTheOthers" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Null() Failure: Value is not null / Expected: null / Actual:   Release { Id = 1, … Title = Orphan …}` (1 failed)
+- green: `PruneEntriesAsync` deletes the artist's releases with no remaining `source_entry` before recomputing canonicals. Suite -> 50 passed, 0 failed
+- refactor: none needed
+- commit: `cf7f3b2`
