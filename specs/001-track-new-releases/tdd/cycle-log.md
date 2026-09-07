@@ -247,3 +247,12 @@ failed before the implementation.
 - green: `ReleaseRepository.UpsertFromSourceAsync` — release upsert on `(library_artist_id, normalized_title)` with `RETURNING id`, then `source_entry` upsert on `(release_id, source)` inside one transaction; `GetAsync` reads a release row. Suite -> 45 passed, 0 failed
 - refactor: none needed
 - commit: `d02ceba`
+
+## Cycle 28: U28 when a MusicBrainz entry exists, canonical source, id, types and date come from it
+
+- test: `Storage/ReleaseRepositoryTests.cs::UpsertFromSourceAsync_MusicBrainzEntryIsCanonicalForSourceIdTypesAndDate` (new; Deezer upserted first, MusicBrainz second)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.UpsertFromSourceAsync_MusicBrainzEntryIsCanonicalForSourceIdTypesAndDate" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: Tuple ("musicbrainz", "rg-9", Album, "2001-10-02") / Actual:   Tuple ("deezer", "dz-9", Album, "2001-10-01")` (1 failed)
+- green: `ReleaseRepository.RecomputeCanonicalAsync` (`UPDATE … FROM` the preferred entry, MusicBrainz first) called after every entry upsert. Suite -> 46 passed, 0 failed
+- refactor: none needed
+- commit: `5c9f260`
