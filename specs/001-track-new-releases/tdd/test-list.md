@@ -212,7 +212,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U88 | No search results → `Unmatched` | FR-002, EC-2 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoSearchResults_IsUnmatched` |
 | U89 | An albums page maps `record_type`, sets `NextOffset` from `next` when present and null when absent | FR-003, FR-004 | example | DONE | `Sources/DeezerSourceTests.cs::FetchCataloguePageAsync_MapsRecordTypeAndTakesNextOffsetFromNext` |
 | U90 | `release_date` `0000-00-00` becomes a null date; `link` becomes the source URL | FR-003, EC-4 | example | DONE | `Sources/DeezerSourceTests.cs::FetchCataloguePageAsync_UnknownDateBecomesNull_LinkBecomesTheUrl` |
-| U91 | Album tracks spread over two `next` pages come back as one edition titled as the album | FR-005 | example | PENDING | `Sources/DeezerSourceTests.cs` |
+| U91 | Album tracks spread over two `next` pages come back as one edition titled as the album | FR-005 | example | DONE | `Sources/DeezerSourceTests.cs::FetchEditionsAsync_TracksAcrossTwoPages_ComeBackAsOneEditionTitledAsTheAlbum` |
 | U92 | An HTTP 200 body with `error.code = 4` is retried as transient; any other `error` code throws | FR-011, R3 | example | PENDING | `Sources/DeezerSourceTests.cs` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Matching/OwnershipMatcher.cs`

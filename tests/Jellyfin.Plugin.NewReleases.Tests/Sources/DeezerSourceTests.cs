@@ -103,4 +103,19 @@ public sealed class DeezerSourceTests : IAsyncLifetime
         Assert.Equal("2010-03-15", page.Items[1].Date);
         Assert.All(page.Items, i => Assert.Equal($"https://www.deezer.com/album/{i.SourceReleaseId}", i.Url));
     }
+
+    [Fact]
+    public async Task FetchEditionsAsync_TracksAcrossTwoPages_ComeBackAsOneEditionTitledAsTheAlbum()
+    {
+        _h.Fixture(@"api\.deezer\.com/album/302127$", "deezer/album.json");
+        _h.Fixture(@"api\.deezer\.com/album/302127/tracks\?(?!.*index=8)", "deezer/album_tracks_page1.json"); // next → index=8
+        _h.Fixture(@"api\.deezer\.com/album/302127/tracks\?.*index=8", "deezer/album_tracks_page2.json");
+
+        var editions = await Source().FetchEditionsAsync("302127", CancellationToken.None);
+
+        var edition = Assert.Single(editions);
+        Assert.Equal(("302127", "Discovery", 14), (edition.SourceEditionId, edition.Title, edition.NormalizedTrackTitles.Count));
+        Assert.Equal("one more time", edition.NormalizedTrackTitles[0]);
+        Assert.Equal("too long", edition.NormalizedTrackTitles[13]);
+    }
 }

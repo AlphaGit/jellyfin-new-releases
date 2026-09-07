@@ -80,7 +80,27 @@ public sealed class DeezerSource : IReleaseSource
         return index is not null && int.TryParse(index[1], NumberStyles.None, CultureInfo.InvariantCulture, out var value) ? value : null;
     }
 
-    public Task<IReadOnlyList<EditionTrackList>> FetchEditionsAsync(string sourceReleaseId, CancellationToken ct) => throw new NotImplementedException();
+    /// <summary>One edition per Deezer album: title from `album/&lt;id&gt;`, tracks from `album/&lt;id&gt;/tracks` following `next` (FR-005).</summary>
+    public async Task<IReadOnlyList<EditionTrackList>> FetchEditionsAsync(string sourceReleaseId, CancellationToken ct)
+    {
+        var id = Uri.EscapeDataString(sourceReleaseId);
+        string title;
+        using (var album = await GetJsonAsync($"{Base}album/{id}", ct).ConfigureAwait(false))
+        {
+            title = album.RootElement.GetProperty("title").GetString() ?? sourceReleaseId;
+        }
+
+        var tracks = new List<string>();
+        string? url = $"{Base}album/{id}/tracks?limit={AlbumPageSize}";
+        while (url is not null)
+        {
+            using var page = await GetJsonAsync(url, ct).ConfigureAwait(false);
+            tracks.AddRange(page.RootElement.GetProperty("data").EnumerateArray().Select(t => TitleNormalizer.NormalizeTrack(t.GetProperty("title").GetString() ?? string.Empty)));
+            url = page.RootElement.TryGetProperty("next", out var next) && next.ValueKind == JsonValueKind.String ? next.GetString() : null;
+        }
+
+        return [new EditionTrackList(sourceReleaseId, title, tracks)];
+    }
 
     private async Task<JsonDocument> GetJsonAsync(string url, CancellationToken ct)
         => JsonDocument.Parse(await _http.GetStringAsync(Id, url, ct).ConfigureAwait(false));
