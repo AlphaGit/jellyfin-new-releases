@@ -238,3 +238,12 @@ failed before the implementation.
 - green: `ArtistRepository.GetCountsAsync` — COUNT(*), GROUP BY source on Matched, and a joined Unmatched query folded per artist. First suite run after the implementation still failed on this test: the assertion compared `UnmatchedArtist` records whose `Sources` list property compares by reference (test defect, same expected values). Test fixed to compare flattened (artist, source, reason) tuples; no assertion dropped. Suite -> 44 passed, 0 failed
 - refactor: none needed
 - commit: `a17bdca`
+
+## Cycle 27: U27 the same normalized title from two sources yields one `release` with two `source_entry` rows
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ReleaseRepositoryTests.cs::UpsertFromSourceAsync_SameNormalizedTitleFromTwoSources_OneReleaseTwoEntries` (new; `Discovery` vs `DISCOVERY (Deluxe Edition)`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.UpsertFromSourceAsync_SameNormalizedTitleFromTwoSources_OneReleaseTwoEntries" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub). Declarations added: `CatalogueItem`, `CataloguePage`, `EditionTrackList`, `Release` records; `TestDatabase.Releases`.
+- green: `ReleaseRepository.UpsertFromSourceAsync` — release upsert on `(library_artist_id, normalized_title)` with `RETURNING id`, then `source_entry` upsert on `(release_id, source)` inside one transaction; `GetAsync` reads a release row. Suite -> 45 passed, 0 failed
+- refactor: none needed
+- commit: `d02ceba`
