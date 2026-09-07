@@ -121,6 +121,54 @@ public sealed class ArtistRepository
         reader.IsDBNull(7) ? null : DateTimeOffset.Parse(reader.GetString(7), CultureInfo.InvariantCulture),
         reader.IsDBNull(8) ? null : reader.GetString(8));
 
+    /// <summary>Admin counts: total artists, Matched per source, and every artist Unmatched at at least one source with the reasons (FR-012).</summary>
+    public async Task<ArtistCounts> GetCountsAsync(CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+
+        await using var total = connection.CreateCommand();
+        total.CommandText = "SELECT COUNT(*) FROM library_artist";
+        var libraryArtists = Convert.ToInt32(await total.ExecuteScalarAsync(ct).ConfigureAwait(false), CultureInfo.InvariantCulture);
+
+        var matched = new Dictionary<string, int>(StringComparer.Ordinal);
+        await using (var perSource = connection.CreateCommand())
+        {
+            perSource.CommandText = "SELECT source, COUNT(*) FROM artist_source WHERE status = 'Matched' GROUP BY source";
+            await using var reader = await perSource.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            while (await reader.ReadAsync(ct).ConfigureAwait(false))
+            {
+                matched[reader.GetString(0)] = reader.GetInt32(1);
+            }
+        }
+
+        var unmatched = new List<UnmatchedArtist>();
+        await using (var rows = connection.CreateCommand())
+        {
+            rows.CommandText = """
+                SELECT a.jellyfin_id, a.name, s.source, s.unmatched_reason
+                FROM artist_source s JOIN library_artist a ON a.id = s.library_artist_id
+                WHERE s.status = 'Unmatched'
+                ORDER BY a.name, a.id, s.source
+                """;
+            await using var reader = await rows.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            while (await reader.ReadAsync(ct).ConfigureAwait(false))
+            {
+                var jellyfinId = Guid.Parse(reader.GetString(0));
+                var at = new UnmatchedAt(reader.GetString(2), reader.IsDBNull(3) ? string.Empty : reader.GetString(3));
+                if (unmatched.Count > 0 && unmatched[^1].JellyfinId == jellyfinId)
+                {
+                    unmatched[^1] = unmatched[^1] with { Sources = [.. unmatched[^1].Sources, at] };
+                }
+                else
+                {
+                    unmatched.Add(new UnmatchedArtist(jellyfinId, reader.GetString(1), [at]));
+                }
+            }
+        }
+
+        return new ArtistCounts(libraryArtists, matched, unmatched);
+    }
+
     /// <summary>Refresh order: never refreshed first, then oldest first, ties by name (edge case: rotation, no starvation).</summary>
     public Task<IReadOnlyList<LibraryArtist>> GetRotationAsync(CancellationToken ct)
         => QueryArtistsAsync("ORDER BY last_refreshed_at IS NOT NULL, last_refreshed_at, name", ct);

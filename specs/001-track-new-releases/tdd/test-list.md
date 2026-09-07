@@ -102,7 +102,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U23 | Deleting artists absent from the snapshot removes their `artist_source`, `release`, `source_entry`, `edition` rows | FR-014, EC-9 | example | DONE | `Storage/ArtistRepositoryTests.cs::DeleteMissingAsync_RemovesArtistsAbsentFromTheSnapshotWithTheirRows` |
 | U24 | Rotation returns artists with NULL `last_refreshed_at` first, then oldest first, ties by name | EC-6 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetRotationAsync_NeverRefreshedFirstThenOldestThenName` |
 | U25 | `artist_source` upsert stores status, source artist id, unmatched reason, outcome, `resume_offset`; a Complete outcome resets the offset to 0 | FR-002, FR-014 | example | DONE | `Storage/ArtistRepositoryTests.cs::ArtistSource_UpsertStoresMatchAndOutcome_CompleteResetsOffset` |
-| U26 | Admin counts return total library artists, matched per source, and the unmatched list with each source's reason | FR-012 | example | PENDING | `Storage/ArtistRepositoryTests.cs` |
+| U26 | Admin counts return total library artists, matched per source, and the unmatched list with each source's reason | FR-012 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_ReportsTotalsMatchedPerSourceAndUnmatchedReasons` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Storage/ReleaseRepository.cs`
 

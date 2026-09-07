@@ -98,4 +98,35 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
 
         Assert.Equal(new ArtistSourceState(id, "musicbrainz", MatchStatus.Unmatched, null, "no result", 0, FetchOutcome.Complete, now, null), complete);
     }
+
+    [Fact]
+    public async Task GetCountsAsync_ReportsTotalsMatchedPerSourceAndUnmatchedReasons()
+    {
+        var both = Artist("name:both", "Both");
+        var mbOnly = Artist("name:mb only", "MB Only");
+        var neither = Artist("name:neither", "Neither");
+        var bothId = await _db.Artists.UpsertAsync(both, CancellationToken.None);
+        var mbOnlyId = await _db.Artists.UpsertAsync(mbOnly, CancellationToken.None);
+        var neitherId = await _db.Artists.UpsertAsync(neither, CancellationToken.None);
+        await _db.Artists.SetMatchAsync(bothId, "musicbrainz", ArtistMatch.Matched("mb-1"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(bothId, "deezer", ArtistMatch.Matched("dz-1"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(mbOnlyId, "musicbrainz", ArtistMatch.Matched("mb-2"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(mbOnlyId, "deezer", ArtistMatch.Unmatched("no corroborating album"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(neitherId, "musicbrainz", ArtistMatch.Unmatched("ambiguous (score 90 vs 85)"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(neitherId, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var counts = await _db.Artists.GetCountsAsync(CancellationToken.None);
+
+        Assert.Equal(3, counts.LibraryArtists);
+        Assert.Equal(2, counts.MatchedBySource["musicbrainz"]);
+        Assert.Equal(1, counts.MatchedBySource["deezer"]);
+        // Records holding lists compare by reference; flatten to (artist, source, reason) rows.
+        Assert.Equal(
+            [
+                (mbOnly.JellyfinId, "MB Only", "deezer", "no corroborating album"),
+                (neither.JellyfinId, "Neither", "deezer", "no result"),
+                (neither.JellyfinId, "Neither", "musicbrainz", "ambiguous (score 90 vs 85)"),
+            ],
+            counts.Unmatched.SelectMany(u => u.Sources.OrderBy(s => s.Source).Select(s => (u.JellyfinId, u.Name, s.Source, s.Reason))));
+    }
 }

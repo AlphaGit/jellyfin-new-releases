@@ -22,3 +22,11 @@ public sealed record ArtistSourceState(
     FetchOutcome? LastOutcome,
     DateTimeOffset? LastCompleteAt,
     string? LastError);
+
+/// <summary>Admin-page counts (FR-012).</summary>
+public sealed record ArtistCounts(int LibraryArtists, IReadOnlyDictionary<string, int> MatchedBySource, IReadOnlyList<UnmatchedArtist> Unmatched);
+
+/// <summary>A library artist Unmatched at one or more sources, with each source's reason.</summary>
+public sealed record UnmatchedArtist(Guid JellyfinId, string Name, IReadOnlyList<UnmatchedAt> Sources);
+
+public sealed record UnmatchedAt(string Source, string Reason);
