@@ -433,3 +433,13 @@ failed before the implementation.
 - green: `SourceStateRepository.GetRemainingBudgetAsync` = `max(0, budget − (calls_day == today ? calls_today : 0))`. Suite -> 69 passed, 0 failed
 - refactor: none needed
 - commit: `18ec5f4`
+
+## Cycle 49: U49 four consecutive failures set no cooldown; the fifth sets `cooldown_until = now + 6 h`
+
+- test: `Storage/SourceStateRepositoryTests.cs::RecordFailureAsync_FourFailuresNoCooldown_FifthSetsCooldownSixHoursFromNow` (new)
+- red: first run against the no-op stub died with `System.NullReferenceException` (no row to read); test tightened with `Assert.NotNull` before dereferencing (same expectations), re-run:
+  `dotnet test --configuration Release --filter "FullyQualifiedName~SourceStateRepositoryTests.RecordFailureAsync_FourFailuresNoCooldown_FifthSetsCooldownSixHoursFromNow" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.NotNull() Failure: Value is null` (1 failed)
+- green: `SourceStateRepository.RecordFailureAsync` upsert incrementing `consecutive_failures`, setting `cooldown_until` when the new count reaches the threshold, storing `last_error`. Suite -> 70 passed, 0 failed
+- refactor: none needed
+- commit: `2f2bffd`
