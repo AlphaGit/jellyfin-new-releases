@@ -597,3 +597,12 @@ failed before the implementation.
 - green: `GetStringAsync` calls `RecordSuccessAsync` on 2xx and `RecordFailureAsync(threshold 5, cooldown 6 h)` before throwing on a final failure. Suite -> 92 passed, 0 failed
 - refactor: the two throw sites merged into one failure branch with a transient-aware message; suite re-run green
 - commit: `c2f8c6e`
+
+## Cycle 67: U65 `IsAvailableAsync` is false during cooldown or before `next_allowed_at`, true otherwise
+
+- test: `Sources/SourceHttpClientTests.cs::IsAvailableAsync_FalseDuringCooldownOrBeforeNextAllowedAt_TrueOtherwise` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceHttpClientTests.IsAvailableAsync_FalseDuringCooldownOrBeforeNextAllowedAt_TrueOtherwise" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.False() Failure / Expected: False / Actual:   True` (1 failed; stub returned true)
+- green: `SourceHttpClient.IsAvailableAsync` = not (`cooldown_until > now`) and not (`next_allowed_at > now`). Suite -> 93 passed, 0 failed
+- refactor: none needed
+- commit: `acecf77`
