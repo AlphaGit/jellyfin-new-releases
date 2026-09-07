@@ -1009,3 +1009,11 @@ failed before the implementation.
 - green: no production change. Suite -> 140 passed, 0 failed
 - refactor: none needed
 - commit: `28c06e8`
+
+## Cycle 115: U112 a source in cooldown is skipped for every artist while the other source is processed
+
+- test: `ScheduledTasks/RefreshNewReleasesTaskTests.cs::Run_SourceInCooldown_IsSkippedForEveryArtistWhileTheOtherIsProcessed` (new; five recorded failures put MusicBrainz in cooldown)
+- red: passed on first run (cycle 106's `IsAvailableAsync` gate). Deliberate mutant: gate removed -> `ReceivedCallsException` (MusicBrainz received `MatchArtistAsync`) (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 141 passed, 0 failed
+- refactor: none needed
+- commit: `4c833bb`
