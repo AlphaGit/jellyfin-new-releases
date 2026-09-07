@@ -327,3 +327,12 @@ failed before the implementation.
 - green: `ListAsync` skips rows where `ReleaseTypeMapper.IsIncluded(primary, secondaries, filter.EnabledTypes)` is false. Suite -> 57 passed, 0 failed
 - refactor: `ReadListed` now receives the parsed types instead of re-parsing them; suite re-run green
 - commit: `2c4fe4c`
+
+## Cycle 37: U37 with `ReleasedSince=2020-01-01`, `2020-01-01` is returned, `2019-12-31` is not, undated is returned
+
+- test: `Storage/ReleaseRepositoryTests.cs::ListAsync_ReleasedSinceIsInclusiveAndKeepsUndatedRows` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.ListAsync_ReleasedSinceIsInclusiveAndKeepsUndatedRows" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: ["On The Day", "Undated"] / Actual: ["On The Day", "Day Before", "Undated"]` (1 failed)
+- green: `ListAsync` drops dated rows whose `date_sort` sorts before the cutoff (ordinal string compare on `yyyy-MM-dd`); undated rows pass. Suite -> 58 passed, 0 failed
+- refactor: none needed
+- commit: `702c689`
