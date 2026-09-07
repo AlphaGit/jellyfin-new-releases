@@ -224,7 +224,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U95 | With no identifier match, an album titled `Album (Deluxe Edition)` is the candidate for release `Album` with method `Title` | FR-005, EC-3 | example | DONE | `Matching/OwnershipMatcherTests.cs::Decide_WithoutIdentifierMatch_AlbumTitledWithAnEditionQualifier_IsTheCandidateByTitle` |
 | U96 | With no candidate the result is `Missing` and no edition fetch is requested | FR-005, EC-7 | example | DONE | `Matching/OwnershipMatcherTests.cs::Decide_NoCandidate_IsMissingAndAsksForNoEditions` |
 | U97 | With a candidate and no stored editions the result asks for editions instead of deciding | FR-005, EC-7 | example | DONE | `Matching/OwnershipMatcherTests.cs::Decide_CandidateWithoutStoredEditions_AsksForEditionsInsteadOfDeciding` |
-| U98 | Every edition track matched by a library track → `Owned` | FR-005 | example | PENDING | `Matching/OwnershipMatcherTests.cs` |
+| U98 | Every edition track matched by a library track → `Owned` | FR-005 | example | DONE | `Matching/OwnershipMatcherTests.cs::Decide_EveryEditionTrackMatchedByALibraryTrack_IsOwned` |
 | U99 | 8 of 10 matched → `Incomplete` listing the 2 missing titles, the edition and its source | FR-005a, US1-AS8 | example | PENDING | `Matching/OwnershipMatcherTests.cs` |
 | U100 | Edition choice: more matched tracks wins; equal matched → fewer missing; still equal → MusicBrainz over Deezer; still equal → lowest edition id | FR-005 | example | PENDING | `Matching/OwnershipMatcherTests.cs` |
 | U101 | Extra library tracks beyond the edition do not prevent `Owned` | FR-005 | example | PENDING | `Matching/OwnershipMatcherTests.cs` |

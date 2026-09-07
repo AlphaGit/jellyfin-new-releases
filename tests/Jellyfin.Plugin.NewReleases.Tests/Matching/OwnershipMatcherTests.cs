@@ -71,4 +71,15 @@ public class OwnershipMatcherTests
         Assert.True(result.NeedsEditions);
         Assert.Equal((album.JellyfinId, "Title"), (result.LibraryAlbumId, result.MatchMethod));
     }
+
+    [Fact]
+    public void Decide_EveryEditionTrackMatchedByALibraryTrack_IsOwned()
+    {
+        var album = Album("Discovery", tracks: Discovery);
+        var edition = Edition(7, "musicbrainz", "rel-1", Discovery);
+
+        var result = OwnershipMatcher.Decide(Release(), [edition], [album]);
+
+        Assert.Equal((OwnershipState.Owned, 7L, 0, false), (result.State, result.EditionId, result.MissingTracks.Count, result.NeedsEditions));
+    }
 }
