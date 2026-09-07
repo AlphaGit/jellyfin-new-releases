@@ -169,6 +169,17 @@ public sealed class ArtistRepository
         return new ArtistCounts(libraryArtists, matched, unmatched);
     }
 
+    /// <summary>Stamps the rotation key once every enabled source was attempted for the artist in a run.</summary>
+    public async Task SetLastRefreshedAsync(long artistId, DateTimeOffset now, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE library_artist SET last_refreshed_at = @now WHERE id = @id";
+        command.Parameters.AddWithValue("@id", artistId);
+        command.Parameters.AddWithValue("@now", now.ToString("O"));
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
     /// <summary>Refresh order: never refreshed first, then oldest first, ties by name (edge case: rotation, no starvation).</summary>
     public Task<IReadOnlyList<LibraryArtist>> GetRotationAsync(CancellationToken ct)
         => QueryArtistsAsync("ORDER BY last_refreshed_at IS NOT NULL, last_refreshed_at, name", ct);
