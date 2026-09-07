@@ -513,3 +513,12 @@ failed before the implementation.
 - green: no production change. Suite -> 80 passed, 0 failed
 - refactor: none needed
 - commit: `1980c13`
+
+## Cycle 58: U56 without a contact the User-Agent is `JellyfinNewReleases/<version>`
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Sources/UserAgentBuilderTests.cs::Build_WithoutContact_IsProductAndVersion` (new, Theory: null, empty, blank contact)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~UserAgentBuilderTests.Build_WithoutContact_IsProductAndVersion" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Strings differ / Expected: "JellyfinNewReleases/0.1.0" / Actual:   "JellyfinNewReleases"` (3 failed)
+- green: `UserAgentBuilder.Build` = `$"{ProductName}/{version}"`. Suite -> 83 passed, 0 failed
+- refactor: none needed
+- commit: `e56d37b`
