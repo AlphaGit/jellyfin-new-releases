@@ -568,3 +568,13 @@ failed before the implementation.
 - green: `GetStringAsync` retry loop — non-success: `Retry-After` (delta or date) becomes the delay and is persisted via new `SourceStateRepository.SetNextAllowedAtAsync`; `Task.Delay(delay, clock)`; each attempt first waits for a stored `next_allowed_at` floor. Suite -> 88 passed, 0 failed
 - refactor: none needed
 - commit: `7a7073b`
+
+## Cycle 64: U62 persistent 500s are retried three times (200 ms, 800 ms, 3 200 ms) then surface as `HttpRequestException`
+
+- test: `Sources/SourceHttpClientTests.cs::GetStringAsync_Persistent500_RetriesThreeTimesWithBackoffThenThrows` (new; asserts the four send instants on the stub clock)
+- red: the first run hung — cycle 63's loop had no attempt bound, so the client retried for as long as the clock advanced and then waited forever; the run was killed. The clock helper now fails with `WaitAsync(2 s)` instead of hanging. Re-run:
+  `dotnet test --configuration Release --filter "FullyQualifiedName~SourceHttpClientTests.GetStringAsync_Persistent500_RetriesThreeTimesWithBackoffThenThrows" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Throws() Failure: Exception type was not an exact match / Expected: typeof(System.Net.Http.HttpRequestException) / Actual:   typeof(System.TimeoutException)` (1 failed)
+- green: `GetStringAsync` throws `HttpRequestException` (with the status code) once `attempt >= RetryBackoffs.Length`; backoff for attempt *n* is `RetryBackoffs[n]`. Suite -> 89 passed, 0 failed
+- refactor: none needed
+- commit: `536c702`
