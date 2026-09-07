@@ -588,3 +588,12 @@ failed before the implementation.
 - green: `GetStringAsync` treats only 429 and 5xx as transient; any other non-success throws `HttpRequestException` with the status before the retry bound. Suite -> 91 passed, 0 failed
 - refactor: none needed
 - commit: `4206a1b`
+
+## Cycle 66: U64 a failed request increments consecutive failures; a later success resets them
+
+- test: `Sources/SourceHttpClientTests.cs::GetStringAsync_FailureIncrementsConsecutiveFailures_LaterSuccessResetsThem` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceHttpClientTests.GetStringAsync_FailureIncrementsConsecutiveFailures_LaterSuccessResetsThem" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: 2 / Actual:   0` (1 failed)
+- green: `GetStringAsync` calls `RecordSuccessAsync` on 2xx and `RecordFailureAsync(threshold 5, cooldown 6 h)` before throwing on a final failure. Suite -> 92 passed, 0 failed
+- refactor: the two throw sites merged into one failure branch with a transient-aware message; suite re-run green
+- commit: `c2f8c6e`
