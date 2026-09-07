@@ -28,4 +28,22 @@ public sealed class ArchiveRepositoryTests : IAsyncLifetime
         Assert.Equal(new Decision("name:a", "album", DecisionKind.HaveIt, Bob, T2), await _db.Archive.GetAsync("name:a", "album", CancellationToken.None));
         Assert.Equal(1L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision"));
     }
+
+    [Fact]
+    public async Task RemoveAsync_DeletesOnlyThatKey_ClearAsync_DeletesAll()
+    {
+        await _db.Archive.SetAsync("name:a", "one", DecisionKind.Ignore, Alice, T1, CancellationToken.None);
+        await _db.Archive.SetAsync("name:a", "two", DecisionKind.HaveIt, Alice, T1, CancellationToken.None);
+        await _db.Archive.SetAsync("name:b", "one", DecisionKind.Ignore, Bob, T1, CancellationToken.None);
+
+        await _db.Archive.RemoveAsync("name:a", "one", CancellationToken.None);
+
+        Assert.Null(await _db.Archive.GetAsync("name:a", "one", CancellationToken.None));
+        Assert.NotNull(await _db.Archive.GetAsync("name:a", "two", CancellationToken.None));
+        Assert.NotNull(await _db.Archive.GetAsync("name:b", "one", CancellationToken.None));
+
+        await _db.Archive.ClearAsync(CancellationToken.None);
+
+        Assert.Equal(0L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision"));
+    }
 }

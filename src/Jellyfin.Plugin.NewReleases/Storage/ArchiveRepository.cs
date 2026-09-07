@@ -42,6 +42,25 @@ public sealed class ArchiveRepository
             : null;
     }
 
+    /// <summary>Restore: deletes the decision for one release.</summary>
+    public async Task RemoveAsync(string artistKey, string normalizedTitle, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM decision WHERE artist_key = @key AND normalized_title = @title";
+        AddKey(command, artistKey, normalizedTitle);
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Clear Archive: deletes every decision (FR-013).</summary>
+    public async Task ClearAsync(CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM decision";
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
     private static void AddKey(SqliteCommand command, string artistKey, string normalizedTitle)
     {
         command.Parameters.AddWithValue("@key", artistKey);
