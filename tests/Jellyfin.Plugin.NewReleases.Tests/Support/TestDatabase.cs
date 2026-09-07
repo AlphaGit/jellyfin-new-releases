@@ -21,6 +21,7 @@ internal sealed class TestDatabase : IAsyncDisposable
         Artists = new ArtistRepository(database);
         Releases = new ReleaseRepository(database);
         Archive = new ArchiveRepository(database);
+        SourceState = new SourceStateRepository(database, clock);
     }
 
     public PluginDatabase Database { get; }
@@ -32,6 +33,8 @@ internal sealed class TestDatabase : IAsyncDisposable
     public ReleaseRepository Releases { get; }
 
     public ArchiveRepository Archive { get; }
+
+    public SourceStateRepository SourceState { get; }
 
     public static Task<TestDatabase> CreateAsync() => CreateAsync(TimeProvider.System);
 

@@ -89,3 +89,25 @@ public sealed record ComparedEdition(string Source, string Title);
 
 /// <summary>Row of <c>edition</c>: one Official version of a release with its normalized track titles.</summary>
 public sealed record Edition(long Id, long ReleaseId, string Source, string SourceEditionId, string Title, IReadOnlyList<string> Tracks, DateTimeOffset FetchedAt);
+
+/// <summary>Row of <c>source_state</c>: health, budget counter and cooldown of one source (FR-011, FR-012).</summary>
+public sealed record SourceState(
+    string Source,
+    int ConsecutiveFailures,
+    DateTimeOffset? CooldownUntil,
+    int CallsToday,
+    DateOnly? CallsDay,
+    DateTimeOffset? NextAllowedAt,
+    string? LastError,
+    DateTimeOffset? LastSuccessAt);
+
+/// <summary>Row of <c>refresh_run</c> (FR-012, FR-015).</summary>
+public sealed record RefreshRun(
+    long Id,
+    DateTimeOffset StartedAt,
+    DateTimeOffset? EndedAt,
+    int ArtistsProcessed,
+    int ReleasesFound,
+    int EditionsFetched,
+    int Errors,
+    string? Outcome);
