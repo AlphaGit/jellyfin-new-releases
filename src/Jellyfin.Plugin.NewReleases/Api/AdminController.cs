@@ -98,9 +98,9 @@ public sealed class AdminController : ControllerBase
             counts.Unmatched.Select(u => new UnmatchedArtistDto(u.JellyfinId, u.Name, u.Sources.Select(s => new UnmatchedSourceDto(s.Source, s.Reason)).ToList(), UnmatchedHint)).ToList());
     }
 
+    /// <summary>Purge release data (FR-013): releases, entries, editions and ownership go; decisions, artists and match state stay; paging passes restart.</summary>
     [HttpPost("purge")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    /// <summary>Purge release data (FR-013): releases, entries, editions and ownership go; decisions, artists and match state stay; paging passes restart.</summary>
     public async Task<ActionResult> PurgeAsync(CancellationToken cancellationToken = default)
     {
         await _releases.PurgeAsync(cancellationToken).ConfigureAwait(false);
@@ -109,9 +109,9 @@ public sealed class AdminController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Clear Archive (FR-013): every Ignore and Have-it decision; release rows untouched.</summary>
     [HttpPost("clear-archive")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    /// <summary>Clear Archive (FR-013): every Ignore and Have-it decision; release rows untouched.</summary>
     public async Task<ActionResult> ClearArchiveAsync(CancellationToken cancellationToken = default)
     {
         await _archive.ClearAsync(cancellationToken).ConfigureAwait(false);
