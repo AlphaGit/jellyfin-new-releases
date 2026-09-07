@@ -897,3 +897,12 @@ failed before the implementation.
 - green: `DeezerSource.NextIndex()` reads the `index` query value of the `next` URL; type mapping was already in place from cycle 97. Suite -> 127 passed, 0 failed
 - refactor: none needed
 - commit: `f660389`
+
+## Cycle 102: U90 `release_date` `0000-00-00` becomes a null date; `link` becomes the source URL
+
+- test: `Sources/DeezerSourceTests.cs::FetchCataloguePageAsync_UnknownDateBecomesNull_LinkBecomesTheUrl` (new; `artist_albums_unknown_date.json`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DeezerSourceTests.FetchCataloguePageAsync_UnknownDateBecomesNull_LinkBecomesTheUrl" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Null() Failure: Value is not null / Expected: null / Actual:   "0000-00-00"` (1 failed)
+- green: `FetchCataloguePageAsync` maps `0000-00-00` (and empty) to a null date; `link` was already the URL. Suite -> 128 passed, 0 failed
+- refactor: none needed
+- commit: `bb0189b`
