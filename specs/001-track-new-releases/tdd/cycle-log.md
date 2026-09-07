@@ -114,3 +114,12 @@ failed before the implementation.
 - green: `ReleaseTypeMapper.MapDeezer()` switch. Suite -> 30 passed, 0 failed
 - refactor: none needed
 - commit: `b07cae8`
+
+## Cycle 13: U13 EP with no secondaries is included under the default selection
+
+- test: `Matching/ReleaseTypeMapperTests.cs::IsIncluded_EpWithNoSecondaries_IsIncludedByDefault` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseTypeMapperTests.IsIncluded_EpWithNoSecondaries_IsIncludedByDefault" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.True() Failure / Expected: True / Actual:   False` (1 failed; stub returned false)
+- green: `IsIncluded` = `enabled.Contains(primary)` (fake-it step; secondaries come with U14). Suite -> 31 passed, 0 failed
+- refactor: none needed
+- commit: `2aca436`
