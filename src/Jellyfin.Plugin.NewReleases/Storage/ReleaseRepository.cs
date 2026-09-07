@@ -189,8 +189,13 @@ public sealed class ReleaseRepository
             LEFT JOIN edition e ON e.id = r.compared_edition_id
             LEFT JOIN decision d ON d.artist_key = a.artist_key AND d.normalized_title = r.normalized_title
             WHERE r.ownership_state <> 'Owned'
+              AND (@artist IS NULL OR a.jellyfin_id = @artist)
             ORDER BY r.date_sort IS NULL, r.date_sort DESC, r.title
             """;
+        command.Parameters.AddWithValue("@artist", (object?)filter.ArtistJellyfinId?.ToString("D") ?? DBNull.Value);
+        var today = filter.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var from = filter.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var to = filter.To?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
         var rows = new List<ListedRelease>();
         await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
@@ -210,15 +215,35 @@ public sealed class ReleaseRepository
                 continue; // "released since" never cuts undated releases (data-model: Included)
             }
 
-            rows.Add(ReadListed(reader, primary, secondaries));
+            if ((from is not null || to is not null) && dateSort is null)
+            {
+                continue; // a date range says nothing about undated rows (contract: excluded when either bound is set)
+            }
+
+            if ((from is not null && string.CompareOrdinal(dateSort, from) < 0) || (to is not null && string.CompareOrdinal(dateSort, to) > 0))
+            {
+                continue;
+            }
+
+            var row = ReadListed(reader, primary, secondaries, today);
+            if ((filter.Type is { } type && row.Type != type) || (filter.State is { } state && row.State != state))
+            {
+                continue;
+            }
+
+            rows.Add(row);
         }
 
         return rows;
     }
 
-    private static ListedRelease ReadListed(SqliteDataReader r, ReleaseType primary, IReadOnlyList<ReleaseType> secondaries)
+    private static ListedRelease ReadListed(SqliteDataReader r, ReleaseType primary, IReadOnlyList<ReleaseType> secondaries, string today)
     {
         var ownership = Enum.Parse<OwnershipState>(r.GetString(9));
+        var dateSort = r.IsDBNull(8) ? null : r.GetString(8);
+        var state = dateSort is not null && string.CompareOrdinal(dateSort, today) > 0 ? ListState.Upcoming
+            : ownership == OwnershipState.Incomplete ? ListState.Incomplete
+            : ListState.Missing;
         var sources = (JsonSerializer.Deserialize<List<SourceLink>>(r.GetString(18), JsonWeb) ?? []).AsReadOnly();
         return new ListedRelease(
             r.GetInt64(0),
@@ -228,8 +253,8 @@ public sealed class ReleaseRepository
             r.GetString(4),
             ReleaseTypeMapper.DisplayType(primary, secondaries),
             r.IsDBNull(7) ? null : r.GetString(7),
-            r.IsDBNull(8) ? null : r.GetString(8),
-            ownership == OwnershipState.Incomplete ? ListState.Incomplete : ListState.Missing,
+            dateSort,
+            state,
             JsonSerializer.Deserialize<string[]>(r.GetString(10)) ?? [],
             r.IsDBNull(11) ? null : new ComparedEdition(r.GetString(11), r.GetString(12)),
             sources,

@@ -171,4 +171,30 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
 
         Assert.Equal(["On The Day", "Undated"], titles);
     }
+
+    [Fact]
+    public async Task ListAsync_FiltersByArtistTypeStateAndInclusiveDateRange()
+    {
+        var otherSnapshot = ArtistRepositoryTests.Artist("name:other", "Other");
+        var other = await _db.Artists.UpsertAsync(otherSnapshot, CancellationToken.None);
+        var mine = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single(a => a.Name == "Daft Punk").JellyfinId;
+        var incomplete = await Seed("Incomplete Album", "2020-05-01", "rg-inc");
+        await _db.ExecuteAsync($"UPDATE release SET ownership_state = 'Incomplete' WHERE id = {incomplete}");
+        await Seed("Missing Album", "2020-06-01", "rg-mis");
+        await Seed("An EP", "2020-07-01", "rg-ep", ReleaseType.EP);
+        await Seed("Future Album", "2026-09-07", "rg-fut");
+        await Seed("Today Album", "2026-09-06", "rg-today");
+        await Seed("Undated", null, "rg-und");
+        await _db.Releases.UpsertFromSourceAsync(other, "musicbrainz", MusicBrainzItem("Other Artist Album", "rg-other", "2020-06-15"), Run1, Now, CancellationToken.None);
+
+        async Task<string[]> Titles(ReleaseFilter f) => (await _db.Releases.ListAsync(f, CancellationToken.None)).Select(r => r.Title).ToArray();
+
+        Assert.Equal(["Future Album", "Today Album", "An EP", "Missing Album", "Incomplete Album", "Undated"], await Titles(DefaultFilter with { ArtistJellyfinId = mine }));
+        Assert.Equal(["An EP"], await Titles(DefaultFilter with { Type = ReleaseType.EP }));
+        Assert.Equal(["Future Album"], await Titles(DefaultFilter with { State = ListState.Upcoming }));
+        Assert.Equal(["Today Album", "Other Artist Album", "Missing Album", "Undated"], await Titles(DefaultFilter with { State = ListState.Missing, Type = ReleaseType.Album }));
+        Assert.Equal(["Incomplete Album"], await Titles(DefaultFilter with { State = ListState.Incomplete }));
+        Assert.Equal(["An EP", "Other Artist Album", "Missing Album"], await Titles(DefaultFilter with { From = new DateOnly(2020, 6, 1), To = new DateOnly(2020, 7, 1) }));
+        Assert.Equal(ListState.Upcoming, (await _db.Releases.ListAsync(DefaultFilter with { State = ListState.Upcoming }, CancellationToken.None)).Single().State);
+    }
 }
