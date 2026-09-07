@@ -256,3 +256,12 @@ failed before the implementation.
 - green: `ReleaseRepository.RecomputeCanonicalAsync` (`UPDATE … FROM` the preferred entry, MusicBrainz first) called after every entry upsert. Suite -> 46 passed, 0 failed
 - refactor: none needed
 - commit: `5c9f260`
+
+## Cycle 29: U29 removing the MusicBrainz entry makes the Deezer entry canonical
+
+- test: `Storage/ReleaseRepositoryTests.cs::PruneEntriesAsync_RemovingTheMusicBrainzEntryMakesDeezerCanonical` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.PruneEntriesAsync_RemovingTheMusicBrainzEntryMakesDeezerCanonical" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: Tuple ("deezer", "dz-2", "1997-01-17") / Actual:   Tuple ("musicbrainz", "rg-2", "1997-01-20")` (1 failed; no-op stub)
+- green: `ReleaseRepository.PruneEntriesAsync` deletes the pair's entries with `last_seen_run_id < @runId` (`RETURNING release_id`) and recomputes the canonical entry of each touched release. Suite -> 47 passed, 0 failed
+- refactor: none needed
+- commit: `b4e8a6a`
