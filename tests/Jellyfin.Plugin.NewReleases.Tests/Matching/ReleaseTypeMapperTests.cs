@@ -54,4 +54,10 @@ public class ReleaseTypeMapperTests
     {
         Assert.True(ReleaseTypeMapper.IsIncluded(ReleaseType.EP, [], DefaultSelection));
     }
+
+    [Fact]
+    public void IsIncluded_AlbumPlusLive_IsExcludedByDefault()
+    {
+        Assert.False(ReleaseTypeMapper.IsIncluded(ReleaseType.Album, [ReleaseType.Live], DefaultSelection));
+    }
 }
