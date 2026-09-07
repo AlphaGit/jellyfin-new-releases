@@ -132,3 +132,11 @@ failed before the implementation.
 - green: `IsIncluded` adds `secondaries.All(enabled.Contains)`. Suite -> 32 passed, 0 failed
 - refactor: none needed
 - commit: `808678e`
+
+## Cycle 15: U15 Album + Live included with Live enabled; Album + Compilation + Live needs both
+
+- test: `Matching/ReleaseTypeMapperTests.cs::IsIncluded_EverySecondaryMustBeEnabled` (new)
+- red: passed on first run (cycle 14's `All` already covers it). Deliberate mutant: `All` -> `Any` -> `Assert.False() Failure / Expected: False / Actual:   True` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 33 passed, 0 failed
+- refactor: none needed
+- commit: `3387ca9`
