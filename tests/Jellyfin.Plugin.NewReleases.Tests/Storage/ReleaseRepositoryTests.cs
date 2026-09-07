@@ -9,6 +9,9 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
     private static readonly DateTimeOffset Now = new(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
     private const long Run1 = 1;
 
+    private static readonly DateOnly Today = new(2026, 9, 6);
+    private static readonly ReleaseFilter DefaultFilter = new(new HashSet<ReleaseType> { ReleaseType.Album, ReleaseType.EP }, Today);
+
     private TestDatabase _db = null!;
     private long _artist;
 
@@ -113,5 +116,22 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         var id = await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Dated " + (date ?? "none"), "rg-" + (date ?? "none"), date), Run1, Now, CancellationToken.None);
 
         Assert.Equal(expectedSort, (await _db.Releases.GetAsync(id, CancellationToken.None))!.DateSort);
+    }
+
+    private Task<long> Seed(string title, string? date, string id, ReleaseType primary = ReleaseType.Album, params ReleaseType[] secondaries)
+        => _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem(title, id, date, primary, secondaries), Run1, Now, CancellationToken.None);
+
+    [Fact]
+    public async Task ListAsync_OrdersByDateDescendingUndatedLastTitleTiebreak_YearOnlyAfterDated()
+    {
+        await Seed("Undated", null, "rg-u");
+        await Seed("Beta 2023", "2023-06-01", "rg-b");
+        await Seed("Year Only 2024", "2024", "rg-y");
+        await Seed("Alpha 2023", "2023-06-01", "rg-a");
+        await Seed("New Year 2024", "2024-01-01", "rg-n");
+
+        var titles = (await _db.Releases.ListAsync(DefaultFilter, CancellationToken.None)).Select(r => r.Title);
+
+        Assert.Equal(["New Year 2024", "Year Only 2024", "Alpha 2023", "Beta 2023", "Undated"], titles);
     }
 }

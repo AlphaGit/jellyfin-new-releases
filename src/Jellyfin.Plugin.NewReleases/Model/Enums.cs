@@ -43,3 +43,11 @@ public enum MatchStatus
     Matched,
     Unmatched,
 }
+
+/// <summary>State a listed release shows to users (FR-007, FR-008). <c>Owned</c> releases are never listed.</summary>
+public enum ListState
+{
+    Missing,
+    Incomplete,
+    Upcoming,
+}

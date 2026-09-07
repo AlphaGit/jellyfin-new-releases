@@ -51,3 +51,38 @@ public sealed record Release(
     long? ComparedEditionId,
     IReadOnlyList<string> MissingTracks,
     DateTimeOffset? OwnershipCheckedAt);
+
+/// <summary>Row of <c>decision</c>: an Ignore or Have-it decision keyed by the natural release key (R8).</summary>
+public sealed record Decision(string ArtistKey, string NormalizedTitle, DecisionKind Kind, Guid UserId, DateTimeOffset DecidedAt);
+
+/// <summary>Read-time query for the list and the Archive. Type set, released-since and today come from configuration and the clock (R7).</summary>
+public sealed record ReleaseFilter(
+    ISet<ReleaseType> EnabledTypes,
+    DateOnly Today,
+    DateOnly? ReleasedSince = null,
+    Guid? ArtistJellyfinId = null,
+    ReleaseType? Type = null,
+    ListState? State = null,
+    DateOnly? From = null,
+    DateOnly? To = null,
+    bool Archived = false);
+
+/// <summary>One row of the list or the Archive, joined with its artist, source links, compared edition and decision.</summary>
+public sealed record ListedRelease(
+    long Id,
+    string ArtistName,
+    Guid ArtistJellyfinId,
+    IReadOnlyList<Guid> ArtistLibraryIds,
+    string Title,
+    ReleaseType Type,
+    string? Date,
+    string? DateSort,
+    ListState State,
+    IReadOnlyList<string> MissingTracks,
+    ComparedEdition? ComparedEdition,
+    IReadOnlyList<SourceLink> Sources,
+    Decision? Archived);
+
+public sealed record SourceLink(string Source, string Url);
+
+public sealed record ComparedEdition(string Source, string Title);

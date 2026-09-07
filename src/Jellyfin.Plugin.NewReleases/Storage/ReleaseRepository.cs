@@ -170,6 +170,61 @@ public sealed class ReleaseRepository
         await transaction.CommitAsync(ct).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// The list (or the Archive): joined rows in display order. Ordering is `date_sort` descending with undated rows
+    /// last and title as tiebreak (R16). Read-time rules (types, released-since, state, Archive) are applied here.
+    /// </summary>
+    public async Task<IReadOnlyList<ListedRelease>> ListAsync(ReleaseFilter filter, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT r.id, a.name, a.jellyfin_id, a.library_ids, r.title, r.primary_type, r.secondary_types, r.release_date, r.date_sort,
+                   r.ownership_state, r.missing_tracks, e.source, e.title,
+                   a.artist_key, r.normalized_title, d.kind, d.user_id, d.decided_at,
+                   (SELECT json_group_array(json_object('source', s.source, 'url', s.url))
+                      FROM (SELECT source, url FROM source_entry WHERE release_id = r.id ORDER BY source) AS s) AS sources
+            FROM release r
+            JOIN library_artist a ON a.id = r.library_artist_id
+            LEFT JOIN edition e ON e.id = r.compared_edition_id
+            LEFT JOIN decision d ON d.artist_key = a.artist_key AND d.normalized_title = r.normalized_title
+            ORDER BY r.date_sort IS NULL, r.date_sort DESC, r.title
+            """;
+
+        var rows = new List<ListedRelease>();
+        await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
+        {
+            rows.Add(ReadListed(reader));
+        }
+
+        return rows;
+    }
+
+    private static ListedRelease ReadListed(SqliteDataReader r)
+    {
+        var primary = Enum.Parse<ReleaseType>(r.GetString(5));
+        var secondaries = (JsonSerializer.Deserialize<string[]>(r.GetString(6)) ?? []).Select(Enum.Parse<ReleaseType>).ToArray();
+        var ownership = Enum.Parse<OwnershipState>(r.GetString(9));
+        var sources = (JsonSerializer.Deserialize<List<SourceLink>>(r.GetString(18), JsonWeb) ?? []).AsReadOnly();
+        return new ListedRelease(
+            r.GetInt64(0),
+            r.GetString(1),
+            Guid.Parse(r.GetString(2)),
+            JsonSerializer.Deserialize<Guid[]>(r.GetString(3)) ?? [],
+            r.GetString(4),
+            ReleaseTypeMapper.DisplayType(primary, secondaries),
+            r.IsDBNull(7) ? null : r.GetString(7),
+            r.IsDBNull(8) ? null : r.GetString(8),
+            ownership == OwnershipState.Incomplete ? ListState.Incomplete : ListState.Missing,
+            JsonSerializer.Deserialize<string[]>(r.GetString(10)) ?? [],
+            r.IsDBNull(11) ? null : new ComparedEdition(r.GetString(11), r.GetString(12)),
+            sources,
+            r.IsDBNull(15) ? null : new Decision(r.GetString(13), r.GetString(14), Enum.Parse<DecisionKind>(r.GetString(15)), Guid.Parse(r.GetString(16)), DateTimeOffset.Parse(r.GetString(17), CultureInfo.InvariantCulture)));
+    }
+
+    private static readonly JsonSerializerOptions JsonWeb = new(JsonSerializerDefaults.Web);
+
     public async Task<Release?> GetAsync(long releaseId, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
