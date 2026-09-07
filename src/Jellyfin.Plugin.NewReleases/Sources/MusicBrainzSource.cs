@@ -35,8 +35,17 @@ public sealed class MusicBrainzSource : IReleaseSource
         var query = Uri.EscapeDataString("\"" + artist.Name.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"");
         var body = await _http.GetStringAsync(Id, $"{Base}artist?query=artist:{query}&limit=5&fmt=json", ct).ConfigureAwait(false);
         using var json = JsonDocument.Parse(body);
-        var top = json.RootElement.GetProperty("artists").EnumerateArray().First();
-        return ArtistMatch.Matched(top.GetProperty("id").GetString()!);
+        var candidates = json.RootElement.GetProperty("artists").EnumerateArray()
+            .Select(a => (Id: a.GetProperty("id").GetString()!, Score: a.GetProperty("score").GetInt32()))
+            .OrderByDescending(a => a.Score)
+            .ToList();
+        var top = candidates[0];
+        if (candidates.Count > 1 && top.Score - candidates[1].Score <= 5)
+        {
+            return ArtistMatch.Unmatched($"ambiguous (score {top.Score} vs {candidates[1].Score})");
+        }
+
+        return ArtistMatch.Matched(top.Id);
     }
 
     public Task<CataloguePage> FetchCataloguePageAsync(string sourceArtistId, int offset, CancellationToken ct) => throw new NotImplementedException();

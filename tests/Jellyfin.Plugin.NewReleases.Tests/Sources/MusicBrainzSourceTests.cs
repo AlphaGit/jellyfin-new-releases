@@ -50,4 +50,15 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
 
         Assert.Equal(ArtistMatch.Matched(DaftPunkMbid), match);
     }
+
+    [Fact]
+    public async Task MatchArtistAsync_RunnerUpWithinFivePoints_IsUnmatchedAsAmbiguous()
+    {
+        _h.Fixture(ArtistSearch, "musicbrainz/artist_search_ambiguous.json"); // Nirvana 100 vs Nirvana 96
+
+        var match = await Source().MatchArtistAsync(Artist("Nirvana"), CancellationToken.None);
+
+        Assert.Equal(MatchStatus.Unmatched, match.Status);
+        Assert.Equal("ambiguous (score 100 vs 96)", match.Reason);
+    }
 }

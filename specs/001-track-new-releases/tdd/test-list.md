@@ -192,7 +192,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | --- | --- | --- | --- | --- | --- |
 | U74 | An artist snapshot with an MBID is `Matched(mbid)` with zero HTTP requests | FR-002 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_SnapshotWithMbid_IsMatchedWithoutAnyRequest` |
 | U75 | Top score 85 with the runner-up at 79 → `Matched` | FR-002 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_ConfidentTopResult_IsMatched` |
-| U76 | Top score 90 with the runner-up at 85 (5 points) → `Unmatched` with an "ambiguous" reason | FR-002, EC-1 | example | PENDING | `Sources/MusicBrainzSourceTests.cs` |
+| U76 | Top score 90 with the runner-up at 85 (5 points) → `Unmatched` with an "ambiguous" reason | FR-002, EC-1 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_RunnerUpWithinFivePoints_IsUnmatchedAsAmbiguous` |
 | U77 | Top score 90 with the runner-up at 84 (6 points) → `Matched` | FR-002 | example | PENDING | `Sources/MusicBrainzSourceTests.cs` |
 | U78 | Top score 84 → `Unmatched` with a "low score" reason | FR-002 | example | PENDING | `Sources/MusicBrainzSourceTests.cs` |
 | U79 | An empty `artists` array → `Unmatched` with a "no result" reason | FR-002, EC-2 | example | PENDING | `Sources/MusicBrainzSourceTests.cs` |
