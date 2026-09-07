@@ -140,3 +140,12 @@ failed before the implementation.
 - green: no production change. Suite -> 33 passed, 0 failed
 - refactor: none needed
 - commit: `3387ca9`
+
+## Cycle 16: U16 any `Other` primary or secondary excludes the release whatever the selection
+
+- test: `Matching/ReleaseTypeMapperTests.cs::IsIncluded_AnyOtherType_ExcludesWhateverTheSelection` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseTypeMapperTests.IsIncluded_AnyOtherType_ExcludesWhateverTheSelection" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.False() Failure / Expected: False / Actual:   True` (1 failed; a selection containing Other let it through)
+- green: `IsIncluded` rejects `Other` explicitly for primary and secondaries. Suite -> 34 passed, 0 failed
+- refactor: none needed
+- commit: `4d79775`
