@@ -3,13 +3,31 @@ using MediaBrowser.Model.Plugins;
 namespace Jellyfin.Plugin.NewReleases.Configuration;
 
 /// <summary>
-/// Server-global plugin configuration. Persisted as XML by Jellyfin's built-in serializer.
-/// Collection properties must use <see cref="System.Collections.Generic.List{T}"/> —
-/// <c>HashSet&lt;T&gt;</c> and <c>Dictionary&lt;K,V&gt;</c> do not survive
-/// <see cref="System.Xml.Serialization.XmlSerializer"/>. Do not seed lists in the constructor
-/// (the serializer calls <c>Add</c> on round-trip and duplicates entries).
+/// Server-global plugin configuration, persisted as XML by Jellyfin's serializer. Scalar properties only (R9): a
+/// missing element keeps the initializer's default, so older configuration files migrate forward without a seeding
+/// step. Fields and defaults: <c>specs/001-track-new-releases/contracts/plugin-configuration.md</c>.
 /// </summary>
 public class PluginConfiguration : BasePluginConfiguration
 {
-    // Settings are defined by the spec (see specs/). Intentionally empty until then.
+    public bool MusicBrainzEnabled { get; set; } = true;
+
+    public bool DeezerEnabled { get; set; } = true;
+
+    public bool IncludeAlbums { get; set; } = true;
+
+    public bool IncludeEps { get; set; } = true;
+
+    public bool IncludeSingles { get; set; }
+
+    public bool IncludeCompilations { get; set; }
+
+    public bool IncludeLive { get; set; }
+
+    public bool IncludeRemixes { get; set; }
+
+    public bool IncludeSoundtracks { get; set; }
+
+    public string ReleasedSince { get; set; } = string.Empty;
+
+    public string UserAgentContact { get; set; } = string.Empty;
 }
