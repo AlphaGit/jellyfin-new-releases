@@ -193,3 +193,12 @@ failed before the implementation.
 - green: production change limited to the counter seam (`Interlocked.Increment` in `MigrateAsync`); the `Lazy<Task>` from cycle 19 already provides the behaviour. Suite -> 39 passed, 0 failed
 - refactor: none needed
 - commit: `023dbbc`
+
+## Cycle 22: U22 upserting an artist by `artist_key` keeps its `id` and updates name, mbid, `library_ids`, `album_count`
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ArtistRepositoryTests.cs::UpsertAsync_SameKeyKeepsIdAndUpdatesFields` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.UpsertAsync_SameKeyKeepsIdAndUpdatesFields" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub repository). Declarations added for compilation: `Model/Enums.cs` (OwnershipState, DecisionKind, FetchOutcome, MatchStatus), `Library/LibrarySnapshot.cs` records, `Model/StoredRecords.cs` `LibraryArtist`, `tests/Support/TestDatabase.cs` (T013 helper, temp SQLite + repositories).
+- green: `ArtistRepository.UpsertAsync` = `INSERT … ON CONFLICT (artist_key) DO UPDATE … RETURNING id`; `GetAllAsync` reads rows back. Suite -> 40 passed, 0 failed
+- refactor: none needed
+- commit: `2e08b54`
