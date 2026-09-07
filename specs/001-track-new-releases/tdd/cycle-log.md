@@ -916,3 +916,12 @@ failed before the implementation.
 - refactor: none needed
 - deviation: contracts/release-source.md lists only `album/<id>/tracks` for editions; the title requires one extra `album/<id>` call per candidate (ids only leave the server, FR-017 intact). To be folded into the contract by `/speckit-implement`.
 - commit: `5909b83`
+
+## Cycle 104: U92 an HTTP 200 body with `error.code = 4` is retried as transient; any other `error` code throws
+
+- test: `Sources/DeezerSourceTests.cs::ErrorEnvelope_QuotaCode4IsRetriedAsTransient_OtherCodesThrow` (new; `error_quota.json` then a real page; a code-800 body for the failure path)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DeezerSourceTests.ErrorEnvelope_QuotaCode4IsRetriedAsTransient_OtherCodesThrow" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.` (1 failed; the envelope was read as a page)
+- green: `DeezerSource.GetJsonAsync` checks `error` before `data`: code 4 waits 5 s on the injected `TimeProvider` and retries (bounded by `RetryBackoffs.Length`), other codes throw `HttpRequestException`. Constructor gains `TimeProvider`. Suite -> 130 passed, 0 failed
+- refactor: none needed
+- commit: `91d4802`
