@@ -300,3 +300,12 @@ failed before the implementation.
 - green: `RecomputeCanonicalAsync` pads `date_sort` by `length(release_date)` (4 -> `-00-00`, 7 -> `-00`, else as is; NULL stays NULL). Suite -> 54 passed, 0 failed
 - refactor: none needed
 - commit: `ff14519`
+
+## Cycle 34: U34 list order is `date_sort` descending, undated last, title tiebreak; year-only 2024 after `2024-01-01`
+
+- test: `Storage/ReleaseRepositoryTests.cs::ListAsync_OrdersByDateDescendingUndatedLastTitleTiebreak_YearOnlyAfterDated` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.ListAsync_OrdersByDateDescendingUndatedLastTitleTiebreak_YearOnlyAfterDated" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stub). Declarations added: `ListState`, `Decision`, `ReleaseFilter`, `ListedRelease`, `SourceLink`, `ComparedEdition`.
+- green: `ReleaseRepository.ListAsync` joined query (`artist`, compared `edition`, `decision`, `json_group_array` of source links) with `ORDER BY date_sort IS NULL, date_sort DESC, title`; `ReadListed` maps a row incl. display type. Suite -> 55 passed, 0 failed
+- refactor: none needed
+- commit: `e49b16d`
