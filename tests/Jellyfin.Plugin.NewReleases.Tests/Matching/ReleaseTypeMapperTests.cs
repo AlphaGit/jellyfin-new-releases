@@ -46,4 +46,12 @@ public class ReleaseTypeMapperTests
         Assert.Equal(expected, primary);
         Assert.Empty(secondaries);
     }
+
+    private static readonly HashSet<ReleaseType> DefaultSelection = [ReleaseType.Album, ReleaseType.EP];
+
+    [Fact]
+    public void IsIncluded_EpWithNoSecondaries_IsIncludedByDefault()
+    {
+        Assert.True(ReleaseTypeMapper.IsIncluded(ReleaseType.EP, [], DefaultSelection));
+    }
 }

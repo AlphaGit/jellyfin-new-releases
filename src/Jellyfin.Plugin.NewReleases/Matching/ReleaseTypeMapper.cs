@@ -19,6 +19,9 @@ public static class ReleaseTypeMapper
             _ => ReleaseType.Other,
         }, Array.Empty<ReleaseType>());
 
+    public static bool IsIncluded(ReleaseType primary, IReadOnlyList<ReleaseType> secondaries, ISet<ReleaseType> enabled)
+        => enabled.Contains(primary);
+
     private static ReleaseType MapMusicBrainzPrimary(string? primary) => primary switch
     {
         "Album" => ReleaseType.Album,

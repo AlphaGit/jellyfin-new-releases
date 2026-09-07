@@ -79,7 +79,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U10 | MusicBrainz primary `Album`/`EP`/`Single` map to Album/EP/Single; `Broadcast` and `Other` map to `Other` | FR-004 | example | DONE | `Matching/ReleaseTypeMapperTests.cs::MapMusicBrainz_MapsPrimaryType` |
 | U11 | MusicBrainz secondaries `Compilation`/`Live`/`Remix`/`Soundtrack` map by name; `DJ-mix`, `Mixtape/Street`, `Demo`, `Audiobook` map to `Other` | FR-004 | example | DONE | `Matching/ReleaseTypeMapperTests.cs::MapMusicBrainz_MapsSecondaryTypesByNameAndUnknownToOther` |
 | U12 | Deezer `album`/`ep`/`single`/`compile` map to Album/EP/Single/Compilation as primary with no secondaries | FR-004 | example | DONE | `Matching/ReleaseTypeMapperTests.cs::MapDeezer_MapsRecordTypeAsPrimaryWithNoSecondaries` |
-| U13 | EP with no secondaries is included under the default selection | FR-004 | example | PENDING | `Matching/ReleaseTypeMapperTests.cs` |
+| U13 | EP with no secondaries is included under the default selection | FR-004 | example | DONE | `Matching/ReleaseTypeMapperTests.cs::IsIncluded_EpWithNoSecondaries_IsIncludedByDefault` |
 | U14 | Album + Live is excluded under the default selection (Live disabled) | FR-004 | example | PENDING | `Matching/ReleaseTypeMapperTests.cs` |
 | U15 | Album + Live is included when Live is enabled; Album + Compilation + Live needs both enabled | FR-004 | example | PENDING | `Matching/ReleaseTypeMapperTests.cs` |
 | U16 | Any `Other` primary or secondary excludes the release whatever the selection | FR-004 | example | PENDING | `Matching/ReleaseTypeMapperTests.cs` |
