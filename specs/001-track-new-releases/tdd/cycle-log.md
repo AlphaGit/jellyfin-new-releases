@@ -220,3 +220,12 @@ failed before the implementation.
 - green: `GetRotationAsync` = `ORDER BY last_refreshed_at IS NOT NULL, last_refreshed_at, name`. Suite -> 42 passed, 0 failed
 - refactor: `GetAllAsync`/`GetRotationAsync` share `QueryArtistsAsync(orderBy)`; suite re-run green
 - commit: `b302949`
+
+## Cycle 25: U25 `artist_source` upsert stores status, source artist id, reason, outcome, `resume_offset`; Complete resets the offset
+
+- test: `Storage/ArtistRepositoryTests.cs::ArtistSource_UpsertStoresMatchAndOutcome_CompleteResetsOffset` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.ArtistSource_UpsertStoresMatchAndOutcome_CompleteResetsOffset" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.NotImplementedException : The method or operation is not implemented.` (1 failed; stubs). Declarations added: `Model/SourceRecords.cs` `ArtistMatch`, `ArtistSourceState` record.
+- green: `ArtistRepository.SetMatchAsync` / `SetFetchOutcomeAsync` (upserts on the pair PK; Complete -> offset 0 and `last_complete_at = now`) / `GetSourceStateAsync`. Suite -> 43 passed, 0 failed
+- refactor: none needed
+- commit: `7102e7b`
