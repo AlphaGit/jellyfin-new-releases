@@ -211,3 +211,12 @@ failed before the implementation.
 - green: `ArtistRepository.DeleteMissingAsync` = `DELETE FROM library_artist WHERE artist_key NOT IN (json_each(@keys))`; cascades come from the schema (`Foreign Keys=True` in the connection string). Suite -> 41 passed, 0 failed
 - refactor: none needed
 - commit: `86e2522`
+
+## Cycle 24: U24 rotation returns NULL `last_refreshed_at` first, then oldest first, ties by name
+
+- test: `Storage/ArtistRepositoryTests.cs::GetRotationAsync_NeverRefreshedFirstThenOldestThenName` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.GetRotationAsync_NeverRefreshedFirstThenOldestThenName" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ / Expected: ["Amy Never", "Zed Never", "Old", "Recent"] / Actual: ["Amy Never", "Old", "Recent", "Zed Never"]` (1 failed; stub delegated to name order)
+- green: `GetRotationAsync` = `ORDER BY last_refreshed_at IS NOT NULL, last_refreshed_at, name`. Suite -> 42 passed, 0 failed
+- refactor: `GetAllAsync`/`GetRotationAsync` share `QueryArtistsAsync(orderBy)`; suite re-run green
+- commit: `b302949`
