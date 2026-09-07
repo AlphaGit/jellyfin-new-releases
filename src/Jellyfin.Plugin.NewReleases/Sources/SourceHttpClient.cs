@@ -56,6 +56,12 @@ public sealed class SourceHttpClient
                 return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             }
 
+            var transient = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests || (int)response.StatusCode >= 500;
+            if (!transient)
+            {
+                throw new HttpRequestException($"Source '{source}' answered {(int)response.StatusCode}.", null, response.StatusCode);
+            }
+
             if (attempt >= SourceLimits.RetryBackoffs.Length)
             {
                 throw new HttpRequestException($"Source '{source}' still answered {(int)response.StatusCode} after {attempt} retries.", null, response.StatusCode);

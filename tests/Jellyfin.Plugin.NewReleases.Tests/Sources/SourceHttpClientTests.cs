@@ -81,7 +81,7 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
         for (var i = 0; i < maxSteps && !task.IsCompleted; i++)
         {
             _clock.Advance(step);
-            await Task.Yield();
+            await Task.Delay(15); // let the continuation register its next stub timer before advancing again
         }
 
         // A task still pending here is waiting on the stub clock forever: report it instead of hanging the run.
@@ -127,5 +127,19 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
 
         Assert.Equal(4, _http.ReceivedRequests.Count);
         Assert.Equal([TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(800), TimeSpan.FromMilliseconds(3_200)], sentAt.Zip(sentAt.Skip(1), (a, b) => b - a));
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.NotFound)]
+    [InlineData(HttpStatusCode.BadRequest)]
+    public async Task GetStringAsync_ClientError_ThrowsImmediatelyWithoutRetry(HttpStatusCode status)
+    {
+        _http.AlwaysReturn(status, "nope");
+
+        var pending = Client().GetStringAsync(Deezer, Url, CancellationToken.None);
+        var error = await Assert.ThrowsAsync<HttpRequestException>(() => RunAdvancingAsync(pending, TimeSpan.FromSeconds(1)));
+
+        Assert.Equal(status, error.StatusCode);
+        Assert.Single(_http.ReceivedRequests);
     }
 }

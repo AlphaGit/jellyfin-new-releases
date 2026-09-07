@@ -169,7 +169,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U60 | With 1 call of budget left the request is sent; with 0 left `DailyBudgetExhaustedException` is thrown and nothing is sent | FR-011 | example | DONE | `Sources/SourceHttpClientTests.cs::GetStringAsync_LastUnitOfBudgetIsSent_ExhaustedBudgetThrowsWithoutSending` |
 | U61 | A 503 with `Retry-After: 2` sets `next_allowed_at = now + 2 s`, waits, retries, and returns the later 200 body | FR-011 | example | DONE | `Sources/SourceHttpClientTests.cs::GetStringAsync_503WithRetryAfter_SetsNextAllowedAtWaitsRetriesAndReturnsTheLaterBody` |
 | U62 | Persistent 500s are retried three times (200 ms, 800 ms, 3 200 ms) then surface as `HttpRequestException` | FR-011 | example | DONE | `Sources/SourceHttpClientTests.cs::GetStringAsync_Persistent500_RetriesThreeTimesWithBackoffThenThrows` |
-| U63 | A 404 or 400 throws immediately with no retry | FR-011 | example | PENDING | `Sources/SourceHttpClientTests.cs` |
+| U63 | A 404 or 400 throws immediately with no retry | FR-011 | example | DONE | `Sources/SourceHttpClientTests.cs::GetStringAsync_ClientError_ThrowsImmediatelyWithoutRetry` |
 | U64 | A failed request increments consecutive failures; a later success resets them | FR-011 | example | PENDING | `Sources/SourceHttpClientTests.cs` |
 | U65 | `IsAvailableAsync` is false during cooldown or before `next_allowed_at`, true otherwise | FR-011 | example | PENDING | `Sources/SourceHttpClientTests.cs` |
 | U66 | An unknown source id throws `ArgumentException` | FR-011 | example | PENDING | `Sources/SourceHttpClientTests.cs` |
