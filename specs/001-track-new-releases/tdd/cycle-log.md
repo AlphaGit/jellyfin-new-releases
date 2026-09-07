@@ -606,3 +606,12 @@ failed before the implementation.
 - green: `SourceHttpClient.IsAvailableAsync` = not (`cooldown_until > now`) and not (`next_allowed_at > now`). Suite -> 93 passed, 0 failed
 - refactor: none needed
 - commit: `acecf77`
+
+## Cycle 68: U66 an unknown source id throws `ArgumentException`
+
+- test: `Sources/SourceHttpClientTests.cs::GetStringAsync_UnknownSourceId_ThrowsArgumentException` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceHttpClientTests.GetStringAsync_UnknownSourceId_ThrowsArgumentException" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Throws() Failure: Exception type was not an exact match / Expected: typeof(System.ArgumentException) / Actual:   typeof(System.Collections.Generic.KeyNotFoundException)` (1 failed; the dictionary indexer leaked)
+- green: `GetStringAsync` uses `SourceLimits.BySource.TryGetValue` and throws `ArgumentException` for an unknown id before any I/O. Suite -> 94 passed, 0 failed
+- refactor: none needed
+- commit: `75eaeb0`
