@@ -219,7 +219,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U93 | An album whose `MusicBrainzReleaseGroup` equals the canonical id is the candidate with method `Identifier` | FR-005 | example | PENDING | `Matching/OwnershipMatcherTests.cs` |
+| U93 | An album whose `MusicBrainzReleaseGroup` equals the canonical id is the candidate with method `Identifier` | FR-005 | example | DONE | `Matching/OwnershipMatcherTests.cs::Decide_AlbumWithTheCanonicalReleaseGroupId_IsTheCandidateByIdentifier` |
 | U94 | An album whose `MusicBrainzAlbum` equals a stored MusicBrainz edition id is the candidate with method `Identifier` | FR-005 | example | PENDING | `Matching/OwnershipMatcherTests.cs` |
 | U95 | With no identifier match, an album titled `Album (Deluxe Edition)` is the candidate for release `Album` with method `Title` | FR-005, EC-3 | example | PENDING | `Matching/OwnershipMatcherTests.cs` |
 | U96 | With no candidate the result is `Missing` and no edition fetch is requested | FR-005, EC-7 | example | PENDING | `Matching/OwnershipMatcherTests.cs` |
