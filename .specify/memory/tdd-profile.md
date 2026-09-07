@@ -25,6 +25,9 @@ stacks:
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/StubHttpMessageHandler.cs
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/FixtureLoader.cs
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/TimeProviderStub.cs
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Support/TestDatabase.cs
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Support/LibraryFakes.cs
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Support/SourceHarness.cs
 verified: [single, suite]
 suite_baseline: green
 suite_seconds: 2
