@@ -96,4 +96,20 @@ public class OwnershipMatcherTests
         Assert.Equal(["track 9", "track 10"], result.MissingTracks);
         Assert.Equal(42L, result.EditionId);
     }
+
+    [Fact]
+    public void Decide_EditionChoice_MostMatchedThenFewestMissingThenMusicBrainzThenLowestId()
+    {
+        var album = Album("Discovery", tracks: ["a", "b", "c"]);
+        Release release = Release();
+
+        // more matched tracks wins (edition 2 matches 3, edition 1 matches 2)
+        Assert.Equal(2L, OwnershipMatcher.Decide(release, [Edition(1, "musicbrainz", "x", "a", "b"), Edition(2, "deezer", "y", "a", "b", "c", "d")], [album]).EditionId);
+        // equal matched → fewer missing wins
+        Assert.Equal(4L, OwnershipMatcher.Decide(release, [Edition(3, "musicbrainz", "x", "a", "b", "c", "d", "e"), Edition(4, "deezer", "y", "a", "b", "c", "d")], [album]).EditionId);
+        // still equal → MusicBrainz over Deezer
+        Assert.Equal(6L, OwnershipMatcher.Decide(release, [Edition(5, "deezer", "y", "a", "b", "c"), Edition(6, "musicbrainz", "x", "a", "b", "c")], [album]).EditionId);
+        // still equal → lowest source edition id
+        Assert.Equal(8L, OwnershipMatcher.Decide(release, [Edition(7, "musicbrainz", "rel-b", "a", "b", "c"), Edition(8, "musicbrainz", "rel-a", "a", "b", "c")], [album]).EditionId);
+    }
 }

@@ -20,8 +20,15 @@ public static class OwnershipMatcher
             return new OwnershipResult(OwnershipState.Missing, method, candidate.JellyfinId, null, [], NeedsEditions: true);
         }
 
-        var edition = editions[0];
-        var missing = edition.Tracks.Except(candidate.NormalizedTrackTitles, StringComparer.Ordinal).ToArray();
+        // Step 3: the edition whose track list overlaps the library album most; deterministic tie-breaks.
+        var owned = candidate.NormalizedTrackTitles.ToHashSet(StringComparer.Ordinal);
+        var (edition, missing) = editions
+            .Select(e => (Edition: e, Missing: e.Tracks.Where(t => !owned.Contains(t)).ToArray()))
+            .OrderByDescending(x => x.Edition.Tracks.Count - x.Missing.Length)
+            .ThenBy(x => x.Missing.Length)
+            .ThenBy(x => x.Edition.Source == "musicbrainz" ? 0 : 1)
+            .ThenBy(x => x.Edition.SourceEditionId, StringComparer.Ordinal)
+            .First();
         return new OwnershipResult(missing.Length == 0 ? OwnershipState.Owned : OwnershipState.Incomplete, method, candidate.JellyfinId, edition.Id, missing);
     }
 
