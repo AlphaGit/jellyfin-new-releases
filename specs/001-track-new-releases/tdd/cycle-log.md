@@ -149,3 +149,12 @@ failed before the implementation.
 - green: `IsIncluded` rejects `Other` explicitly for primary and secondaries. Suite -> 34 passed, 0 failed
 - refactor: none needed
 - commit: `4d79775`
+
+## Cycle 17: U17 display type is the first of Live, Remix, Soundtrack, Compilation present, else the primary
+
+- test: `Matching/ReleaseTypeMapperTests.cs::DisplayType_FirstSecondaryByPrecedence_ElsePrimary` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseTypeMapperTests.DisplayType_FirstSecondaryByPrecedence_ElsePrimary" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: Live / Actual:   Album` (1 failed; stub returned the primary)
+- green: `ReleaseTypeMapper.DisplayType()` = first of `DisplayPrecedence` contained in secondaries, else primary. Suite -> 35 passed, 0 failed
+- refactor: none needed
+- commit: `8ed7a3c`
