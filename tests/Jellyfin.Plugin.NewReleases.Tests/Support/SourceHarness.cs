@@ -45,6 +45,22 @@ internal sealed class SourceHarness : IAsyncDisposable
     /// <summary>Wire form of every request URL, in order (`AbsoluteUri` keeps percent-escapes; `ToString()` would unescape them).</summary>
     public IReadOnlyList<string> RequestedUrls => Http.ReceivedRequests.Select(r => r.RequestUri!.AbsoluteUri).ToList();
 
+    /// <summary>
+    /// Drives a task that waits on the stub clock (retry backoffs) while real time passes for the token bucket:
+    /// advance in steps until it completes or the wall-clock budget runs out, then fail loudly instead of hanging.
+    /// </summary>
+    public async Task<T> RunAdvancingAsync<T>(Task<T> task, TimeSpan step, TimeSpan? budget = null)
+    {
+        var deadline = System.Diagnostics.Stopwatch.StartNew();
+        while (!task.IsCompleted && deadline.Elapsed < (budget ?? TimeSpan.FromSeconds(10)))
+        {
+            Clock.Advance(step);
+            await Task.Delay(15);
+        }
+
+        return await task.WaitAsync(TimeSpan.FromSeconds(2));
+    }
+
     public async ValueTask DisposeAsync()
     {
         await HttpClient.DisposeAsync();

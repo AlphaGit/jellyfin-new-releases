@@ -164,4 +164,18 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
             ],
             _h.RequestedUrls);
     }
+
+    /// <summary>A failing source is a Failed outcome for the pair (FR-014), never a silent Unmatched or an empty catalogue.</summary>
+    [Fact]
+    public async Task PersistentServiceUnavailable_SurfacesAsAnException()
+    {
+        _h.Fixture(".*", "musicbrainz/error_503_retry_after.txt", System.Net.HttpStatusCode.ServiceUnavailable);
+        var source = Source();
+
+        var matching = source.MatchArtistAsync(Artist("Daft Punk"), CancellationToken.None);
+        await Assert.ThrowsAsync<HttpRequestException>(() => _h.RunAdvancingAsync(matching, TimeSpan.FromMilliseconds(500)));
+
+        var paging = source.FetchCataloguePageAsync(DaftPunkMbid, 0, CancellationToken.None);
+        await Assert.ThrowsAsync<HttpRequestException>(() => _h.RunAdvancingAsync(paging, TimeSpan.FromMilliseconds(500)));
+    }
 }

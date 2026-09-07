@@ -200,7 +200,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U81 | `NextOffset` is `offset + 100` while `release-count` exceeds it and null on the last page | FR-003 | example | DONE | `Sources/MusicBrainzSourceTests.cs::FetchCataloguePageAsync_NextOffsetAdvancesBy100WhileTheCountExceedsIt_NullOnTheLastPage` |
 | U82 | Editions come back one per Official release with all `media[].tracks[].title` normalized as tracks | FR-005 | example | DONE | `Sources/MusicBrainzSourceTests.cs::FetchEditionsAsync_OneEditionPerOfficialReleaseWithAllMediaTracksNormalized` |
 | U83 | Request URLs are exactly the endpoints in `contracts/release-source.md` and their query strings contain only the artist name or ids | FR-017 | example | DONE | `Sources/MusicBrainzSourceTests.cs::Requests_UseExactlyTheContractEndpointsWithOnlyNamesAndIdsInTheQuery` |
-| U84 | A persistent 503 surfaces as an exception, not as `Unmatched` or an empty page | FR-014 | example | PENDING | `Sources/MusicBrainzSourceTests.cs` |
+| U84 | A persistent 503 surfaces as an exception, not as `Unmatched` or an empty page | FR-014 | example | DONE | `Sources/MusicBrainzSourceTests.cs::PersistentServiceUnavailable_SurfacesAsAnException` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Sources/DeezerSource.cs`
 
