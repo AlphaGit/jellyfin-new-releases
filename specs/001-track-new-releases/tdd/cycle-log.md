@@ -705,3 +705,19 @@ failed before the implementation.
 - green: `FindCandidate` falls back to equal `NormalizedTitle` with method `Title`. Suite -> 104 passed, 0 failed
 - refactor: none needed
 - commit: `bf4737e`
+
+## Cycle 79: U96 with no candidate the result is `Missing` and no edition fetch is requested
+
+- test: `Matching/OwnershipMatcherTests.cs::Decide_NoCandidate_IsMissingAndAsksForNoEditions` (new)
+- red: passed on first run (`Missing` was the stub default from cycle 76). Deliberate mutant: the no-candidate branch returns `NeedsEditions = true` -> `Expected: Tuple (Missing, False, null, null) / Actual:   Tuple (Missing, True, null, null)` (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. This test was written in the same edit as cycle 80's and is committed with it (below); the suite could not be green in between.
+- refactor: none needed
+
+## Cycle 80: U97 with a candidate and no stored editions the result asks for editions instead of deciding
+
+- test: `Matching/OwnershipMatcherTests.cs::Decide_CandidateWithoutStoredEditions_AsksForEditionsInsteadOfDeciding` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~OwnershipMatcherTests.Decide_CandidateWithoutStoredEditions_AsksForEditionsInsteadOfDeciding" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.ArgumentOutOfRangeException : Index was out of range.` (1 failed; `editions[0]` on an empty list — the branch did not exist)
+- green: `Decide` returns `NeedsEditions: true` with the candidate and method when `editions.Count == 0`. Suite -> 106 passed, 0 failed
+- refactor: none needed
+- commit: `f4101ef`
