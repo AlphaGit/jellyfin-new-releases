@@ -70,4 +70,15 @@ public sealed class SourceStateRepositoryTests : IAsyncLifetime
         var afterFive = (await _db.SourceState.GetAsync(MusicBrainz, CancellationToken.None))!;
         Assert.Equal((5, LateEvening + SixHours), (afterFive.ConsecutiveFailures, afterFive.CooldownUntil));
     }
+
+    [Fact]
+    public async Task RecordSuccessAsync_ResetsFailuresClearsCooldownAndStampsLastSuccess()
+    {
+        await FailAsync(5);
+
+        await _db.SourceState.RecordSuccessAsync(MusicBrainz, CancellationToken.None);
+
+        var state = (await _db.SourceState.GetAsync(MusicBrainz, CancellationToken.None))!;
+        Assert.Equal((0, (DateTimeOffset?)null, (DateTimeOffset?)LateEvening), (state.ConsecutiveFailures, state.CooldownUntil, state.LastSuccessAt));
+    }
 }

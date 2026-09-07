@@ -63,6 +63,20 @@ public sealed class SourceStateRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
+    /// <summary>A successful request closes the failure streak and any cooldown.</summary>
+    public async Task RecordSuccessAsync(string source, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO source_state (source, consecutive_failures, cooldown_until, last_success_at) VALUES (@source, 0, NULL, @now)
+            ON CONFLICT (source) DO UPDATE SET consecutive_failures = 0, cooldown_until = NULL, last_success_at = excluded.last_success_at
+            """;
+        command.Parameters.AddWithValue("@source", source);
+        command.Parameters.AddWithValue("@now", _clock.GetUtcNow().ToString("O"));
+        await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
     public async Task<SourceState?> GetAsync(string source, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
