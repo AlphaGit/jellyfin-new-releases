@@ -1041,3 +1041,11 @@ failed before the implementation.
 - green: `GetReleasesAsync` builds a `ReleaseFilter` from the query and configuration, lists, keeps rows whose artist libraries intersect the caller's (`LibraryAccess` from `HasPermission(EnableAllFolders)` / `GetPreferenceValues<Guid>(EnabledFolders)`), maps `ReleaseDto`s, and fills `hasCompletedRefresh`/`lastRefreshedAt` from the last completed run. Suite -> 145 passed, 0 failed
 - refactor: none needed
 - commit: `b10100e`
+
+## Cycle 120: U117 `from=2020-01-01` keeps a release dated `2020-01-01` and drops `2019-12-31`; `type`, `state`, `artistId` reach the filter
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_PassesFromTypeStateAndArtistToTheFilter` (new)
+- red: passed on first run (the parameter mapping came with cycle 119's listing). Deliberate mutants: (A) `from` ignored -> `Expected: ["Future One", "On The Day"] / Actual: ["Future One", "On The Day", "Day Before", "Cross"]`; (B) `artistId` ignored -> the artist assertion fails. Both 1 failed. Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 146 passed, 0 failed
+- refactor: none needed
+- commit: `868d88c`
