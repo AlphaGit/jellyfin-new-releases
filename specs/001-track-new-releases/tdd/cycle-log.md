@@ -452,3 +452,12 @@ failed before the implementation.
 - green: `SourceStateRepository.RecordSuccessAsync` upsert resetting failures, clearing `cooldown_until`, stamping `last_success_at`. Suite -> 71 passed, 0 failed
 - refactor: none needed
 - commit: `b1ff768`
+
+## Cycle 51: U51 in-cooldown is true one second before `cooldown_until` and false at it
+
+- test: `Storage/SourceStateRepositoryTests.cs::IsInCooldownAsync_TrueOneSecondBeforeCooldownUntil_FalseAtIt` (new; both sides of the boundary via `TimeProviderStub.Set`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~SourceStateRepositoryTests.IsInCooldownAsync_TrueOneSecondBeforeCooldownUntil_FalseAtIt" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.True() Failure / Expected: True / Actual:   False` (1 failed; stub returned false)
+- green: `SourceStateRepository.IsInCooldownAsync` = `cooldown_until > now`. Suite -> 72 passed, 0 failed
+- refactor: none needed
+- commit: `8e40b90`
