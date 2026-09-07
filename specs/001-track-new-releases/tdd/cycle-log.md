@@ -1162,3 +1162,25 @@ failed before the implementation.
 - green: `AdminController.ClearArchiveAsync` = `ArchiveRepository.ClearAsync` → 204. Suite -> 161 passed, 0 failed
 - refactor: none needed
 - commit: `e266094`
+
+## Cycle 136: A11 `POST api/admin/run-now` queues the task (202); after a completed run `GET api/admin/status.lastRun` has `endedAt`, `artistsProcessed`, `releasesFound`
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ConfigureAndRunTests.cs::A11_RunNowQueuesTheTask_StatusAfterACompletedRunShowsEndCountsAndReleasesFound` (new; the rig gained `AdminController()`/`AdminStatusAsync()`)
+- red: passed on first run. Deliberate mutant: the Completed run is never recorded -> `Assert.NotNull() Failure: Value is null` (1 failed). Code restored exactly, test green again. Committed with cycles 137–138.
+- green: no production change.
+- refactor: none needed
+
+## Cycle 137: A13 after `POST api/admin/purge` the list is empty; after the next run a release archived before the purge is still in `?archived=true`
+
+- test: `Acceptance/ConfigureAndRunTests.cs::A13_PurgeEmptiesTheList_AReleaseArchivedBeforeThePurgeIsStillArchivedAfterTheNextRun` (new)
+- red: passed on first run. Deliberate mutant: purge also clears the Archive -> `Assert.Single() Failure: The collection was empty` (1 failed). Code restored exactly, test green again.
+- green: no production change.
+- refactor: none needed
+
+## Cycle 138: A15 after `POST api/admin/clear-archive`, `?archived=true` is empty, the archived releases are back in the list, and the number of stored releases is unchanged
+
+- test: `Acceptance/ConfigureAndRunTests.cs::A15_ClearArchiveEmptiesIt_ArchivedReleasesReturnToTheList_StoredReleasesUnchanged` (new)
+- red: passed on first run. Deliberate mutant: clear-archive also purges releases -> `Assert.Equal() Failure` on the list / stored count (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 164 passed, 0 failed
+- refactor: none needed
+- commit: `0f0f729`
