@@ -35,3 +35,22 @@ public sealed record ArtistDto(Guid JellyfinId, string Name);
 public sealed record ArtistsResponse(IReadOnlyList<ArtistDto> Items);
 
 public sealed record StatusResponse(bool HasCompletedRefresh, DateTimeOffset? LastRefreshedAt, int RefreshIntervalHours, bool IsRunning);
+
+// Admin status (contracts/http-api.md, GET api/admin/status).
+
+public sealed record AdminStatusResponse(
+    IReadOnlyList<SourceStatusDto> Sources,
+    RunDto? LastRun,
+    DateTimeOffset? NextRunAt,
+    bool IsRunning,
+    int LibraryArtists,
+    IReadOnlyDictionary<string, int> MatchedArtists,
+    IReadOnlyList<UnmatchedArtistDto> Unmatched);
+
+public sealed record SourceStatusDto(string Id, string DisplayName, bool Enabled, string Health, string? LastError, int CallsToday, int DailyBudget, DateTimeOffset? CooldownUntil, DateTimeOffset? LastSuccessAt);
+
+public sealed record RunDto(DateTimeOffset StartedAt, DateTimeOffset? EndedAt, string? Outcome, int ArtistsProcessed, int ReleasesFound, int EditionsFetched, int Errors);
+
+public sealed record UnmatchedArtistDto(Guid JellyfinId, string Name, IReadOnlyList<UnmatchedSourceDto> Sources, string Hint);
+
+public sealed record UnmatchedSourceDto(string Source, string Reason);
