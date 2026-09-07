@@ -737,3 +737,12 @@ failed before the implementation.
 - green: no production change. Suite -> 108 passed, 0 failed
 - refactor: none needed
 - commit: `8aace0b`
+
+## Cycle 83: U100 edition choice: more matched wins; equal → fewer missing; then MusicBrainz over Deezer; then lowest edition id
+
+- test: `Matching/OwnershipMatcherTests.cs::Decide_EditionChoice_MostMatchedThenFewestMissingThenMusicBrainzThenLowestId` (new; one assertion per tie-break level)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~OwnershipMatcherTests.Decide_EditionChoice_MostMatchedThenFewestMissingThenMusicBrainzThenLowestId" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: 2 / Actual:   1` (1 failed; the first edition was always used)
+- green: `Decide` orders editions by matched count desc, missing count asc, MusicBrainz first, `SourceEditionId` ordinal. Suite -> 109 passed, 0 failed
+- refactor: none needed
+- commit: `c29a1dc`
