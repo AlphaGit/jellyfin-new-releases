@@ -336,6 +336,18 @@ public sealed class ReleaseRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Whether any release is stored, server-wide (002 FR-008). The empty state and the reported age both follow
+    /// this rather than whether a refresh has ever run, so a purge returns the page to the empty state.
+    /// </summary>
+    public async Task<bool> HasAnyAsync(CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT EXISTS(SELECT 1 FROM release LIMIT 1)";
+        return Convert.ToInt64(await command.ExecuteScalarAsync(ct).ConfigureAwait(false), CultureInfo.InvariantCulture) == 1;
+    }
+
     /// <summary>Purge release data (FR-013): releases, entries and editions go; decisions, artists and their match state stay.</summary>
     public async Task PurgeAsync(CancellationToken ct)
     {

@@ -98,20 +98,26 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         _tasks.ScheduledTasks.Returns([worker]);
     }
 
+    /// <summary>002 FR-001/FR-002: the reported instant is the newest completed catalogue fetch, not a run's end.</summary>
     [Fact]
-    public async Task GetReleases_LastRefreshedAtIsTheLastCompletedRunsEnd_RefreshIntervalFollowsTheTrigger()
+    public async Task GetReleases_ReportsTheNewestCompletedFetch_RefreshIntervalFollowsTheTrigger()
     {
         var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
         Assert.Equal((false, (DateTimeOffset?)null), (Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).HasCompletedRefresh, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).LastRefreshedAt));
 
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
+        var fetchedAt = _clock.GetUtcNow();
+        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, fetchedAt, CancellationToken.None);
+
+        // A run that ends later must not become the reported instant.
         var run = await _db.SourceState.StartRunAsync(CancellationToken.None);
         _clock.Advance(TimeSpan.FromMinutes(5));
         await _db.SourceState.FinishRunAsync(run, 1, 1, 0, 0, "Completed", CancellationToken.None);
-        var endedAt = _clock.GetUtcNow();
 
         TriggersAre(new TaskTriggerInfo { Type = TaskTriggerInfoType.DailyTrigger, TimeOfDayTicks = TimeSpan.FromHours(3).Ticks });
         var daily = Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None));
-        Assert.Equal((true, endedAt, 24), (daily.HasCompletedRefresh, daily.LastRefreshedAt, daily.RefreshIntervalHours));
+        Assert.Equal((true, fetchedAt, 24), (daily.HasCompletedRefresh, daily.LastRefreshedAt, daily.RefreshIntervalHours));
 
         TriggersAre(new TaskTriggerInfo { Type = TaskTriggerInfoType.IntervalTrigger, IntervalTicks = TimeSpan.FromHours(12).Ticks });
         Assert.Equal(12, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).RefreshIntervalHours);

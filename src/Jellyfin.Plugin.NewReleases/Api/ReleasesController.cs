@@ -88,8 +88,9 @@ public sealed class ReleasesController : ControllerBase
 
         var rows = await _releases.ListAsync(filter, cancellationToken).ConfigureAwait(false);
         var visible = rows.Where(access.CanSee).Select(ToDto).ToList();
-        var lastRun = await _runs.GetLastCompletedRunAsync(cancellationToken).ConfigureAwait(false);
-        return new ListResponse(visible, visible.Count, lastRun is not null, lastRun?.EndedAt, RefreshIntervalHours(), today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        var lastChecked = await _artists.GetReleasesLastCheckedAtAsync(configuration.EnabledSourceIds(), cancellationToken).ConfigureAwait(false);
+        var hasStored = await _releases.HasAnyAsync(cancellationToken).ConfigureAwait(false);
+        return new ListResponse(visible, visible.Count, hasStored, lastChecked, RefreshIntervalHours(), today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
     }
 
     [HttpGet("artists")]
@@ -155,9 +156,10 @@ public sealed class ReleasesController : ControllerBase
     [ProducesResponseType(typeof(StatusResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<StatusResponse>> GetStatusAsync(CancellationToken cancellationToken = default)
     {
-        var lastRun = await _runs.GetLastCompletedRunAsync(cancellationToken).ConfigureAwait(false);
+        var lastChecked = await _artists.GetReleasesLastCheckedAtAsync(_configuration().EnabledSourceIds(), cancellationToken).ConfigureAwait(false);
+        var hasStored = await _releases.HasAnyAsync(cancellationToken).ConfigureAwait(false);
         var latest = await _runs.GetLatestRunAsync(cancellationToken).ConfigureAwait(false);
-        return new StatusResponse(lastRun is not null, lastRun?.EndedAt, RefreshIntervalHours(), latest is { EndedAt: null });
+        return new StatusResponse(hasStored, lastChecked, RefreshIntervalHours(), latest is { EndedAt: null });
     }
 
     /// <summary>Hours between refreshes from the task's triggers in Jellyfin (R15); 24 when no trigger is readable.</summary>

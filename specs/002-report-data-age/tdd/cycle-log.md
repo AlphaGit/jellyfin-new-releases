@@ -96,3 +96,33 @@ failed before the implementation.
 - note: `U5` and `U6` were driven as **one** cycle, not two. They are one rule ("an outcome other
   than Complete does not move the value") with two inputs, so staging them as separate cycles
   would have been theatre. Both ids are marked DONE against the one Theory.
+
+## Cycle 6: U7, U8, U9 the stored-releases check follows the release rows
+
+- test: `Storage/ReleaseRepositoryTests.cs::HasAnyAsync_FollowsWhetherReleaseRowsExist` (new; walks
+  empty -> one row -> purged, which is the three list rows in one sequence)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.HasAnyAsync_FollowsWhetherReleaseRowsExist" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.True() Failure / Expected: True / Actual: False` (1 failed; stub returned false)
+- green: `ReleaseRepository.HasAnyAsync` = `SELECT EXISTS(SELECT 1 FROM release LIMIT 1)`.
+  Suite -> 184 passed, 1 failed (A1, expected)
+- refactor: none needed
+- note: `U7`, `U8` and `U9` are one rule over three states, driven as one cycle.
+
+## Cycle 7: U10 the list reports the newest completed fetch, not a run's end — and A1 closes
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_RefreshIntervalFollowsTheTrigger`
+  (`001`'s `U118`, rewritten and renamed: it asserted the last completed run's end, which `002`
+  replaces. A behaviour change decided by `spec.md`, taken before the implementation change.)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleasesControllerTests.GetReleases_ReportsTheNewestCompletedFetch_RefreshIntervalFollowsTheTrigger" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ / Expected: Tuple (True, 2026-09-06T12:00:00Z, 24) / Actual: Tuple (True, 2026-09-06T12:05:00Z, 24)` (1 failed)
+- green: `PluginConfiguration.EnabledSourceIds()` added beside `EnabledReleaseTypes()`;
+  `ReleasesController` list and status actions now read
+  `ArtistRepository.GetReleasesLastCheckedAtAsync` and `ReleaseRepository.HasAnyAsync` instead of
+  the last completed run. **Suite -> 185 passed, 0 failed: the outer loop A1 closed on this change.**
+- refactor: none needed. The enabled-source mapping is still duplicated in
+  `ScheduledTasks/RefreshNewReleasesTask.cs:268` and `Api/AdminController.cs:68`; neither is in
+  this cycle's scope and `RefreshNewReleasesTask` is not in `plan.md`'s file list, so both are
+  reported rather than changed.
+- note: this change also makes `U11`, `U12`, `U13` and `U14` true, but none of them has a test yet,
+  so they stay PENDING. Each is pinned in its own cycle below, with a deliberate mutant, rather
+  than credited to an implementation that arrived first.

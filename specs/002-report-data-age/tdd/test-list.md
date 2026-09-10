@@ -37,7 +37,7 @@ entry point is the page's own exported logic, reached through the sandbox loader
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| A1 | A catalogue fetch completes at 03:00; a later refresh at 15:00 completes none → at 15:05 the list response reports the 03:00 instant, not the 15:00 run | US1-AS1 | example | RED | `Acceptance/ConfigureAndRunTests.cs::A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge` |
+| A1 | A catalogue fetch completes at 03:00; a later refresh at 15:00 completes none → at 15:05 the list response reports the 03:00 instant, not the 15:00 run | US1-AS1 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge` |
 | A2 | Data older than one refresh interval → the page produces a staleness sentence rather than nothing | US1-AS2 | example | PENDING | |
 | A3 | Data confirmed within one refresh interval → the page produces no staleness sentence | US1-AS3 | example | PENDING | |
 | A4 | No enabled source has ever completed a fetch → the list response reports no stored releases and no instant | US1-AS4 | example | PENDING | |
@@ -73,15 +73,15 @@ Grouped by the component from `plan.md` that owns them.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U7 | `HasAnyAsync` is false against an empty database | FR-008 | example | PENDING | |
-| U8 | `HasAnyAsync` is true with one release row | FR-008 | example | PENDING | |
-| U9 | `HasAnyAsync` is false again after `PurgeAsync` | FR-008, US1-AS5 | example | PENDING | |
+| U7 | `HasAnyAsync` is false against an empty database | FR-008 | example | DONE | `Storage/ReleaseRepositoryTests.cs::HasAnyAsync_FollowsWhetherReleaseRowsExist` |
+| U8 | `HasAnyAsync` is true with one release row | FR-008 | example | DONE | `Storage/ReleaseRepositoryTests.cs::HasAnyAsync_FollowsWhetherReleaseRowsExist` |
+| U9 | `HasAnyAsync` is false again after `PurgeAsync` | FR-008, US1-AS5 | example | DONE | `Storage/ReleaseRepositoryTests.cs::HasAnyAsync_FollowsWhetherReleaseRowsExist` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs`
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U10 | The list response reports the newest completed fetch, not the last completed run's end | FR-001, FR-002 | example | PENDING | rewrites `001`'s `U118` |
+| U10 | The list response reports the newest completed fetch, not the last completed run's end | FR-001, FR-002 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_RefreshIntervalFollowsTheTrigger` |
 | U11 | A refresh that completed no fetch leaves the reported instant unchanged | FR-003, FR-004 | example | PENDING | rewrites `001`'s `A20` |
 | U12 | The list response and the status response report the same instant for one caller at one moment | FR-011 | example | PENDING | |
 | U13 | The stored-releases flag follows whether release rows exist, not whether a run has completed | FR-008 | example | PENDING | |

@@ -37,6 +37,23 @@ public class PluginConfiguration : BasePluginConfiguration
     public DateOnly? ReleasedSinceDate()
         => DateOnly.TryParseExact(ReleasedSince, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : null;
 
+    /// <summary>The sources the administrator currently has switched on (002 FR-002). Read on every request, so a change takes effect at once.</summary>
+    public ISet<string> EnabledSourceIds()
+    {
+        var enabled = new HashSet<string>(StringComparer.Ordinal);
+        if (MusicBrainzEnabled)
+        {
+            enabled.Add("musicbrainz");
+        }
+
+        if (DeezerEnabled)
+        {
+            enabled.Add("deezer");
+        }
+
+        return enabled;
+    }
+
     /// <summary>The admin's type selection as a set (FR-004).</summary>
     public ISet<ReleaseType> EnabledReleaseTypes()
     {

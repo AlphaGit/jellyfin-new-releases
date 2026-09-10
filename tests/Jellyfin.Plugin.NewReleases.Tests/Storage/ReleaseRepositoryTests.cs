@@ -282,6 +282,18 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         }
     }
 
+    [Fact]
+    public async Task HasAnyAsync_FollowsWhetherReleaseRowsExist()
+    {
+        Assert.False(await _db.Releases.HasAnyAsync(CancellationToken.None));
+
+        await Seed("Discovery", "2001-03-12", "rg-d");
+        Assert.True(await _db.Releases.HasAnyAsync(CancellationToken.None));
+
+        await _db.Releases.PurgeAsync(CancellationToken.None);
+        Assert.False(await _db.Releases.HasAnyAsync(CancellationToken.None));
+    }
+
     /// <summary>SC-005: the list request completes in under 500 ms. Measured at about 3 ms here, so the criterion itself is the assertion.</summary>
     [Fact]
     public async Task ListAsync_FiveHundredStoredReleases_ListsWithinBudget()
