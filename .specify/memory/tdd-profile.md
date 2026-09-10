@@ -53,6 +53,7 @@ stacks:
       unit: tests/web/staleness.test.js
     helpers:
       - tests/web/load-page.js
+      - tests/web/fixed-clock.js
 verified: [single, suite]
 suite_baseline: green
 suite_seconds: 10
@@ -86,6 +87,11 @@ suite_seconds: 10
 
 - Tests live in `tests/web/*.test.js` and use `node:test` (`test`, `describe`) with `node:assert`
   in strict mode. No assertion library, no framework, no `package.json`.
+- One file per subject, named for it: `staleness.test.js` and `checked.test.js` hold the two
+  copies of the unit ladder (`user-view.html` and `admin.html`), `esc.test.js` the escaping, and
+  `page-helpers.test.js` what is left. The two ladder files are twins — change one page's ladder
+  and the other must follow. Fixed instants and the `ago`/`ahead` helpers come from
+  `tests/web/fixed-clock.js`; never redeclare them in a test file.
 - The embedded pages under `src/Jellyfin.Plugin.NewReleases/Web/` are not modules. Each exposes
   its pure helpers on `NewReleasesInternals` as the first statement of its IIFE; the recorded
   helper `tests/web/load-page.js` runs the page's script in a `node:vm` sandbox and returns them.
@@ -111,6 +117,22 @@ suite_seconds: 10
 - `acceptance: null` — no host-level runner. Controller and scheduled-task behaviour is tested
   at the class level with substituted Jellyfin services, as in concert-radar.
 - `watch: null` — `dotnet watch test` exists in the SDK but was not run here.
+- **Restore a deliberate mutant from a file copy, never with `git checkout`.** `git checkout -- <file>`
+  reverts the whole file to HEAD, taking any uncommitted work with it. This has now cost work twice
+  on `002`: cycle 3 of its cycle log, and mutant M1 of its verification report. Copy the file aside,
+  apply the mutant, run, copy back, and verify the restore with `cmp -s`. `git diff` being empty is
+  not proof when the baseline itself is uncommitted.
+- **Page tests must not depend on the machine's locale.** The pages pass `undefined` to
+  `Intl.RelativeTimeFormat` on purpose, so a Jellyfin user reads the sentence in their own language.
+  `tests/web/load-page.js` pins the sandbox's `Intl` to `en` for that reason. Check a change with
+  `LANG=de_DE.UTF-8 node --test "tests/web/*.test.js"`, not only the default locale.
+- **Known conflict in the `tdd` extension, not worked around here.** `/speckit-tdd-run` Phase 6
+  forbids ticking a task whose behaviour is `BASELINE`, but characterization behaviours terminate at
+  `BASELINE` and can never reach `DONE`, so such a task could never be ticked. `T023` and `T024` of
+  `002` are ticked against `BASELINE` behaviours, which is right in substance. Do not "fix" it by
+  promoting `U29`-`U33` to `DONE`; that would falsify the record. Reporting it upstream was
+  considered and dropped: the conflict is in the third-party extension, not in this plugin. Keep
+  ticking such tasks and leave this note in place.
 - Constitution principle applied: `.specify/memory/constitution.md` has been at version 1.2.0
   since 2026-09-06 and its principle II, "Test-Driven Development (NON-NEGOTIABLE)", governs this
   profile. Nothing further to add.

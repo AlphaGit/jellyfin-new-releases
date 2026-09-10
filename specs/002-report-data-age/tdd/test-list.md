@@ -23,10 +23,9 @@ suite_baseline: green
 ## Two ecosystems
 
 The server behaviours run under xunit, as `001` established. The page behaviours run under Node's
-built-in runner, which **this feature introduces** (`research.md` R8). The stack profile currently
-describes only the `dotnet` ecosystem; task `T033` adds the `node` entry. Until it does, the
-commands at the bottom of this file are the authority for the page side, taken from `plan.md` and
-`research.md` rather than guessed.
+built-in runner, which **this feature introduces** (`research.md` R8). `T006` added the `node`
+ecosystem to the stack profile, so the profile is the authority for both sides; the commands at the
+bottom of this file are copied from it.
 
 ## Outer loop: acceptance behaviors
 
@@ -40,7 +39,7 @@ entry point is the page's own exported logic, reached through the sandbox loader
 | A1 | A catalogue fetch completes at 03:00; a later refresh at 15:00 completes none → at 15:05 the list response reports the 03:00 instant, not the 15:00 run | US1-AS1 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge` |
 | A2 | Data older than one refresh interval → the page produces a staleness sentence rather than nothing | US1-AS2 | example | DONE | `tests/web/staleness.test.js` (an age past the interval yields a sentence) |
 | A3 | Data confirmed within one refresh interval → the page produces no staleness sentence | US1-AS3 | example | DONE | `tests/web/staleness.test.js` (an age at the interval yields none) |
-| A4 | No enabled source has ever completed a fetch → the list response reports no stored releases and no instant | US1-AS4 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A5_NoCompletedRun_HasCompletedRefreshFalseAndNoItems` (`001`'s) |
+| A4 | No enabled source has ever completed a fetch → the list response reports no stored releases and no instant | US1-AS4 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A5_NoCompletedRun_ReportsNoStoredReleasesAndNoInstant` (`001`'s) |
 | A5 | After a purge → the list response reports no stored releases and no instant, though completed runs are still on record | US1-AS5 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A5_AfterAPurge_TheListReportsNoStoredReleasesAndNoInstant` |
 | A6 | One source cooling down while the other completes a fetch → the reported instant is that completed fetch and is within one refresh interval | US2-AS1 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A6_OneSourceCoolingDownWhileTheOtherCompletesAFetch_TheAgeCountsFromThatFetch` |
 | A7 | The administrator disables every source → refreshes keep running and the reported instant stops moving | US2-AS2 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A7_WithEverySourceDisabled_NoAgeIsReportedWhileTheListStillShowsWhatIsStored` |
@@ -81,8 +80,8 @@ Grouped by the component from `plan.md` that owns them.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U10 | The list response reports the newest completed fetch, not the last completed run's end | FR-001, FR-002 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_RefreshIntervalFollowsTheTrigger` |
-| U11 | A refresh that completed no fetch leaves the reported instant unchanged | FR-003, FR-004 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_RefreshIntervalFollowsTheTrigger` |
+| U10 | The list response reports the newest completed fetch, not the last completed run's end | FR-001, FR-002 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd` |
+| U11 | A refresh that completed no fetch leaves the reported instant unchanged | FR-003, FR-004 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd` |
 | U12 | The list response and the status response report the same instant for one caller at one moment | FR-011 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ListAndStatusReportTheSameInstant` |
 | U13 | The stored-releases flag follows whether release rows exist, not whether a run has completed | FR-008 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted` |
 | U14 | Release rows with no completed fetch anywhere → the releases are listed and no instant is reported | FR-008, EC-no-fetch | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReleasesStoredButNoFetchEverCompleted_AreListedWithNoInstant` |
@@ -130,9 +129,18 @@ any later change cannot break them silently.
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/admin.html`
 
+`U36`-`U38` were added after the TDD audits: `U36`-`U37` by `T041`, `U38` by `T051`. `T029` shipped
+`checkedText` with a test but with no behaviour on this list, so it never entered the per-behaviour
+evidence — which is how three of its four boundaries reached the first audit pinned on one side only
+(`tdd/verification.md`, Finding 1), and how its clock-correction clamp reached the second audit with
+no test at all (Finding 1 again, second instance).
+
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U33 | `healthText` renders each source health value the administrator page can receive | US3-AS2 | characterization | BASELINE | `tests/web/page-helpers.test.js` |
+| U36 | `checkedText` renders every band of the unit ladder, and each changeover is asserted on both sides — the same ladder as `stalenessText`, plus the under-an-hour rung the user page never reaches | FR-009, FR-012, SC-005 | example | DONE | `tests/web/checked.test.js` (the `ladder` table and the over-a-year test) |
+| U37 | `checkedText` with no instant yields a dash, not a sentence | FR-008, FR-009 | example | DONE | `tests/web/checked.test.js::no instant yields a dash, not a sentence` |
+| U38 | `checkedText` with an instant later than now counts it as the present moment, so this view never states a future age | FR-010, FR-009, EC-clock | example | DONE | `tests/web/checked.test.js::an instant later than now counts as the present moment, never a future age` |
 | U34 | Both pages expose their pure helpers on one named object, so the sandbox can reach them without a browser | FR-013, FR-016 | example | DONE | `tests/web/exposure.test.js` |
 
 ## Invariants and edge cases still to place
@@ -151,8 +159,8 @@ source disabled on `U3` and `A7`, the clock correction on `U20`, data with no co
 - **Where the staleness line sits on the page.** `US1-AS2` says the age must be readable "before
   the list"; `A2` covers that a sentence is produced, not where it is placed. Placement is checked
   by hand in `quickstart.md`.
-- **The sandbox loader itself** (`tests/web/load-page.js`): exercised by every page test; a test
-  for the test helper would pin nothing the others do not.
+- **The page test helpers themselves** (`tests/web/load-page.js`, `tests/web/fixed-clock.js`):
+  exercised by every page test; a test for a test helper would pin nothing the others do not.
 - **Rotation lag.** The reported instant is server-wide by decision, so an individual artist's data
   can be older than it says (`spec.md` Assumptions). No test, because it is the accepted design.
 - **Renaming the response fields** (`T022`): a mechanical refactor on a green suite, proven by the
@@ -167,10 +175,12 @@ Server side, copied verbatim from `.specify/memory/tdd-profile.md`:
 - Coverage: not available (`coverage: null`)
 - Mutation: not available (`mutation: null`); the loop uses deliberate mutants
 
-Page side, from `plan.md` and `research.md` R8. **Not yet in the profile — `T033` adds them:**
+Page side, added to the profile by `T006` and now copied verbatim from it. The path must be the
+glob, never the bare directory: `node --test tests/web/` resolves it as a module, runs nothing and
+still exits 0 (cycle 14).
 
-- Single test: `node --test --test-name-pattern "<name>" tests/web/`
-- Full suite: `node --test tests/web/`
+- Single test: `node --test --test-name-pattern "<name>" "tests/web/*.test.js"`
+- Full suite: `node --test "tests/web/*.test.js"`
 
 `{name}` is `Class.Method` for xunit. In a shell that did not source `~/.zshenv`, prefix the
 dotnet commands with `PATH=/opt/homebrew/opt/dotnet@9/bin:$PATH DOTNET_ROOT=/opt/homebrew/opt/dotnet@9/libexec`.

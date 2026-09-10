@@ -17,9 +17,12 @@ Jellyfin server and cover what the suite cannot reach: the page copy.
 ```bash
 dotnet build --configuration Release   # must report zero warnings
 dotnet test --configuration Release
+node --test "tests/web/*.test.js"      # the page's own logic; no install step, no network
 ```
 
-Expected: green, with the suite larger than `001`'s 178 by the behaviours this feature adds.
+Expected: both green, with the server suite larger than `001`'s 178 by the behaviours this
+feature adds. The page suite needs nothing installed: `node:test`, `node:assert` and `node:vm`
+are standard library.
 
 ## 2. Prove the datapoint, not the run
 
@@ -75,8 +78,6 @@ Then confirm the test has teeth — this is the check that would have caught the
 
 ## What this guide does not cover
 
-- The unit ladder above two days. Weeks, months and `over a year ago` are covered by tests rather
-  than by hand, because reproducing them live means waiting or editing the database.
 - Keyboard operation and screen-reader announcement of the line, which `001` already leaves to a
   manual accessibility pass.
 

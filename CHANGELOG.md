@@ -19,3 +19,12 @@ All notable changes to this project are documented here. The format follows
   run status, unmatched artists with fix-it links, Run now, Purge release data, Clear Archive.
 - Per-user library access on the list and the Archive.
 - Per-source request rate, daily budget and cooldown; identifying User-Agent.
+
+### Changed
+
+- The New Releases page now states when the releases were last checked, not when a refresh last
+  ran: "Releases last checked <relative time> ago." A refresh that reaches no source no longer
+  makes the data look fresh, and the age keeps growing until a source actually answers.
+- The empty state now follows whether any release is stored, so it appears again after
+  Purge release data even though refresh runs are still on record.
+- The admin page shows the data age beside the last run, so the two can be seen to diverge.

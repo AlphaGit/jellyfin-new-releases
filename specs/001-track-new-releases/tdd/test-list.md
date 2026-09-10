@@ -37,7 +37,7 @@ the web pages are checked manually (see Out of scope).
 | A2 | Releases from several years come back ordered newest first with undated rows last, each carrying its year in `date` | US1-AS2 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A2_SeveralYears_NewestFirst_UndatedLast_EachCarryingItsDate` |
 | A3 | With 40 releases, `?artistId=` returns only that artist's rows; the same call without the filter returns all 40 | US1-AS3 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A3_FortyReleases_ArtistFilterNarrows_ClearingRestoresAll` |
 | A4 | Every listed release carries one `sources[]` link per source that lists it, each an `https` URL on `musicbrainz.org` or `www.deezer.com` | US1-AS4 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A4_EveryListedReleaseCarriesOneLinkPerListingSource_HttpsOnTheSourceHosts` |
-| A5 | With no completed run, the list response has `hasCompletedRefresh=false` and no items | US1-AS5 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A5_NoCompletedRun_HasCompletedRefreshFalseAndNoItems` |
+| A5 | With nothing stored, the list response has `hasStoredReleases=false`, no instant and no items | US1-AS5 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A5_NoCompletedRun_ReportsNoStoredReleasesAndNoInstant` |
 | A6 | Z is listed after run 1; Z appears in the library snapshot; after run 2 Z is absent from the list | US1-AS6, INV-1 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A6_ZListedAfterRunOne_ZAddedToTheLibrary_AbsentAfterRunTwo` |
 | A7 | A release dated after `serverToday` is returned with `state=Upcoming`; `?state=Upcoming` returns only it | US1-AS7 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A7_ReleaseDatedAfterToday_IsUpcoming_AndTheStateFilterReturnsOnlyIt` |
 | A8 | Library album W holds 8 of the source edition's 10 tracks → W is listed `Incomplete` with exactly the 2 missing titles and `comparedEdition` naming the source and edition | US1-AS8 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A8_LibraryAlbumWith8Of10Tracks_IsIncompleteWithTheTwoMissingTitlesAndTheComparedEdition` |
@@ -52,7 +52,7 @@ the web pages are checked manually (see Out of scope).
 | A17 | `POST api/releases/{id}/restore` on an archived release puts it back in the list at its date position | US3-AS2 | example | DONE | `Acceptance/ArchiveTests.cs::A17_RestoreOnAnArchivedRelease_PutsItBackInTheListAtItsDatePosition` |
 | A18 | `have-it` on an `Incomplete` release archives it; after a later run that still finds tracks missing it remains archived with `kind=HaveIt` | US3-AS3, FR-005b | example | DONE | `Acceptance/ArchiveTests.cs::A18_HaveItOnAnIncompleteRelease_StaysArchivedAfterARunThatStillFindsTracksMissing` |
 | A19 | A `have-it` release whose library album later gains every track stays in the Archive; the decision is not reopened | US3-AS4 | example | DONE | `Acceptance/ArchiveTests.cs::A19_HaveItRelease_WhoseLibraryAlbumLaterGainsEveryTrack_StaysInTheArchive` |
-| A20 | After a good run, with every source in cooldown, a second run contacts nothing and the list still returns the stored releases with `hasCompletedRefresh` and a `lastRefreshedAt` | SC-007 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge` |
+| A20 | After a good run, with every source in cooldown, a second run contacts nothing and the list still returns the stored releases with `hasStoredReleases` and the **first** run's `releasesLastCheckedAt` — the instant does not move when nothing was learned (restated by `002` T008) | SC-007 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge` |
 
 ## Inner loop: unit behaviors
 
@@ -261,7 +261,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U115 | A request without the `Jellyfin-UserId` claim gets 401 | FR-007 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_WithoutTheUserIdClaim_Is401` |
 | U116 | A user with `EnableAllFolders` sees every release; a user whose `EnabledFolders` exclude the library sees none; including it sees them | FR-007, EC-11 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_FollowsTheCallersLibraryAccess` |
 | U117 | `from=2020-01-01` returns a release dated `2020-01-01` and not one dated `2019-12-31`; `type`, `state`, `artistId` are passed to the repository filter | FR-008 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_PassesFromTypeStateAndArtistToTheFilter` |
-| U118 | `lastRefreshedAt` is the last completed run's end; `refreshIntervalHours` is 24 for a daily trigger, 12 for a 12-hour interval trigger, 24 when no trigger is readable | FR-015 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_LastRefreshedAtIsTheLastCompletedRunsEnd_RefreshIntervalFollowsTheTrigger` |
+| U118 | `releasesLastCheckedAt` is the newest completed catalogue fetch at an enabled source, not a run's end; `refreshIntervalHours` is 24 for a daily trigger, 12 for a 12-hour interval trigger, 24 when no trigger is readable | FR-015 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd` and `::GetReleases_RefreshIntervalFollowsTheTrigger` (split by `002` T044: one name, two rules) |
 | U119 | `GET api/artists` returns only artists in libraries the caller may access | FR-007 | example | DONE | `Api/ReleasesControllerTests.cs::GetArtists_ReturnsOnlyArtistsInLibrariesTheCallerMayAccess` |
 | U120 | `ignore` and `have-it` store a decision with the caller's user id and the injected clock; `restore` deletes it; each returns 204 | FR-005b, FR-016 | example | DONE | `Api/ReleasesControllerTests.cs::Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204` |
 | U121 | A decision on an unknown release id → 404; on a release outside the caller's libraries → 403 and no decision written | FR-007, FR-016 | example | DONE | `Api/ReleasesControllerTests.cs::Decisions_UnknownReleaseIs404_ReleaseOutsideTheCallersLibrariesIs403WithNothingWritten` |
@@ -294,9 +294,10 @@ None. INV-1 is placed on U113 and A6; SC-007 is placed on A20.
   accepted ceiling (research R8), no test.
 - Re-fetching an edition's track list after a source corrects it: accepted ceiling (R11).
 - SC-002, SC-003, SC-006: measured on a real library after release, not in the suite.
-- `lastRefreshedAt` after a run that reached no source reports that run, not the run whose data is
-  being shown (pinned as written by A20). Whether SC-007 wants the last *reaching* run is a spec
-  question, recorded in `tdd/verification.md`, not decided here.
+- ~~`lastRefreshedAt` after a run that reached no source reports that run, not the run whose data is
+  being shown.~~ **Answered by `specs/002-report-data-age/`**: the reported instant is the newest
+  completed catalogue fetch at an enabled source, so a run that reached nothing leaves it where it
+  was. A20 and U118 above are restated to that rule.
 
 ## Verification commands
 

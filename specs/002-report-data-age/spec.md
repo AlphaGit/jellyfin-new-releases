@@ -89,8 +89,9 @@ the stated age reflects the completed fetch rather than the cooling-down source.
    refresh, **When** a user opens the page, **Then** the stated age counts from that completed
    fetch.
 2. **Given** the administrator disables every source rather than the sources failing,
-   **When** refreshes continue to run, **Then** the stated age keeps growing, because nothing is
-   confirming the data.
+   **When** refreshes continue to run, **Then** the page states no age at all, because `FR-002`
+   stops a disabled source counting and no enabled source is left to confirm the data. The list
+   still shows what is stored.
 
 ---
 
@@ -132,8 +133,10 @@ server, and confirm it fails when the unit ladder's boundaries are moved by one 
 - The administrator disables the source whose fetches were the newest: the stated age immediately
   becomes older, because only enabled sources count and a disabled one will never confirm anything
   again. The jump happens with no change to the releases on screen and is intended.
-- Every source is disabled: nothing can confirm the data, so the age keeps growing without bound
-  while the list continues to show what is stored.
+- Every source is disabled: no enabled source is left to confirm the data, so there is no instant
+  to report and the page states no age, while the list continues to show what is stored. This is
+  the end point of the rule above — each source that goes off stops counting, and when the last
+  one does the age disappears rather than growing.
 - A clock correction leaves the stored instant in the future: it counts as the present moment, so
   the line stays hidden. A correction the other way needs no special handling — the data simply
   looks older, which is how any other elapsed time is treated.
@@ -201,6 +204,10 @@ server, and confirm it fails when the unit ladder's boundaries are moved by one 
   so it holds to the project's rule that the suite passes on a machine with neither.
 - **FR-015**: The project's build gate MUST run the page-side tests alongside the existing ones,
   so a page regression fails the same check.
+  **Verified by inspection, not by a test** (decided by `T050` after the TDD audit): this requirement
+  governs the gate that would have to run any test of it, so a test inside the suite could only
+  assert that it is itself being run. Proof is the `Test page logic` step in
+  `.github/workflows/build.yml`, and a red CI run if it is removed.
 - **FR-016**: Adding the page-side suite MUST NOT change what the plugin ships: no new file in the
   packaged output, no script the page fetches at runtime, and no build step before packaging.
 

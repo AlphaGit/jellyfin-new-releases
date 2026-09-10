@@ -29,8 +29,8 @@ Response `200`:
 {
   "items": [ReleaseDto],
   "total": 412,
-  "hasCompletedRefresh": true,
-  "lastRefreshedAt": "2026-09-06T03:14:09Z",
+  "hasStoredReleases": true,
+  "releasesLastCheckedAt": "2026-09-06T03:14:09Z",
   "refreshIntervalHours": 24,
   "serverToday": "2026-09-06"
 }
@@ -92,7 +92,7 @@ the release's natural key with the caller's user id; `restore` deletes it.
 Small status for the fragment header (also embedded in the list response; kept for polling).
 
 ```json
-{ "hasCompletedRefresh": true, "lastRefreshedAt": "…", "refreshIntervalHours": 24, "isRunning": false }
+{ "hasStoredReleases": true, "releasesLastCheckedAt": "…", "refreshIntervalHours": 24, "isRunning": false }
 ```
 
 ## Admin endpoints (`AdminController`, `Policies.RequiresElevation`)
@@ -108,6 +108,7 @@ Small status for the fragment header (also embedded in the list response; kept f
   ],
   "lastRun": { "startedAt": "…", "endedAt": "…", "outcome": "Completed",
                "artistsProcessed": 500, "releasesFound": 3210, "editionsFetched": 140, "errors": 2 },
+  "releasesLastCheckedAt": "2026-09-06T03:14:09Z",
   "nextRunAt": "2026-09-07T03:00:00+02:00",
   "isRunning": false,
   "libraryArtists": 500,
@@ -122,6 +123,11 @@ Small status for the fragment header (also embedded in the list response; kept f
 
 `health` ∈ `Ok` | `Failing` | `CoolingDown` | `Disabled`. `nextRunAt` is computed from the task's
 triggers (server local time, as Jellyfin fires them) and is `null` when no trigger is set.
+`releasesLastCheckedAt` is the same instant the user page reports, so an administrator can see the
+last run and the age of the data diverge.
+
+Field names and the meaning of `releasesLastCheckedAt` are settled by
+`specs/002-report-data-age/contracts/http-api.md`.
 
 ### POST `/api/admin/run-now`
 

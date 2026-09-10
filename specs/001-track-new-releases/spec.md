@@ -311,7 +311,10 @@ both are gone, open the Archive, restore both, confirm they are back.
   omits it; a failed fetch or a fetch known to be partial (interrupted, budget-limited, or
   paginated but cut short) MUST NOT remove anything.
 - **FR-015**: System MUST show the age of the data behind the list when it is older than one
-  refresh interval, as "Last refreshed <relative time> ago".
+  refresh interval, as "Releases last checked <relative time> ago". The age is measured from the
+  last completed catalogue fetch at an enabled source, not from the end of the last refresh run.
+  Superseded in that detail by `specs/002-report-data-age/`; the intent here is unchanged and
+  `SC-007` still holds.
 - **FR-016**: Any authenticated user MUST be able to Ignore a release, mark it Have it, and
   Restore either from the Archive. These decisions are shared server-wide: once made, the
   release is archived for every user until someone restores it. No administrator role is

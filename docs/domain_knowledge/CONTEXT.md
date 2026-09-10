@@ -61,7 +61,7 @@ plans, UI strings, and identifiers use these terms verbatim.
 - Filter values and badges use the state and type names exactly: Missing, Incomplete,
   Upcoming; Album, EP, Single, Compilation, Live, Remix, Soundtrack, Bootleg.
 - Fixed sentences: empty state "No data yet. New Releases is waiting for its first refresh.";
-  stale data "Last refreshed <relative time> ago." (relative time, never a raw timestamp).
+  stale data "Releases last checked <relative time> ago." (relative time, never a raw timestamp).
 - Code identifiers are the PascalCase form of the term: `LibraryArtist`, `SourceEntry`,
   `ReleaseState.Incomplete`, `HaveIt`, `Archive`.
 

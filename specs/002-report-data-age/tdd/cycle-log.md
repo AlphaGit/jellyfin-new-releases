@@ -337,3 +337,212 @@ Verified rather than asserted — there is nothing for a test to claim about its
 Ceiling on this evidence: the machine's network was not physically severed for the run. What is
 proven is that no install step exists and no network API is referenced, which is what `FR-014`
 asks for.
+
+## T029: the administrator view states the data age beside the last run
+
+Written during `/speckit-implement`, not by the loop: `T029` carries no behaviour id, because the
+test list treats the administrator page's copy as page wiring. It still added real logic — a second
+copy of the unit ladder — so it was driven test-first rather than written test-after.
+
+- test: `tests/web/page-helpers.test.js::checkedText states the data age in the ladder's units, or a dash when nothing is known` (new)
+- red: `node --test --test-name-pattern "checkedText" "tests/web/*.test.js"`
+  -> `error: 'checkedText is not a function'` (1 failed)
+- green: `admin.html` gained `checkedText(iso, now)` and a `Releases last checked` row in
+  `#nr-status`, rendered from `status.releasesLastCheckedAt`. Page suite -> 23 passed, 0 failed
+- refactor: none needed
+- note: `exposure.test.js` pins the exact set of helpers each page exposes, so it went red on the
+  new key and was updated to `['checkedText', 'esc', 'healthText']`. The assertion was not
+  loosened; it still demands an exact set.
+- note: the ladder is stated twice. The two pages are separate embedded resources with no way to
+  share code, and a third resource plus a route to serve it costs more than twelve duplicated
+  lines. `admin.html` uses `numeric: 'always'` where `user-view.html` uses `'auto'`: this view
+  shows the age even when it is under an hour, and `'auto'` renders that as "this hour", not
+  "0 hours". Every other value the ladder can produce is identical in both modes (verified: the
+  bands never emit 1 day or 1 week).
+
+## T030: the rename, on a green suite
+
+Structural only, no behaviour change. `LastRefreshedAt` -> `ReleasesLastCheckedAt` and
+`HasCompletedRefresh` -> `HasStoredReleases` in `Api/Dtos.cs`, `Web/user-view.html` and the three
+test files that name them.
+
+- before: 194 passed, 0 failed (server); 23 passed, 0 failed (page)
+- after: 194 passed, 0 failed (server); 23 passed, 0 failed (page)
+- the two lists of test names differ by exactly one entry, the deliberate method rename
+  `A5_NoCompletedRun_HasCompletedRefreshFalseAndNoItems` ->
+  `A5_NoCompletedRun_ReportsNoStoredReleasesAndNoInstant`. Both `001`'s and `002`'s test lists
+  were repointed at the new name.
+- `Model/StoredRecords.cs`'s `ArtistRecord.LastRefreshedAt` is a different datapoint — when that
+  artist was last refreshed — and was deliberately left alone, with its tests.
+- `SourceStateRepository.GetLastCompletedRunAsync` has no production caller left. Its doc comment
+  claimed to be "the run behind `lastRefreshedAt`", which is no longer true; the comment was
+  corrected. **The method itself was kept**: two tests still exercise it, and deleting it is
+  outside this feature's scope. Reported, not fixed.
+
+## Phase 9: remediation of the TDD audit findings
+
+Driven from `tdd/verification.md` (verdict FAIL). These are test changes on green production code,
+so the proof of each is a deliberate mutant, not a red.
+
+**T039 + T041 — Finding 1, the administrator ladder.** `page-helpers.test.js`'s single
+`checkedText` test became one test per rung in the shape of the node exemplar, asserting both sides
+of every changeover. The three mutants that survived the audit are now caught:
+
+| Boundary moved down one unit | before T039 | after T039 |
+| --- | --- | --- |
+| day → week, 14 d → 13 d | SURVIVED | 1 failed |
+| week → month, 61 d → 60 d | SURVIVED | 1 failed |
+| over a year, 365 d → 364 d | SURVIVED | 1 failed |
+| hour → day, 2 d → 3 d | 1 failed | 1 failed |
+| drop the no-instant guard | 1 failed | 1 failed |
+
+`U36` and `U37` were added to the test list and their ids to `T029`. The root cause was not the
+test: it was that `T029` shipped production logic with no behaviour on the list, so it never
+entered the per-behaviour evidence at all.
+
+**T040 — Finding 2, the vacuous assertion.** `staleness.test.js:33` asserted `notEqual(…, null)`,
+which `''` would pass while hiding the line exactly as `null` does. Now asserts the exact sentence.
+Mutant: `stalenessText` returning `''` past the interval -> **10 failed** (was 0). Restored exactly.
+
+**T042 — Finding 3, the locale.** The suite was green on an English machine and red on any other:
+`LANG=de_DE.UTF-8` gave 14 passed, 9 failed. `load-page.js` now pins the sandbox's
+`Intl.RelativeTimeFormat` default to `en`. Production is untouched and still passes `undefined`, so
+a Jellyfin user keeps reading the sentence in their own language. Verified green under the default
+locale, `de_DE.UTF-8` and `ja_JP.UTF-8`.
+
+**T043 to T047 — the MED and LOW findings.** Three assertions that could not fail were removed
+(`ConfigureAndRunTests.cs`'s `InRange` behind an exact-instant equality; `staleness.test.js`'s
+job-word loop behind a whole-string equality; `exposure.test.js`'s `typeof` loops). The exact-key-set
+assertions in `exposure.test.js` were **kept** against the subagent's advice to delete the file:
+they are the one thing no other test does, and they caught `T029`'s new helper. The eager
+`GetReleases_ReportsTheNewestCompletedFetch_RefreshIntervalFollowsTheTrigger` split into
+`…_NotTheLastRunsEnd` and `GetReleases_RefreshIntervalFollowsTheTrigger`; both test lists repointed.
+`sandboxGlobals` now merges one level down, so a test pins one `ApiClient` member without restating
+the rest.
+
+**T048 to T050 — process.** The `git checkout` hazard, the locale rule and the extension's
+`BASELINE` tick conflict are recorded in `.specify/memory/tdd-profile.md`, which both the loop and
+the audit read at preflight. `FR-015` is recorded in `spec.md` as verified by inspection: it governs
+the gate that would have to run any test of it.
+
+- suite after remediation: 195 passed, 0 failed (dotnet, one test became two); 32 passed, 0 failed
+  (node, one test became eleven)
+- no production code changed in this phase
+
+## Phase 10: remediation of the second TDD audit's findings
+
+Driven from `tdd/verification.md` (verdict FAIL, second run). The production code was already
+correct in every case except `T055`, so the proof of each is a deliberate mutant, not a red. Every
+mutant was applied from a file copy and restored with a `cmp` check, never `git checkout`.
+
+**T051 — Finding 1 (HIGH), the administrator page's clock-correction guard.** `checkedText`'s
+`Math.max(0, …)` clamp at `admin.html:129` survived deletion: 32 passed, 0 failed. `user-view.html`
+does not need a test for the same clamp because `FR-006` gates its line below one refresh interval
+and a clamped zero never renders; the administrator view has no gate and shows the age whenever the
+instant is known, so there the clamp is what holds `FR-010`. Without it the page states
+`Releases last checked in 5 hours.` — verified directly. `U38` added to the test list, its id added
+to `T029`'s brackets, and one test added beside the `checkedText` ladder.
+
+| Mutant | before T051 | after T051 |
+| --- | --- | --- |
+| `admin.html` drop `Math.max(0, …)` | SURVIVED | 1 failed |
+| `user-view.html` drop `Math.max(0, …)` | SURVIVED | SURVIVED — equivalent, and the control: the interval gate makes it unreachable |
+
+**T052 — Finding 2 (MED), the specification's own contradiction.** `spec.md`'s `US2-AS2` and its
+matching edge case still said the stated age "keeps growing" when every source is disabled, which
+`FR-002` and `A7` contradict. Reported by the loop at cycle 21 and left unamended by Phase 9. Both
+passages now state the `FR-002` behaviour: no enabled source means no instant, so the page states no
+age while the list still shows what is stored. No test changed — `A7` already asserted this.
+
+**T053 — Finding 3 (MED), two characterizations pinned on one half.** Both mutants survived because
+the test could not see the half they broke:
+
+| Mutant | before T053 | after T053 |
+| --- | --- | --- |
+| `healthText` drops the cooldown instant (`when(s.cooldownUntil)` → `when(null)`) | SURVIVED | 1 failed |
+| `artistLink` stops encoding the server id | SURVIVED | 1 failed |
+
+`U33`: the assertion used `/^CoolingDown until .+ · …/` because `when()` calls
+`Date.prototype.toLocaleString()`, whose output follows the machine's locale **and timezone**.
+`load-page.js` already pinned `Intl.RelativeTimeFormat` for exactly this reason; it now pins `Date`'s
+`toLocaleString` the same way, to `en-US` and UTC, so the exact sentence can be asserted. Production
+is untouched and still passes nothing, so a Jellyfin operator keeps their own format. `U32`: the
+sandbox served `serverId: () => 'srv-42'`, which needs no escaping, so only the artist-id half could
+fail; the fixture now serves `'srv 42&x'`. Verified green under `de_DE`, `ja_JP`, `Asia/Tokyo` and
+`America/Sao_Paulo`.
+
+**T054 — Finding 4 (MED), a documented command that runs nothing.** `node --test tests/web/`
+resolves the path as a module, runs no test and **exits 0**. Cycle 14 fixed the profile and CI but
+not this feature's own files. Nine occurrences replaced with the glob form across `tasks.md` and
+`tdd/test-list.md`, and that file's two stale claims — that the profile has no `node` entry yet, and
+that `T033` adds it — corrected to `T006`, which did. The profile's `file:` command is unaffected:
+`node --test tests/web/{file}` resolves to a real file once substituted.
+
+**T055 — Finding 5 (MED), two cases of one test on one arm.** `RefreshIntervalHours` had no
+`DailyTrigger` arm, so the daily case and the no-task case both landed on `_ => 24` and the daily
+case proved nothing about a daily trigger. **I departed from the task text**, which offered only
+"drop the daily case" or "add an arm if daily means something other than 24". Daily does mean 24, so
+neither branch fitted. Dropping the case would have deleted the only test of a rule `001`'s `U118`
+states explicitly ("24 for a daily trigger"), so instead the arm was made explicit —
+`TaskTriggerInfoType.DailyTrigger => 24` — which changes no behaviour and keeps the rule pinned
+against a future change to the default. This is the one production change in this phase. Proven by
+two mutants that now fail on different arms:
+
+| Mutant | Result |
+| --- | --- |
+| `DailyTrigger => 24` → `48` | 1 failed, at `ReleasesControllerTests.cs:129` (the daily case) |
+| `_ => 24` → `48` | 1 failed, at the no-task case |
+
+- suite after remediation: 195 passed, 0 failed (dotnet, unchanged); 33 passed, 0 failed (node, one
+  test added by `T051`). `dotnet build --configuration Release` clean with `TreatWarningsAsErrors`
+- `T056`–`T058` (the three LOW findings) are left open
+
+## Phase 10, second part: the three LOW findings
+
+No production code changed. Every mutant that the moved and rewritten tests are meant to catch was
+re-run afterwards and still fails; each was applied from a file copy and restored with `cmp`.
+
+**T056 — Finding 6, the exact key set in `exposure.test.js`.** Kept, and the rule it enforces is
+now written where it is enforced. The objection was fair — no requirement states the set, so a
+refactor exposing one more pure helper fails the test. That failure is the point: `T029` added
+`checkedText` to `admin.html` with no behaviour on the test list, and both audits found the same
+consequence, first three of four boundaries pinned on one side only, then the clock-correction
+clamp with no test at all. The assertion is the gate that would have caught it, so it stays and the
+comment says so. The removed `typeof` loops are not restored: every name in both key sets is called
+as a function by one of the four test files, so callability is still enforced.
+
+**T057 — Finding 7, duplicated fixtures.** `HOUR`, `DAY`, `NOW` and `ago` moved to
+`tests/web/fixed-clock.js`, which also gained `ahead` for the clock-correction cases that both
+pages now have. The two `NOW` values differed by a day for no reason and are now one. Added to the
+profile's `helpers`. The two ladder tables stay separate on purpose: they pin two implementations
+in two pages.
+
+**T058 — Finding 8, a file that claimed to be one thing and was two.** Split rather than
+re-labelled. `checkedText` moved out of `page-helpers.test.js` into `tests/web/checked.test.js`,
+beside `staleness.test.js`, so the two copies of the unit ladder sit side by side — `user-view.html`
+in one file, `admin.html` in the other — and an author changing one ladder can see the other.
+`page-helpers.test.js` is characterization again, as its header always claimed. `esc.test.js` set
+the precedent. `tdd/test-list.md` repointed `U36`, `U37` and `U38` at the new file, and the
+profile's page-side conventions now state the one-file-per-subject rule.
+
+Mutants re-run after the split, all caught:
+
+| Mutant | Behaviour | Result |
+| --- | --- | --- |
+| `admin.html` drop `Math.max(0, …)` | U38 | 1 failed |
+| `admin.html` day→week 14 d → 13 d | U36 | 1 failed |
+| `admin.html` week→month 61 d → 60 d | U36 | 1 failed |
+| `admin.html` over-a-year 365 d → 364 d | U36 | 1 failed |
+| `healthText` drops the cooldown instant | U33 | 1 failed |
+| `artistLink` stops encoding the server id | U32 | 1 failed |
+| `user-view.html` day→week 14 d → 13 d | U25, A8 | 1 failed |
+| `user-view.html` interval gate `<=` → `<` | U21 | 1 failed |
+
+`A10` re-verified after adding two files: no `package.json`, every `require` resolves to a Node
+builtin or a local file, and no network API is referenced anywhere under `tests/web`.
+
+- suite: 195 passed, 0 failed (dotnet); 33 passed, 0 failed (node) under `en_US`, `de_DE`, `ja_JP`,
+  `Asia/Tokyo` and `America/Sao_Paulo`. `dotnet build --configuration Release` clean with
+  `TreatWarningsAsErrors`
+- every finding of the second audit is now closed. `T037`, `T038` and `T049` remain open and none
+  of them is a code change
