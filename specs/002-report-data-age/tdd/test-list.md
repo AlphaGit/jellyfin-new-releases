@@ -122,16 +122,16 @@ any later change cannot break them silently.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U29 | `esc` escapes `&`, `<`, `>`, `"` and `'` in text that came from a release source | SC-008, US3-AS2 | characterization | PENDING | |
-| U30 | `esc` turns null and undefined into the empty string | SC-008 | characterization | PENDING | |
-| U31 | `groupOf` returns `Upcoming` for an upcoming release, `Undated` for one with no date, and the year otherwise | US3-AS2 | characterization | PENDING | pins `001`'s US1-AS2 grouping |
-| U32 | `artistLink` builds the Jellyfin artist deep link from the artist id and the server id | US3-AS2 | characterization | PENDING | |
+| U29 | `esc` escapes `&`, `<`, `>`, `"` and `'` in text that came from a release source | SC-008, US3-AS2 | characterization | BASELINE | `tests/web/esc.test.js` |
+| U30 | `esc` turns null and undefined into the empty string | SC-008 | characterization | BASELINE | `tests/web/esc.test.js` |
+| U31 | `groupOf` returns `Upcoming` for an upcoming release, `Undated` for one with no date, and the year otherwise | US3-AS2 | characterization | BASELINE | `tests/web/page-helpers.test.js` |
+| U32 | `artistLink` builds the Jellyfin artist deep link from the artist id and the server id | US3-AS2 | characterization | BASELINE | `tests/web/page-helpers.test.js` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/admin.html`
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U33 | `healthText` renders each source health value the administrator page can receive | US3-AS2 | characterization | PENDING | pins `001`'s FR-012 wording |
+| U33 | `healthText` renders each source health value the administrator page can receive | US3-AS2 | characterization | BASELINE | `tests/web/page-helpers.test.js` |
 | U34 | Both pages expose their pure helpers on one named object, so the sandbox can reach them without a browser | FR-013, FR-016 | example | DONE | `tests/web/exposure.test.js` |
 
 ## Invariants and edge cases still to place

@@ -244,3 +244,22 @@ cycle. No new test, no new code.
 - refactor: `staleness(data)` reduced to showing what `stalenessText` decides, so every rule now
   lives where a test can reach it. The DOM half has no test — no runner reaches it — and is
   checked by hand in `quickstart.md`.
+
+## Cycle 18: U29, U30, U31, U32, U33 characterization of the pages' existing helpers
+
+- tests: `tests/web/esc.test.js` and `tests/web/page-helpers.test.js` (new). These capture what the
+  code already does; this feature does not change any of them. They exist so the rename in Phase 7,
+  and anything later, cannot break them silently.
+- red: none expected, and none occurred — characterization tests are green against untouched code.
+  Page suite -> 22 passed, 0 failed.
+- deliberate mutants, one per behaviour, each applied alone and restored exactly:
+  - `U29` `esc` escaping only `&<>`, not quotes -> 1 failed
+  - `U30` `esc` dropping the null guard -> 1 failed
+  - `U31` `groupOf` no longer returning `Undated` -> 1 failed
+  - `U32` `artistLink` not URL-encoding the artist id -> 1 failed
+  - `U33` `healthText` dropping the error reason -> 1 failed
+- green: no production change. Page suite -> 22 passed, 0 failed after every restore
+- refactor: none needed
+- note: `esc` is the one worth having regardless of this feature. Release titles and artist names
+  arrive from MusicBrainz and Deezer and are concatenated into HTML by `row()` in about ten places;
+  `esc` is the only thing between them and the DOM, and until now nothing tested it.
