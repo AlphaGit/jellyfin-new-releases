@@ -46,7 +46,7 @@ entry point is the page's own exported logic, reached through the sandbox loader
 | A7 | The administrator disables every source → refreshes keep running and the reported instant stops moving | US2-AS2 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A7_WithEverySourceDisabled_NoAgeIsReportedWhileTheListStillShowsWhatIsStored` |
 | A8 | Every band and boundary of the unit ladder is asserted, and moving any boundary by one unit makes a test fail | US3-AS1, SC-007 | example | DONE | `tests/web/staleness.test.js` + the four boundary mutants in `cycle-log.md` |
 | A9 | A release title containing HTML markup is escaped rather than rendered as markup | US3-AS2, SC-008 | characterization | DONE | `tests/web/esc.test.js` |
-| A10 | The whole suite, page side included, runs with no network and no installation step | US3-AS3, SC-009, FR-014 | example | PENDING | see note below |
+| A10 | The whole suite, page side included, runs with no network and no installation step | US3-AS3, SC-009, FR-014 | example | DONE | verified in `cycle-log.md`; no manifest, no install, no network module |
 
 **A8 and A10 are not conventional tests.** A8's first half is `U21`–`U28` below; its second half —
 "moving any boundary makes a test fail" — is the deliberate-mutant check from the loop playbook,

@@ -322,3 +322,18 @@ The half of `US3-AS1` no assertion can express. Each boundary moved alone, then 
 | months/over a year, 365 days -> 366 days | 1 failed |
 
 Page suite green again after every restore: 22 passed, 0 failed.
+
+## A10: the suite runs with no network and no installation step
+
+Verified rather than asserted — there is nothing for a test to claim about itself:
+
+- No `package.json`, no `package-lock.json`, no `node_modules`. Nothing to install.
+- Every `require` in `tests/web` resolves to a Node builtin (`node:test`, `node:assert/strict`,
+  `node:fs`, `node:path`, `node:vm`) or to the local `./load-page.js`.
+- No network-capable module is reached for: `node:http`, `node:https`, `node:net`, `node:dns`,
+  `node:tls`, `fetch(` and `XMLHttpRequest` all appear nowhere under `tests/web`.
+- Both suites, back to back: page 22 passed, 0 failed; server 194 passed, 0 failed.
+
+Ceiling on this evidence: the machine's network was not physically severed for the run. What is
+proven is that no install step exists and no network API is referenced, which is what `FR-014`
+asks for.

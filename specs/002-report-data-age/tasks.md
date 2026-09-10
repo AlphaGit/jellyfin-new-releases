@@ -118,7 +118,7 @@ These are characterization behaviours: they capture what the code does today and
 - [X] T023 [P] [US3] Write characterization tests in `tests/web/esc.test.js`: a release title containing `<script>`, `&`, `"` and `'` comes back escaped; null and undefined become the empty string Behaviors: [U29] [U30] [A9]
 - [X] T024 [P] [US3] Write characterization tests in `tests/web/page-helpers.test.js` for `groupOf` (Upcoming, undated, year slice), `artistLink` (link shape with `ApiClient` stubbed) and `healthText` (each health value the admin page can receive) Behaviors: [U31] [U32] [U33]
 - [X] T025 [US3] Deliberate-mutant check for the ladder: move each boundary in `src/Web/user-view.html` by one unit, confirm a test in `tests/web/staleness.test.js` fails, restore exactly, re-run. Record each in `specs/002-report-data-age/tdd/cycle-log.md` — this is the second half of `A8`, which no assertion can express Behaviors: [A8]
-- [ ] T026 [US3] Run the whole suite with the network down and nothing installed — `dotnet test --configuration Release` then `node --test tests/web/` — and record the result in `specs/002-report-data-age/tdd/cycle-log.md` Behaviors: [A10]
+- [X] T026 [US3] Run the whole suite with the network down and nothing installed — `dotnet test --configuration Release` then `node --test tests/web/` — and record the result in `specs/002-report-data-age/tdd/cycle-log.md` Behaviors: [A10]
 
 ---
 
