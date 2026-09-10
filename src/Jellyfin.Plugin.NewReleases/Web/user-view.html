@@ -51,6 +51,11 @@
     <script>
         (function () {
             'use strict';
+
+            // Exposed for tests/web/*: assigned before any DOM access, so a sandbox can reach these
+            // without a browser. Function declarations hoist, so all of them are defined by now.
+            globalThis.NewReleasesInternals = { esc: esc, groupOf: groupOf, artistLink: artistLink, stalenessText: stalenessText };
+
             var root = document.getElementById('nr-user-view');
             if (!root || root.dataset.nrReady) return;
             root.dataset.nrReady = '1';
@@ -89,15 +94,44 @@
                 return item.date.slice(0, 4);
             }
 
+            /**
+             * The staleness sentence, or null when there should be none (002 FR-006/FR-007/FR-010).
+             * `checkedAt` is the instant the releases were last checked; an instant later than `now`
+             * can only come from a clock correction and counts as an age of zero, which the interval
+             * rule then hides on its own.
+             */
+            function stalenessText(checkedAt, now, intervalHours) {
+                if (!checkedAt) return null;
+                var ageMs = Math.max(0, now - new Date(checkedAt).getTime());
+                if (ageMs <= intervalHours * 3600000) return null;
+                return 'Releases last checked ' + relativeAge(ageMs) + ' ago.';
+            }
+
+            /**
+             * How long ago, in the coarsest unit that still reads plainly (002 FR-012). Each unit
+             * gives way at two of the next: 48 h becomes days, 14 days becomes weeks, 61 days
+             * (two 30.5-day months) becomes months. Past a year it stops counting, because
+             * `Intl.RelativeTimeFormat` renders everything from 12 to 23 months as "1 year".
+             */
+            function relativeAge(ageMs) {
+                var DAY_MS = 86400000;
+                if (ageMs >= 365 * DAY_MS) return 'over a year';
+                var unit = ageMs < 2 * DAY_MS ? ['hour', 3600000]
+                    : ageMs < 14 * DAY_MS ? ['day', DAY_MS]
+                    : ageMs < 61 * DAY_MS ? ['week', 7 * DAY_MS]
+                    : ['month', 30.5 * DAY_MS];
+                // Floor, not round: "checked 8 weeks ago" should mean at least eight weeks have
+                // passed. Rounding would also put "12 months" next door to "over a year".
+                var rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+                return rtf.format(-Math.floor(ageMs / unit[1]), unit[0]).replace(/ ago$/, '');
+            }
+
+            /** Shows what `stalenessText` decides. All the rules live there, where a test can reach them. */
             function staleness(data) {
                 var line = root.querySelector('#nr-staleness');
-                if (!data.lastRefreshedAt) { line.hidden = true; return; }
-                var ageHours = (Date.now() - new Date(data.lastRefreshedAt).getTime()) / 36e5;
-                if (ageHours <= data.refreshIntervalHours) { line.hidden = true; return; }
-                var rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
-                var text = ageHours < 48 ? rtf.format(-Math.round(ageHours), 'hour') : rtf.format(-Math.round(ageHours / 24), 'day');
-                line.textContent = 'Last refreshed ' + text.replace(/ ago$/, '') + ' ago.';
-                line.hidden = false;
+                var text = stalenessText(data.lastRefreshedAt, Date.now(), data.refreshIntervalHours);
+                line.textContent = text || '';
+                line.hidden = !text;
             }
 
             function artistLink(item) {

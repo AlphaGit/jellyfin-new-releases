@@ -92,9 +92,9 @@ Grouped by the component from `plan.md` that owns them.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U16 | Reports the last run, including a run that reached no source | FR-009 | example | PENDING | |
-| U17 | Reports the same instant the user page reports | FR-009, FR-011 | example | PENDING | |
-| U18 | After a run that completed no fetch, the reported run end and the reported instant differ | FR-009, SC-005 | example | PENDING | |
+| U16 | Reports the last run, including a run that reached no source | FR-009 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` |
+| U17 | Reports the same instant the user page reports | FR-009, FR-011 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` |
+| U18 | After a run that completed no fetch, the reported run end and the reported instant differ | FR-009, SC-005 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` — `stalenessText`
 
@@ -103,16 +103,16 @@ boundary below is tested on both sides: a threshold with one test pins nothing.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U19 | No instant → no sentence | FR-008 | example | PENDING | |
-| U20 | An instant later than the current time counts as an age of zero, so no sentence | FR-010, EC-clock | example | PENDING | |
-| U21 | Age exactly one refresh interval → no sentence | FR-006 | example | PENDING | |
-| U22 | Age one second past one refresh interval → a sentence | FR-006 | example | PENDING | |
-| U23 | 47 hours renders in hours | FR-012 | example | PENDING | |
-| U24 | 48 hours renders in days, not hours | FR-012, SC-007 | example | PENDING | |
-| U25 | 13 days renders in days; 14 days renders in weeks | FR-012, SC-007 | example | PENDING | |
-| U26 | 60 days renders in weeks; 61 days renders in months | FR-012, SC-007 | example | PENDING | |
-| U27 | 364 days renders in months; 365 days renders as `over a year ago` | FR-012, SC-007 | example | PENDING | |
-| U28 | The sentence reads `Releases last checked <relative time> ago.` and contains none of "refresh", "run", "scan" or "update" | FR-007, SC-004 | example | PENDING | |
+| U19 | No instant → no sentence | FR-008 | example | DONE | `tests/web/staleness.test.js` |
+| U20 | An instant later than the current time counts as an age of zero, so no sentence | FR-010, EC-clock | example | DONE | `tests/web/staleness.test.js` |
+| U21 | Age exactly one refresh interval → no sentence | FR-006 | example | DONE | `tests/web/staleness.test.js` |
+| U22 | Age one second past one refresh interval → a sentence | FR-006 | example | DONE | `tests/web/staleness.test.js` |
+| U23 | 47 hours renders in hours | FR-012 | example | DONE | `tests/web/staleness.test.js` |
+| U24 | 48 hours renders in days, not hours | FR-012, SC-007 | example | DONE | `tests/web/staleness.test.js` |
+| U25 | 13 days renders in days; 14 days renders in weeks | FR-012, SC-007 | example | DONE | `tests/web/staleness.test.js` |
+| U26 | 60 days renders in weeks; 61 days renders in months | FR-012, SC-007 | example | DONE | `tests/web/staleness.test.js` |
+| U27 | 364 days renders in months; 365 days renders as `over a year ago` | FR-012, SC-007 | example | DONE | `tests/web/staleness.test.js` |
+| U28 | The sentence reads `Releases last checked <relative time> ago.` and contains none of "refresh", "run", "scan" or "update" | FR-007, SC-004 | example | DONE | `tests/web/staleness.test.js` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` — existing helpers
 
@@ -132,7 +132,7 @@ any later change cannot break them silently.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U33 | `healthText` renders each source health value the administrator page can receive | US3-AS2 | characterization | PENDING | pins `001`'s FR-012 wording |
-| U34 | Both pages expose their pure helpers on one named object, so the sandbox can reach them without a browser | FR-013, FR-016 | example | PENDING | |
+| U34 | Both pages expose their pure helpers on one named object, so the sandbox can reach them without a browser | FR-013, FR-016 | example | DONE | `tests/web/exposure.test.js` |
 
 ## Invariants and edge cases still to place
 

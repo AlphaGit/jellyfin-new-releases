@@ -41,6 +41,7 @@ public sealed record StatusResponse(bool HasCompletedRefresh, DateTimeOffset? La
 public sealed record AdminStatusResponse(
     IReadOnlyList<SourceStatusDto> Sources,
     RunDto? LastRun,
+    DateTimeOffset? ReleasesLastCheckedAt,
     DateTimeOffset? NextRunAt,
     bool IsRunning,
     int LibraryArtists,

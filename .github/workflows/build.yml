@@ -34,7 +34,7 @@ jobs:
 
       # Standard library only: no package.json, nothing to install.
       - name: Test page logic
-        run: node --test tests/web/
+        run: node --test "tests/web/*.test.js"
 
       - name: Upload test results
         if: always()

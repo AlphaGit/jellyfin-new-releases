@@ -52,7 +52,7 @@ only be written test-after, which constitution II forbids. This phase exists **b
 behaviours for that reason, and it is why `/speckit-tdd-plan` reordered the task file.
 
 - [ ] T004 Add `tests/web/load-page.js`: read a page from `src/Web/`, run its `<script>` body in a `node:vm` sandbox with stubs for the browser globals it touches (`document`, `ApiClient`), and return the object of exposed helpers. Standard library only — no `package.json`, no install (research.md R9)
-- [ ] T005 Expose the pure helpers on one named global at the end of the script in `src/Web/user-view.html` (`esc`, `groupOf`, `artistLink`, and `stalenessText` once it exists) and in `src/Web/admin.html` (`esc`, `healthText`), then write a failing test in `tests/web/exposure.test.js` that the loader reaches both pages' objects Behaviors: [U34]
+- [X] T005 Expose the pure helpers on one named global at the end of the script in `src/Web/user-view.html` (`esc`, `groupOf`, `artistLink`, and `stalenessText` once it exists) and in `src/Web/admin.html` (`esc`, `healthText`), then write a failing test in `tests/web/exposure.test.js` that the loader reaches both pages' objects Behaviors: [U34]
 - [ ] T006 Add a `node` ecosystem entry to `.specify/memory/tdd-profile.md`: `single` (`node --test --test-name-pattern "<name>" tests/web/`), `suite` (`node --test tests/web/`), `test_glob`, the exemplar and the `tests/web/load-page.js` helper, so the loop and the audit both find the page side
 - [ ] T007 Add a `node --test tests/web/` step to `.github/workflows/build.yml` after `dotnet test`, with `actions/setup-node@v4` pinned to Node 22 (FR-015)
 
@@ -83,11 +83,11 @@ Both assert the *opposite* of what `002` requires, so both go red before the wir
 
 Test-first, on the harness from Phase 3.
 
-- [ ] T015 [US1] Write failing tests in `tests/web/staleness.test.js` for the showing rules: no instant yields no sentence; an instant later than now counts as zero and yields none; exactly one refresh interval yields none; one second past it yields a sentence Behaviors: [U19] [U20] [U21] [U22]
-- [ ] T016 [US1] Write failing tests in `tests/web/staleness.test.js` for every band and boundary of the unit ladder — 47 h, 48 h, 13 d, 14 d, 60 d, 61 d, 364 d, 365 d — asserting both sides of each changeover Behaviors: [U23] [U24] [U25] [U26] [U27]
-- [ ] T017 [US1] Write a failing test in `tests/web/staleness.test.js` that the sentence reads `Releases last checked <relative time> ago.` and contains none of "refresh", "run", "scan" or "update" Behaviors: [U28]
-- [ ] T018 [US1] Implement `stalenessText(checkedAt, now, intervalHours)` in `src/Web/user-view.html` returning the sentence or nothing, and have the existing `staleness(data)` call it and touch the DOM, until T015–T017 are green Behaviors: [U19] [U20] [U21] [U22] [U23] [U24] [U25] [U26] [U27] [U28]
-- [ ] T019 [US1] Point the empty-state and staleness rendering in `src/Web/user-view.html` at the response fields as they stand after this phase, so the page and the API agree before the Phase 7 rename
+- [X] T015 [US1] Write failing tests in `tests/web/staleness.test.js` for the showing rules: no instant yields no sentence; an instant later than now counts as zero and yields none; exactly one refresh interval yields none; one second past it yields a sentence Behaviors: [U19] [U20] [U21] [U22]
+- [X] T016 [US1] Write failing tests in `tests/web/staleness.test.js` for every band and boundary of the unit ladder — 47 h, 48 h, 13 d, 14 d, 60 d, 61 d, 364 d, 365 d — asserting both sides of each changeover Behaviors: [U23] [U24] [U25] [U26] [U27]
+- [X] T017 [US1] Write a failing test in `tests/web/staleness.test.js` that the sentence reads `Releases last checked <relative time> ago.` and contains none of "refresh", "run", "scan" or "update" Behaviors: [U28]
+- [X] T018 [US1] Implement `stalenessText(checkedAt, now, intervalHours)` in `src/Web/user-view.html` returning the sentence or nothing, and have the existing `staleness(data)` call it and touch the DOM, until T015–T017 are green Behaviors: [U19] [U20] [U21] [U22] [U23] [U24] [U25] [U26] [U27] [U28]
+- [X] T019 [US1] Point the empty-state and staleness rendering in `src/Web/user-view.html` at the response fields as they stand after this phase, so the page and the API agree before the Phase 7 rename
 - [ ] T020 [US1] Story gate: the acceptance behaviours for US1 are green Behaviors: [A1] [A2] [A3] [A4] [A5]
 
 **Checkpoint**: US1 is independently shippable.
@@ -126,8 +126,8 @@ These are characterization behaviours: they capture what the code does today and
 
 ### Administrator view
 
-- [ ] T027 Write failing tests in `tests/Api/AdminControllerTests.cs` that the admin status reports the last run including one that reached no source, reports the same instant the user page reports, and that after a run which completed no fetch the two differ Behaviors: [U16] [U17] [U18]
-- [ ] T028 Add the instant to `AdminStatusResponse` in `src/Api/Dtos.cs` and populate it in `src/Api/AdminController.cs` from the same repository call the user page uses, until T027 is green; leave `sources[].lastSuccessAt` and `lastRun` unchanged Behaviors: [U16] [U17] [U18]
+- [X] T027 Write failing tests in `tests/Api/AdminControllerTests.cs` that the admin status reports the last run including one that reached no source, reports the same instant the user page reports, and that after a run which completed no fetch the two differ Behaviors: [U16] [U17] [U18]
+- [X] T028 Add the instant to `AdminStatusResponse` in `src/Api/Dtos.cs` and populate it in `src/Api/AdminController.cs` from the same repository call the user page uses, until T027 is green; leave `sources[].lastSuccessAt` and `lastRun` unchanged Behaviors: [U16] [U17] [U18]
 - [ ] T029 Show the data age beside the last run in `src/Web/admin.html`, using the wording and unit ladder from `contracts/staleness-line.md`
 
 ### The rename, on a green suite

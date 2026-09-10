@@ -91,6 +91,7 @@ public sealed class AdminController : ControllerBase
         return new AdminStatusResponse(
             sources,
             lastRun is null ? null : new RunDto(lastRun.StartedAt, lastRun.EndedAt, lastRun.Outcome, lastRun.ArtistsProcessed, lastRun.ReleasesFound, lastRun.EditionsFetched, lastRun.Errors),
+            await _artists.GetReleasesLastCheckedAtAsync(configuration.EnabledSourceIds(), cancellationToken).ConfigureAwait(false),
             NextRunAt(worker, now),
             worker is { State: TaskState.Running },
             counts.LibraryArtists,

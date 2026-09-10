@@ -177,3 +177,70 @@ cycle. No new test, no new code.
   (1 failed). Code restored exactly, test green again.
 - green: no production change. Suite -> 189 passed, 0 failed
 - refactor: none needed
+
+## Cycle 13: U16, U17, U18 the administrator sees the run and the data age diverge
+
+- test: `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch`
+  (new; a fetch, then six hours later a run that completed none)
+- red: `ReleasesLastCheckedAt` added to `AdminStatusResponse` and wired to a `null` stub so the red
+  could be an assertion rather than a compile error ->
+  `Assert.Equal() Failure: Expected: 2026-09-06T12:00:00Z / Actual: null` (1 failed)
+- green: `AdminController.GetStatusAsync` reads the same `GetReleasesLastCheckedAtAsync` call the
+  user page uses, satisfying FR-011's "one instant everywhere". Suite -> 190 passed, 0 failed
+- refactor: none needed
+- note: one test for three list rows — they are three assertions about one response.
+
+## Cycle 14: U34 both pages expose their pure helpers
+
+- test: `tests/web/exposure.test.js` (new, the first page-side test)
+- red: `node --test "tests/web/*.test.js"`
+  -> `user-view.html exposed no NewReleasesInternals; see tests/web/load-page.js` (2 failed)
+- green: each page assigns its helpers to `globalThis.NewReleasesInternals` as the first statement
+  of its IIFE, before any DOM access; function declarations hoist, so they are all defined.
+  Page suite -> 2 passed, 0 failed
+- refactor: none needed
+- note: **the profile and CI had the wrong command.** `node --test tests/web` and
+  `node --test tests/web/` both resolve the path as a module (`MODULE_NOT_FOUND`); a directory is
+  only scanned when no path is given. Corrected to the glob `node --test "tests/web/*.test.js"`
+  in `.specify/memory/tdd-profile.md` and `.github/workflows/build.yml`, and verified by running
+  the CI command exactly as written. Caught because this was the first cycle to run it.
+
+## Cycle 15: U19, U20, U21, U22 when there is a sentence at all
+
+- test: `tests/web/staleness.test.js` (new): no instant, an instant in the future, exactly one
+  refresh interval, one second past it
+- red: `node --test "tests/web/*.test.js"` -> `stalenessText is not a function` (4 failed). A
+  missing symbol is not a valid red, so a stub returning null was added; re-run ->
+  `not ok - an age one second past the interval yields a sentence / Expected "actual" to be strictly unequal to: null` (1 failed)
+- green: `stalenessText(checkedAt, now, intervalHours)` in `Web/user-view.html` — the gating only,
+  with hours as the single unit. Page suite -> 6 passed, 0 failed
+- refactor: none needed
+- note: `tests/web/exposure.test.js` gained `stalenessText` in its expected key list. An added
+  expectation, not a weakened one.
+
+## Cycle 16: U23, U24, U25, U26, U27 the unit ladder
+
+- test: `tests/web/staleness.test.js` extended: 47 h, 48 h, 13 d, 14 d, 60 d, 61 d, 364 d, 365 d
+  and 700 d — both sides of every changeover
+- red: `node --test "tests/web/*.test.js"` ->
+  `not ok - 48 hours renders in days / expected: 'Releases last checked 2 days ago.' / actual: 'Releases last checked 48 hours ago.'` (7 failed)
+- green: `relativeAge(ageMs)` extracted, stepping hours -> days -> weeks -> months -> `over a year`.
+  Page suite -> 14 passed, 0 failed
+- refactor: `relativeAge` extracted from `stalenessText` as part of the green step, so the sentence
+  and the unit choice are separate concerns
+- note: **the first implementation rounded and two tests failed** — 60 days gave "9 weeks" and 364
+  days "12 months", the latter sitting absurdly next to "over a year" at 365. The tests were right
+  and the implementation was wrong, so the implementation changed to floor: "checked 8 weeks ago"
+  should mean at least eight weeks have passed. The tests were not touched.
+
+## Cycle 17: U28 the sentence is about the releases, not the job
+
+- test: `tests/web/staleness.test.js` extended: the exact sentence, and none of "refresh", "run",
+  "scan" or "update" in it
+- red: passed on first run — cycle 16 already produced this wording.
+- deliberate mutant: the sentence reverted to `001`'s `Last refreshed … ago.` -> 8 failed,
+  including this one. Restored exactly, tests green again.
+- green: no production change. Page suite -> 15 passed, 0 failed
+- refactor: `staleness(data)` reduced to showing what `stalenessText` decides, so every rule now
+  lives where a test can reach it. The DOM half has no test — no runner reaches it — and is
+  checked by hand in `quickstart.md`.

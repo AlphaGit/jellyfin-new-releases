@@ -103,6 +103,26 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal([("musicbrainz", "ambiguous (score 100 vs 97)")], unmatched.Sources.Select(s => (s.Source, s.Reason)));
     }
 
+    /// <summary>002 FR-009/SC-005: an operator sees the run and the data age side by side, and sees them diverge.</summary>
+    [Fact]
+    public async Task Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch()
+    {
+        var fetchedAt = _clock.GetUtcNow();
+        var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:daft punk", Guid.NewGuid(), "Daft Punk", null, [Library], []), CancellationToken.None);
+        await _db.Artists.SetFetchOutcomeAsync(artist, "musicbrainz", FetchOutcome.Complete, 0, null, fetchedAt, CancellationToken.None);
+
+        _clock.Advance(TimeSpan.FromHours(6));
+        var run = await _db.SourceState.StartRunAsync(CancellationToken.None);
+        await _db.SourceState.FinishRunAsync(run, 0, 0, 0, 0, "Completed", CancellationToken.None);
+        RefreshWorkerIs(TaskState.Idle);
+
+        var status = (await Controller().GetStatusAsync(CancellationToken.None)).Value!;
+
+        Assert.Equal(_clock.GetUtcNow(), status.LastRun!.EndedAt);
+        Assert.Equal(fetchedAt, status.ReleasesLastCheckedAt);
+        Assert.NotEqual(status.LastRun.EndedAt, status.ReleasesLastCheckedAt);
+    }
+
     private async Task<long> SeedReleaseDataAsync()
     {
         var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:daft punk", Guid.NewGuid(), "Daft Punk", null, [Library], []), CancellationToken.None);

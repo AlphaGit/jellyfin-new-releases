@@ -37,11 +37,12 @@ stacks:
     runner: node:test
     # Node's built-in runner. No package.json, no install step: `node:test`, `node:assert`
     # and `node:vm` are standard library, so the suite still passes with no network.
-    single: 'node --test --test-name-pattern "{name}" tests/web/'
+    # The path must be a glob, not a directory: `node --test tests/web` resolves it as a module.
+    single: 'node --test --test-name-pattern "{name}" "tests/web/*.test.js"'
     file: 'node --test tests/web/{file}'
-    suite: node --test tests/web/
-    watch: 'node --test --watch tests/web/'
-    coverage: 'node --test --experimental-test-coverage tests/web/'
+    suite: 'node --test "tests/web/*.test.js"'
+    watch: 'node --test --watch "tests/web/*.test.js"'
+    coverage: 'node --test --experimental-test-coverage "tests/web/*.test.js"'
     mutation: null
     acceptance: null
     property: null

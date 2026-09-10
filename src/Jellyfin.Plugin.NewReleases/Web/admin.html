@@ -78,6 +78,10 @@
     <script type="text/javascript">
         (function () {
             'use strict';
+
+            // Exposed for tests/web/*: see the note in user-view.html.
+            globalThis.NewReleasesInternals = { esc: esc, healthText: healthText };
+
             var PLUGIN_ID = 'b8a15db8-e368-42c4-9048-390faf0094db';
             var API = 'Plugins/NewReleases/api/admin/';
             var page = document.querySelector('#newreleasesConfigPage');
