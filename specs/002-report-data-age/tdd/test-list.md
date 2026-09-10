@@ -37,7 +37,7 @@ entry point is the page's own exported logic, reached through the sandbox loader
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| A1 | A catalogue fetch completes at 03:00; a later refresh at 15:00 completes none → at 15:05 the list response reports the 03:00 instant, not the 15:00 run | US1-AS1 | example | PENDING | |
+| A1 | A catalogue fetch completes at 03:00; a later refresh at 15:00 completes none → at 15:05 the list response reports the 03:00 instant, not the 15:00 run | US1-AS1 | example | RED | `Acceptance/ConfigureAndRunTests.cs::A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge` |
 | A2 | Data older than one refresh interval → the page produces a staleness sentence rather than nothing | US1-AS2 | example | PENDING | |
 | A3 | Data confirmed within one refresh interval → the page produces no staleness sentence | US1-AS3 | example | PENDING | |
 | A4 | No enabled source has ever completed a fetch → the list response reports no stored releases and no instant | US1-AS4 | example | PENDING | |
@@ -62,9 +62,9 @@ Grouped by the component from `plan.md` that owns them.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U1 | Returns the newest `last_complete_at` across all artists at the enabled sources | FR-002 | example | PENDING | |
-| U2 | A completed fetch at a source outside the enabled set is ignored, even when it is the newest | FR-002, EC-disabled | example | PENDING | |
-| U3 | An empty enabled set returns no instant | FR-002, EC-all-disabled | example | PENDING | |
+| U1 | Returns the newest `last_complete_at` across all artists at the enabled sources | FR-002 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetchAcrossArtists` |
+| U2 | A completed fetch at a source outside the enabled set is ignored, even when it is the newest | FR-002, EC-disabled | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IgnoresASourceThatIsNotEnabled_EvenWhenItIsTheNewest` |
+| U3 | An empty enabled set returns no instant | FR-002, EC-all-disabled | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_WithNoEnabledSource_IsNothing` |
 | U4 | No artist-and-source pair has ever completed a fetch → returns no instant | FR-008, EC-no-fetch | example | PENDING | |
 | U5 | A `Partial` outcome leaves the value where the last `Complete` left it | FR-003 | example | PENDING | |
 | U6 | A `Failed` outcome leaves the value where the last `Complete` left it | FR-003 | example | PENDING | |

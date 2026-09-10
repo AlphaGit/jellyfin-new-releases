@@ -130,6 +130,45 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
             counts.Unmatched.SelectMany(u => u.Sources.OrderBy(s => s.Source).Select(s => (u.JellyfinId, u.Name, s.Source, s.Reason))));
     }
 
+    private static readonly HashSet<string> BothSources = ["musicbrainz", "deezer"];
+
+    private async Task CompleteFetchAsync(long artistId, string source, DateTimeOffset at)
+        => await _db.Artists.SetFetchOutcomeAsync(artistId, source, FetchOutcome.Complete, 0, null, at, CancellationToken.None);
+
+    [Fact]
+    public async Task GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetchAcrossArtists()
+    {
+        var older = new DateTimeOffset(2026, 9, 1, 3, 0, 0, TimeSpan.Zero);
+        var newer = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
+        var one = await _db.Artists.UpsertAsync(Artist("name:one", "One"), CancellationToken.None);
+        var two = await _db.Artists.UpsertAsync(Artist("name:two", "Two"), CancellationToken.None);
+        await CompleteFetchAsync(one, "musicbrainz", older);
+        await CompleteFetchAsync(two, "musicbrainz", newer);
+
+        Assert.Equal(newer, await _db.Artists.GetReleasesLastCheckedAtAsync(BothSources, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetReleasesLastCheckedAtAsync_IgnoresASourceThatIsNotEnabled_EvenWhenItIsTheNewest()
+    {
+        var older = new DateTimeOffset(2026, 9, 1, 3, 0, 0, TimeSpan.Zero);
+        var newer = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
+        var id = await _db.Artists.UpsertAsync(Artist("name:one", "One"), CancellationToken.None);
+        await CompleteFetchAsync(id, "musicbrainz", older);
+        await CompleteFetchAsync(id, "deezer", newer);
+
+        Assert.Equal(older, await _db.Artists.GetReleasesLastCheckedAtAsync(new HashSet<string> { "musicbrainz" }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetReleasesLastCheckedAtAsync_WithNoEnabledSource_IsNothing()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:one", "One"), CancellationToken.None);
+        await CompleteFetchAsync(id, "musicbrainz", new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero));
+
+        Assert.Null(await _db.Artists.GetReleasesLastCheckedAtAsync(new HashSet<string>(), CancellationToken.None));
+    }
+
     [Fact]
     public async Task BeginPassAsync_KeepsTheStartingRunAcrossPartialOutcomes_ForgetsItOnComplete()
     {

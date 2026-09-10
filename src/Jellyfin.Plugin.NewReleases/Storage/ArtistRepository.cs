@@ -201,6 +201,27 @@ public sealed class ArtistRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// The newest instant at which a catalogue fetch completed fully for any artist at a currently enabled source
+    /// (002 FR-002). This is the age of the data the list shows, as distinct from when a refresh last ran: a run
+    /// that completes no fetch writes no <c>last_complete_at</c>, so it cannot move this value.
+    /// An empty enabled set yields no rows, and therefore no instant.
+    /// </summary>
+    public async Task<DateTimeOffset?> GetReleasesLastCheckedAtAsync(ISet<string> enabledSources, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        var placeholders = enabledSources.Select((_, i) => "@s" + i.ToString(CultureInfo.InvariantCulture)).ToArray();
+        command.CommandText = $"SELECT MAX(last_complete_at) FROM artist_source WHERE source IN ({string.Join(", ", placeholders)})";
+        foreach (var (placeholder, source) in placeholders.Zip(enabledSources))
+        {
+            command.Parameters.AddWithValue(placeholder, source);
+        }
+
+        var value = await command.ExecuteScalarAsync(ct).ConfigureAwait(false);
+        return value is string text ? DateTimeOffset.Parse(text, CultureInfo.InvariantCulture) : null;
+    }
+
     /// <summary>After Purge release data (FR-013): every open paging pass is forgotten so the next run refetches from the start.</summary>
     public async Task ResetResumeOffsetsAsync(CancellationToken ct)
     {

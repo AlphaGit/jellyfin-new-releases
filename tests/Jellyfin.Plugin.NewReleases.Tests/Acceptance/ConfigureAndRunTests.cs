@@ -1,5 +1,6 @@
 using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.ScheduledTasks;
+using Jellyfin.Plugin.NewReleases.Tests.Support;
 using MediaBrowser.Model.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
@@ -105,7 +106,9 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
 
         Assert.Equal(callsWhileReachable, _rig.Harness.Http.CallCount); // no source was contacted
         Assert.Equal(["Alive 2007", "Human After All"], list.Items.Select(i => i.Title));
-        Assert.Equal((true, _rig.Harness.Clock.GetUtcNow()), (list.HasCompletedRefresh, list.LastRefreshedAt));
+        // 002 FR-003: the second run completed no catalogue fetch, so the reported instant stays
+        // at the first run's fetch. Before 002 this asserted the second run's end instead.
+        Assert.Equal((true, SourceHarness.Start), (list.HasCompletedRefresh, list.LastRefreshedAt));
     }
 
     /// <summary>MusicBrainz fails on every call (four failures already on record from earlier runs), Deezer works: the failing source is isolated.</summary>
