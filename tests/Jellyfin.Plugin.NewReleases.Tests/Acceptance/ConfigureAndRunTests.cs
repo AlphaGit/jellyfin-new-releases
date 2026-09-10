@@ -82,6 +82,32 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         Assert.Equal(storedBefore, await _rig.Harness.Db.ScalarAsync<long>("SELECT COUNT(*) FROM release"));
     }
 
+    /// <summary>SC-007: with no source reachable the list still shows the last stored data and reports when it was last refreshed.</summary>
+    [Fact]
+    public async Task A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge()
+    {
+        DeezerScenario();
+        await _rig.RunAsync();
+        Assert.Equal(["Alive 2007", "Human After All"], (await _rig.ListAsync()).Items.Select(i => i.Title));
+        var callsWhileReachable = _rig.Harness.Http.CallCount;
+
+        foreach (var source in new[] { "musicbrainz", "deezer" })
+        {
+            for (var i = 0; i < Jellyfin.Plugin.NewReleases.Sources.SourceLimits.FailureThreshold; i++)
+            {
+                await _rig.Harness.Db.SourceState.RecordFailureAsync(source, "503", Jellyfin.Plugin.NewReleases.Sources.SourceLimits.FailureThreshold, Jellyfin.Plugin.NewReleases.Sources.SourceLimits.Cooldown, CancellationToken.None);
+            }
+        }
+
+        _rig.Harness.Clock.Advance(TimeSpan.FromHours(1)); // still inside the 6 h cooldown
+        await _rig.RunAsync();
+        var list = await _rig.ListAsync();
+
+        Assert.Equal(callsWhileReachable, _rig.Harness.Http.CallCount); // no source was contacted
+        Assert.Equal(["Alive 2007", "Human After All"], list.Items.Select(i => i.Title));
+        Assert.Equal((true, _rig.Harness.Clock.GetUtcNow()), (list.HasCompletedRefresh, list.LastRefreshedAt));
+    }
+
     /// <summary>MusicBrainz fails on every call (four failures already on record from earlier runs), Deezer works: the failing source is isolated.</summary>
     [Fact]
     public async Task A12_MusicBrainz503OnEveryCall_WhileDeezerSucceeds_StatusShowsCoolingDownWithLastError_DeezerReleasesListed()

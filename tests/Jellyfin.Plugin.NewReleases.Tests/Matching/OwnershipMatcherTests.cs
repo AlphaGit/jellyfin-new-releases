@@ -97,6 +97,19 @@ public class OwnershipMatcherTests
         Assert.Equal(42L, result.EditionId);
     }
 
+    /// <summary>U131: `Incomplete` starts at the first missing track. `U98` sits at none missing and `U99` at two; this is the boundary between them.</summary>
+    [Fact]
+    public void Decide_OneMissingTrack_IsIncompleteNamingThatTrack()
+    {
+        var ten = Enumerable.Range(1, 10).Select(i => $"track {i}").ToArray();
+        var album = Album("Ten Tracks", tracks: ten.Take(9).ToArray());
+
+        var result = OwnershipMatcher.Decide(Release("ten tracks"), [Edition(42, "musicbrainz", "rel-10", ten)], [album]);
+
+        Assert.Equal(OwnershipState.Incomplete, result.State);
+        Assert.Equal(["track 10"], result.MissingTracks);
+    }
+
     [Fact]
     public void Decide_EditionChoice_MostMatchedThenFewestMissingThenMusicBrainzThenLowestId()
     {

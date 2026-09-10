@@ -32,14 +32,9 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
 
     private const string ArtistSearch = @"musicbrainz\.org/ws/2/artist\?query=";
 
-    private static string Search(params (string Name, int Score)[] artists)
-        => System.Text.Json.JsonSerializer.Serialize(new
-        {
-            created = "2026-09-06T12:00:00Z",
-            count = artists.Length,
-            offset = 0,
-            artists = artists.Select((a, i) => new { id = $"mbid-{i + 1}", name = a.Name, score = a.Score }),
-        });
+    /// <summary>Serves a search body with the given (id, name, score) rows, for the score rules the recorded fixtures do not cover.</summary>
+    private void SearchReturns(params (string Id, string Name, int Score)[] artists)
+        => _h.Http.OnUrlPattern(ArtistSearch, System.Net.HttpStatusCode.OK, SourceJson.MusicBrainz.Search(artists));
 
     [Fact]
     public async Task MatchArtistAsync_ConfidentTopResult_IsMatched()
@@ -65,7 +60,28 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
     [Fact]
     public async Task MatchArtistAsync_RunnerUpSixPointsBehind_IsMatched()
     {
-        _h.Http.OnUrlPattern(ArtistSearch, System.Net.HttpStatusCode.OK, Search(("Blur", 90), ("Blur Tribute", 84)));
+        SearchReturns(("mbid-1", "Blur", 90), ("mbid-2", "Blur Tribute", 84));
+
+        Assert.Equal(ArtistMatch.Matched("mbid-1"), await Source().MatchArtistAsync(Artist("Blur"), CancellationToken.None));
+    }
+
+    /// <summary>U130: the ambiguity gap is inclusive, so a runner-up exactly 5 points behind is still ambiguous. `U76` sits at 4 points and `U77` at 6; this is the boundary between them.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_RunnerUpExactlyFivePointsBehind_IsUnmatchedAsAmbiguous()
+    {
+        SearchReturns(("mbid-1", "Blur", 90), ("mbid-2", "Blur Tribute", 85));
+
+        var match = await Source().MatchArtistAsync(Artist("Blur"), CancellationToken.None);
+
+        Assert.Equal(MatchStatus.Unmatched, match.Status);
+        Assert.Equal("ambiguous (score 90 vs 85)", match.Reason);
+    }
+
+    /// <summary>U129: 85 is the inclusive minimum, so a top score of exactly 85 matches. `U78` sits at 84; this is the boundary above it.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_TopScoreExactly85_IsMatched()
+    {
+        SearchReturns(("mbid-1", "Blur", 85), ("mbid-2", "Blur Tribute", 79));
 
         Assert.Equal(ArtistMatch.Matched("mbid-1"), await Source().MatchArtistAsync(Artist("Blur"), CancellationToken.None));
     }
@@ -124,6 +140,19 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
 
         Assert.Equal((100, 110), (first.NextOffset, first.Total));
         Assert.Equal(((int?)null, 4), (last.NextOffset, last.Items.Count));
+    }
+
+    /// <summary>U132: a page past the end of the catalogue yields no items and stops the paging pass.</summary>
+    [Fact]
+    public async Task FetchCataloguePageAsync_EmptyPage_YieldsNoItemsAndStopsPaging()
+    {
+        _h.Fixture(ReleaseBrowse, "musicbrainz/releases_empty.json"); // offset 100 000, release-count 296, no releases
+
+        var page = await Source().FetchCataloguePageAsync(DaftPunkMbid, 100_000, CancellationToken.None);
+
+        Assert.Empty(page.Items);
+        Assert.Null(page.NextOffset);
+        Assert.Equal(296, page.Total);
     }
 
     [Fact]

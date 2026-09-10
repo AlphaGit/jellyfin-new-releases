@@ -17,7 +17,7 @@ internal static class FixtureLoader
     /// Reads a fixture file as a UTF-8 string.
     /// </summary>
     /// <param name="relativePath">
-    /// Path relative to the <c>fixtures/</c> root, e.g. <c>"musicbrainz/search_multi_score.json"</c>.
+    /// Path relative to the <c>fixtures/</c> root, e.g. <c>"musicbrainz/artist_search_confident.json"</c>.
     /// </param>
     public static string LoadText(string relativePath)
         => File.ReadAllText(ResolvePath(relativePath), Encoding.UTF8);

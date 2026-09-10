@@ -11,15 +11,17 @@ internal sealed class SourceHarness : IAsyncDisposable
 {
     public static readonly DateTimeOffset Start = new(2026, 9, 6, 12, 0, 0, TimeSpan.Zero);
 
-    private SourceHarness(TestDatabase db)
+    private SourceHarness(TestDatabase db, TimeProviderStub clock)
     {
         Db = db;
+        Clock = clock;
         var factory = Substitute.For<IHttpClientFactory>();
         factory.CreateClient(SourceHttpClient.ClientName).Returns(_ => new HttpClient(Http, disposeHandler: false));
         HttpClient = new SourceHttpClient(factory, db.SourceState, Clock, NullLogger<SourceHttpClient>.Instance, () => Configuration);
     }
 
-    public TimeProviderStub Clock { get; } = new(Start);
+    /// <summary>The one clock in the harness: the repositories, the HTTP policy client, the sources and the task all read it.</summary>
+    public TimeProviderStub Clock { get; }
 
     public StubHttpMessageHandler Http { get; } = new();
 
@@ -32,7 +34,7 @@ internal sealed class SourceHarness : IAsyncDisposable
     public static async Task<SourceHarness> CreateAsync()
     {
         var clock = new TimeProviderStub(Start);
-        return new SourceHarness(await TestDatabase.CreateAsync(clock));
+        return new SourceHarness(await TestDatabase.CreateAsync(clock), clock);
     }
 
     /// <summary>Serves a recorded fixture (path under <c>tests/fixtures/</c>) for URLs matching the pattern.</summary>

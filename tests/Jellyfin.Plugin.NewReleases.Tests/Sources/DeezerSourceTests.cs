@@ -119,6 +119,20 @@ public sealed class DeezerSourceTests : IAsyncLifetime
         Assert.Equal("too long", edition.NormalizedTrackTitles[13]);
     }
 
+    /// <summary>U133: the common case — an album whose whole track list fits one page, so there is no `next` to follow.</summary>
+    [Fact]
+    public async Task FetchEditionsAsync_TracksOnASinglePage_NeedNoFurtherRequest()
+    {
+        _h.Fixture(@"api\.deezer\.com/album/302127$", "deezer/album.json");
+        _h.Fixture(@"api\.deezer\.com/album/302127/tracks\?", "deezer/album_tracks.json"); // 14 tracks, no next
+
+        var edition = Assert.Single(await Source().FetchEditionsAsync("302127", CancellationToken.None));
+
+        Assert.Equal(("302127", "Discovery", 14), (edition.SourceEditionId, edition.Title, edition.NormalizedTrackTitles.Count));
+        Assert.Equal("harder better faster stronger", edition.NormalizedTrackTitles[3]);
+        Assert.Equal(2, _h.RequestedUrls.Count); // the album, then its one page of tracks
+    }
+
     [Fact]
     public async Task ErrorEnvelope_QuotaCode4IsRetriedAsTransient_OtherCodesThrow()
     {

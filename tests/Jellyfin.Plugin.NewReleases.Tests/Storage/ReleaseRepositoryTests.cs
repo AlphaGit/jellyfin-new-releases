@@ -282,7 +282,7 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         }
     }
 
-    /// <summary>SC-005 target is 500 ms on the development machine; asserted at 2 000 ms so CI runners have headroom.</summary>
+    /// <summary>SC-005: the list request completes in under 500 ms. Measured at about 3 ms here, so the criterion itself is the assertion.</summary>
     [Fact]
     public async Task ListAsync_FiveHundredStoredReleases_ListsWithinBudget()
     {
@@ -293,8 +293,8 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         var rows = await _db.Releases.ListAsync(DefaultFilter, CancellationToken.None);
         watch.Stop();
 
-        _output.WriteLine($"ListAsync with 500 releases: {watch.ElapsedMilliseconds} ms (target 500 ms, asserted 2000 ms)");
+        _output.WriteLine($"ListAsync with 500 releases: {watch.ElapsedMilliseconds} ms (SC-005 budget 500 ms)");
         Assert.Equal(500, rows.Count);
-        Assert.InRange(watch.ElapsedMilliseconds, 0, 2_000);
+        Assert.InRange(watch.ElapsedMilliseconds, 0, 500);
     }
 }
