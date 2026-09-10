@@ -69,3 +69,30 @@ failed before the implementation.
   `git checkout --` intended to revert a mutant reverted the whole file and destroyed cycles 1 and
   2's implementation; it was rewritten identically and the suite re-run green. Recorded here rather
   than hidden: the evidence for those two cycles is this log, not the commit history.
+
+## Cycle 4: U4 no fetch ever completed yields no instant
+
+- test: `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_WithNoFetchEverCompleted_IsNothing` (new)
+- red: passed on first run — an artist matched but never fetched has a NULL `last_complete_at`,
+  so `MAX` is NULL.
+- deliberate mutant: a null scalar mapped to `DateTimeOffset.MinValue` instead of null ->
+  `Assert.Null() Failure: Expected: null / Actual: 0001-01-01T00:00:00Z` (1 failed). Code restored
+  exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 181 passed, 1 failed (A1, expected)
+- refactor: none needed
+
+## Cycle 5: U5 and U6 an outcome other than Complete leaves the value alone
+
+- test: `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_AnOutcomeOtherThanComplete_LeavesTheValueWhereTheLastCompleteLeftIt`
+  (new, Theory: `Partial`, `Failed`)
+- red: passed on first run — `SetFetchOutcomeAsync` writes `@completeAt` as NULL unless the
+  outcome is `Complete`, and the upsert's `COALESCE` keeps the previous value.
+- deliberate mutant: `@completeAt` bound to `now` regardless of outcome ->
+  `Assert.Equal() Failure: Expected: 2026-09-01T03:00:00Z / Actual: 2026-09-06T03:00:00Z`
+  (both theory rows failed). Code restored exactly (`git diff` empty), tests green again.
+- green: no production change. `FR-003` holds because of a property the schema already had, not
+  because of new code — which is why it needed pinning. Suite -> 183 passed, 1 failed (A1, expected)
+- refactor: none needed
+- note: `U5` and `U6` were driven as **one** cycle, not two. They are one rule ("an outcome other
+  than Complete does not move the value") with two inputs, so staging them as separate cycles
+  would have been theatre. Both ids are marked DONE against the one Theory.

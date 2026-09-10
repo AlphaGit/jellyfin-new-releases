@@ -170,6 +170,30 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetReleasesLastCheckedAtAsync_WithNoFetchEverCompleted_IsNothing()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:one", "One"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Matched("mbid-1"), CancellationToken.None);
+
+        Assert.Null(await _db.Artists.GetReleasesLastCheckedAtAsync(BothSources, CancellationToken.None));
+    }
+
+    [Theory]
+    [InlineData(FetchOutcome.Partial)]
+    [InlineData(FetchOutcome.Failed)]
+    public async Task GetReleasesLastCheckedAtAsync_AnOutcomeOtherThanComplete_LeavesTheValueWhereTheLastCompleteLeftIt(FetchOutcome later)
+    {
+        var completed = new DateTimeOffset(2026, 9, 1, 3, 0, 0, TimeSpan.Zero);
+        var afterwards = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
+        var id = await _db.Artists.UpsertAsync(Artist("name:one", "One"), CancellationToken.None);
+        await CompleteFetchAsync(id, "musicbrainz", completed);
+
+        await _db.Artists.SetFetchOutcomeAsync(id, "musicbrainz", later, 100, "boom", afterwards, CancellationToken.None);
+
+        Assert.Equal(completed, await _db.Artists.GetReleasesLastCheckedAtAsync(BothSources, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task BeginPassAsync_KeepsTheStartingRunAcrossPartialOutcomes_ForgetsItOnComplete()
     {
         var now = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);

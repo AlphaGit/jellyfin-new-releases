@@ -65,9 +65,9 @@ Grouped by the component from `plan.md` that owns them.
 | U1 | Returns the newest `last_complete_at` across all artists at the enabled sources | FR-002 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetchAcrossArtists` |
 | U2 | A completed fetch at a source outside the enabled set is ignored, even when it is the newest | FR-002, EC-disabled | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IgnoresASourceThatIsNotEnabled_EvenWhenItIsTheNewest` |
 | U3 | An empty enabled set returns no instant | FR-002, EC-all-disabled | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_WithNoEnabledSource_IsNothing` |
-| U4 | No artist-and-source pair has ever completed a fetch → returns no instant | FR-008, EC-no-fetch | example | PENDING | |
-| U5 | A `Partial` outcome leaves the value where the last `Complete` left it | FR-003 | example | PENDING | |
-| U6 | A `Failed` outcome leaves the value where the last `Complete` left it | FR-003 | example | PENDING | |
+| U4 | No artist-and-source pair has ever completed a fetch → returns no instant | FR-008, EC-no-fetch | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_WithNoFetchEverCompleted_IsNothing` |
+| U5 | A `Partial` outcome leaves the value where the last `Complete` left it | FR-003 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_AnOutcomeOtherThanComplete_LeavesTheValueWhereTheLastCompleteLeftIt` |
+| U6 | A `Failed` outcome leaves the value where the last `Complete` left it | FR-003 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_AnOutcomeOtherThanComplete_LeavesTheValueWhereTheLastCompleteLeftIt` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Storage/ReleaseRepository.cs`
 

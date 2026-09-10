@@ -40,8 +40,8 @@ when it can read those ids, and `/speckit-implement` writes anything still untic
 
 **Purpose**: the one read every story depends on. Nothing after this can start until it is green.
 
-- [ ] T002 Write failing tests in `tests/Storage/ArtistRepositoryTests.cs` for `GetReleasesLastCheckedAtAsync`: newest value across artists; a completed fetch at a source outside the enabled set ignored even when newest; empty enabled set returns nothing; no pair ever completed returns nothing; a `Partial` and a `Failed` outcome each leave the value where the last `Complete` left it Behaviors: [U1] [U2] [U3] [U4] [U5] [U6]
-- [ ] T003 Implement `ArtistRepository.GetReleasesLastCheckedAtAsync(ISet<string> enabledSources, CancellationToken)` in `src/Storage/ArtistRepository.cs` as `SELECT MAX(last_complete_at) FROM artist_source WHERE source IN (…)` until T002 is green — per `data-model.md` "Read-model additions" Behaviors: [U1] [U2] [U3] [U4] [U5] [U6]
+- [X] T002 Write failing tests in `tests/Storage/ArtistRepositoryTests.cs` for `GetReleasesLastCheckedAtAsync`: newest value across artists; a completed fetch at a source outside the enabled set ignored even when newest; empty enabled set returns nothing; no pair ever completed returns nothing; a `Partial` and a `Failed` outcome each leave the value where the last `Complete` left it Behaviors: [U1] [U2] [U3] [U4] [U5] [U6]
+- [X] T003 Implement `ArtistRepository.GetReleasesLastCheckedAtAsync(ISet<string> enabledSources, CancellationToken)` in `src/Storage/ArtistRepository.cs` as `SELECT MAX(last_complete_at) FROM artist_source WHERE source IN (…)` until T002 is green — per `data-model.md` "Read-model additions" Behaviors: [U1] [U2] [U3] [U4] [U5] [U6]
 
 ---
 
