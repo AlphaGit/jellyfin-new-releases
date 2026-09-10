@@ -83,6 +83,64 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         Assert.Equal(storedBefore, await _rig.Harness.Db.ScalarAsync<long>("SELECT COUNT(*) FROM release"));
     }
 
+    /// <summary>002 A5 / FR-008: a purge returns the page to the empty state, though runs are still on record.</summary>
+    [Fact]
+    public async Task A5_AfterAPurge_TheListReportsNoStoredReleasesAndNoInstant()
+    {
+        DeezerScenario();
+        await _rig.RunAsync();
+        var afterRun = await _rig.ListAsync();
+        Assert.True(afterRun.HasCompletedRefresh);
+        Assert.NotNull(afterRun.LastRefreshedAt);
+
+        Assert.IsType<NoContentResult>(await _rig.AdminController().PurgeAsync(CancellationToken.None));
+        var afterPurge = await _rig.ListAsync();
+
+        Assert.Empty(afterPurge.Items);
+        Assert.False(afterPurge.HasCompletedRefresh);
+        Assert.Null(afterPurge.LastRefreshedAt);
+        Assert.Equal(1L, await _rig.Harness.Db.ScalarAsync<long>("SELECT COUNT(*) FROM refresh_run")); // the run is still on record
+    }
+
+    /// <summary>002 A6 / SC-006: one source down, the other working — the age counts from the fetch that completed.</summary>
+    [Fact]
+    public async Task A6_OneSourceCoolingDownWhileTheOtherCompletesAFetch_TheAgeCountsFromThatFetch()
+    {
+        const string mbid = "056e4f3e-d505-4dad-8ec1-d04f521cbb56";
+        _rig.Library_.Artist("Daft Punk", mbid);
+        _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.DeezerArtist(27, "Daft Punk", (2, "Homework", "album", "1997-01-16"), (3, "Alive 2007", "album", "2007-11-16")).DeezerAlbum(2, "Homework", Homework);
+        for (var i = 0; i < Jellyfin.Plugin.NewReleases.Sources.SourceLimits.FailureThreshold; i++)
+        {
+            await _rig.Harness.Db.SourceState.RecordFailureAsync("musicbrainz", "503", Jellyfin.Plugin.NewReleases.Sources.SourceLimits.FailureThreshold, Jellyfin.Plugin.NewReleases.Sources.SourceLimits.Cooldown, CancellationToken.None);
+        }
+
+        await _rig.RunAsync();
+        var list = await _rig.ListAsync();
+
+        Assert.Equal(["Alive 2007"], list.Items.Select(i => i.Title));
+        Assert.Equal(SourceHarness.Start, list.LastRefreshedAt); // the Deezer fetch, not the cooling-down source
+        Assert.InRange(list.LastRefreshedAt!.Value, _rig.Harness.Clock.GetUtcNow().AddHours(-list.RefreshIntervalHours), _rig.Harness.Clock.GetUtcNow());
+    }
+
+    /// <summary>002 A7 / FR-002: with every source switched off nothing can confirm the data, so no age is reported.</summary>
+    [Fact]
+    public async Task A7_WithEverySourceDisabled_NoAgeIsReportedWhileTheListStillShowsWhatIsStored()
+    {
+        DeezerScenario();
+        await _rig.RunAsync();
+        Assert.Equal(SourceHarness.Start, (await _rig.ListAsync()).LastRefreshedAt);
+
+        _rig.Harness.Configuration.DeezerEnabled = false;
+        _rig.Harness.Configuration.MusicBrainzEnabled = false;
+        _rig.Harness.Clock.Advance(TimeSpan.FromDays(3));
+        await _rig.RunAsync();
+        var list = await _rig.ListAsync();
+
+        Assert.Equal(["Alive 2007", "Human After All"], list.Items.Select(i => i.Title)); // still shown
+        Assert.Null(list.LastRefreshedAt); // no enabled source can confirm them any more
+    }
+
     /// <summary>SC-007: with no source reachable the list still shows the last stored data and reports when it was last refreshed.</summary>
     [Fact]
     public async Task A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge()

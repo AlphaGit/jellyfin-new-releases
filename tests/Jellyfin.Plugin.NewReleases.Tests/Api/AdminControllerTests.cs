@@ -110,6 +110,8 @@ public sealed class AdminControllerTests : IAsyncLifetime
         var fetchedAt = _clock.GetUtcNow();
         var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:daft punk", Guid.NewGuid(), "Daft Punk", null, [Library], []), CancellationToken.None);
         await _db.Artists.SetFetchOutcomeAsync(artist, "musicbrainz", FetchOutcome.Complete, 0, null, fetchedAt, CancellationToken.None);
+        // A stored release, because the age is reported only for data that exists (U35).
+        await _db.Releases.UpsertFromSourceAsync(artist, "musicbrainz", new CatalogueItem("rg-1", "Discovery", "https://musicbrainz.org/release-group/rg-1", ReleaseType.Album, [], "2001-03-12"), 1, fetchedAt, CancellationToken.None);
 
         _clock.Advance(TimeSpan.FromHours(6));
         var run = await _db.SourceState.StartRunAsync(CancellationToken.None);
@@ -121,6 +123,20 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal(_clock.GetUtcNow(), status.LastRun!.EndedAt);
         Assert.Equal(fetchedAt, status.ReleasesLastCheckedAt);
         Assert.NotEqual(status.LastRun.EndedAt, status.ReleasesLastCheckedAt);
+    }
+
+    /// <summary>002 U35 (FR-008, FR-011): with nothing stored there is no age to report, on either view.</summary>
+    [Fact]
+    public async Task Status_WithNothingStored_ReportsNoInstantEitherThoughTheFetchTimestampSurvives()
+    {
+        var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:daft punk", Guid.NewGuid(), "Daft Punk", null, [Library], []), CancellationToken.None);
+        await _db.Artists.SetFetchOutcomeAsync(artist, "musicbrainz", FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), CancellationToken.None);
+        RefreshWorkerIs(TaskState.Idle);
+
+        // No release rows were ever stored, or they were purged: the fetch timestamp outlives them.
+        var status = (await Controller().GetStatusAsync(CancellationToken.None)).Value!;
+
+        Assert.Null(status.ReleasesLastCheckedAt);
     }
 
     private async Task<long> SeedReleaseDataAsync()

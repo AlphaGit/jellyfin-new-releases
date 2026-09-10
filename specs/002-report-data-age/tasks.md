@@ -88,7 +88,7 @@ Test-first, on the harness from Phase 3.
 - [X] T017 [US1] Write a failing test in `tests/web/staleness.test.js` that the sentence reads `Releases last checked <relative time> ago.` and contains none of "refresh", "run", "scan" or "update" Behaviors: [U28]
 - [X] T018 [US1] Implement `stalenessText(checkedAt, now, intervalHours)` in `src/Web/user-view.html` returning the sentence or nothing, and have the existing `staleness(data)` call it and touch the DOM, until T015–T017 are green Behaviors: [U19] [U20] [U21] [U22] [U23] [U24] [U25] [U26] [U27] [U28]
 - [X] T019 [US1] Point the empty-state and staleness rendering in `src/Web/user-view.html` at the response fields as they stand after this phase, so the page and the API agree before the Phase 7 rename
-- [ ] T020 [US1] Story gate: the acceptance behaviours for US1 are green Behaviors: [A1] [A2] [A3] [A4] [A5]
+- [X] T020 [US1] Story gate: the acceptance behaviours for US1 are green Behaviors: [A1] [A2] [A3] [A4] [A5]
 
 **Checkpoint**: US1 is independently shippable.
 
@@ -100,8 +100,8 @@ Test-first, on the harness from Phase 3.
 
 **Independent Test**: put one source in cooldown, leave the other working, refresh, and confirm the stated instant is the completed fetch.
 
-- [ ] T021 [US2] Write failing tests: in `tests/Acceptance/ConfigureAndRunTests.cs`, one source cooling down while the other completes a fetch gives an instant within one refresh interval; in `tests/Api/ReleasesControllerTests.cs`, disabling the newest source falls back to the next enabled one and disabling every source reports none Behaviors: [U15] [A6] [A7]
-- [ ] T022 [US2] Make T021 green, changing `src/Api/ReleasesController.cs` or `src/Storage/ArtistRepository.cs` only if they demand it. Expect no production change beyond Phase 2 — if either test passes on the first run, apply the deliberate-mutant check from the TDD playbook and record it, because the behaviour is meant to fall out of `FR-002`'s enabled-source filter Behaviors: [U15] [A6] [A7]
+- [X] T021 [US2] Write failing tests: in `tests/Acceptance/ConfigureAndRunTests.cs`, one source cooling down while the other completes a fetch gives an instant within one refresh interval; in `tests/Api/ReleasesControllerTests.cs`, disabling the newest source falls back to the next enabled one and disabling every source reports none Behaviors: [U15] [A6] [A7]
+- [X] T022 [US2] Make T021 green, changing `src/Api/ReleasesController.cs` or `src/Storage/ArtistRepository.cs` only if they demand it. Expect no production change beyond Phase 2 — if either test passes on the first run, apply the deliberate-mutant check from the TDD playbook and record it, because the behaviour is meant to fall out of `FR-002`'s enabled-source filter Behaviors: [U15] [A6] [A7]
 
 **Checkpoint**: both behaviour stories complete and independently verifiable.
 
@@ -117,7 +117,7 @@ These are characterization behaviours: they capture what the code does today and
 
 - [X] T023 [P] [US3] Write characterization tests in `tests/web/esc.test.js`: a release title containing `<script>`, `&`, `"` and `'` comes back escaped; null and undefined become the empty string Behaviors: [U29] [U30] [A9]
 - [X] T024 [P] [US3] Write characterization tests in `tests/web/page-helpers.test.js` for `groupOf` (Upcoming, undated, year slice), `artistLink` (link shape with `ApiClient` stubbed) and `healthText` (each health value the admin page can receive) Behaviors: [U31] [U32] [U33]
-- [ ] T025 [US3] Deliberate-mutant check for the ladder: move each boundary in `src/Web/user-view.html` by one unit, confirm a test in `tests/web/staleness.test.js` fails, restore exactly, re-run. Record each in `specs/002-report-data-age/tdd/cycle-log.md` — this is the second half of `A8`, which no assertion can express Behaviors: [A8]
+- [X] T025 [US3] Deliberate-mutant check for the ladder: move each boundary in `src/Web/user-view.html` by one unit, confirm a test in `tests/web/staleness.test.js` fails, restore exactly, re-run. Record each in `specs/002-report-data-age/tdd/cycle-log.md` — this is the second half of `A8`, which no assertion can express Behaviors: [A8]
 - [ ] T026 [US3] Run the whole suite with the network down and nothing installed — `dotnet test --configuration Release` then `node --test tests/web/` — and record the result in `specs/002-report-data-age/tdd/cycle-log.md` Behaviors: [A10]
 
 ---

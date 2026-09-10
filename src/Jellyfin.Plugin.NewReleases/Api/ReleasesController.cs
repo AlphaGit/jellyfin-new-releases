@@ -88,8 +88,8 @@ public sealed class ReleasesController : ControllerBase
 
         var rows = await _releases.ListAsync(filter, cancellationToken).ConfigureAwait(false);
         var visible = rows.Where(access.CanSee).Select(ToDto).ToList();
-        var lastChecked = await _artists.GetReleasesLastCheckedAtAsync(configuration.EnabledSourceIds(), cancellationToken).ConfigureAwait(false);
         var hasStored = await _releases.HasAnyAsync(cancellationToken).ConfigureAwait(false);
+        var lastChecked = await LastCheckedAtAsync(hasStored, configuration, cancellationToken).ConfigureAwait(false);
         return new ListResponse(visible, visible.Count, hasStored, lastChecked, RefreshIntervalHours(), today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
     }
 
@@ -156,8 +156,8 @@ public sealed class ReleasesController : ControllerBase
     [ProducesResponseType(typeof(StatusResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<StatusResponse>> GetStatusAsync(CancellationToken cancellationToken = default)
     {
-        var lastChecked = await _artists.GetReleasesLastCheckedAtAsync(_configuration().EnabledSourceIds(), cancellationToken).ConfigureAwait(false);
         var hasStored = await _releases.HasAnyAsync(cancellationToken).ConfigureAwait(false);
+        var lastChecked = await LastCheckedAtAsync(hasStored, _configuration(), cancellationToken).ConfigureAwait(false);
         var latest = await _runs.GetLatestRunAsync(cancellationToken).ConfigureAwait(false);
         return new StatusResponse(hasStored, lastChecked, RefreshIntervalHours(), latest is { EndedAt: null });
     }
@@ -173,6 +173,16 @@ public sealed class ReleasesController : ControllerBase
             _ => 24,
         };
     }
+
+    /// <summary>
+    /// When the releases were last checked (002 FR-002), or nothing when nothing is stored. A purge leaves the
+    /// per-artist fetch timestamps behind, so without this gate the page would state an age for a list it no
+    /// longer has: FR-008 ties both the empty state and the age to whether releases exist.
+    /// </summary>
+    private async Task<DateTimeOffset?> LastCheckedAtAsync(bool hasStoredReleases, PluginConfiguration configuration, CancellationToken ct)
+        => hasStoredReleases
+            ? await _artists.GetReleasesLastCheckedAtAsync(configuration.EnabledSourceIds(), ct).ConfigureAwait(false)
+            : null;
 
     /// <summary>The libraries the caller may see (FR-007, R4); null when Jellyfin does not know the user.</summary>
     private LibraryAccess? AccessOf(Guid userId)

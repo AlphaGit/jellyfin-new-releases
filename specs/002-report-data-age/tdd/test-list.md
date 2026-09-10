@@ -38,14 +38,14 @@ entry point is the page's own exported logic, reached through the sandbox loader
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | A1 | A catalogue fetch completes at 03:00; a later refresh at 15:00 completes none → at 15:05 the list response reports the 03:00 instant, not the 15:00 run | US1-AS1 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge` |
-| A2 | Data older than one refresh interval → the page produces a staleness sentence rather than nothing | US1-AS2 | example | PENDING | |
-| A3 | Data confirmed within one refresh interval → the page produces no staleness sentence | US1-AS3 | example | PENDING | |
-| A4 | No enabled source has ever completed a fetch → the list response reports no stored releases and no instant | US1-AS4 | example | PENDING | |
-| A5 | After a purge → the list response reports no stored releases and no instant, though completed runs are still on record | US1-AS5 | example | PENDING | |
-| A6 | One source cooling down while the other completes a fetch → the reported instant is that completed fetch and is within one refresh interval | US2-AS1 | example | PENDING | |
-| A7 | The administrator disables every source → refreshes keep running and the reported instant stops moving | US2-AS2 | example | PENDING | |
-| A8 | Every band and boundary of the unit ladder is asserted, and moving any boundary by one unit makes a test fail | US3-AS1, SC-007 | example | PENDING | see note below |
-| A9 | A release title containing HTML markup is escaped rather than rendered as markup | US3-AS2, SC-008 | characterization | PENDING | |
+| A2 | Data older than one refresh interval → the page produces a staleness sentence rather than nothing | US1-AS2 | example | DONE | `tests/web/staleness.test.js` (an age past the interval yields a sentence) |
+| A3 | Data confirmed within one refresh interval → the page produces no staleness sentence | US1-AS3 | example | DONE | `tests/web/staleness.test.js` (an age at the interval yields none) |
+| A4 | No enabled source has ever completed a fetch → the list response reports no stored releases and no instant | US1-AS4 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A5_NoCompletedRun_HasCompletedRefreshFalseAndNoItems` (`001`'s) |
+| A5 | After a purge → the list response reports no stored releases and no instant, though completed runs are still on record | US1-AS5 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A5_AfterAPurge_TheListReportsNoStoredReleasesAndNoInstant` |
+| A6 | One source cooling down while the other completes a fetch → the reported instant is that completed fetch and is within one refresh interval | US2-AS1 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A6_OneSourceCoolingDownWhileTheOtherCompletesAFetch_TheAgeCountsFromThatFetch` |
+| A7 | The administrator disables every source → refreshes keep running and the reported instant stops moving | US2-AS2 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A7_WithEverySourceDisabled_NoAgeIsReportedWhileTheListStillShowsWhatIsStored` |
+| A8 | Every band and boundary of the unit ladder is asserted, and moving any boundary by one unit makes a test fail | US3-AS1, SC-007 | example | DONE | `tests/web/staleness.test.js` + the four boundary mutants in `cycle-log.md` |
+| A9 | A release title containing HTML markup is escaped rather than rendered as markup | US3-AS2, SC-008 | characterization | DONE | `tests/web/esc.test.js` |
 | A10 | The whole suite, page side included, runs with no network and no installation step | US3-AS3, SC-009, FR-014 | example | PENDING | see note below |
 
 **A8 and A10 are not conventional tests.** A8's first half is `U21`–`U28` below; its second half —
@@ -95,6 +95,7 @@ Grouped by the component from `plan.md` that owns them.
 | U16 | Reports the last run, including a run that reached no source | FR-009 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` |
 | U17 | Reports the same instant the user page reports | FR-009, FR-011 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` |
 | U18 | After a run that completed no fetch, the reported run end and the reported instant differ | FR-009, SC-005 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` |
+| U35 | With nothing stored, the administrator view reports no instant either | FR-008, FR-011 | example | DONE | `Api/AdminControllerTests.cs::Status_WithNothingStored_ReportsNoInstantEitherThoughTheFetchTimestampSurvives` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` — `stalenessText`
 

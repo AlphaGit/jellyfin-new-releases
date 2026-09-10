@@ -263,3 +263,62 @@ cycle. No new test, no new code.
 - note: `esc` is the one worth having regardless of this feature. Release titles and artist names
   arrive from MusicBrainz and Deezer and are concatenated into HTML by `row()` in about ten places;
   `esc` is the only thing between them and the DOM, and until now nothing tested it.
+
+## Cycle 19: A5 a purge returns the page to the empty state — and exposes a missing rule
+
+- test: `Acceptance/ConfigureAndRunTests.cs::A5_AfterAPurge_TheListReportsNoStoredReleasesAndNoInstant` (new)
+- red: `Assert.Null() Failure: Expected: null / Actual: 2026-09-06T12:00:00Z` (1 failed). **A real
+  gap, not a wrong expectation.** After a purge the empty-state flag went false correctly, but the
+  instant survived: `artist_source.last_complete_at` outlives the release rows, exactly as
+  `research.md` R3 said it would. R3 concluded the page would hide the line anyway, which is true
+  of the line but not of the value: the response still carried an age for a list that no longer
+  existed, and the administrator page would have shown it.
+- green: `ReleasesController.LastCheckedAtAsync` reports the instant only when releases are stored,
+  in both the list and status actions. `FR-008` ties both the empty state and the age to whether
+  releases exist; only the first half had been built. Suite -> 191 passed, 0 failed
+- refactor: the gate extracted to one private helper rather than repeated at both call sites
+
+## Cycle 20: U35 the administrator view reports no instant either — a behaviour found mid-loop
+
+`U35` was not on the list. Cycle 19's fix applied to the user-facing responses only, and `FR-011`
+requires every place reporting the age to report the same instant, so the administrator view had to
+follow. Appended to the test list rather than folded silently into cycle 19.
+
+- test: `Api/AdminControllerTests.cs::Status_WithNothingStored_ReportsNoInstantEitherThoughTheFetchTimestampSurvives` (new)
+- red: `Assert.Null() Failure: Expected: null / Actual: 2026-09-06T12:00:00Z` (1 failed)
+- green: `AdminController.GetStatusAsync` gates the instant on stored releases too.
+  Suite -> 192 passed, 0 failed
+- refactor: none needed
+- note: this broke cycle 13's test, which seeded a fetch but no release rows — a setup that the new
+  rule makes impossible. **The assertion was right and the setup was wrong**, so the setup gained a
+  stored release. No assertion was loosened.
+
+## Cycle 21: A6 and A7 the outer loop for user story 2
+
+- tests: `Acceptance/ConfigureAndRunTests.cs::A6_OneSourceCoolingDownWhileTheOtherCompletesAFetch_TheAgeCountsFromThatFetch`
+  and `::A7_WithEverySourceDisabled_NoAgeIsReportedWhileTheListStillShowsWhatIsStored` (new)
+- red: both passed on first run. This is the outer loop closing on units that are already green,
+  which the playbook describes as the expected end of the double loop, not a suspicious pass. Every
+  unit beneath them (`U1`-`U6`, `U15`) is separately mutant-verified.
+- green: no production change. Suite -> 194 passed, 0 failed
+- refactor: none needed
+- **conflict found in the specification, reported not resolved:** `spec.md`'s `US2-AS2` and its
+  matching edge case both say that with every source disabled "the stated age keeps growing".
+  `FR-002`, the Clarifications answer behind it, and `U3`/`U15` all say a disabled source stops
+  counting, so with none enabled there is no instant at all and the line disappears. The prose
+  predates the disabled-source decision taken during grilling and was not swept. `A7` asserts the
+  `FR-002` behaviour, which is what is built and what the later decision requires. **`spec.md` needs
+  the amendment; this command may not make it.**
+
+## A8: every boundary of the ladder moved by one unit
+
+The half of `US3-AS1` no assertion can express. Each boundary moved alone, then restored exactly:
+
+| Boundary moved | Result |
+| -------------- | ------ |
+| hours/days, 2 days -> 3 days | 1 failed |
+| days/weeks, 14 days -> 15 days | 1 failed |
+| weeks/months, 61 days -> 62 days | 1 failed |
+| months/over a year, 365 days -> 366 days | 1 failed |
+
+Page suite green again after every restore: 22 passed, 0 failed.
