@@ -5,8 +5,8 @@ namespace Jellyfin.Plugin.NewReleases.Api;
 public sealed record ListResponse(
     IReadOnlyList<ReleaseDto> Items,
     int Total,
-    bool HasCompletedRefresh,
-    DateTimeOffset? LastRefreshedAt,
+    bool HasStoredReleases,
+    DateTimeOffset? ReleasesLastCheckedAt,
     int RefreshIntervalHours,
     string ServerToday);
 
@@ -34,7 +34,7 @@ public sealed record ArtistDto(Guid JellyfinId, string Name);
 
 public sealed record ArtistsResponse(IReadOnlyList<ArtistDto> Items);
 
-public sealed record StatusResponse(bool HasCompletedRefresh, DateTimeOffset? LastRefreshedAt, int RefreshIntervalHours, bool IsRunning);
+public sealed record StatusResponse(bool HasStoredReleases, DateTimeOffset? ReleasesLastCheckedAt, int RefreshIntervalHours, bool IsRunning);
 
 // Admin status (contracts/http-api.md, GET api/admin/status).
 

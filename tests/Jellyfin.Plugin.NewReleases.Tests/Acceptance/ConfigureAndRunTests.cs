@@ -90,15 +90,15 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         DeezerScenario();
         await _rig.RunAsync();
         var afterRun = await _rig.ListAsync();
-        Assert.True(afterRun.HasCompletedRefresh);
-        Assert.NotNull(afterRun.LastRefreshedAt);
+        Assert.True(afterRun.HasStoredReleases);
+        Assert.Equal(SourceHarness.Start, afterRun.ReleasesLastCheckedAt);
 
         Assert.IsType<NoContentResult>(await _rig.AdminController().PurgeAsync(CancellationToken.None));
         var afterPurge = await _rig.ListAsync();
 
         Assert.Empty(afterPurge.Items);
-        Assert.False(afterPurge.HasCompletedRefresh);
-        Assert.Null(afterPurge.LastRefreshedAt);
+        Assert.False(afterPurge.HasStoredReleases);
+        Assert.Null(afterPurge.ReleasesLastCheckedAt);
         Assert.Equal(1L, await _rig.Harness.Db.ScalarAsync<long>("SELECT COUNT(*) FROM refresh_run")); // the run is still on record
     }
 
@@ -119,8 +119,7 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         var list = await _rig.ListAsync();
 
         Assert.Equal(["Alive 2007"], list.Items.Select(i => i.Title));
-        Assert.Equal(SourceHarness.Start, list.LastRefreshedAt); // the Deezer fetch, not the cooling-down source
-        Assert.InRange(list.LastRefreshedAt!.Value, _rig.Harness.Clock.GetUtcNow().AddHours(-list.RefreshIntervalHours), _rig.Harness.Clock.GetUtcNow());
+        Assert.Equal(SourceHarness.Start, list.ReleasesLastCheckedAt); // the Deezer fetch, not the cooling-down source
     }
 
     /// <summary>002 A7 / FR-002: with every source switched off nothing can confirm the data, so no age is reported.</summary>
@@ -129,7 +128,7 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
     {
         DeezerScenario();
         await _rig.RunAsync();
-        Assert.Equal(SourceHarness.Start, (await _rig.ListAsync()).LastRefreshedAt);
+        Assert.Equal(SourceHarness.Start, (await _rig.ListAsync()).ReleasesLastCheckedAt);
 
         _rig.Harness.Configuration.DeezerEnabled = false;
         _rig.Harness.Configuration.MusicBrainzEnabled = false;
@@ -138,7 +137,7 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         var list = await _rig.ListAsync();
 
         Assert.Equal(["Alive 2007", "Human After All"], list.Items.Select(i => i.Title)); // still shown
-        Assert.Null(list.LastRefreshedAt); // no enabled source can confirm them any more
+        Assert.Null(list.ReleasesLastCheckedAt); // no enabled source can confirm them any more
     }
 
     /// <summary>SC-007: with no source reachable the list still shows the last stored data and reports when it was last refreshed.</summary>
@@ -166,7 +165,7 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         Assert.Equal(["Alive 2007", "Human After All"], list.Items.Select(i => i.Title));
         // 002 FR-003: the second run completed no catalogue fetch, so the reported instant stays
         // at the first run's fetch. Before 002 this asserted the second run's end instead.
-        Assert.Equal((true, SourceHarness.Start), (list.HasCompletedRefresh, list.LastRefreshedAt));
+        Assert.Equal((true, SourceHarness.Start), (list.HasStoredReleases, list.ReleasesLastCheckedAt));
     }
 
     /// <summary>MusicBrainz fails on every call (four failures already on record from earlier runs), Deezer works: the failing source is isolated.</summary>

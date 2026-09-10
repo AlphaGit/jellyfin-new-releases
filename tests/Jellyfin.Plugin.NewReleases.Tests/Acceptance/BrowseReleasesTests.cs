@@ -112,12 +112,12 @@ public sealed class BrowseReleasesTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task A5_NoCompletedRun_HasCompletedRefreshFalseAndNoItems()
+    public async Task A5_NoCompletedRun_ReportsNoStoredReleasesAndNoInstant()
     {
         var list = await _rig.ListAsync();
 
-        Assert.False(list.HasCompletedRefresh);
-        Assert.Null(list.LastRefreshedAt);
+        Assert.False(list.HasStoredReleases);
+        Assert.Null(list.ReleasesLastCheckedAt);
         Assert.Empty(list.Items);
     }
 

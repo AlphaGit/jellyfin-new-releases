@@ -24,10 +24,14 @@ function extractScript(html, fileName) {
     return blocks[0];
 }
 
-/** The browser and Jellyfin globals the pages reach for. Every element lookup answers null. */
+/**
+ * The browser and Jellyfin globals the pages reach for. Every element lookup answers null.
+ * `overrides` merges one level down, so a test that pins `ApiClient.serverId` keeps the rest of
+ * `ApiClient` rather than restating it.
+ */
 function sandboxGlobals(overrides) {
     const none = () => null;
-    return Object.assign({
+    const defaults = {
         console,
         document: { getElementById: none, querySelector: none, querySelectorAll: () => [] },
         ApiClient: {
@@ -38,12 +42,40 @@ function sandboxGlobals(overrides) {
             updatePluginConfiguration: () => Promise.resolve({}),
         },
         Dashboard: { alert: () => {}, confirm: () => Promise.resolve(true), processPluginConfigurationUpdateResult: () => {} },
-    }, overrides);
+        // The pages pass `undefined` as the locale on purpose, so a Jellyfin user reads the
+        // sentence in their own language. That makes the runtime's ambient locale an input, and
+        // the assertions are English: without this the suite is green on an English machine and
+        // red on any other. Pinned here, in the harness, so production keeps its behaviour.
+        // `Object.create` rather than a spread: Intl's constructors are non-enumerable.
+        Intl: Object.create(Intl, {
+            RelativeTimeFormat: {
+                value: function (locale, options) { return new Intl.RelativeTimeFormat(locale ?? 'en', options); },
+            },
+        }),
+        // Same reason, second channel: `when()` in admin.html calls `Date.prototype.toLocaleString()`,
+        // which reads the machine's locale *and* its timezone. Both are pinned here so a test can
+        // assert the exact sentence; production still passes nothing and renders in the user's own
+        // format. Everything else on Date is inherited.
+        Date: class extends Date {
+            toLocaleString(locale, options) {
+                return super.toLocaleString(locale ?? 'en-US', { timeZone: 'UTC', ...options });
+            }
+        },
+    };
+
+    const merged = { ...defaults };
+    for (const [name, value] of Object.entries(overrides)) {
+        const base = defaults[name];
+        const mergeable = base && value && typeof base === 'object' && typeof value === 'object';
+        merged[name] = mergeable ? { ...base, ...value } : value;
+    }
+
+    return merged;
 }
 
 /**
- * Returns the helpers `fileName` exposes. `overrides` replaces sandbox globals, so a test
- * can pin what `artistLink` reads from `ApiClient`.
+ * Returns the helpers `fileName` exposes. `overrides` merges into the sandbox globals, so a test
+ * can pin what `artistLink` reads from `ApiClient` without restating the rest of it.
  */
 function loadPage(fileName, overrides = {}) {
     const html = fs.readFileSync(path.join(WEB_DIR, fileName), 'utf8');

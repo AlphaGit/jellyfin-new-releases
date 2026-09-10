@@ -170,6 +170,7 @@ public sealed class ReleasesController : ControllerBase
         {
             TaskTriggerInfoType.IntervalTrigger when trigger.IntervalTicks is { } ticks && ticks > 0 => (int)Math.Max(1, Math.Round(TimeSpan.FromTicks(ticks).TotalHours)),
             TaskTriggerInfoType.WeeklyTrigger => 24 * 7,
+            TaskTriggerInfoType.DailyTrigger => 24, // same number as the fallback, but a stated rule rather than a coincidence
             _ => 24,
         };
     }

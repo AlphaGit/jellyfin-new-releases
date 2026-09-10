@@ -129,7 +129,7 @@
             /** Shows what `stalenessText` decides. All the rules live there, where a test can reach them. */
             function staleness(data) {
                 var line = root.querySelector('#nr-staleness');
-                var text = stalenessText(data.lastRefreshedAt, Date.now(), data.refreshIntervalHours);
+                var text = stalenessText(data.releasesLastCheckedAt, Date.now(), data.refreshIntervalHours);
                 line.textContent = text || '';
                 line.hidden = !text;
             }
@@ -170,7 +170,7 @@
 
             function render(data) {
                 staleness(data);
-                if (!data.hasCompletedRefresh && !archived) {
+                if (!data.hasStoredReleases && !archived) {
                     panel.innerHTML = '<p class="nr-empty">No data yet. New Releases is waiting for its first refresh.</p>';
                     return;
                 }

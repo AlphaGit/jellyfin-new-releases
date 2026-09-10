@@ -125,7 +125,8 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.NotEqual(status.LastRun.EndedAt, status.ReleasesLastCheckedAt);
     }
 
-    /// <summary>002 U35 (FR-008, FR-011): with nothing stored there is no age to report, on either view.</summary>
+    /// <summary>002 U35 (FR-008, FR-011): with nothing stored the administrator view reports no age either.
+    /// The list side of FR-011 is covered by ReleasesControllerTests.GetReleases_ListAndStatusReportTheSameInstant.</summary>
     [Fact]
     public async Task Status_WithNothingStored_ReportsNoInstantEitherThoughTheFetchTimestampSurvives()
     {

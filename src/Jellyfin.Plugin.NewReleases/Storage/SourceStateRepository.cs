@@ -126,7 +126,7 @@ public sealed class SourceStateRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
-    /// <summary>The run behind `lastRefreshedAt` (FR-015): latest with outcome Completed.</summary>
+    /// <summary>The latest run with outcome Completed. It is no longer what the pages report: 002 reports the last completed catalogue fetch instead.</summary>
     public Task<RefreshRun?> GetLastCompletedRunAsync(CancellationToken ct) => QueryRunAsync("WHERE outcome = 'Completed' ORDER BY ended_at DESC, id DESC", ct);
 
     public Task<RefreshRun?> GetLatestRunAsync(CancellationToken ct) => QueryRunAsync("ORDER BY id DESC", ct);
