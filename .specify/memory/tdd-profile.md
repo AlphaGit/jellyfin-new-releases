@@ -1,6 +1,6 @@
 ---
 detected_at: ed8d2f5
-ecosystems: [dotnet]
+ecosystems: [dotnet, node]
 default: dotnet
 stacks:
   dotnet:
@@ -32,6 +32,26 @@ stacks:
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/ControllerContextFactory.cs
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/SourceJson.cs
       - tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/AcceptanceRig.cs
+  node:
+    cwd: .
+    runner: node:test
+    # Node's built-in runner. No package.json, no install step: `node:test`, `node:assert`
+    # and `node:vm` are standard library, so the suite still passes with no network.
+    single: 'node --test --test-name-pattern "{name}" tests/web/'
+    file: 'node --test tests/web/{file}'
+    suite: node --test tests/web/
+    watch: 'node --test --watch tests/web/'
+    coverage: 'node --test --experimental-test-coverage tests/web/'
+    mutation: null
+    acceptance: null
+    property: null
+    approval: null
+    contract: null
+    test_glob: "tests/web/**/*.test.js"
+    exemplar:
+      unit: tests/web/staleness.test.js
+    helpers:
+      - tests/web/load-page.js
 verified: [single, suite]
 suite_baseline: green
 suite_seconds: 10
@@ -61,6 +81,18 @@ suite_seconds: 10
 - Exemplar to imitate: `tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs` (unit).
   There is no acceptance exemplar yet.
 
+## Page-side conventions (`node` ecosystem)
+
+- Tests live in `tests/web/*.test.js` and use `node:test` (`test`, `describe`) with `node:assert`
+  in strict mode. No assertion library, no framework, no `package.json`.
+- The embedded pages under `src/Jellyfin.Plugin.NewReleases/Web/` are not modules. Each exposes
+  its pure helpers on `NewReleasesInternals` as the first statement of its IIFE; the recorded
+  helper `tests/web/load-page.js` runs the page's script in a `node:vm` sandbox and returns them.
+  Never hand-roll a second loader, and never read a page's source as text to assert on it.
+- Only the helpers that can be computed without a page are reachable this way. Anything that
+  reads or writes elements (`row`, `render`, `refreshStatus`, `read`, `fill`, `query`) needs a
+  simulated browser this project does not have; those stay manual.
+
 ## Notes and constraints
 
 - Suite wall time is 2 s including build. Per-cycle full runs are fine.
@@ -78,6 +110,6 @@ suite_seconds: 10
 - `acceptance: null` — no host-level runner. Controller and scheduled-task behaviour is tested
   at the class level with substituted Jellyfin services, as in concert-radar.
 - `watch: null` — `dotnet watch test` exists in the SDK but was not run here.
-- Constitution principle not applied: `.specify/memory/constitution.md` is still the template.
-  Add the TDD principle when running `/speckit-constitution` (text in
-  `.specify/extensions/tdd/templates/tdd-stack-profile.md`, "Constitution principle").
+- Constitution principle applied: `.specify/memory/constitution.md` has been at version 1.2.0
+  since 2026-09-06 and its principle II, "Test-Driven Development (NON-NEGOTIABLE)", governs this
+  profile. Nothing further to add.
