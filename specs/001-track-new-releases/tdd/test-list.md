@@ -4,7 +4,7 @@ loop: outside-in
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 19
 planned_at: 92a272d
-updated_at: 78ecfc9
+updated_at: 0fa9999
 suite_baseline: green
 ---
 
@@ -50,8 +50,9 @@ the web pages are checked manually (see Out of scope).
 | A15 | After `POST api/admin/clear-archive`, `?archived=true` is empty, the archived releases are back in the list, and the number of stored releases is unchanged | US2-AS7 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A15_ClearArchiveEmptiesIt_ArchivedReleasesReturnToTheList_StoredReleasesUnchanged` |
 | A16 | `POST api/releases/{id}/ignore` removes the release from the list at once; it is still absent after a run and present in `?archived=true` with `kind=Ignore` | US3-AS1 | example | DONE | `Acceptance/ArchiveTests.cs::A16_IgnoreRemovesTheReleaseAtOnce_StillAbsentAfterARun_PresentInTheArchiveAsIgnore` |
 | A17 | `POST api/releases/{id}/restore` on an archived release puts it back in the list at its date position | US3-AS2 | example | DONE | `Acceptance/ArchiveTests.cs::A17_RestoreOnAnArchivedRelease_PutsItBackInTheListAtItsDatePosition` |
-| A18 | `have-it` on an `Incomplete` release archives it; after a later run that still finds tracks missing it remains archived with `kind=HaveIt` | US3-AS3 | example | DONE | `Acceptance/ArchiveTests.cs::A18_HaveItOnAnIncompleteRelease_StaysArchivedAfterARunThatStillFindsTracksMissing` |
+| A18 | `have-it` on an `Incomplete` release archives it; after a later run that still finds tracks missing it remains archived with `kind=HaveIt` | US3-AS3, FR-005b | example | DONE | `Acceptance/ArchiveTests.cs::A18_HaveItOnAnIncompleteRelease_StaysArchivedAfterARunThatStillFindsTracksMissing` |
 | A19 | A `have-it` release whose library album later gains every track stays in the Archive; the decision is not reopened | US3-AS4 | example | DONE | `Acceptance/ArchiveTests.cs::A19_HaveItRelease_WhoseLibraryAlbumLaterGainsEveryTrack_StaysInTheArchive` |
+| A20 | After a good run, with every source in cooldown, a second run contacts nothing and the list still returns the stored releases with `hasCompletedRefresh` and a `lastRefreshedAt` | SC-007 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge` |
 
 ## Inner loop: unit behaviors
 
@@ -85,7 +86,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U16 | Any `Other` primary or secondary excludes the release whatever the selection | FR-004 | example | DONE | `Matching/ReleaseTypeMapperTests.cs::IsIncluded_AnyOtherType_ExcludesWhateverTheSelection` |
 | U17 | Display type is the first of Live, Remix, Soundtrack, Compilation present (Album+Compilation+Live → Live); with no secondaries it is the primary | FR-004 | example | DONE | `Matching/ReleaseTypeMapperTests.cs::DisplayType_FirstSecondaryByPrecedence_ElsePrimary` |
 
-### `src/Jellyfin.Plugin.NewReleases/Storage/Database.cs`
+### `src/Jellyfin.Plugin.NewReleases/Storage/PluginDatabase.cs`
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
@@ -202,6 +203,9 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U82 | Editions come back one per Official release with all `media[].tracks[].title` normalized as tracks | FR-005 | example | DONE | `Sources/MusicBrainzSourceTests.cs::FetchEditionsAsync_OneEditionPerOfficialReleaseWithAllMediaTracksNormalized` |
 | U83 | Request URLs are exactly the endpoints in `contracts/release-source.md` and their query strings contain only the artist name or ids | FR-017 | example | DONE | `Sources/MusicBrainzSourceTests.cs::Requests_UseExactlyTheContractEndpointsWithOnlyNamesAndIdsInTheQuery` |
 | U84 | A persistent 503 surfaces as an exception, not as `Unmatched` or an empty page | FR-014 | example | DONE | `Sources/MusicBrainzSourceTests.cs::PersistentServiceUnavailable_SurfacesAsAnException` |
+| U129 | Top score exactly 85 with the runner-up at 79 → `Matched` (85 is the inclusive minimum; `U78` pins 84) | FR-002 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_TopScoreExactly85_IsMatched` |
+| U130 | Runner-up exactly 5 points behind → `Unmatched` as ambiguous (the gap is inclusive; `U76` pins 4 and `U77` pins 6) | FR-002, EC-1 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_RunnerUpExactlyFivePointsBehind_IsUnmatchedAsAmbiguous` |
+| U132 | A catalogue page past the end of the catalogue yields no items and a null `NextOffset` | FR-003 | example | DONE | `Sources/MusicBrainzSourceTests.cs::FetchCataloguePageAsync_EmptyPage_YieldsNoItemsAndStopsPaging` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Sources/DeezerSource.cs`
 
@@ -215,6 +219,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U90 | `release_date` `0000-00-00` becomes a null date; `link` becomes the source URL | FR-003, EC-4 | example | DONE | `Sources/DeezerSourceTests.cs::FetchCataloguePageAsync_UnknownDateBecomesNull_LinkBecomesTheUrl` |
 | U91 | Album tracks spread over two `next` pages come back as one edition titled as the album | FR-005 | example | DONE | `Sources/DeezerSourceTests.cs::FetchEditionsAsync_TracksAcrossTwoPages_ComeBackAsOneEditionTitledAsTheAlbum` |
 | U92 | An HTTP 200 body with `error.code = 4` is retried as transient; any other `error` code throws | FR-011, R3 | example | DONE | `Sources/DeezerSourceTests.cs::ErrorEnvelope_QuotaCode4IsRetriedAsTransient_OtherCodesThrow` |
+| U133 | An album whose track list fits one page comes back as one edition with no further request | FR-005 | example | DONE | `Sources/DeezerSourceTests.cs::FetchEditionsAsync_TracksOnASinglePage_NeedNoFurtherRequest` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Matching/OwnershipMatcher.cs`
 
@@ -230,6 +235,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U100 | Edition choice: more matched tracks wins; equal matched → fewer missing; still equal → MusicBrainz over Deezer; still equal → lowest edition id | FR-005 | example | DONE | `Matching/OwnershipMatcherTests.cs::Decide_EditionChoice_MostMatchedThenFewestMissingThenMusicBrainzThenLowestId` |
 | U101 | Extra library tracks beyond the edition do not prevent `Owned` | FR-005 | example | DONE | `Matching/OwnershipMatcherTests.cs::Decide_ExtraLibraryTracksBeyondTheEdition_DoNotPreventOwned` |
 | U102 | Editions with no tracks at all yield `Owned` by album presence | FR-005 | example | DONE | `Matching/OwnershipMatcherTests.cs::Decide_EditionsWithoutAnyTracks_AreOwnedByAlbumPresence` |
+| U131 | Exactly one missing track → `Incomplete` naming that track (`U98` pins none missing, `U99` pins two) | FR-005a | example | DONE | `Matching/OwnershipMatcherTests.cs::Decide_OneMissingTrack_IsIncompleteNamingThatTrack` |
 
 ### `src/Jellyfin.Plugin.NewReleases/ScheduledTasks/RefreshNewReleasesTask.cs`
 
@@ -257,7 +263,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 | U117 | `from=2020-01-01` returns a release dated `2020-01-01` and not one dated `2019-12-31`; `type`, `state`, `artistId` are passed to the repository filter | FR-008 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_PassesFromTypeStateAndArtistToTheFilter` |
 | U118 | `lastRefreshedAt` is the last completed run's end; `refreshIntervalHours` is 24 for a daily trigger, 12 for a 12-hour interval trigger, 24 when no trigger is readable | FR-015 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_LastRefreshedAtIsTheLastCompletedRunsEnd_RefreshIntervalFollowsTheTrigger` |
 | U119 | `GET api/artists` returns only artists in libraries the caller may access | FR-007 | example | DONE | `Api/ReleasesControllerTests.cs::GetArtists_ReturnsOnlyArtistsInLibrariesTheCallerMayAccess` |
-| U120 | `ignore` and `have-it` store a decision with the caller's user id and the injected clock; `restore` deletes it; each returns 204 | FR-016 | example | DONE | `Api/ReleasesControllerTests.cs::Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204` |
+| U120 | `ignore` and `have-it` store a decision with the caller's user id and the injected clock; `restore` deletes it; each returns 204 | FR-005b, FR-016 | example | DONE | `Api/ReleasesControllerTests.cs::Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204` |
 | U121 | A decision on an unknown release id → 404; on a release outside the caller's libraries → 403 and no decision written | FR-007, FR-016 | example | DONE | `Api/ReleasesControllerTests.cs::Decisions_UnknownReleaseIs404_ReleaseOutsideTheCallersLibrariesIs403WithNothingWritten` |
 | U122 | A second user's `?archived=true` shows the first user's decision with kind and decided-at | FR-016 | example | DONE | `Api/ReleasesControllerTests.cs::Decisions_AreSharedServerWide_ASecondUserSeesTheFirstUsersDecisionInTheArchive` |
 
@@ -273,7 +279,7 @@ Grouped by the component from `plan.md` that owns them. Tests mirror the source 
 
 ## Invariants and edge cases still to place
 
-None. INV-1 is placed on U113 and A6.
+None. INV-1 is placed on U113 and A6; SC-007 is placed on A20.
 
 ## Out of scope
 
@@ -288,6 +294,9 @@ None. INV-1 is placed on U113 and A6.
   accepted ceiling (research R8), no test.
 - Re-fetching an edition's track list after a source corrects it: accepted ceiling (R11).
 - SC-002, SC-003, SC-006: measured on a real library after release, not in the suite.
+- `lastRefreshedAt` after a run that reached no source reports that run, not the run whose data is
+  being shown (pinned as written by A20). Whether SC-007 wants the last *reaching* run is a spec
+  question, recorded in `tdd/verification.md`, not decided here.
 
 ## Verification commands
 

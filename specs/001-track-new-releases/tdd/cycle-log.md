@@ -1259,3 +1259,121 @@ failed before the implementation.
   `dotnet test --configuration Release --filter "FullyQualifiedName~ArchiveTests.A17_" -- RunConfiguration.TreatNoTestsAsError=true`
   -> `Assert.Equal() Failure: Collections differ / Expected: ["Alive 2007", "Human After All"] / Actual: ["Alive 2007"]` (1 failed). Code restored exactly, test green again.
 - cycle 145's mutant (Archive join counts only Ignore) did fail the test, but through `System.InvalidOperationException : Sequence contains no matching element` (the `.Single()` over the Archive), not the `DoesNotContain` assertion the entry names. Re-run confirmed (1 failed). Code restored exactly, test green again.
+
+## Correction to cycles 118 and 132 (U115 and U124 had no entry)
+
+`/speckit-tdd-verify` at `0fa9999` found no entry for cycle 118 (`U115`) or cycle 132 (`U124`),
+and found that commits `a5ddd11` and `993d797` — whose messages say "docs: record TDD cycle for
+U115" and "… for U124" — only flip the test-list state to `DONE`. **No red was recorded for
+either test at the time.** The entries below do not claim one: they record what the log can
+honestly say now, plus a deliberate-mutant check run after the fact to show each test
+discriminates.
+
+- `U115` `Api/ReleasesControllerTests.cs::GetReleases_WithoutTheUserIdClaim_Is401`
+  - red: **not recorded.** Cycle 119's entry says cycle 118's commit was blocked by U116's red
+    with both tests already in the file, and `b10100e` does add both tests alongside the
+    controller, so the test-first order is plausible but unproven.
+  - after the fact: `ReleasesController.GetReleasesAsync` `return Unauthorized()` -> `return
+    Forbid()` on the missing-claim branch -> `Assert.IsType() Failure: Expected
+    typeof(UnauthorizedResult) / Actual: typeof(ForbidResult)` (1 failed). Code restored exactly
+    (`git diff` empty), test green again.
+- `U124` `Api/AdminControllerTests.cs::RunNow_QueuesTheTaskAndReturns202_Returns409WithoutQueueingWhileRunning`
+  - red: **not recorded.** Cycle 133's entry says cycle 132's commit was blocked first by a
+    compile error and then by U125's red, so U124 rode along in `4db8072`.
+  - after the fact: the `RefreshWorker() is { State: TaskState.Running }` guard removed from
+    `AdminController.RunNow` -> `Assert.IsType() Failure: Expected
+    typeof(ConflictObjectResult) / Actual: typeof(AcceptedResult)` (1 failed). Code restored
+    exactly (`git diff` empty), test green again.
+
+## Cycle 147: U129 top score exactly 85 with the runner-up at 79 is `Matched`
+
+- test: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_TopScoreExactly85_IsMatched` (new).
+  `/speckit-tdd-verify` found `U75`'s test asserting against `artist_search_confident.json`
+  (100 vs 66), so the 85 in its behaviour text was never exercised.
+- red: passed on first run (85 is already the inclusive minimum). Deliberate mutant:
+  `MusicBrainzSource.cs:51` `top.Score < MinimumScore` -> `<= MinimumScore` -> 1 failed. Before
+  this cycle that mutant survived the whole suite. Code restored exactly (`git diff` empty).
+- green: no production change. Suite -> 173 passed, 0 failed
+- refactor: the file's hand-rolled `Search(...)` body builder replaced by
+  `Support/SourceJson.MusicBrainz.Search` through a new `SearchReturns(...)` helper (one search
+  builder for the suite); `U77` moved onto it too
+- commit: pending
+
+## Cycle 148: U130 a runner-up exactly 5 points behind is `Unmatched` as ambiguous
+
+- test: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_RunnerUpExactlyFivePointsBehind_IsUnmatchedAsAmbiguous`
+  (new). `U76` pins a 4-point gap (`artist_search_ambiguous.json`, 100 vs 96) and `U77` a
+  6-point gap; the inclusive boundary between them was untested.
+- red: passed on first run. Deliberate mutant: `MusicBrainzSource.cs:56`
+  `top.Score - candidates[1].Score <= 5` -> `< 5` -> 1 failed. Before this cycle that mutant
+  survived the whole suite, so an artist whose runner-up was exactly 5 points behind could be
+  matched to the wrong MusicBrainz id (EC-1). Code restored exactly (`git diff` empty).
+- green: no production change. Suite -> 174 passed, 0 failed
+- refactor: none needed
+- commit: pending
+
+## Cycle 149: U131 exactly one missing track is `Incomplete`
+
+- test: `Matching/OwnershipMatcherTests.cs::Decide_OneMissingTrack_IsIncompleteNamingThatTrack`
+  (new). `U98` pins none missing and `U99` pins two; the `Owned`/`Incomplete` boundary was held
+  only by `ArchiveTests` A17-A19, whose library happens to hold 3 of 4 tracks.
+- red: passed on first run. Deliberate mutant: `OwnershipMatcher.cs:33` `missing.Length == 0`
+  -> `<= 1` -> 1 failed in `OwnershipMatcherTests`. Before this cycle that mutant died only in
+  the acceptance tests. Code restored exactly (`git diff` empty).
+- green: no production change. Suite -> 175 passed, 0 failed
+- refactor: none needed
+- commit: pending
+
+## Cycle 150: A20 with every source in cooldown the list still shows the stored data
+
+- test: `Acceptance/ConfigureAndRunTests.cs::A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge`
+  (new). SC-007 had no test that ran with *every* source unreachable: A12 leaves Deezer up and
+  U113 stops at the ownership recompute.
+- red: the first run failed for a harness reason, and the harness was the real defect —
+  `Assert.Equal() Failure: Expected Tuple (True, …T13:00:00Z) / Actual: Tuple (True,
+  …T12:00:00Z)`. `Support/SourceHarness.cs` built **two** independent `TimeProviderStub`s: the
+  `Clock` property initialiser made one, and `CreateAsync` passed a different one to
+  `TestDatabase`, so every timestamp `SourceStateRepository` wrote was frozen at `Start` and no
+  test could advance it. Harness fixed to one clock; the whole suite stayed green, which is why
+  the defect had gone unnoticed.
+- green: no production change. Deliberate mutant: the availability check in
+  `RefreshNewReleasesTask` inverted (`if (!await IsAvailableAsync(...))` -> `if (await …)`) ->
+  `Assert.Equal() Failure: Collections differ / Expected: ["Alive 2007", "Human After All"] /
+  Actual: []` (1 failed). Code restored exactly (`git diff` empty). Suite -> 176 passed, 0 failed
+- refactor: none needed
+- commit: pending
+
+## Cycle 151: U132 a catalogue page past the end yields no items and stops paging
+
+- test: `Sources/MusicBrainzSourceTests.cs::FetchCataloguePageAsync_EmptyPage_YieldsNoItemsAndStopsPaging`
+  (new). Uses `tests/fixtures/musicbrainz/releases_empty.json`, a recorded fixture the contract
+  requires (`contracts/release-source.md`) that no test referenced.
+- red: passed on first run. Deliberate mutant: `MusicBrainzSource.cs:89`
+  `next < total ? next : null` -> `next` -> 2 failed (`U81` and this one). Code restored exactly
+  (`git diff` empty).
+- green: no production change. Suite -> 177 passed, 0 failed
+- refactor: none needed
+- commit: pending
+
+## Cycle 152: U133 an album whose tracks fit one page needs no further request
+
+- test: `Sources/DeezerSourceTests.cs::FetchEditionsAsync_TracksOnASinglePage_NeedNoFurtherRequest`
+  (new). Uses `tests/fixtures/deezer/album_tracks.json`, the other contract-required fixture no
+  test referenced. `U91` covers the two-page merge; the common single-page path had no recorded
+  body behind it.
+- red: passed on first run. Deliberate mutant: `DeezerSource.cs:102`
+  `TitleNormalizer.NormalizeTrack(...)` dropped so track titles stay raw -> 2 failed (`U91` and
+  this one). Code restored exactly (`git diff` empty).
+- green: no production change. Suite -> 178 passed, 0 failed
+- refactor: none needed
+- commit: pending
+
+## Refactors with no new behaviour (same run as cycles 147-152)
+
+- `Storage/ReleaseRepositoryTests.cs::ListAsync_FiveHundredStoredReleases_ListsWithinBudget`
+  (`U43`): the asserted bound tightened from 2 000 ms to the 500 ms `SC-005` actually states.
+  Measured 3 ms on this machine, so the criterion is now the assertion. No spec amendment
+  needed; the test had simply been looser than the criterion.
+- `Support/FixtureLoader.cs`: the doc comment named `musicbrainz/search_multi_score.json`, which
+  does not exist; it now names a fixture that does.
+- `Support/SourceHarness.cs`: one clock instead of two (see cycle 150).

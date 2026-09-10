@@ -210,6 +210,42 @@ back in the list in date position.
 
 ---
 
+## Phase 7: TDD remediation
+
+**Purpose**: clear the findings in `specs/001-track-new-releases/tdd/verification.md` (verdict
+`FAIL` at `0fa9999`). **The feature is not done until T076 and T077 are cleared**: both are
+surviving mutants inside behaviours marked `DONE`, so `U75` and `U76` do not currently test what
+the test list says they test. T078–T083 follow; T084–T087 are cosmetic.
+
+Prefix every command with `PATH=/opt/homebrew/opt/dotnet@9/bin:$PATH DOTNET_ROOT=/opt/homebrew/opt/dotnet@9/libexec` in a shell that did not source `~/.zshenv`.
+
+- [X] T076 Finding 1 (HIGH): add the exact 5-point case to `tests/Jellyfin.Plugin.NewReleases.Tests/Sources/MusicBrainzSourceTests.cs:55` (`MatchArtistAsync_RunnerUpWithinFivePoints_IsUnmatchedAsAmbiguous`) using the inline `Search(("X", 90), ("Y", 85))` builder that `U77` already uses, so 5 and 6 points bracket the boundary at `src/Jellyfin.Plugin.NewReleases/Sources/MusicBrainzSource.cs:56`. Proven done when `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests" -- RunConfiguration.TreatNoTestsAsError=true` is green **and** changing `<= 5` to `< 5` at that line makes it red. Behaviors: [U76]
+- [X] T077 Finding 2 (HIGH): add the score-85 case to `tests/Jellyfin.Plugin.NewReleases.Tests/Sources/MusicBrainzSourceTests.cs:45` (`MatchArtistAsync_ConfidentTopResult_IsMatched`) with the runner-up at 79, as the test list states, so 84 and 85 bracket the minimum at `src/Jellyfin.Plugin.NewReleases/Sources/MusicBrainzSource.cs:51`. Proven done when `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests" -- RunConfiguration.TreatNoTestsAsError=true` is green **and** changing `<` to `<=` at that line makes it red. Behaviors: [U75]
+- [X] T078 Finding 6 (MED): add one `OwnershipMatcherTests` case for exactly one missing track (9 of 10 library tracks against a 10-track edition) so the `Owned`/`Incomplete` boundary at `src/Jellyfin.Plugin.NewReleases/Matching/OwnershipMatcher.cs:33` is pinned by the unit that owns it, not only by `ArchiveTests`. Proven done when `dotnet test --configuration Release --filter "FullyQualifiedName~OwnershipMatcherTests" -- RunConfiguration.TreatNoTestsAsError=true` is green **and** changing `missing.Length == 0` to `<= 1` makes it red. Behaviors: [U98] [U99]
+- [X] T079 Finding 5 (MED): add an acceptance test to `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ConfigureAndRunTests.cs` for `SC-007` — after one good run, put **both** sources in cooldown, run again, and assert `GET api/releases` still returns the stored items with `hasCompletedRefresh=true` and `lastRefreshedAt` at the first run's end. Add the behaviour to `tdd/test-list.md` with `traces` `SC-007` before writing it. Proven done when `dotnet test --configuration Release` is green and the new test appears in the run
+- [X] T080 Finding 3 (MED): append the two missing entries to `specs/001-track-new-releases/tdd/cycle-log.md` for cycles 118 (`U115`) and 132 (`U124`) — either the red evidence if it can be reproduced by reverting the source hunk in `b10100e` / `4db8072`, or an explicit note that no red was recorded and why. Do not backdate a red that was not observed. Proven done when the log's cycle numbering has no gaps and `/speckit-tdd-verify` reclassifies both behaviours out of `TEST_AFTER`. Behaviors: [U115] [U124]
+- [X] T081 Finding 4 (MED): decide `SC-005` explicitly — either tighten `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ReleaseRepositoryTests.cs:298` to the 500 ms the criterion states, or amend `spec.md` `SC-005` to the threshold the suite will actually enforce (constitution I: amend the spec before the code). Proven done when the asserted bound and `spec.md` agree, and `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.ListAsync_FiveHundredStoredReleases_ListsWithinBudget" -- RunConfiguration.TreatNoTestsAsError=true` is green. Behaviors: [U43]
+- [ ] T082 Finding 8 (MED, NOT DONE — see the note below): drive `TokenBucketRateLimiter` from the injected `TimeProvider` in `src/Jellyfin.Plugin.NewReleases/Sources/SourceHttpClient.cs` so `Sources/SourceHttpClientTests.cs:194` can assert on the stub clock instead of a 900 ms–5 s wall-clock range, then remove the `await Task.Delay(15)` poll from `Support/SourceHarness.cs:58` and `Sources/SourceHttpClientTests.cs:84`. Proven done when `dotnet test --configuration Release` is green and `suite_seconds` in `.specify/memory/tdd-profile.md` drops to the new measured value
+- [X] T083 Finding 7 (MED): replace the hand-rolled `Search(...)` builder at `tests/Jellyfin.Plugin.NewReleases.Tests/Sources/MusicBrainzSourceTests.cs:35` with `Support/SourceJson.MusicBrainz.Search` (extend the helper with the score field if needed) so one search-body builder serves the suite. Proven done when `grep -c 'private static string Search' tests/Jellyfin.Plugin.NewReleases.Tests/Sources/MusicBrainzSourceTests.cs` prints `0` and `dotnet test --configuration Release` is green
+- [X] T084 [P] Finding 9 (MED): add `FR-005b` to the `traces` cells of `U120` and `A18` in `specs/001-track-new-releases/tdd/test-list.md`. Proven done when `grep -c 'FR-005b' specs/001-track-new-releases/tdd/test-list.md` prints at least `1`
+- [X] T085 [P] Finding 10 (LOW): rename the test-list group heading `src/Jellyfin.Plugin.NewReleases/Storage/Database.cs` to `Storage/PluginDatabase.cs`, the file that exists. Proven done when `grep -c 'Storage/Database.cs' specs/001-track-new-releases/tdd/test-list.md` prints `0`
+- [X] T086 [P] Finding 11 (LOW): delete `tests/fixtures/deezer/album_tracks.json` and `tests/fixtures/musicbrainz/releases_empty.json`, or reference them from a test. Proven done when every file under `tests/fixtures/` except `README.md` is named by at least one `.cs` file and `dotnet test --configuration Release` is green
+- [X] T087 [P] Finding 12 (LOW): correct the doc comment at `tests/Jellyfin.Plugin.NewReleases.Tests/Support/FixtureLoader.cs:20` to name a fixture that exists. Proven done when the path in the comment resolves under `tests/fixtures/`
+
+**T082 was attempted and reverted.** Driving the limiter from the injected `TimeProvider` works —
+`System.Threading.RateLimiting` replenishes from a private `Stopwatch`, so it was replaced with a
+clock-driven request spacer and `TimeProviderStub` gained an opt-in auto-advance. The suite then
+required every test that makes two calls to one source to pump the clock, and the retry-timing
+tests (`U61`, `U62`) started racing the auto-advance. That is a worse suite and a rewrite of the
+component that keeps the plugin polite to MusicBrainz and Deezer, traded for one MED finding, so
+it was reverted whole (`src/` is untouched). The wall-clock assertion at
+`Sources/SourceHttpClientTests.cs:206` stands as a recorded ceiling. Re-open this only alongside
+a stub clock that resolves pending delays when nothing else is runnable.
+
+Finding 13 (LOW) has no task on purpose: `Matching/TitleNormalizerTests.cs:66` asserts only that two titles normalize differently, but cycle 8 already proved the assertion discriminates with a deliberate mutant, so a stronger form would add nothing.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
