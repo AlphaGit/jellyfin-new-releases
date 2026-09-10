@@ -126,6 +126,75 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.Equal(24, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).RefreshIntervalHours);
     }
 
+    /// <summary>002 FR-011: every place reporting the age reports the same instant.</summary>
+    [Fact]
+    public async Task GetReleases_ListAndStatusReportTheSameInstant()
+    {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
+        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), CancellationToken.None);
+        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+
+        var list = Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None));
+        var status = (await controller.GetStatusAsync(CancellationToken.None)).Value!;
+
+        Assert.Equal(_clock.GetUtcNow(), list.LastRefreshedAt);
+        Assert.Equal((list.HasCompletedRefresh, list.LastRefreshedAt), (status.HasCompletedRefresh, status.LastRefreshedAt));
+    }
+
+    /// <summary>002 FR-008: the empty state follows stored releases, not run history — so a purge returns to it.</summary>
+    [Fact]
+    public async Task GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted()
+    {
+        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        var run = await _db.SourceState.StartRunAsync(CancellationToken.None);
+        await _db.SourceState.FinishRunAsync(run, 1, 0, 0, 0, "Completed", CancellationToken.None);
+
+        Assert.False(Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).HasCompletedRefresh);
+
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        Assert.True(Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).HasCompletedRefresh);
+
+        await _db.Releases.PurgeAsync(CancellationToken.None);
+        Assert.False(Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).HasCompletedRefresh);
+    }
+
+    /// <summary>002 Edge Cases: releases on screen with nothing that confirmed them — show them, state no age.</summary>
+    [Fact]
+    public async Task GetReleases_ReleasesStoredButNoFetchEverCompleted_AreListedWithNoInstant()
+    {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var run = await _db.SourceState.StartRunAsync(CancellationToken.None);
+        await _db.SourceState.FinishRunAsync(run, 1, 1, 0, 0, "Completed", CancellationToken.None);
+
+        var list = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(cancellationToken: CancellationToken.None));
+
+        Assert.Equal(["Discovery"], list.Items.Select(i => i.Title));
+        Assert.True(list.HasCompletedRefresh);
+        Assert.Null(list.LastRefreshedAt);
+    }
+
+    /// <summary>002 FR-002: disabling a source stops its past fetches counting, so the age can jump older.</summary>
+    [Fact]
+    public async Task GetReleases_DisablingTheNewestSource_FallsBackToTheNewestEnabledOne()
+    {
+        var older = new DateTimeOffset(2026, 9, 1, 3, 0, 0, TimeSpan.Zero);
+        var newer = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
+        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, older, CancellationToken.None);
+        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "deezer", FetchOutcome.Complete, 0, null, newer, CancellationToken.None);
+        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+
+        Assert.Equal(newer, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).LastRefreshedAt);
+
+        _configuration.DeezerEnabled = false;
+        Assert.Equal(older, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).LastRefreshedAt);
+
+        _configuration.MusicBrainzEnabled = false;
+        Assert.Null(Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).LastRefreshedAt);
+    }
+
     [Fact]
     public async Task GetArtists_ReturnsOnlyArtistsInLibrariesTheCallerMayAccess()
     {

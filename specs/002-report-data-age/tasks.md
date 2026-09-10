@@ -68,16 +68,16 @@ behaviours for that reason, and it is why `/speckit-tdd-plan` reordered the task
 
 Both assert the *opposite* of what `002` requires, so both go red before the wiring changes. Neither is deleted or weakened (constitution II).
 
-- [ ] T008 [US1] Rewrite `GetReleases_LastRefreshedAtIsTheLastCompletedRunsEnd_RefreshIntervalFollowsTheTrigger` in `tests/Api/ReleasesControllerTests.cs` (`001`'s `U118`) to assert the reported instant is the newest completed catalogue fetch, renaming the method to match; and invert `A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge` in `tests/Acceptance/ConfigureAndRunTests.cs` (`001`'s `A20`) to assert the **first** run's fetch after a second run that completed none. Record both reds Behaviors: [U10] [U11]
-- [ ] T009 [US1] Read the aggregate in `src/Api/ReleasesController.cs` and return it from both the list and status actions, replacing the last-completed-run lookup, until T008 is green Behaviors: [U10] [U11]
-- [ ] T010 [US1] Write a failing test in `tests/Api/ReleasesControllerTests.cs` that the list and status responses report the same instant for one caller at one moment, then make it green Behaviors: [U12]
+- [X] T008 [US1] Rewrite `GetReleases_LastRefreshedAtIsTheLastCompletedRunsEnd_RefreshIntervalFollowsTheTrigger` in `tests/Api/ReleasesControllerTests.cs` (`001`'s `U118`) to assert the reported instant is the newest completed catalogue fetch, renaming the method to match; and invert `A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge` in `tests/Acceptance/ConfigureAndRunTests.cs` (`001`'s `A20`) to assert the **first** run's fetch after a second run that completed none. Record both reds Behaviors: [U10] [U11]
+- [X] T009 [US1] Read the aggregate in `src/Api/ReleasesController.cs` and return it from both the list and status actions, replacing the last-completed-run lookup, until T008 is green Behaviors: [U10] [U11]
+- [X] T010 [US1] Write a failing test in `tests/Api/ReleasesControllerTests.cs` that the list and status responses report the same instant for one caller at one moment, then make it green Behaviors: [U12]
 
 ### The empty state
 
 - [X] T011 [P] [US1] Write failing tests in `tests/Storage/ReleaseRepositoryTests.cs` for `HasAnyAsync`: false on an empty database, true with one release row, false again after `PurgeAsync` Behaviors: [U7] [U8] [U9]
 - [X] T012 [US1] Implement `ReleaseRepository.HasAnyAsync(CancellationToken)` in `src/Storage/ReleaseRepository.cs` as `SELECT EXISTS(SELECT 1 FROM release LIMIT 1)` until T011 is green Behaviors: [U7] [U8] [U9]
-- [ ] T013 [US1] Write failing tests in `tests/Api/ReleasesControllerTests.cs` that the stored-releases flag follows whether release rows exist rather than run history, and that release rows with no completed fetch anywhere are listed with no instant reported Behaviors: [U13] [U14]
-- [ ] T014 [US1] Gate the stored-releases flag in `src/Api/ReleasesController.cs` on `HasAnyAsync` in both the list and status actions until T013 is green Behaviors: [U13] [U14]
+- [X] T013 [US1] Write failing tests in `tests/Api/ReleasesControllerTests.cs` that the stored-releases flag follows whether release rows exist rather than run history, and that release rows with no completed fetch anywhere are listed with no instant reported Behaviors: [U13] [U14]
+- [X] T014 [US1] Gate the stored-releases flag in `src/Api/ReleasesController.cs` on `HasAnyAsync` in both the list and status actions until T013 is green Behaviors: [U13] [U14]
 
 ### The page
 

@@ -82,11 +82,11 @@ Grouped by the component from `plan.md` that owns them.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U10 | The list response reports the newest completed fetch, not the last completed run's end | FR-001, FR-002 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_RefreshIntervalFollowsTheTrigger` |
-| U11 | A refresh that completed no fetch leaves the reported instant unchanged | FR-003, FR-004 | example | PENDING | rewrites `001`'s `A20` |
-| U12 | The list response and the status response report the same instant for one caller at one moment | FR-011 | example | PENDING | |
-| U13 | The stored-releases flag follows whether release rows exist, not whether a run has completed | FR-008 | example | PENDING | |
-| U14 | Release rows with no completed fetch anywhere → the releases are listed and no instant is reported | FR-008, EC-no-fetch | example | PENDING | |
-| U15 | Disabling the source whose fetch was newest makes the reported instant fall back to the newest remaining enabled source | FR-002, US2-AS2 | example | PENDING | |
+| U11 | A refresh that completed no fetch leaves the reported instant unchanged | FR-003, FR-004 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_RefreshIntervalFollowsTheTrigger` |
+| U12 | The list response and the status response report the same instant for one caller at one moment | FR-011 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ListAndStatusReportTheSameInstant` |
+| U13 | The stored-releases flag follows whether release rows exist, not whether a run has completed | FR-008 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted` |
+| U14 | Release rows with no completed fetch anywhere → the releases are listed and no instant is reported | FR-008, EC-no-fetch | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReleasesStoredButNoFetchEverCompleted_AreListedWithNoInstant` |
+| U15 | Disabling the source whose fetch was newest makes the reported instant fall back to the newest remaining enabled source | FR-002, US2-AS2 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_DisablingTheNewestSource_FallsBackToTheNewestEnabledOne` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`
 

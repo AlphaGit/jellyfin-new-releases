@@ -126,3 +126,54 @@ failed before the implementation.
 - note: this change also makes `U11`, `U12`, `U13` and `U14` true, but none of them has a test yet,
   so they stay PENDING. Each is pinned in its own cycle below, with a deliberate mutant, rather
   than credited to an implementation that arrived first.
+
+## Cycle 8: U11 credited to an existing test, not re-driven
+
+`U11` ("a refresh that completed no fetch leaves the reported instant unchanged") is already
+asserted by cycle 7's test, which seeds a completed fetch and then finishes a run five minutes
+later, expecting the fetch instant. Per the loop's Phase 1, a behaviour already covered by a
+passing test that really asserts it is marked DONE against that test rather than given a staged
+cycle. No new test, no new code.
+
+## Cycle 9: U12 the list and the status report the same instant
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_ListAndStatusReportTheSameInstant` (new)
+- red: passed on first run — cycle 7 wired both actions to the same call.
+- deliberate mutant: the status action reverted to `GetLastCompletedRunAsync()?.EndedAt` ->
+  `Assert.Equal() Failure: Expected: Tuple (True, 2026-09-06T12:00:00Z) / Actual: Tuple (True, null)`
+  (1 failed). Code restored exactly (`git diff` empty), test green again.
+- green: no production change. Suite -> 186 passed, 0 failed
+- refactor: none needed
+
+## Cycle 10: U13 the empty state follows the rows, not the run history
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted`
+  (new; a completed run with no rows, then rows, then a purge)
+- red: passed on first run.
+- deliberate mutant: the flag reverted to `GetLastCompletedRunAsync() is not null`, which is what
+  `001` shipped -> `Assert.False() Failure / Expected: False / Actual: True` (1 failed). Code
+  restored exactly, test green again. This mutant is the `001` behaviour, so the test pins the
+  change rather than merely describing it.
+- green: no production change. Suite -> 187 passed, 0 failed
+- refactor: none needed
+
+## Cycle 11: U14 releases with nothing that confirmed them are listed with no age
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_ReleasesStoredButNoFetchEverCompleted_AreListedWithNoInstant` (new)
+- red: passed on first run.
+- deliberate mutant: the instant falling back to the last completed run when no fetch has
+  completed -> `Assert.Null() Failure: Expected: null / Actual: 2026-09-06T12:00:00Z` (1 failed).
+  Code restored exactly, test green again.
+- green: no production change. Suite -> 188 passed, 0 failed
+- refactor: none needed
+
+## Cycle 12: U15 disabling the newest source falls back to the newest enabled one
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_DisablingTheNewestSource_FallsBackToTheNewestEnabledOne`
+  (new; both sources, then Deezer off, then both off)
+- red: passed on first run — `EnabledSourceIds()` is read on every request.
+- deliberate mutant: the enabled set replaced with a hard-coded pair of both sources ->
+  `Assert.Equal() Failure: Expected: 2026-09-01T03:00:00Z / Actual: 2026-09-06T03:00:00Z`
+  (1 failed). Code restored exactly, test green again.
+- green: no production change. Suite -> 189 passed, 0 failed
+- refactor: none needed
