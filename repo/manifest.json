@@ -1,11 +1,20 @@
 [
-  {
-    "guid": "b8a15db8-e368-42c4-9048-390faf0094db",
-    "name": "Jellyfin New Releases",
-    "description": "Tracks releases by the library artists in your Jellyfin music library that the library does not yet contain. A daily Refresh reads MusicBrainz and Deezer, decides ownership by track list, and lists Missing, Incomplete and Upcoming releases in a New Releases view; users can Ignore a release or mark it Have it.",
-    "overview": "Releases by your library artists that your library does not have yet.",
-    "owner": "Alpha",
-    "category": "General",
-    "versions": []
-  }
+    {
+        "guid": "b8a15db8-e368-42c4-9048-390faf0094db",
+        "name": "Jellyfin New Releases",
+        "description": "Tracks releases by the library artists in your Jellyfin music library that the library does not yet contain. A daily Refresh reads MusicBrainz and Deezer, decides ownership by track list, and lists Missing, Incomplete and Upcoming releases in a New Releases view; users can Ignore a release or mark it Have it.",
+        "overview": "Releases by your library artists that your library does not have yet.",
+        "owner": "Alpha",
+        "category": "General",
+        "versions": [
+            {
+                "version": "0.1.0.0",
+                "changelog": "Initial scaffold.",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://AlphaGit.github.io/jellyfin-new-releases/jellyfin-new-releases/jellyfin-new-releases_0.1.0.0.zip",
+                "checksum": "b269d3db8cbb584e49c81440581c089e",
+                "timestamp": "2026-09-20T21:38:08Z"
+            }
+        ]
+    }
 ]
