@@ -129,8 +129,8 @@ repository document, the package it points at, and the server version both decla
 
 ## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T034 [P] Add the Jellyfin 12 entry to `CHANGELOG.md` under Unreleased: the supported server version, the dropped 10.11.x support, and the page-registration change
-- [ ] T035 Work through [quickstart.md](./quickstart.md) end to end, including the local JPRM dry run into a temporary directory, and confirm every stated expectation
+- [X] T034 [P] Add the Jellyfin 12 entry to `CHANGELOG.md` under Unreleased: the supported server version, the dropped 10.11.x support, and the page-registration change
+- [X] T035 Work through [quickstart.md](./quickstart.md) end to end, including the local JPRM dry run into a temporary directory, and confirm every stated expectation
 - [ ] T036 Push to `main` and verify the CI run is green with `gh run watch` — the constitution's final gate; a feature is done when its CI run is verified, not when it is pushed
 
 ---

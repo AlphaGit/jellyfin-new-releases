@@ -41,29 +41,43 @@ jobs:
       - name: Install JPRM
         run: pip install jprm==1.1.0
 
+      # JPRM normalises a version to four parts and names the package for the normalised one,
+      # so tag v1.0.0 yields jellyfin-new-releases_1.0.0.0.zip. Both forms are needed: the three
+      # part one to pass to JPRM, the four part one to find what it wrote.
       - name: Derive version from tag
         id: ver
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          version4="$version"
+          while [ "$(printf '%s' "$version4" | tr -cd . | wc -c)" -lt 3 ]; do version4="$version4.0"; done
+          echo "version=$version"   >> "$GITHUB_OUTPUT"
+          echo "version4=$version4" >> "$GITHUB_OUTPUT"
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
+      # Build to a staging directory: `jprm repo add` copies the package into repo/ itself, and
+      # would otherwise be copying a file onto itself.
       - name: Package with JPRM
         run: |
-          mkdir -p ./repo/jellyfin-new-releases
-          jprm plugin build . --version "${{ steps.ver.outputs.version }}" --output ./repo/jellyfin-new-releases
+          mkdir -p ./artifacts
+          jprm plugin build . --version "${{ steps.ver.outputs.version }}" --output ./artifacts
 
-      # JPRM rewrites <TargetFramework> from build.yaml while packaging and is expected to restore
-      # it. If it did not, the commit below would carry that edit onto main.
-      - name: Verify packaging left the project file unchanged
-        run: git diff --quiet -- src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj
+      # JPRM rewrites <TargetFramework> from build.yaml while packaging and restores it; it also
+      # rewrites <Version> and does NOT restore that. Contract statement 6 is about the framework,
+      # so that is what is checked, and the project file is put back before anything is committed.
+      - name: Verify packaging restored the target framework
+        run: |
+          grep -q '<TargetFramework>net10.0</TargetFramework>' \
+            src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj
+          git checkout -- src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj
 
       - name: Add the version to the published repository
         run: |
           jprm repo add \
             --url "${{ steps.pages.outputs.base_url || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}" \
             ./repo/manifest.json \
-            "./repo/jellyfin-new-releases/jellyfin-new-releases_${{ steps.ver.outputs.version }}.zip"
+            "./artifacts/jellyfin-new-releases_${{ steps.ver.outputs.version4 }}.zip"
 
       - name: Commit the published repository
         run: |

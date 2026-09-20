@@ -14,9 +14,17 @@ public class ReleaseWorkflowTests
     private static readonly string Workflow =
         RepositoryFiles.ReadAllText(".github/workflows/package.yml");
 
+    /// <summary>
+    /// The workflow with its comment lines removed. Ordering must be judged on the steps that
+    /// run, not on prose that happens to name a command.
+    /// </summary>
+    private static readonly string Steps = string.Join(
+        '\n',
+        Workflow.Split('\n').Where(line => !line.TrimStart().StartsWith('#')));
+
     private static int IndexOf(string fragment)
     {
-        var at = Workflow.IndexOf(fragment, StringComparison.Ordinal);
+        var at = Steps.IndexOf(fragment, StringComparison.Ordinal);
         Assert.True(at >= 0, $"the release workflow has no step containing: {fragment}");
         return at;
     }
@@ -40,13 +48,31 @@ public class ReleaseWorkflowTests
 
     /// <summary>
     /// U28: JPRM rewrites TargetFramework in the project file while packaging and is expected to
-    /// put it back. If it does not, the commit that follows would carry that edit onto main.
+    /// put it back. Contract statement 6 is about that element specifically, and a local dry run
+    /// confirmed JPRM restores it — while leaving the rewritten &lt;Version&gt; behind. A whole-file
+    /// check would therefore fail every release; this guards what the contract actually says.
     /// </summary>
     [Fact]
-    public void ReleaseWorkflow_FailsTheRunIfPackagingLeftTheProjectFileModified()
+    public void ReleaseWorkflow_FailsTheRunIfPackagingDidNotRestoreTheTargetFramework()
     {
-        Assert.Contains(
+        Assert.Contains("<TargetFramework>net10.0</TargetFramework>", Workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain(
             "git diff --quiet -- src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj",
+            Workflow,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// U33: JPRM normalises a three-part version to four parts and names the package for the
+    /// normalised one, so a tag v1.0.0 produces jellyfin-new-releases_1.0.0.0.zip. A workflow
+    /// that interpolates the tag's own version points at a file that does not exist.
+    /// </summary>
+    [Fact]
+    public void ReleaseWorkflow_NamesThePackageByTheFourPartVersionJprmWrites()
+    {
+        Assert.Contains("version4", Workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "jellyfin-new-releases_${{ steps.ver.outputs.version }}.zip",
             Workflow,
             StringComparison.Ordinal);
     }

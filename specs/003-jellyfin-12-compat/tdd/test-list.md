@@ -143,7 +143,8 @@ first tag.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U27 | The workflow builds with JPRM, adds the version with `jprm repo add`, commits `repo/` and deploys it to Pages, in that order and with no manual step between them | US2-AS1, FR-014 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_BuildsAddsToTheManifestCommitsAndDeploys_InThatOrder` |
-| U28 | The workflow fails the run when the JPRM build leaves the project file modified | CM-6 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_FailsTheRunIfPackagingLeftTheProjectFileModified` |
+| U28 | The workflow fails the run when the JPRM build leaves the project file modified | CM-6 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_FailsTheRunIfPackagingDidNotRestoreTheTargetFramework` |
+| U33 | The workflow names the package by the four-part version JPRM writes, not the tag's three-part one | CM-3, FR-014 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_NamesThePackageByTheFourPartVersionJprmWrites` |
 
 ### `README.md`
 

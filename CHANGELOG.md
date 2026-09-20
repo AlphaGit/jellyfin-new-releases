@@ -19,9 +19,24 @@ All notable changes to this project are documented here. The format follows
   run status, unmatched artists with fix-it links, Run now, Purge release data, Clear Archive.
 - Per-user library access on the list and the Archive.
 - Per-source request rate, daily budget and cooldown; identifying User-Agent.
+- A published plugin repository at
+  `https://alphagit.github.io/jellyfin-new-releases/manifest.json`, kept current by the release
+  workflow, so the plugin can be installed from the Jellyfin catalogue rather than sideloaded.
+
+### Removed
+
+- Support for Jellyfin 10.11.x. One package is published, declaring Jellyfin 12 as the server
+  version it supports, so no older server is offered a build it cannot load.
 
 ### Changed
 
+- **The plugin now runs on Jellyfin 12, and only on Jellyfin 12.** It targets `net10.0` and pins
+  `Jellyfin.Controller`, `Jellyfin.Model`, `Jellyfin.Data` and `Jellyfin.Database.Implementations`
+  to `12.0.0`. Nothing a user sees behaves differently.
+- The New Releases page entry is registered through Plugin Pages' own registration interface at
+  server start and withdrawn at shutdown, instead of by writing into that plugin's configuration
+  file. Plugin Pages 3.0.0.0 is the minimum for the menu entry; without it, or with an older
+  build, the plugin still loads and the admin page, API and refresh all still work.
 - The New Releases page now states when the releases were last checked, not when a refresh last
   ran: "Releases last checked <relative time> ago." A refresh that reaches no source no longer
   makes the data look fresh, and the age keeps growing until a source actually answers.

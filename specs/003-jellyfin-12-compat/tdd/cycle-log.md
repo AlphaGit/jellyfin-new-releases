@@ -430,3 +430,44 @@ untouched 001/002 suite. Recorded here rather than adding a test that would only
 
 Final state: `dotnet test --configuration Release` -> 235 passed, 0 failed, 10 s.
 `node --test "tests/web/*.test.js"` -> 33 passed, 0 failed.
+
+## Cycle 30: U28 corrected and U33 added, after the quickstart dry run found three release defects
+
+`T035` ran `quickstart.md` end to end for the first time, including the local JPRM dry run. It
+found three defects in the release workflow that `T029`-`T031` had shipped and that `U27`-`U28`
+had passed over. All three would have broken a real release.
+
+1. **JPRM normalises the version and names the package for the normalised one.** `--version 0.0.1`
+   produced `jellyfin-new-releases_0.0.1.0.zip`. The workflow's `jprm repo add` referenced
+   `jellyfin-new-releases_${{ steps.ver.outputs.version }}.zip`, a file that never exists.
+2. **`jprm repo add` copies the package into `repo/` itself**, so building into
+   `repo/jellyfin-new-releases/` had it copying a file onto itself.
+3. **JPRM does not restore `<Version>`.** `git diff` after the build showed
+   `-<Version>0.1.0.0</Version> +<Version>0.0.1.0</Version>`. `<TargetFramework>` *was* restored to
+   `net10.0`. The workflow's whole-file `git diff --quiet` guard would therefore fail every run.
+
+- **U28's test was wrong, and was corrected before the workflow changed, with the reason stated.**
+  Contract statement 6 reads "A build leaves `<TargetFramework>net10.0</TargetFramework>` in the
+  project file unchanged" — about that element, not the whole file. The test asserted something
+  stricter that reality disproves, so `spec.md`/the contract decides and the test is what was
+  wrong. Renamed to `ReleaseWorkflow_FailsTheRunIfPackagingDidNotRestoreTheTargetFramework`.
+- **U33 appended to the list**: the workflow must name the package by the four-part version.
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Contains() Failure: Sub-string not found` (2 failed, 2 passed)
+- green: the workflow now derives `version4` alongside `version`, builds into `./artifacts`, greps
+  for the restored `<TargetFramework>` and puts the project file back with `git checkout --`
+  before anything is committed, and hands `jprm repo add` the four-part filename. Verified the
+  file still parses as YAML. -> 4 passed
+- **a second test defect, found by the fix and corrected as its own step.** `U27`'s ordering
+  assertions matched raw substrings, so the new explanatory comment naming `jprm repo add` — which
+  sits above the build step — satisfied `IndexOf` and the test failed with
+  `the version is added to the manifest before the package is built`. Comments are not steps. A
+  `Steps` view with comment lines stripped was added, and ordering is judged on that.
+- suite: `dotnet test --configuration Release` -> 236 passed, 0 failed.
+  `node --test "tests/web/*.test.js"` -> 33 passed, 0 failed
+- commit: `10f4ca1`
+- **what the dry run confirmed as specified**: the package holds the plugin DLL, the four SQLite
+  assemblies, `runtimes/linux-x64/native/libe_sqlite3.so` and `meta.json`; `meta.json` carries
+  `targetAbi` `12.0.0.0` and the frozen guid; `jprm repo add` merged an entry with a `sourceUrl`
+  under the given site root, an MD5 `checksum` and a `timestamp`, matching
+  `contracts/plugin-repository-manifest.md` field for field.
