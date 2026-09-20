@@ -25,23 +25,6 @@ namespace Jellyfin.Plugin.NewReleases.Tests;
 public class PluginServiceRegistratorTests
 {
     /// <summary>
-    /// The host services the plugin expects Jellyfin to have registered already, plus the
-    /// plugin's own registrations on top. Nothing here is real but the plugin's own types.
-    /// </summary>
-    private static ServiceProvider BuildContainerAsTheHostWould()
-    {
-        var services = new ServiceCollection();
-
-        services.AddLogging();
-        services.AddSingleton(Substitute.For<IApplicationPaths>());
-        services.AddSingleton(Substitute.For<ILibraryManager>());
-
-        new PluginServiceRegistrator().RegisterServices(services, Substitute.For<IServerApplicationHost>());
-
-        return services.BuildServiceProvider();
-    }
-
-    /// <summary>
     /// A2: resolve every type the registrator adds, from a container that holds only what the
     /// Jellyfin 12 host provides. This is the whole of the plugin's wiring in one assertion.
     /// </summary>
@@ -49,7 +32,7 @@ public class PluginServiceRegistratorTests
     public async Task RegisterServices_EveryServiceThePluginRegisters_ResolvesFromTheHostContainer()
     {
         // SourceHttpClient is IAsyncDisposable only, so the container needs DisposeAsync.
-        await using var provider = BuildContainerAsTheHostWould();
+        await using var provider = HostContainer.AsTheHostWouldBuildIt();
 
         // GetRequiredService throws, naming the type, when a registration is missing — the call
         // is the assertion. Wrapping each in NotNull only gave the test eleven reasons to fail.
@@ -58,7 +41,7 @@ public class PluginServiceRegistratorTests
                      typeof(PluginDatabase), typeof(ArtistRepository), typeof(ReleaseRepository),
                      typeof(ArchiveRepository), typeof(SourceStateRepository), typeof(TimeProvider),
                      typeof(IHttpClientFactory), typeof(SourceHttpClient), typeof(LibraryScanner),
-                     typeof(IScheduledTask),
+                     typeof(IScheduledTask), typeof(PluginPagesGateway),
                  })
         {
             provider.GetRequiredService(service);
@@ -75,7 +58,7 @@ public class PluginServiceRegistratorTests
     [Fact]
     public async Task RegisterServices_BothReleaseSourcesAreRegistered_NotOneOfThemTwice()
     {
-        await using var provider = BuildContainerAsTheHostWould();
+        await using var provider = HostContainer.AsTheHostWouldBuildIt();
 
         var sources = provider.GetRequiredService<IEnumerable<IReleaseSource>>();
 
@@ -92,7 +75,7 @@ public class PluginServiceRegistratorTests
     [Fact]
     public async Task RegisterServices_TheScheduledTaskResolvesAsTheRefreshTask()
     {
-        await using var provider = BuildContainerAsTheHostWould();
+        await using var provider = HostContainer.AsTheHostWouldBuildIt();
 
         Assert.IsType<RefreshNewReleasesTask>(provider.GetRequiredService<IScheduledTask>());
     }
@@ -105,7 +88,7 @@ public class PluginServiceRegistratorTests
     [Fact]
     public async Task RegisterServices_ThePageRegistrationRunsAsAHostedService()
     {
-        await using var provider = BuildContainerAsTheHostWould();
+        await using var provider = HostContainer.AsTheHostWouldBuildIt();
 
         Assert.Contains(
             provider.GetRequiredService<IEnumerable<IHostedService>>(),

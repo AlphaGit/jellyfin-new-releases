@@ -35,6 +35,25 @@ public class RepositoryManifestTests
             .ToLowerInvariant()
             .Replace(' ', '-');
 
+    /// <summary>
+    /// A well-formed entry, shaped exactly as `jprm repo add` writes one. The published manifest
+    /// lists no versions until the first tag, so without this the helpers below would only ever
+    /// run over an empty list and could reject everything without a test noticing.
+    /// </summary>
+    private static JsonDocument WellFormedEntry(
+        string version = "1.2.3.0",
+        string? sourceUrl = null,
+        string targetAbi = TargetVersions.JellyfinAbi)
+        => JsonDocument.Parse(JsonSerializer.Serialize(new Dictionary<string, string>
+        {
+            ["version"] = version,
+            ["changelog"] = "anything",
+            ["targetAbi"] = targetAbi,
+            ["sourceUrl"] = sourceUrl ?? $"{ExampleSiteRoot}{Slug}_{version}.zip",
+            ["checksum"] = "0123456789abcdef0123456789abcdef",
+            ["timestamp"] = "2026-09-20T00:00:00Z",
+        }));
+
     private static JsonElement TheOnlyPlugin()
     {
         using var document = JsonDocument.Parse(RepositoryFiles.ReadAllText(ManifestPath));
@@ -55,17 +74,6 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
-    /// U22: before the first tag the document exists with no versions. A server pointed at it
-    /// sees a repository with nothing to install, which is right — this feature builds the
-    /// publishing chain; running it is the maintainer's act.
-    /// </summary>
-    [Fact]
-    public void Manifest_MayListNoVersionsAtAll()
-    {
-        Assert.Equal(JsonValueKind.Array, TheOnlyPlugin().GetProperty("versions").ValueKind);
-    }
-
-    /// <summary>
     /// U23: every listed version must be installable. A missing checksum or source location is
     /// an entry a server will offer and then fail to fetch.
     /// </summary>
@@ -78,7 +86,32 @@ public class RepositoryManifestTests
         // so the count is stated first. This line is what fails the day the release chain adds a
         // version, which is exactly when these checks must start being read.
         AssertPublishedVersionCount(versions);
-        Assert.All(versions, AssertInstallable);
+
+        using var synthetic = WellFormedEntry();
+        Assert.All(versions.Append(synthetic.RootElement), AssertInstallable);
+    }
+
+    /// <summary>
+    /// U23, the accepting side. Without this the rule below could reject every entry ever
+    /// written and no test would fail, because the published list is empty until the first tag.
+    /// </summary>
+    [Fact]
+    public void AWellFormedEntry_IsAccepted()
+    {
+        using var entry = WellFormedEntry();
+
+        AssertInstallable(entry.RootElement);
+    }
+
+    /// <summary>
+    /// U25, the accepting side, for the same reason.
+    /// </summary>
+    [Fact]
+    public void AWellFormedEntry_SourceUrlIsAccepted()
+    {
+        using var entry = WellFormedEntry();
+
+        AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleSiteRoot);
     }
 
     /// <summary>
@@ -112,11 +145,14 @@ public class RepositoryManifestTests
 
         AssertPublishedVersionCount(versions);
 
-        if (versions.Count > 0)
-        {
-            var siteRoot = SiteRootOf(versions[0]);
-            Assert.All(versions, version => AssertSourceUrlNamesItsOwnVersion(version, siteRoot));
-        }
+        // Two synthetic entries stand in while the published list is empty, so the rule runs on
+        // every execution rather than the day someone finally tags a release.
+        using var first = WellFormedEntry("1.0.0.0");
+        using var second = WellFormedEntry("2.0.0.0");
+        var entries = versions.Concat([first.RootElement, second.RootElement]).ToList();
+
+        var siteRoot = SiteRootOf(entries[0]);
+        Assert.All(entries, entry => AssertSourceUrlNamesItsOwnVersion(entry, siteRoot));
     }
 
     /// <summary>

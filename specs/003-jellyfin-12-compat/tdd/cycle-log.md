@@ -678,3 +678,62 @@ alone, each with a reason below. No production code changed.
 
 - suite: 238 passed, 0 failed.
 - commit: `0b7ffa8`
+
+## Cycle 36: second remediation, T054-T061
+
+The third audit returned `FAIL` on three `HIGH` findings, two of them created by Phase 6's own
+remediation. Closing them, and the six `MED`/`LOW` that came with them. No production code changed.
+
+- **T054/T055, findings A and B — the manifest helpers proved nothing.** `AssertInstallable` and
+  `AssertSourceUrlNamesItsOwnVersion` were only ever called over a `versions` list that is empty
+  until the first tag, and the nine negative theories accept a throw for any reason. **Demonstrated
+  before fixing**: `Assert.Fail("mutant")` at the top of `AssertInstallable` left the class at
+  **13 passed, 0 failed**. And `T044` had replaced the first audit's early `return` with
+  `if (versions.Count > 0)` — the same defect in a new shape.
+  Fix: a `WellFormedEntry` factory shaped as `jprm repo add` writes one, two new accepting tests
+  (`U36`), the conditional removed, and both rules now run over the published entries plus
+  synthetic ones on every execution. **Re-proved**: the same `Assert.Fail` mutant now fails 2
+  tests, and dropping the site-root and filename checks fails 3.
+- **T056, finding C — the flaky-test guard could not fail for the right reason.** It asserted only
+  `Assert.Null(observed)` and passed on a run where its workers were never scheduled.
+  **The first replacement also failed its own proof**: restoring `ClearAllPools()` did *not* fail
+  it, because after a global clear the pool is simply empty and the next open makes a fresh
+  connection. The race needs a concurrent take, which is why it was a one-in-ten flake and not a
+  test failure. Recorded rather than hidden.
+  The guard that does work is on the call: `U37` fails if `.ClearAllPools(` appears on any
+  non-comment line under `tests/`. **Proved both ways** — green as committed, and failing the
+  moment `TestDatabase.DisposeAsync` is reverted. Two property tests were kept beside it (distinct
+  connection strings per database; `ClearPool` is scoped), and the log is explicit that those two
+  do *not* catch the regression.
+  The first attempt at `U37` matched its own source text and failed in the clean tree; the needle
+  is now built at runtime so the guard cannot match itself.
+- **T057, finding E** — the old guard ran eight unbounded tasks beside every other collection and
+  was a plausible new source of the intermittency it was meant to guard. It is gone; what replaced
+  it is in `ProcessGlobalStateCollection`.
+- **T058, finding D** — `T047` had narrowed the `10.11` negative check to the Requirements
+  section, losing whole-file scope. Restored as a regex that tolerates "no longer supported".
+  **Proved both ways**: a stale "requires Jellyfin 10.11" under "What it does" now fails; the
+  sentence "Jellyfin 10.11 is no longer supported" still passes.
+- **T059, finding F** — the csproj path and the `grep -q` were asserted separately, so
+  `git checkout -- <csproj>` two lines later satisfied the path half. Now one regex across the
+  shell line continuation. **Proved**: deleting the grep step while keeping the checkout fails it.
+- **T060, findings G, H, I, J, K, L**
+  - **G**: `Manifest_MayListNoVersionsAtAll` asserted a JSON array is an array. Deleted; `U22` is
+    `DROPPED` with that reason. The count tripwire lives in one place.
+  - **H**: `A1` had become a duplicate of `U1` and `U2`. It now asserts the composite they cannot
+    see — the constructor publishes `Plugin.Instance` as the object just built. **Proved**:
+    removing `Instance = this` fails it.
+  - **I**: nothing tied `build.yaml`'s `framework` to the project file. `U35` does.
+    **Proved from the silent direction**: setting `build.yaml` to `net9.0` while the csproj stays
+    `net10.0` builds fine and now fails the test. The reverse mutant was attempted first and is
+    not usable — a `net9.0` csproj cannot compile against Jellyfin 12, so the build breaks before
+    any test runs.
+  - **J**: the container factory was hand-copied between two test classes. Now
+    `Support/HostContainer.cs`, called from both.
+  - **K**: `AfterAFailedRegistration_…` arranged the *absent* integration, not a failing one.
+    Renamed to `AfterAnUnavailableIntegration_…`; the `U15` row follows.
+  - **L**: the `artifacts` list was pinned in file order. Compared as a sorted set.
+  - Also closed from the re-audit's finding 9: `PluginPagesGateway` was missing from the
+    resolution list. Added. **Proved**: removing its registration now fails.
+- suite: 243 passed, 0 failed.
+- commit: `6c5d6f3`

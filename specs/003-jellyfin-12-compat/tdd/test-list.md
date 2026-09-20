@@ -124,6 +124,7 @@ Grouped by the component from `plan.md` that owns them.
 | U6 | `IScheduledTask` resolves as the refresh task | US1-AS2, FR-001 | characterization | BASELINE | `PluginServiceRegistratorTests.cs::RegisterServices_TheScheduledTaskResolvesAsTheRefreshTask` |
 | U7 | The page-registration hosted service is registered and resolves as an `IHostedService` | FR-015, US1-AS6 | example | DONE | `PluginServiceRegistratorTests.cs::RegisterServices_ThePageRegistrationRunsAsAHostedService` |
 | U34 | The gateway the registrator builds can reach a type in a genuinely loaded assembly, not only an injected stand-in source | US1-AS6, FR-015, CR-1 | example | DONE | `Integration/PluginPagesRegistrationTests.cs::TheGatewayTheRegistratorBuilds_CanReachATypeInALoadedAssembly` |
+| U37 | No test teardown calls the process-global `SqliteConnection.ClearAllPools()` | FR-010, SC-005 | example | DONE | `Storage/TestDatabaseIsolationTests.cs::NoTestTeardown_CallsTheProcessGlobalClearAllPools` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Integration/PluginPagesRegistrationService.cs`
 
@@ -139,7 +140,7 @@ injected seam so a test supplies the stand-in without touching load contexts.
 | U12 | With no integration assembly loaded, exactly one message is logged, below error level | CR-3, EC-1 | example | DONE | `Integration/PluginPagesRegistrationTests.cs::WithNoIntegrationAssembly_LogsExactlyOnce_BelowErrorLevel` |
 | U13 | When `RegisterPage` throws, starting does not throw and logs exactly one message | CR-4, FR-008 | example | DONE | `Integration/PluginPagesRegistrationTests.cs::WhenRegisterPageThrows_StartingDoesNotThrow_AndLogsOnce` |
 | U14 | Starting twice in one process logs at most one message | CR-5, EC-1 | example | DONE | `Integration/PluginPagesRegistrationTests.cs::StartingTwiceWithNoIntegration_LogsAtMostOnce` |
-| U15 | After a registration that failed, stopping neither throws nor logs a second message | CR-4 | example | DONE | `Integration/PluginPagesRegistrationTests.cs::AfterAFailedRegistration_StoppingDoesNotThrow_AndLogsNothingFurther` |
+| U15 | After a registration that failed, stopping neither throws nor logs a second message | CR-4 | example | DONE | `Integration/PluginPagesRegistrationTests.cs::AfterAnUnavailableIntegration_StoppingDoesNotThrow_AndLogsNothingFurther` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj`
 
@@ -155,6 +156,7 @@ injected seam so a test supplies the stand-in without touching load contexts.
 | U18 | Declares `framework: "net10.0"` | CM-5 | example | DONE | `Packaging/BuildManifestTests.cs::BuildManifest_DeclaresNet10AsTheFramework` |
 | U19 | Its `guid` equals the GUID compiled into `Plugin.PluginGuid` | CM-5, FR-007 | characterization | BASELINE | `Packaging/BuildManifestTests.cs::BuildManifest_GuidMatchesTheOneCompiledIntoThePlugin` |
 | U20 | Its `artifacts` names the plugin DLL, the four SQLite assemblies and the native library | FR-009 | characterization | BASELINE | `Packaging/BuildManifestTests.cs::BuildManifest_ShipsThePluginItsSqliteAssembliesAndTheNativeLibrary` |
+| U35 | `build.yaml`'s `framework` and the project file's `<TargetFramework>` name the same framework | CM-5, CM-6 | example | DONE | `Packaging/BuildManifestTests.cs::BuildManifest_FrameworkMatchesTheProjectFile` |
 
 ### `repo/manifest.json`
 
@@ -166,6 +168,7 @@ first tag.
 | --- | --- | --- | --- | --- | --- |
 | U21 | Parses as a JSON array of exactly one object whose `guid` is the frozen plugin GUID | CM-1, FR-013 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_IsAnArrayOfOnePlugin_CarryingTheFrozenGuid` |
 | U22 | An empty `versions` array is accepted — the state before the first tag | CM-1, FR-014 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_MayListNoVersionsAtAll` |
+| U36 | A well-formed version entry is accepted by the installability and source-URL rules | CM-2, CM-3 | example | DONE | `Packaging/RepositoryManifestTests.cs::AWellFormedEntry_IsAccepted`, `::AWellFormedEntry_SourceUrlIsAccepted` |
 | U23 | Every entry carries a non-empty `version`, `sourceUrl`, `checksum` and `timestamp`, and a `targetAbi` of `12.0.0.0` | CM-2, FR-013, SC-004 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_EveryVersionCarriesItsDownloadChecksumTimestampAndJellyfin12` |
 | U24 | An entry missing one of those fields, or carrying any other `targetAbi`, is rejected by that same check | CM-2, SC-004 | example | DONE | `Packaging/RepositoryManifestTests.cs::AnEntryMissingAFieldOrDeclaringAnotherAbi_IsRejected` |
 | U25 | Every `sourceUrl` sits under the published site root and its filename is `jellyfin-new-releases_<version>.zip` for that entry's version | CM-3, FR-013 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` |

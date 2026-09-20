@@ -32,6 +32,23 @@ public class BuildManifestTests
     }
 
     /// <summary>
+    /// U35: build.yaml and the project file must name the same framework. JPRM rewrites the
+    /// project's TargetFramework from build.yaml, so a divergence packages one framework while
+    /// the repository builds another, and nothing else in the suite compares the two.
+    /// </summary>
+    [Fact]
+    public void BuildManifest_FrameworkMatchesTheProjectFile()
+    {
+        var csproj = RepositoryFiles.ReadAllText(
+            "src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj");
+
+        Assert.Contains(
+            $"<TargetFramework>{RepositoryFiles.Scalar(Manifest, "framework")}</TargetFramework>",
+            csproj,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// U19: Jellyfin keys an install by this GUID. If the manifest and the assembly disagree,
     /// the catalogue offers an install that the server files under a different identity.
     /// </summary>
@@ -49,6 +66,7 @@ public class BuildManifestTests
     public void BuildManifest_ShipsThePluginItsSqliteAssembliesAndTheNativeLibrary()
     {
         Assert.Equal(
+            new SortedSet<string>(
             [
                 "Jellyfin.Plugin.NewReleases.dll",
                 "Microsoft.Data.Sqlite.dll",
@@ -56,7 +74,7 @@ public class BuildManifestTests
                 "SQLitePCLRaw.core.dll",
                 "SQLitePCLRaw.provider.e_sqlite3.dll",
                 "runtimes/linux-x64/native/libe_sqlite3.so",
-            ],
-            RepositoryFiles.Sequence(Manifest, "artifacts"));
+            ], StringComparer.Ordinal),
+            new SortedSet<string>(RepositoryFiles.Sequence(Manifest, "artifacts"), StringComparer.Ordinal));
     }
 }

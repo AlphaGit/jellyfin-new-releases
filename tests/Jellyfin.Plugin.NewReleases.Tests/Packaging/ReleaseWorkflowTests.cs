@@ -55,8 +55,12 @@ public class ReleaseWorkflowTests
     [Fact]
     public void ReleaseWorkflow_FailsTheRunIfPackagingDidNotRestoreTheTargetFramework()
     {
-        Assert.Contains($"grep -q '<TargetFramework>{TargetVersions.Framework}</TargetFramework>'", Steps, StringComparison.Ordinal);
-        Assert.Contains("src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj", Steps, StringComparison.Ordinal);
+        // One unit: the grep, its pattern and its file, across the shell line continuation.
+        // Asserted separately, `git checkout -- <csproj>` two lines later satisfies the path half.
+        Assert.Matches(
+            $@"grep -q '<TargetFramework>{TargetVersions.Framework}</TargetFramework>'\s*\\?\s*"
+            + @"src/Jellyfin\.Plugin\.NewReleases/Jellyfin\.Plugin\.NewReleases\.csproj",
+            Steps);
     }
 
     /// <summary>

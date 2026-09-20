@@ -32,10 +32,13 @@ public class DocumentationTests
     [Fact]
     public void Readme_StatesJellyfin12_AndNoLongerClaims1011()
     {
-        var requirements = SectionOf("## Requirements");
+        Assert.Contains("Jellyfin 12", SectionOf("## Requirements"), StringComparison.Ordinal);
 
-        Assert.Contains("Jellyfin 12", requirements, StringComparison.Ordinal);
-        Assert.DoesNotContain("10.11", requirements, StringComparison.Ordinal);
+        // Whole-file, not section-scoped: a stale claim anywhere misleads. The needle allows a
+        // sentence that names 10.11 only to say it is gone.
+        Assert.DoesNotMatch(
+            @"(requires|supports|needs|works with|Requirements:)[^.\n]{0,40}10\.11",
+            Readme);
     }
 
     /// <summary>

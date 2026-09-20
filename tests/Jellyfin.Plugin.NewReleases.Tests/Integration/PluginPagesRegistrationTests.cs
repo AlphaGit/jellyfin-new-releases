@@ -43,13 +43,7 @@ public class PluginPagesRegistrationTests
     [Fact]
     public async Task TheGatewayTheRegistratorBuilds_CanReachATypeInALoadedAssembly()
     {
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddSingleton(Substitute.For<IApplicationPaths>());
-        services.AddSingleton(Substitute.For<ILibraryManager>());
-        new PluginServiceRegistrator().RegisterServices(services, Substitute.For<IServerApplicationHost>());
-
-        await using var provider = services.BuildServiceProvider();
+        await using var provider = HostContainer.AsTheHostWouldBuildIt();
         var gateway = provider.GetRequiredService<PluginPagesGateway>();
 
         Assert.True(
@@ -184,7 +178,7 @@ public class PluginPagesRegistrationTests
     /// been told once; repeating it while the server stops adds nothing.
     /// </summary>
     [Fact]
-    public async Task AfterAFailedRegistration_StoppingDoesNotThrow_AndLogsNothingFurther()
+    public async Task AfterAnUnavailableIntegration_StoppingDoesNotThrow_AndLogsNothingFurther()
     {
         var logger = new RecordingLogger<PluginPagesRegistrationService>();
         var service = new PluginPagesRegistrationService(new PluginPagesGateway(() => []), logger);

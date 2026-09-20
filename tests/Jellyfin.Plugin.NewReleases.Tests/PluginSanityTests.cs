@@ -29,6 +29,9 @@ public class PluginSanityTests
     {
         var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
 
+        // The composite the units beneath cannot see: the host reaches the plugin's configuration
+        // through the static Instance, and it must be the object just constructed.
+        Assert.Same(plugin, Plugin.Instance);
         Assert.Equal(new Guid("b8a15db8-e368-42c4-9048-390faf0094db"), plugin.Id);
         Assert.Equal("newreleases", Assert.Single(plugin.GetPages()).Name);
     }
