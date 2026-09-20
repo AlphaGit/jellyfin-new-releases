@@ -88,7 +88,17 @@ internal sealed class TestDatabase : IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
-        SqliteConnection.ClearAllPools();
+        // Clear only THIS database's pool. `SqliteConnection.ClearAllPools()` is process-global,
+        // and xunit runs collections in parallel, so it could dispose a pooled handle another
+        // test was opening — an intermittent
+        // `ObjectDisposedException: 'SQLitePCL.sqlite3'` inside `SqliteConnection.Open()`.
+        // Every TestDatabase has its own temp path, so its connection string, and its pool, are
+        // its own and clearing them cannot reach another test.
+        using (var pooled = new SqliteConnection(Database.ConnectionString))
+        {
+            SqliteConnection.ClearPool(pooled);
+        }
+
         try
         {
             Directory.Delete(_dataPath, recursive: true);

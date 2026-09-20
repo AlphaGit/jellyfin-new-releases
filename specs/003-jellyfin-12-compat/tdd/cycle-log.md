@@ -527,3 +527,42 @@ hand the gateway nothing. On a real server the page would never register and no 
 - commit: `903ccd0`
 - note: this closes verification finding 1 only. Findings 2-9 remain open as `T044`-`T051`, and
   the verdict in `tdd/verification.md` still reads `FAIL` until `T053` re-runs the audit.
+
+## Cycle 33: the flaky database test, fixed
+
+Reported by `/speckit-tdd-setup refresh` and carried in the stack profile as a known hazard:
+`Api.ReleasesControllerTests.Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204`
+failing intermittently with
+`System.ObjectDisposedException : Cannot access a disposed object. Object name: 'SQLitePCL.sqlite3'`
+inside `SqliteConnection.Open()`. It predates `003` — `ClearAllPools` is in the tree at `a9f1ba4`,
+added by `2e08b54` during `001` — and it breaches constitution III.
+
+- **Cause.** Two teardowns called the **process-global** `SqliteConnection.ClearAllPools()` while
+  xunit runs collections in parallel, so one test's teardown could dispose a pooled `sqlite3`
+  handle another test was in the middle of opening. `Microsoft.Data.Sqlite` moving 9.0.19 ->
+  10.0.11 in this feature changed pooling behaviour, which is the likely reason it began showing.
+- **No deterministic red was achievable.** A repro was attempted —
+  `Storage/TestDatabaseIsolationTests.cs`, eight threads opening and querying one database while
+  300 others were created and disposed around them — and it did **not** reproduce the race. The
+  window is too narrow to force. That test is kept as a regression guard, and this entry records
+  plainly that it passed before the fix as well: it is not the evidence.
+- **The evidence is statistical, and is stated as such.** Same machine, same command
+  (`dotnet test --configuration Release --no-build`), same build:
+  - before: **2 failures in 14 runs** (runs 8 and 10), on top of the 1-in-10 seen at detection.
+  - after the first site was scoped: 0 in 14, then 0 in 14 again.
+  - after both sites were scoped: **0 failures in 20 runs**.
+- **Fix, at both sites.** `SqliteConnection.ClearPool(connection)` clears only the pool for that
+  connection's own connection string. Every test database lives under its own
+  `Path.GetTempPath()/nr_test_<guid>` directory, so its connection string — and therefore its
+  pool — is unique to it, and clearing it cannot reach another test.
+  - `Support/TestDatabase.cs` `DisposeAsync`
+  - `Storage/DatabaseTests.cs` `SqliteConnectionPoolReset`, which runs in `Dispose` and so fired
+    once per test in that class. Found only because the first fix prompted a grep for the call;
+    fixing one site alone would have left the race live.
+  `grep` now finds no live `ClearAllPools` call anywhere in `tests/` or `src/`.
+- suite: 238 passed, 0 failed.
+- commit: `e14279d`
+- **scope note.** This is test infrastructure, not plugin behaviour, and no specification covers
+  it. Constitution I says behaviour exists only where a spec describes it; constitution III
+  requires the suite to pass hermetically, which this restores. Recorded here rather than raised
+  as a new feature, on the maintainer's explicit instruction.

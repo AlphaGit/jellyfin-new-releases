@@ -100,6 +100,12 @@ public sealed class DatabaseTests : IDisposable
         }
     }
 
-    // Pooled connections keep the file open on Windows; harmless elsewhere.
-    private static void SqliteConnectionPoolReset() => Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+    // Pooled connections keep the file open on Windows; harmless elsewhere. Scoped to this
+    // class's own database file: `ClearAllPools()` is process-global and xunit runs collections
+    // in parallel, so it could dispose a pooled handle another test was opening.
+    private void SqliteConnectionPoolReset()
+    {
+        using var pooled = new Microsoft.Data.Sqlite.SqliteConnection(NewDatabase().ConnectionString);
+        Microsoft.Data.Sqlite.SqliteConnection.ClearPool(pooled);
+    }
 }
