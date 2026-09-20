@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.NewReleases.Library;
+using Jellyfin.Plugin.NewReleases.ScheduledTasks;
 using Jellyfin.Plugin.NewReleases.Sources;
 using Jellyfin.Plugin.NewReleases.Storage;
 using MediaBrowser.Common.Configuration;
@@ -57,5 +58,34 @@ public class PluginServiceRegistratorTests
         Assert.NotNull(provider.GetRequiredService<LibraryScanner>());
         Assert.NotEmpty(provider.GetRequiredService<IEnumerable<IReleaseSource>>());
         Assert.NotNull(provider.GetRequiredService<IScheduledTask>());
+    }
+
+    /// <summary>
+    /// U5: the refresh takes <c>IEnumerable&lt;IReleaseSource&gt;</c>. Registering one source
+    /// twice, or dropping one, still satisfies A2's NotEmpty but halves what the refresh reads.
+    /// </summary>
+    [Fact]
+    public async Task RegisterServices_BothReleaseSourcesAreRegistered_NotOneOfThemTwice()
+    {
+        await using var provider = BuildContainerAsTheHostWould();
+
+        var sources = provider.GetRequiredService<IEnumerable<IReleaseSource>>();
+
+        Assert.Collection(
+            sources,
+            source => Assert.IsType<MusicBrainzSource>(source),
+            source => Assert.IsType<DeezerSource>(source));
+    }
+
+    /// <summary>
+    /// U6: Jellyfin discovers scheduled tasks by resolving <see cref="IScheduledTask"/> from the
+    /// container. Registered as the wrong type, the refresh never appears in the dashboard.
+    /// </summary>
+    [Fact]
+    public async Task RegisterServices_TheScheduledTaskResolvesAsTheRefreshTask()
+    {
+        await using var provider = BuildContainerAsTheHostWould();
+
+        Assert.IsType<RefreshNewReleasesTask>(provider.GetRequiredService<IScheduledTask>());
     }
 }

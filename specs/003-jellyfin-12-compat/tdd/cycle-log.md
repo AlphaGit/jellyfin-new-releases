@@ -99,3 +99,36 @@ correction. From cycle 2 on, the SHA is substituted into the entry after `git co
 - `U5` and `U6` are **not** duplicates of A2 and stay: each asserts something A2's
   `NotEmpty`/`NotNull` deliberately does not — which two sources, and which task type.
 - `U4` is marked `DROPPED` in the list with this reason. Its id is not reused.
+
+## Cycle 4: U5 both release sources are registered, not one of them twice
+
+- target: `net10.0` against Jellyfin 12.0.0.
+- test: `PluginServiceRegistratorTests.cs::RegisterServices_BothReleaseSourcesAreRegistered_NotOneOfThemTwice` (new)
+- red: passed on its first run. Deliberate mutant: the `DeezerSource` registration changed to a
+  second `MusicBrainzSource`, which is the bug A2's `Assert.NotEmpty` cannot see.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~PluginServiceRegistratorTests.RegisterServices_BothReleaseSourcesAreRegistered_NotOneOfThemTwice" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Collection() Failure: Item comparison failure` / `Assert.IsType() Failure: Value is not the exact type` (1 failed)
+- restore: `cp` from a file copy, verified with `cmp -s`.
+- green: no implementation needed. Suite -> 200 passed, 0 failed (with cycle 5)
+- refactor: none needed; reuses `BuildContainerAsTheHostWould()` from cycle 3.
+- commit: `60c9e82`
+
+## Cycle 5: U6 the scheduled task resolves as the refresh task
+
+- target: `net10.0` against Jellyfin 12.0.0.
+- test: `PluginServiceRegistratorTests.cs::RegisterServices_TheScheduledTaskResolvesAsTheRefreshTask` (new)
+- red: passed on its first run. Deliberate mutant: `AddSingleton<IScheduledTask, RefreshNewReleasesTask>()`
+  changed to `AddSingleton<RefreshNewReleasesTask>()`, so the task exists but the host cannot
+  discover it — the exact failure that would leave the refresh out of the dashboard.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~PluginServiceRegistratorTests.RegisterServices_TheScheduledTaskResolvesAsTheRefreshTask" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.InvalidOperationException : No service for type 'MediaBrowser.Model.Tasks.IScheduledTask' has been registered.` (1 failed)
+- restore: `cp` from a file copy, verified with `cmp -s`. `git diff --stat src/` empty afterwards.
+- green: no implementation needed. Suite `dotnet test --configuration Release`
+  -> 200 passed, 0 failed
+- refactor: none needed.
+- commit: `60c9e82`
+- notes on T013: the task carries `[A2] [U4] [U5] [U6]`. `U4` is `DROPPED`, not `DONE`, so on a
+  literal reading of Phase 6 the task could never be ticked. It is ticked here because every
+  behaviour it names is resolved — three green, one withdrawn as a duplicate with its reason on
+  the record. This is the same shape as the `BASELINE` conflict the stack profile already
+  documents for `002`.

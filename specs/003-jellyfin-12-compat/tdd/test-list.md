@@ -87,8 +87,8 @@ Grouped by the component from `plan.md` that owns them.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U4 | Every service the registrator registers resolves from a collection holding substituted Jellyfin 12 host services | US1-AS2, SC-001 | example | DROPPED | duplicate of A2 — same observable, see cycle log |
-| U5 | `IEnumerable<IReleaseSource>` yields both MusicBrainz and Deezer, not one of them | US1-AS2 | example | PENDING | |
-| U6 | `IScheduledTask` resolves as the refresh task | US1-AS2, FR-001 | example | PENDING | |
+| U5 | `IEnumerable<IReleaseSource>` yields both MusicBrainz and Deezer, not one of them | US1-AS2 | example | DONE | `PluginServiceRegistratorTests.cs::RegisterServices_BothReleaseSourcesAreRegistered_NotOneOfThemTwice` |
+| U6 | `IScheduledTask` resolves as the refresh task | US1-AS2, FR-001 | example | DONE | `PluginServiceRegistratorTests.cs::RegisterServices_TheScheduledTaskResolvesAsTheRefreshTask` |
 | U7 | The page-registration hosted service is registered and resolves as an `IHostedService` | FR-015, US1-AS6 | example | PENDING | |
 
 ### `src/Jellyfin.Plugin.NewReleases/Integration/PluginPagesRegistrationService.cs`
