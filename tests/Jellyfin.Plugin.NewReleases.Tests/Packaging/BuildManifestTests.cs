@@ -49,6 +49,23 @@ public class BuildManifestTests
     }
 
     /// <summary>
+    /// U43: the catalogue description is the only text an operator reads before installing, and
+    /// it is the only place the Plugin Pages requirement can reach them — the README is a click
+    /// away on a site they may never visit. Documented, not enforced: `FR-008` keeps the
+    /// integration optional, so this states what the menu entry needs without making it a
+    /// condition of loading.
+    /// </summary>
+    [Fact]
+    public void BuildManifest_DescriptionStatesTheJellyfinAndPluginPagesRequirements()
+    {
+        var description = RepositoryFiles.Scalar(Manifest, "description")!;
+
+        Assert.Contains("Jellyfin 12", description, StringComparison.Ordinal);
+        Assert.Contains("Plugin Pages", description, StringComparison.Ordinal);
+        Assert.Contains(TargetVersions.MinimumPluginPages, description, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// U19: Jellyfin keys an install by this GUID. If the manifest and the assembly disagree,
     /// the catalogue offers an install that the server files under a different identity.
     /// </summary>
