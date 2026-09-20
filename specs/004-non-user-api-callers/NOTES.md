@@ -1,5 +1,10 @@
 # Seed: an API-key caller gets 400, not 401
 
+**Priority: low.** No user of the plugin can reach this. The page calls the API from the browser
+with the signed-in user's token, so the claim carries a real user id. Only a server-to-server
+caller authenticating with an API key — which has no user — hits it. Recorded because the *test*
+is wrong about the host, not because the behaviour hurts anyone today.
+
 Found by the real-server install of 0.1.0 on Jellyfin 12.1 — see
 [`docs/real-server-install-0.1.0.md`](../../docs/real-server-install-0.1.0.md), finding 1.
 `spec.md` for `003-jellyfin-12-compat` says a real-server finding "becomes its own specification".
@@ -19,7 +24,7 @@ System.ArgumentException: Guid can't be empty (Parameter 'id')
 An API-key caller has no user. Jellyfin represents that as `Guid.Empty`, not as a missing claim,
 so `ReleasesController`'s guard does not fire and the empty GUID reaches `GetUserById`.
 
-## Why the suite is green anyway
+## The part that matters: the double disagrees with the host
 
 `ReleasesControllerTests::GetReleases_WithoutTheUserIdClaim_Is401` constructs a controller context
 with **no claim at all**. The real host supplies a claim holding `Guid.Empty`. The double and the

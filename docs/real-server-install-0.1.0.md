@@ -47,9 +47,17 @@ plugin repository list, the plugin installed, and one service restart.
 - Nothing else on the server was disturbed: all ten plugins `Active`, all four libraries intact,
   no fatal log entries.
 
-## Finding 1 — the API rejects a non-user caller with 400 and a logged error, not 401
+## Finding 1 — an API-key caller gets 400 and a logged error, not 401
 
-**Severity: real, user-visible, and the suite asserts the opposite.**
+**Severity: low. It does not affect any user path.** This was first written up as
+"real, user-visible", which was wrong, and is corrected here.
+
+**It cannot happen to a user of the plugin.** The New Releases page calls this API from the
+browser with the signed-in user's token, so the claim holds a real user id, `AccessOf` resolves a
+real user, and per-user library filtering works — which is what `US1-AS4` asks and what the
+install confirmed. The failure was reached only because this pass drove the API with an API key
+over SSH, having no browser session; an API key is a server-to-server credential with no user
+behind it.
 
 `GET /Plugins/NewReleases/api/releases` and `.../artists` both return **400** with an `[ERR]` in
 the server log:
@@ -70,13 +78,21 @@ builds a `ControllerContext` with **no claim at all** and asserts 401. The real 
 claim whose value is empty. The test's double and the host disagree about how "no user" is
 represented, and the double is the one that is wrong.
 
-This is the clearest possible argument for the real-server pass existing: a green, audited,
-mutation-checked suite asserted 401 for a case that returns 400 in production.
+**What is actually worth fixing.** Two small things, neither urgent:
 
-**Not fixed here.** Per `spec.md` this becomes its own specification. It needs a decision on what
-a non-user caller *should* get — 401 is the obvious answer, and `AccessOf` should treat
-`Guid.Empty` the same as a missing claim — plus a test that reproduces how Jellyfin actually
-populates the claim rather than how the double does.
+1. An operator scripting against the plugin's API with a key — a legitimate thing to do — gets an
+   unhandled exception, a 400 and a stack trace in the server log instead of a clean 401. Only the
+   two user-scoped endpoints are affected; `api/admin/status` and `api/status` both answered 200
+   with the same key.
+2. **The test disagrees with the host about what "no user" looks like**, and that is the part with
+   a future cost. `ControllerContextFactory` models an unauthenticated caller as *no claim at
+   all*; Jellyfin supplies a claim holding `Guid.Empty`. So the test asserts 401 for a case that
+   cannot occur and misses the one that can. The next controller that reads a claim inherits the
+   same blind spot.
+
+The fix is one line — treat `Guid.Empty` as a missing claim — plus a double that matches the host.
+
+**Not fixed here.** Per `spec.md` a real-server finding becomes its own specification.
 
 ## Finding 2 — the release chain cannot deploy from a tag under default Pages settings
 

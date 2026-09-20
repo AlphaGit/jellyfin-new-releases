@@ -278,3 +278,14 @@ remediation**, which is the reason this phase exists rather than a re-tick of th
 code. Each delegated its smell pass to a fresh context and each found real defects the author had
 missed — including, this time, two introduced by the previous remediation. A genuinely independent
 review is worth more than a fourth self-audit.
+
+---
+
+## Phase 8: before tagging 1.0.0
+
+Release work that the `0.1.0` install pass surfaced. Not part of the feature's behaviour; these
+are the things that must be true before a version is published for other people to install.
+
+- [ ] T062 Write a real `changelog` in `build.yaml` for 1.0.0, replacing `"Initial scaffold."`. JPRM copies this field verbatim into the published manifest, so it is the text an operator reads in Dashboard → Plugins → Catalogue when deciding whether to install — today they read the scaffold placeholder. Draw it from the `Unreleased` section of [CHANGELOG.md](../../CHANGELOG.md), which already describes the Jellyfin 12 move, the dropped 10.11.x support and the Plugin Pages registration change, and condense it to what an operator needs at the moment of installing. Prove it by reading the entry back from `repo/manifest.json` after the release workflow runs
+- [ ] T063 Add a test that `build.yaml`'s `changelog` is not the scaffold placeholder and is not empty, so the next release cannot ship the default text. `Packaging/BuildManifestTests.cs` is where the other `build.yaml` assertions live
+- [ ] T064 Decide whether `build.yaml`'s `changelog` should be generated from `CHANGELOG.md` by the release workflow rather than maintained by hand. Two sources of the same prose is how this one went stale; if the answer is no, record the reason
