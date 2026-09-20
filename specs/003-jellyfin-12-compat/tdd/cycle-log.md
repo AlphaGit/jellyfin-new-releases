@@ -178,3 +178,34 @@ rewritten. The tests each clause rests on:
 
 This is the honest limit of what `003` proves: the tests are `001`'s and `002`'s, re-run on new
 libraries. No new red was produced for them, and none was available to produce.
+
+## Cycle 7: U8 starting the service calls RegisterPage exactly once
+
+**The first cycle of this feature with a real red.** Everything before it re-proved existing
+behaviour on new libraries; this is new code.
+
+- target: `net10.0` against Jellyfin 12.0.0.
+- test: `Integration/PluginPagesRegistrationTests.cs::StartAsync_WithTheIntegrationPresent_CallsRegisterPageExactlyOnce` (new file)
+- support: `Support/FakePluginPages.cs` (new) — a `Jellyfin.Plugin.PluginPages.PluginInterface`
+  stand-in with static `RegisterPage(FakePayload)` / `RemovePage(string)` and a payload type
+  exposing static `Parse(string)`, recording every call. Static, because the real one is static;
+  the test class resets it per test and runs without parallelisation.
+- first run: unresolved symbols, which C# requires to exist before the test can run —
+  `error CS0234: The type or namespace name 'Integration' does not exist in the namespace 'Jellyfin.Plugin.NewReleases'`
+  and `error CS0246: The type or namespace name 'PluginPagesRegistrationService' could not be found`.
+  Per the playbook, minimal stubs were added (`TryRegisterPage`/`TryRemovePage` returning false,
+  `StartAsync`/`StopAsync` returning `Task.CompletedTask`) and the test re-run.
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~PluginPagesRegistrationTests.StartAsync_WithTheIntegrationPresent_CallsRegisterPageExactlyOnce" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Single() Failure: The collection was empty` (1 failed)
+- green: `PluginPagesGateway.TryRegisterPage` implemented — find the type by full name across the
+  injected assembly source, resolve the static `RegisterPage`, take its own parameter type, call
+  that type's static `Parse(string)` with the payload, invoke. `PluginPagesRegistrationService.StartAsync`
+  calls it with the entry JSON from `data-model.md`. Suite `dotnet test --configuration Release`
+  -> 202 passed, 0 failed
+- refactor: none yet; `TryRemovePage` is still the stub and gets its own cycle (U10).
+- commit: `7426560`
+- note on the contract: `contracts/plugin-pages-registration.md` step 1 says to find the
+  *assembly* named `Jellyfin.Plugin.PluginPages`. The gateway instead looks up the *type*
+  `Jellyfin.Plugin.PluginPages.PluginInterface` across every assembly the source offers. Same
+  result on a real server, and it is what makes the stand-in reachable without shipping a second
+  assembly just for tests. Recorded rather than silently diverged.

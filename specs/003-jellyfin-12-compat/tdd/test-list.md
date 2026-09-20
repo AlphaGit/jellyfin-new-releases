@@ -99,7 +99,7 @@ injected seam so a test supplies the stand-in without touching load contexts.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U8 | Starting calls the integration's `RegisterPage` exactly once | CR-1, US1-AS6 | example | PENDING | |
+| U8 | Starting calls the integration's `RegisterPage` exactly once | CR-1, US1-AS6 | example | DONE | `Integration/PluginPagesRegistrationTests.cs::StartAsync_WithTheIntegrationPresent_CallsRegisterPageExactlyOnce` |
 | U9 | The payload carries `Id`, `Url`, `DisplayText` and `Icon` as `data-model.md` states them, and none of the three `IsEnabled*` fields | CR-1, FR-015 | example | PENDING | |
 | U10 | Stopping calls `RemovePage` exactly once with `Jellyfin.Plugin.NewReleases` | CR-2, US1-AS6 | example | PENDING | |
 | U11 | With no integration assembly loaded, starting and stopping neither throw | CR-3, EC-1, FR-008 | example | PENDING | |
