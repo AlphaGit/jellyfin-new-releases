@@ -1,62 +1,117 @@
 ---
 feature: 003-jellyfin-12-compat
-verdict: PASS_WITH_GAPS
-verified_at: b40efee
+verdict: FAIL
+verified_at: 53bbf86
 standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md
 profile: .specify/memory/tdd-profile.md
 behaviors: 45
 proven: 26
-test_after: 21
-not_applicable: 3
+test_after: 6
+baseline: 12
 dropped: 1
-high_findings: 0
+high_findings: 3
 criteria_total: 10
 criteria_covered: 10
 criteria_with_entry_point_test: 6
-suite: 238 passed, 0 failed, 10 s (xunit) + 33 passed, 0 failed, 123 ms (node)
+suite: 238 passed, 0 failed, 10 s (xunit) + 33 passed, 0 failed (node)
 mutation_tool: none (profile records mutation: null)
-deliberate_mutants: 5 applied, 5 killed, 0 survived
+deliberate_mutants: 10 applied, 9 killed, 1 survived
 independent: false
+audits: 3
 ---
 
 # TDD Verification: Run on Jellyfin 12
 
-**Verdict: PASS_WITH_GAPS.** Every `HIGH` finding of the first audit is closed and re-verified;
-what remains is weak evidence, not weak tests — twenty-one behaviours still carry no recorded red
-because they pin code this feature never changed.
+**Verdict: FAIL.** The two repository-manifest checks still prove nothing: mutating their shared
+helper to reject every entry leaves all 13 tests in the class green, because no test ever calls
+it with a valid one.
 
-**Re-audited at `b40efee`, after `T043`-`T053`.** The first audit's verdict and its nine `HIGH`
-findings are preserved below under "First audit", because the record of what was wrong is the
-point of keeping one.
+This is the **third** audit. The counts asked for are refreshed — `test_after` falls from 21 to 6
+after the classification refresh — but refreshing them surfaced three `HIGH` smells that the
+second audit's remediation introduced or left behind. The first audit's report is preserved
+below.
 
-### What changed
+## Findings
 
-- **Finding 1 is closed and proved.** `U34` resolves `PluginPagesGateway` from the container the
-  registrator populates and drives it against genuinely loaded assemblies. Mutant M4 —
-  `() => []` in place of the `AssemblyLoadContext.All` scan — now fails with
-  `the registrator gave the gateway an assembly source that cannot see loaded assemblies`.
-- **Findings 2-9 closed** by `T044`-`T051`: the two vacuous manifest tests now pin the published
-  version count first (proved by writing a bad entry into `repo/manifest.json` and watching both
-  fail); the tautological `Assert.Empty` on a configured double is gone; the re-implemented GUID
-  expectation uses the literal; documentation assertions are scoped to their own README section;
-  the workflow guard asserts its `grep -q` mechanism; the stale test-list reference is corrected
-  and all 36 references resolve; and one `DisableParallelization` collection now holds every test
-  touching process-global state.
-- **The pre-existing flaky test is fixed.** Two teardowns called the process-global
-  `ClearAllPools()`; both now scope to their own pool. Measured 2 failures in 14 runs before,
-  0 in 20 after. `suite_baseline` in the stack profile is back to `green`.
-- **Mutation re-run: 5 applied, 5 killed, none survived.**
+| # | Sev | Finding | Evidence |
+| --- | --- | --- | --- |
+| A | HIGH | **The manifest helpers are never exercised against a valid entry.** `AssertInstallable` and `AssertSourceUrlNamesItsOwnVersion` are called positively only at `:81` and `:118`, both `Assert.All` over a `versions` list that is empty until the first tag. The nine negative theories accept a throw for *any* reason. **Proved**: adding `Assert.Fail(...)` at the top of `AssertInstallable` leaves the class at 13 passed, 0 failed. | `Packaging/RepositoryManifestTests.cs:81, 99, 118, 139-140, 143` |
+| B | HIGH | **A conditional was reintroduced by the very task that removed one.** `T044` removed the early `return` from `Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` and replaced it with `if (versions.Count > 0)`. The site-root and version-naming rules still never run; the test's only live assertion is the count. | `Packaging/RepositoryManifestTests.cs:115` |
+| C | HIGH | **The flaky-test regression guard cannot fail for the right reason.** `Assert.Null(observed)` is the only assertion; nothing asserts the eight workers ever opened a connection, so a run in which they were never scheduled passes identically. The cycle log already records that it passed *before* the fix; the class comment calling it "the regression test" overstates it. | `Storage/TestDatabaseIsolationTests.cs:51`, `tdd/cycle-log.md` cycle 33 |
+| D | MED | **A negative assertion was loosened by the remediation.** `DoesNotContain("10.11", …)` now runs against the Requirements section only. Before `T047` it covered the whole README. A stale 10.11 claim in the intro, "What it does" or "Install" now passes. | `Packaging/DocumentationTests.cs:38` |
+| E | MED | **The new regression guard is itself a plausible source of flakiness.** Eight unbounded thread-pool tasks hammering SQLite while 300 databases are created, migrated and deleted — and the class is **not** in `ProcessGlobalStateCollection`, so it runs beside every other collection. | `Storage/TestDatabaseIsolationTests.cs:23-46`, `:11` |
+| F | MED | **The csproj-path assertion does not bind to the guard it checks.** `package.yml:73`'s `git checkout --` line satisfies `Assert.Contains("…csproj", Steps)` on its own, so the path is not tied to the `grep -q`. | `Packaging/ReleaseWorkflowTests.cs:59`; `.github/workflows/package.yml:72-73` |
+| G | MED | Two manifest tests now share one live assertion (`AssertPublishedVersionCount`); one manifest edit fails both with the same message. `Manifest_MayListNoVersionsAtAll` asserts only that a JSON array is an array. | `RepositoryManifestTests.cs:63-66, 80, 113` |
+| H | MED | `A1` became a duplicate: after `T046` it asserts the same GUID literal as `U1` and the same page name as `U2`. Nothing asserts the composite fact it could carry — that the constructor sets `Plugin.Instance` to the same object. | `PluginSanityTests.cs:28-34` |
+| I | MED | Nothing ties `TargetVersions.Framework` to the **csproj's** `<TargetFramework>`. `build.yaml` and the workflow grep string are both checked against the test constant, so a csproj/`build.yaml` divergence is invisible to the suite. | `Support/TargetVersions.cs`, `BuildManifestTests.cs:31` |
+| J | LOW | The new wiring test hand-copies `BuildContainerAsTheHostWould` rather than sharing it. | `Integration/PluginPagesRegistrationTests.cs:46-50` vs `PluginServiceRegistratorTests.cs:31-42` |
+| K | LOW | `AfterAFailedRegistration_…` arranges the *absent* integration (`() => []`), not the failing one. The name describes a case it does not set up. | `Integration/PluginPagesRegistrationTests.cs:187` |
+| L | LOW | `build.yaml`'s `artifacts` list is pinned in file order; a reorder JPRM does not care about fails the test. | `Packaging/BuildManifestTests.cs:51-60` |
 
-### Gaps that remain, and why this is not a `PASS`
+## What the remediation did fix
 
-- Twenty-one behaviours are `TEST_AFTER` on the rubric's literal rule. They pin pre-existing,
-  untouched code and were planned `kind: example` rather than `kind: characterization`. Correcting
-  that is a `/speckit-tdd-plan refresh` decision, not a test change, and it is not made here.
-- Four acceptance criteria rest on declared proxies or file-text assertions rather than a real
-  entry point (`US2-AS1`, `US2-AS2`, `US2-AS3`, `US2-AS4`).
-- Mutation remains a sample of five on the Plugin Pages path; no tool is installed and none was
-  added. Coverage is still unavailable.
-- Findings 14, 16, 22 and 24 were judged and deliberately left; see the cycle log for each reason.
+Verified independently, not taken on trust. Five of the eight claimed fixes **hold**: the
+tautological `Assert.Empty` on a throwing fake, the re-implemented GUID expectation, the
+workflow's `grep -q` mechanism over a comment-stripped view, the `DisableParallelization`
+collection, the `ClearPool` scoping, and the DI-gateway wiring test. Two are **partial** (A, B
+above, and D). One caveat on the wiring test: it proves the default load context only, not the
+separate `AssemblyLoadContext` a real Plugin Pages install uses.
+
+## Test-first evidence, refreshed
+
+The classification refresh at `53bbf86` recast twelve behaviours from `example`/`DONE` to
+`characterization`/`BASELINE`, on evidence that this feature's diff never touched the code they
+pin. That is what moves `test_after` from 21 to 6.
+
+| Class | Count | Which |
+| --- | --- | --- |
+| `PROVEN` | 26 | the Plugin Pages code, the manifest, the workflow, the docs — red recorded and history corroborating |
+| `BASELINE` | 12 | `A1`-`A5`, `U1`, `U2`, `U5`, `U6`, `U19`, `U20`, `U32` — pin untouched code |
+| `TEST_AFTER` | 6 | `U17`, `U18` (values the feature changed, tested three commits later); `U11`, `U14`, `U15`, `U16` (new code satisfied by an earlier cycle, mutant-verified) |
+| `DROPPED` | 1 | `U4` |
+
+**No pre-existing test was weakened**: the whole-feature diff touches none. The remediation
+removed 38 assertion lines, every one a paired replacement of equal or greater strength — except
+finding D, which is a genuine loosening.
+
+**`tasks.md`**: all 53 ticked; five now name `BASELINE` behaviours (`T007`, `T012`, `T013`,
+`T025`, `T039`), which the stack profile records as a known conflict in the extension, with
+precedent from `002`.
+
+## Test strength
+
+No mutation tool; ten deliberate mutants, each restored from a file copy and verified with
+`cmp -s`.
+
+| Mutant | Result |
+| --- | --- |
+| M1 gateway `catch` returns true | killed |
+| M2 `StopAsync` drops `TryRemovePage` | killed |
+| M3 wrong page `Url` | killed |
+| M4 registrator hands the gateway `() => []` | killed (was the first audit's survivor) |
+| M5 log-once guard never latches | killed |
+| M6 `build.yaml` guid altered | killed |
+| M7 `repo/manifest.json` guid altered | killed |
+| M8 README Jellyfin version | killed |
+| M9 README Plugin Pages minimum | killed |
+| **M10 `AssertInstallable` always rejects** | **SURVIVED** — finding A |
+
+Coverage remains unavailable (`Unable to find a datacollector with friendly name 'XPlat Code Coverage'`).
+
+## Traceability
+
+All 10 acceptance criteria covered; 36 of 36 referenced tests resolve; no behaviour without a
+named test. Four criteria (`US2-AS1`-`AS4`) rest on declared proxies over file text rather than a
+real entry point — a recorded planning decision, not a lapse.
+
+## What was not audited
+
+- **Independence**: I wrote both the tests and the remediation. The smell pass was delegated to a
+  fresh context for the second time, and every line it cited was re-opened and checked here.
+- Mutation is a sample of ten, still none inside `001`/`002` code.
+- Coverage unavailable; performance not assessed beyond the 10 s suite.
+- The page side (`tests/web/`, 33 tests) is untouched by this feature and was not re-audited.
+- A real Jellyfin 12 server — out of scope by `spec.md`, still the largest unknown.
 
 ---
 
