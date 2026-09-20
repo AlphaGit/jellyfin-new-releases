@@ -56,6 +56,24 @@ public class PluginConfigurationTests
         Assert.Equal(Fields(changed), Fields(RoundTrip(changed)));
     }
 
+    /// <summary>
+    /// U32: <c>XmlSerializer</c> appends to a collection it finds already populated, so a
+    /// collection seeded in the constructor gains a duplicate on every round trip. The
+    /// configuration avoids the trap by holding no collection at all. This fails the moment one
+    /// is added, which is when the rule stops being free.
+    /// </summary>
+    [Fact]
+    public void Configuration_ExposesNoCollectionProperty_SoNothingCanGainADuplicateOnRoundTrip()
+    {
+        var collections = typeof(PluginConfiguration)
+            .GetProperties()
+            .Where(p => p.PropertyType != typeof(string)
+                        && typeof(System.Collections.IEnumerable).IsAssignableFrom(p.PropertyType))
+            .Select(p => p.Name);
+
+        Assert.Empty(collections);
+    }
+
     [Fact]
     public void EnabledReleaseTypes_AlbumAndEpByDefault_ReflectsEachToggle()
     {

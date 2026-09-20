@@ -132,3 +132,49 @@ correction. From cycle 2 on, the SHA is substituted into the entry after `git co
   behaviour it names is resolved — three green, one withdrawn as a duplicate with its reason on
   the record. This is the same shape as the `BASELINE` conflict the stack profile already
   documents for `002`.
+
+## Cycle 6: U32 the configuration exposes no collection property
+
+- target: `net10.0` against Jellyfin 12.0.0.
+- behaviour: appended to the list mid-loop while closing A5. `US1-AS5` asks that a round-trip
+  leave every value unchanged **and** that no collection gain duplicate entries. Reading
+  `PluginConfiguration` showed the second clause has nothing to assert: every property is a
+  `bool` or a `string`, and `EnabledSourceIds()`/`EnabledReleaseTypes()` are computed, not
+  serialised. Rather than claim A5 fully covered, the clause is closed by pinning the reason it
+  is vacuous.
+- test: `Configuration/PluginConfigurationTests.cs::Configuration_ExposesNoCollectionProperty_SoNothingCanGainADuplicateOnRoundTrip` (new)
+- red: passed on its first run. Deliberate mutant: a `List<string> MutantIgnoredArtists` property
+  added to `PluginConfiguration` — the exact change that would reintroduce the `XmlSerializer`
+  duplication trap `CLAUDE.md` warns about.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~PluginConfigurationTests.Configuration_ExposesNoCollectionProperty_SoNothingCanGainADuplicateOnRoundTrip" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Empty() Failure: Collection was not empty` (1 failed)
+- restore: `cp` from a file copy, verified with `cmp -s`.
+- green: no implementation needed. Suite `dotnet test --configuration Release`
+  -> 201 passed, 0 failed
+- refactor: none needed.
+- commit: `e67638f`
+
+## A3, A4 and A5 closed on the existing suite, no cycle run
+
+All three are `FR-002` behaviours: they ask that what `001` and `002` already specify still holds,
+now against the Jellyfin 12 libraries. Their tests exist, were written test-first in those
+features, and the whole 195-test suite has run green on `net10.0` against Jellyfin 12.0.0 since
+`T007`. Per `/speckit-tdd-run` Phase 1 they are marked `DONE` against those tests rather than
+rewritten. The tests each clause rests on:
+
+- **A3** (Missing, Incomplete, Upcoming from the Jellyfin 12 library reader):
+  `Acceptance/BrowseReleasesTests.cs::A1_ZIsListedUnderA_XAndYAreNot` (Missing),
+  `::A8_LibraryAlbumWith8Of10Tracks_IsIncompleteWithTheTwoMissingTitlesAndTheComparedEdition`
+  (Incomplete), `::A7_ReleaseDatedAfterToday_IsUpcoming_AndTheStateFilterReturnsOnlyIt`
+  (Upcoming), over `Library/LibraryScannerTests.cs` for the reader itself.
+- **A4** (the API answers, per-user library access enforced):
+  `Api/ReleasesControllerTests.cs::GetReleases_FollowsTheCallersLibraryAccess`,
+  `::GetArtists_ReturnsOnlyArtistsInLibrariesTheCallerMayAccess`,
+  `::Decisions_UnknownReleaseIs404_ReleaseOutsideTheCallersLibrariesIs403WithNothingWritten`,
+  and `Acceptance/ArchiveTests.cs` for the Archive.
+- **A5** (configuration round-trips unchanged):
+  `Configuration/PluginConfigurationTests.cs::XmlRoundTrip_FullyChangedConfiguration_IsEqualFieldByField`
+  for the first clause; `U32` above for the second, which was otherwise unassertable.
+
+This is the honest limit of what `003` proves: the tests are `001`'s and `002`'s, re-run on new
+libraries. No new red was produced for them, and none was available to produce.
