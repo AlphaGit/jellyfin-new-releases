@@ -209,3 +209,32 @@ behaviour on new libraries; this is new code.
   `Jellyfin.Plugin.PluginPages.PluginInterface` across every assembly the source offers. Same
   result on a real server, and it is what makes the stand-in reachable without shipping a second
   assembly just for tests. Recorded rather than silently diverged.
+
+## Cycle 8: U9 the payload carries the four fields and no IsEnabled* field
+
+- target: `net10.0` against Jellyfin 12.0.0.
+- test: `Integration/PluginPagesRegistrationTests.cs::StartAsync_SendsThePageEntryFromTheDataModel_AndNoIsEnabledFields` (new)
+- red: passed on its first run, because cycle 7's green step had to send *some* payload and sent
+  this one. Deliberate mutant: `"IsEnabledAssembly": "Something"` added to the entry JSON.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~PluginPagesRegistrationTests.StartAsync_SendsThePageEntryFromTheDataModel_AndNoIsEnabledFields" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` (1 failed)
+- restore: `cp` from a file copy, verified with `cmp -s`.
+- green: no implementation needed. Suite -> 203 passed, 0 failed
+- refactor: none needed.
+- commit: `3b3212e`
+- note: the key-set assertion is what kills the mutant. Asserting the four values alone would
+  have passed with an extra field present, which is exactly the `IsEnabled*` mistake the
+  contract warns against.
+
+## Cycle 9: U10 stopping calls RemovePage once with the plugin id
+
+- target: `net10.0` against Jellyfin 12.0.0.
+- test: `Integration/PluginPagesRegistrationTests.cs::StopAsync_WithTheIntegrationPresent_CallsRemovePageOnceWithThePluginId` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~PluginPagesRegistrationTests.StopAsync_WithTheIntegrationPresent_CallsRemovePageOnceWithThePluginId" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Single() Failure: The collection was empty` (1 failed). A real red: `StopAsync` was
+  still the `Task.CompletedTask` stub from cycle 7 and `TryRemovePage` was never called.
+- green: `TryRemovePage` wired into `StopAsync`, and the id lifted to a `PageEntryId` constant so
+  the JSON entry and the withdrawal cannot drift apart. Suite `dotnet test --configuration Release`
+  -> 204 passed, 0 failed
+- refactor: the id constant is that refactor, taken while green.
+- commit: `3b3212e`

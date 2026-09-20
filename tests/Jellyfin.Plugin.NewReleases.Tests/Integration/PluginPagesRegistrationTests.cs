@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Reflection;
 using Jellyfin.Plugin.NewReleases.Integration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -38,5 +39,43 @@ public class PluginPagesRegistrationTests
         await service.StartAsync(CancellationToken.None);
 
         Assert.Single(FakePluginPages.Registered);
+    }
+
+    /// <summary>
+    /// U9: the four fields are what the web client renders. The three IsEnabled* fields are
+    /// omitted on purpose — the entry is shown to every authenticated user, and per-user library
+    /// filtering happens inside the view's own API calls.
+    /// </summary>
+    [Fact]
+    public async Task StartAsync_SendsThePageEntryFromTheDataModel_AndNoIsEnabledFields()
+    {
+        var service = ServiceOver(WithPluginPages());
+
+        await service.StartAsync(CancellationToken.None);
+
+        var payload = JsonSerializer.Deserialize<Dictionary<string, string>>(
+            Assert.Single(FakePluginPages.Registered).Json);
+
+        Assert.NotNull(payload);
+        Assert.Equal("Jellyfin.Plugin.NewReleases", payload["Id"]);
+        Assert.Equal("/Plugins/NewReleases/UserView", payload["Url"]);
+        Assert.Equal("New Releases", payload["DisplayText"]);
+        Assert.Equal("new_releases", payload["Icon"]);
+        Assert.Equal(["Id", "Url", "DisplayText", "Icon"], payload.Keys);
+    }
+
+    /// <summary>
+    /// U10: Plugin Pages holds registrations in memory and keys them by id, so a shutdown that
+    /// does not withdraw leaves a menu entry pointing at a plugin that has stopped.
+    /// </summary>
+    [Fact]
+    public async Task StopAsync_WithTheIntegrationPresent_CallsRemovePageOnceWithThePluginId()
+    {
+        var service = ServiceOver(WithPluginPages());
+        await service.StartAsync(CancellationToken.None);
+
+        await service.StopAsync(CancellationToken.None);
+
+        Assert.Equal("Jellyfin.Plugin.NewReleases", Assert.Single(FakePluginPages.Removed));
     }
 }

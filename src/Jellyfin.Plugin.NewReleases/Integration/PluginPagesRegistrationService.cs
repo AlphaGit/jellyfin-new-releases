@@ -8,6 +8,9 @@ namespace Jellyfin.Plugin.NewReleases.Integration;
 /// </summary>
 public sealed class PluginPagesRegistrationService : IHostedService
 {
+    /// <summary>The entry's identity. `RemovePage` takes this string.</summary>
+    private const string PageEntryId = "Jellyfin.Plugin.NewReleases";
+
     /// <summary>The page entry, exactly as `data-model.md` fixes it.</summary>
     private const string PageEntryJson = """
         {
@@ -35,5 +38,9 @@ public sealed class PluginPagesRegistrationService : IHostedService
     }
 
     /// <inheritdoc />
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        _gateway.TryRemovePage(PageEntryId);
+        return Task.CompletedTask;
+    }
 }
