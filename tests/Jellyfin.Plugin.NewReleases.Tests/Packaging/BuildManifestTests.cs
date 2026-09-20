@@ -63,6 +63,7 @@ public class BuildManifestTests
         Assert.Contains("Jellyfin 12", description, StringComparison.Ordinal);
         Assert.Contains("Plugin Pages", description, StringComparison.Ordinal);
         Assert.Contains(TargetVersions.MinimumPluginPages, description, StringComparison.Ordinal);
+        Assert.Contains("File Transformation", description, StringComparison.Ordinal);
     }
 
     /// <summary>

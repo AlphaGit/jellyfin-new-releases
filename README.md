@@ -51,9 +51,28 @@ refresh interval is changed in Dashboard → Scheduled Tasks, not in the plugin.
 
 Jellyfin 12. Older servers are not supported and are not offered the plugin.
 
-Plugin Pages is optional: without it the admin page, API and task work; the user view is simply
-not linked from the menu. Version 3.0.0.0 is the minimum, because the plugin registers its page
-through that integration's registration interface, which earlier builds do not have.
+The plugin works on its own: the configuration page, the API and the daily refresh need nothing
+else installed.
+
+**The New Releases entry in the side menu is a different matter, and on Jellyfin 12 it currently
+does not appear at all.** It is published by [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages),
+a separate plugin, which in turn needs
+[File Transformation](https://www.iamparadox.dev/jellyfin/plugins/manifest.json) to load its
+browser script — a chain of two third-party plugins:
+
+```
+New Releases  ->  Plugin Pages 3.0.0.0+  ->  File Transformation
+```
+
+With both installed, this plugin's half works: the page is registered and Plugin Pages serves it
+to the client. The entry still does not render, because Plugin Pages 3.0.1.0 only initialises when
+it finds the pre-12 web client's navigation drawer, and Jellyfin 12 replaced the client with a
+React application that has no such element. That is a Plugin Pages issue, not one this plugin can
+fix or work around. Details and evidence:
+[`docs/real-server-install-0.1.0.md`](docs/real-server-install-0.1.0.md) finding 3.
+
+Until that is resolved, reach the plugin through Dashboard → Plugins → New Releases, and drive the
+refresh from Dashboard → Scheduled Tasks → Refresh new releases.
 
 Data lives in `<data>/newreleases/newreleases.db` (SQLite).
 

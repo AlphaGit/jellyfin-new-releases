@@ -158,6 +158,7 @@ injected seam so a test supplies the stand-in without touching load contexts.
 | U19 | Its `guid` equals the GUID compiled into `Plugin.PluginGuid` | CM-5, FR-007 | characterization | BASELINE | `Packaging/BuildManifestTests.cs::BuildManifest_GuidMatchesTheOneCompiledIntoThePlugin` |
 | U20 | Its `artifacts` names the plugin DLL, the four SQLite assemblies and the native library | FR-009 | characterization | BASELINE | `Packaging/BuildManifestTests.cs::BuildManifest_ShipsThePluginItsSqliteAssembliesAndTheNativeLibrary` |
 | U43 | The catalogue description states the Jellyfin version and that the menu entry needs Plugin Pages 3.0.0.0 or later | FR-006, FR-008 | example | DONE | `Packaging/BuildManifestTests.cs::BuildManifest_DescriptionStatesTheJellyfinAndPluginPagesRequirements` |
+| U44 | The README states the whole Plugin Pages chain, File Transformation included, and that the menu entry does not render on Jellyfin 12 | FR-006, FR-008 | example | DONE | `Packaging/DocumentationTests.cs::Readme_StatesTheWholePluginPagesChain_AndThatTheMenuEntryDoesNotRenderOn12` |
 | U35 | `build.yaml`'s `framework` and the project file's `<TargetFramework>` name the same framework | CM-5, CM-6 | example | DONE | `Packaging/BuildManifestTests.cs::BuildManifest_FrameworkMatchesTheProjectFile` |
 
 ### `repo/manifest.json`

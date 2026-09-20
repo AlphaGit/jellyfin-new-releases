@@ -116,6 +116,64 @@ No test could have caught this. `ReleaseWorkflowTests` asserts the workflow's sh
 workflow's shape was correct; the blocker was in repository settings, which the suite cannot see.
 It is recorded here because a fork, or a restored repository, will hit it again.
 
+## Finding 3 — the user-facing page needs a two-plugin chain, and still does not render on 12.1
+
+**Severity: the plugin's user-facing half is unreachable on Jellyfin 12.1. The cause is entirely
+outside this plugin.**
+
+The New Releases view reaches the web client's menu through Plugin Pages. On a Jellyfin 12.1
+server that turns out to need **two** third-party plugins, and to fail anyway:
+
+```
+New Releases  ->  Plugin Pages  ->  File Transformation
+```
+
+**What each link does, and what was observed.**
+
+1. **Our registration works.** With Plugin Pages installed, `GET /PluginPages/User` — the endpoint
+   the menu renders from — returns our entry with exactly the payload `data-model.md` fixes:
+   `Id`, `Url`, `DisplayText`, `Icon`, and none of the three `IsEnabled*` fields. This is the
+   first proof the registration interface works against a real Plugin Pages rather than the
+   stand-in, and it closes the server-side half of `A6`.
+2. **Plugin Pages needs File Transformation.** Its browser script is served at
+   `/PluginPages/inject.js` (200, ~5 KB), but nothing referenced it from `index.html`, so it never
+   loaded. File Transformation is the plugin that patches the web client's files to add the script
+   tag. Installing it produced
+   `[FileTransformation] Registering transformation for 'index.html'` and the tag appeared.
+   Nothing in Plugin Pages' catalogue description or its assembly metadata mentions this
+   requirement; it was found by reading the served HTML.
+3. **It still does not render, and the reason is a Plugin Pages bug on Jellyfin 12.** Its
+   `inject.js` initialises only through this gate:
+
+   ```js
+   if ($('.mainDrawer-scrollContainer').length > 0) {
+       if ($(".mainDrawer-scrollContainer").children('.userMenuOptions').length > 0) {
+           PluginPages.initialized = true;
+           PluginPages.onReady();
+           PluginPages.populateSidebar();
+   ```
+
+   Jellyfin 12 replaced the web client with a React and MUI application — confirmed in the
+   browser: `#reactRoot`, `@mui/material` and `@tanstack/react-query` bundles, and
+   `.mainDrawer-scrollContainer` absent. The legacy drawer that gate requires no longer exists, so
+   `populateSidebar()` never runs.
+
+   The script is not simply out of date: `onReady()` already carries a Jellyfin 12 branch that
+   anchors to `[href='#/mypreferencesmenu']` and emits `MuiMenuItem` markup. Only the gate that
+   reaches it was left on the old selector.
+
+**What this means for this plugin.** Nothing to fix here, and nothing that contradicts `FR-008`:
+the plugin loads, the configuration page, the API and the daily refresh all work, and the
+registration it is responsible for is demonstrably correct. What it does mean is that the
+documented requirement "Plugin Pages 3.0.0.0 or later" was **incomplete** — it omits File
+Transformation, and it omits that the menu entry does not currently appear on Jellyfin 12.1 at
+all. Both are now stated in `README.md` and in the catalogue description.
+
+**Not verified.** Whether the entry appears for a signed-in user. This pass could authenticate the
+API but not the web client — an API key is not a user session, and the web client rejects one —
+so the final check is a person opening the client and looking. The gate above predicts it will
+not appear; that prediction is worth confirming rather than trusting.
+
 ## Three facts about Jellyfin 12 worth keeping
 
 1. **The legacy API authentication headers are gone.** On 12.1, both of these return **401**:
@@ -132,7 +190,12 @@ It is recorded here because a fork, or a restored repository, will hit it again.
    during the upgrade, as Jellyfin's own upgrade guidance instructs, and their settings survived.
    A reinstall therefore picks up the old configuration.
 
-3. **First-party plugins track the server version.** TMDb, OMDb, MusicBrainz, Studio Images and
+3. **The web client is a different application.** Jellyfin 12 replaced the jQuery client with
+   React and MUI. Any plugin that manipulates the client's DOM by selector — Plugin Pages, and
+   anything like it — is working against a rewritten target, and a selector that worked on 10.11
+   tells you nothing about 12.
+
+4. **First-party plugins track the server version.** TMDb, OMDb, MusicBrainz, Studio Images and
    AudioDB all report `12.1.0.0` on a 12.1 server, while third-party ones keep their own numbering
    (AniList 15.0.0.0, Open Subtitles 25.0.0.0, TVmaze 14.0.0.0).
 

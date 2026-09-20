@@ -98,6 +98,22 @@ public class DocumentationTests
     }
 
     /// <summary>
+    /// U44: the menu entry needs a chain of two third-party plugins, not one, and on Jellyfin 12
+    /// it does not render at all. The real-server pass found the README stating only half of
+    /// that. An operator who reads "needs Plugin Pages" and installs it alone is left with a
+    /// missing menu item and no explanation.
+    /// </summary>
+    [Fact]
+    public void Readme_StatesTheWholePluginPagesChain_AndThatTheMenuEntryDoesNotRenderOn12()
+    {
+        var requirements = SectionOf("## Requirements");
+
+        Assert.Contains("Plugin Pages", requirements, StringComparison.Ordinal);
+        Assert.Contains("File Transformation", requirements, StringComparison.Ordinal);
+        Assert.Contains("does not", requirements, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// U31: the page entry now goes through Plugin Pages' registration interface, which older
     /// builds of it do not have. Without the minimum stated, the menu entry silently never
     /// appears and nothing explains why.
