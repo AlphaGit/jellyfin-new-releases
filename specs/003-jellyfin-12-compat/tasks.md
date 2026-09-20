@@ -210,3 +210,31 @@ Story 2 adds.
   failure output goes in `specs/003-jellyfin-12-compat/tdd/cycle-log.md`
 - Commit after each task or logical group; Conventional Commits, no AI attribution
 - This feature tags no release and touches no running server. Both are out of scope by decision
+
+---
+
+## Phase 6: TDD remediation
+
+**The feature is not done until T043–T051 are cleared.** [tdd/verification.md](./tdd/verification.md)
+returns `FAIL` on nine `HIGH` findings: a surviving mutant that leaves the page registration
+unwired on a real server, two tests that assert nothing in the committed state, and six weak or
+tautological assertions. `HIGH` findings first; each names the finding it closes and the command
+that proves it done.
+
+- [ ] T043 Close verification finding 1: add a test that resolves `PluginPagesGateway` from the container `PluginServiceRegistrator` populates and confirms it can find a type in a genuinely loaded assembly, so the production `AssemblyLoadContext.All` source is exercised. Prove it by re-applying mutant M4 — `() => []` in `src/Jellyfin.Plugin.NewReleases/PluginServiceRegistrator.cs` — and confirming the new test fails, then restoring from a file copy and verifying with `cmp -s`
+- [ ] T044 Close verification findings 2 and 3: remove the early return from `Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` and the zero-iteration `foreach` from `Manifest_EveryVersionCarriesItsDownloadChecksumTimestampAndJellyfin12` in `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs`; assert the entry count explicitly first, then `Assert.All`, so both tests change the day the first tag lands
+- [ ] T045 Close verification finding 4: in `Integration/PluginPagesRegistrationTests.cs::WhenRegisterPageThrows_StartingDoesNotThrow_AndLogsOnce`, replace `Assert.Empty(FakePluginPages.Registered)` — which asserts only that the configured fake threw — with an assertion on the subject's own behaviour: the single log entry's level is below `Error`
+- [ ] T046 Close verification findings 5 and 6: in `PluginSanityTests.cs::Plugin_ConstructedWithHostServices_ReportsItsIdentityAndOffersAConfigurationPage`, compare `plugin.Id` against the GUID literal rather than `new Guid(Plugin.PluginGuid)`, and assert the single page and its embedded resource path rather than `Assert.NotEmpty`
+- [ ] T047 Close verification finding 7: in `Packaging/DocumentationTests.cs::Readme_GivesTheRepositoryUrlAndWhereToAddIt`, assert one URL shape in the Install section (a regex for `https://…/manifest.json`) instead of three bare substrings that pre-existing prose already satisfies
+- [ ] T048 Close verification finding 8: in `Packaging/ReleaseWorkflowTests.cs`, assert the guard's mechanism — a `grep -q` step against the project file — and read the comment-stripped `Steps` rather than `Workflow`
+- [ ] T049 Close verification finding 9: correct the `U25` row in [tdd/test-list.md](./tdd/test-list.md) to name `Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion`, the test that exists. Prove it by re-running the reference check: every `file.cs::method` in the list resolves
+- [ ] T050 Close verification finding 11: put the four tests in `PluginSanityTests.cs` that construct `Plugin` — and so assign the process-global `Plugin.Instance` — into one xunit collection with `DisableParallelization`, as `.specify/memory/tdd-profile.md` requires once a second such test exists
+- [ ] T051 Close verification finding 12: give `PluginServiceRegistratorTests.BuildContainerAsTheHostWould` an empty assembly source, or add the class to the `PluginPagesRegistrationTests` collection, so the production gateway's scan cannot reach the static stand-in when a future test starts that hosted service
+- [ ] T052 Work through the remaining `MED` findings 10, 13–20 and the `LOW` findings 21–24 in [tdd/verification.md](./tdd/verification.md), deciding case by case which are worth acting on; record the ones deliberately left alone and why
+- [ ] T053 Re-run `/speckit-tdd-verify` and confirm the verdict is no longer `FAIL`
+
+**Out of this phase, reported not fixed:** the pre-existing flaky test
+`Api.ReleasesControllerTests.Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204`
+(`Support/TestDatabase.cs` calls the process-global `SqliteConnection.ClearAllPools()`, roughly
+one failure in ten runs). It predates this feature, breaches constitution III, and needs its own
+specification rather than a fix smuggled into this phase.
