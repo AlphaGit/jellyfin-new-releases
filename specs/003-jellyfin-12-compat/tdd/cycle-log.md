@@ -358,3 +358,75 @@ With `U8`-`U16` green, the two acceptance behaviours were run rather than assert
 
 Neither needed a separate test: A6 is the conjunction of `U8`-`U10`, A7 of `U11`-`U13` plus the
 untouched 001/002 suite. Recorded here rather than adding a test that would only re-run them.
+
+## Cycles 17-20: U17-U20 build.yaml declares Jellyfin 12, net10.0, the frozen guid and the full artefact list
+
+- support: `Support/RepositoryFiles.cs` (new) — walks up from the test binaries to the directory
+  holding `build.yaml`, and reads flat YAML scalars and one block sequence by hand. **No YAML
+  library is referenced by this project and none was added** (Hard Rule 7); `build.yaml` is a
+  flat mapping plus one list, so a few lines of string handling is enough.
+- tests: `Packaging/BuildManifestTests.cs` (new file), four tests, one per behaviour.
+- red: all four passed on their first run — `T008` had already updated `build.yaml`. Four
+  deliberate mutants, one per behaviour, each restored from a file copy and verified with `cmp -s`:
+  - U17 `targetAbi` back to `10.11.0.0` -> `Assert.Equal() Failure: Strings differ`
+  - U18 `framework` back to `net9.0` -> `Assert.Equal() Failure: Strings differ`
+  - U19 guid's last character changed -> `Assert.Equal() Failure: Strings differ`
+  - U20 `libe_sqlite3.so` line deleted -> `Assert.Equal() Failure: Collections differ`
+- green: no implementation needed. refactor: none. commit: `<packaging>`
+
+## Cycles 21-24: U21-U26 the published repository manifest
+
+- tests: `Packaging/RepositoryManifestTests.cs` (new file).
+- deviation, fixed before any red: the first version of U22 asserted
+  `Assert.NotNull(...EnumerateArray())`, which the xunit analyzer rejected outright —
+  `error xUnit2002: Do not use Assert.NotNull() on value type 'JsonElement.ArrayEnumerator'`.
+  It was an assertion-free test in disguise. Replaced with an assertion on `ValueKind`.
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> 4 failed, all on `Interop.ThrowExceptionForIoErrno` — `repo/manifest.json` did not exist.
+  A real red: the file is the deliverable.
+- green: `repo/manifest.json` created (T028) with the frozen guid and identity taken from
+  `build.yaml`, and `"versions": []` — correct until the first tag. -> 4 passed
+- **U24 and U26 are the reason this group needed a refactor.** U23 and U25 loop over `versions`,
+  which is empty, so they pass vacuously and pin nothing. The two checks were extracted into
+  `AssertInstallable` and `AssertSourceUrlNamesItsOwnVersion`, and U24/U26 apply those same
+  checks to crafted entries that must fail: six missing-field and wrong-`targetAbi` cases, three
+  wrong-site and wrong-version-in-filename cases. That is what makes the vacuous checks
+  meaningful before a version exists.
+- suite -> 229 passed, 0 failed. commit: `<packaging>`
+
+## Cycles 25-26: U27-U28 the release workflow publishes with no manual step
+
+- tests: `Packaging/ReleaseWorkflowTests.cs` (new file). A declared proxy: a tag push cannot be
+  run hermetically, so these assert the workflow's shape and say so in the class comment.
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `the release workflow has no step containing: jprm repo add` and
+  `Assert.Contains() Failure: Sub-string not found` (2 failed, 1 passed). Real red: the old
+  workflow only built a zip and uploaded it as a CI artefact.
+- green: `.github/workflows/package.yml` rewritten (T029-T031) — build into
+  `repo/jellyfin-new-releases/`, verify the csproj is unmodified, `jprm repo add` into
+  `repo/manifest.json`, commit `repo/` back to `main`, upload and deploy to Pages, with the
+  Pages permissions and a `concurrency` group. Verified it still parses as YAML. -> 3 passed
+- refactor: none. commit: `<packaging>`
+
+## Cycles 27-29: U29-U31 the README states what an operator needs
+
+- tests: `Packaging/DocumentationTests.cs` (new file). Also a declared proxy.
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DocumentationTests" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Contains() Failure: Sub-string not found` (3 failed). Real red: the README still
+  said "Jellyfin 10.11.x", named no repository address, and gave no Plugin Pages minimum.
+- green: README Requirements rewritten to Jellyfin 12 with the Plugin Pages 3.0.0.0 minimum and
+  why it is needed, a new Install section with the repository URL and the Dashboard path, and
+  the Build section moved to the .NET 10 SDK (T033). -> 3 passed
+- refactor: none. commit: `<packaging>`
+
+## Outer loop closed: A8, A9, A10, A11
+
+`dotnet test --configuration Release --filter "FullyQualifiedName~Packaging"` -> 23 passed, 0 failed.
+
+- **A8** (a tagged version publishes with no manual step) rests on U27-U28. Proxy, as declared.
+- **A9** (every listed version carries download, checksum and Jellyfin 12) rests on U23-U26.
+- **A10** (the package's own declaration names Jellyfin 12) rests on U17 and U19.
+- **A11** (the documentation states the version and the repository address) rests on U29-U31. Proxy.
+
+Final state: `dotnet test --configuration Release` -> 235 passed, 0 failed, 10 s.
+`node --test "tests/web/*.test.js"` -> 33 passed, 0 failed.

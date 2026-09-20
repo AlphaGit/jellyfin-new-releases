@@ -49,13 +49,25 @@ refresh interval is changed in Dashboard → Scheduled Tasks, not in the plugin.
 
 ## Requirements
 
-Jellyfin 10.11.x. Plugin Pages is optional: without it the admin page, API and task work; the
-user view is simply not linked from the menu. Data lives in `<data>/newreleases/newreleases.db`
-(SQLite).
+Jellyfin 12. Older servers are not supported and are not offered the plugin.
+
+Plugin Pages is optional: without it the admin page, API and task work; the user view is simply
+not linked from the menu. Version 3.0.0.0 is the minimum, because the plugin registers its page
+through that integration's registration interface, which earlier builds do not have.
+
+Data lives in `<data>/newreleases/newreleases.db` (SQLite).
+
+## Install
+
+Add the plugin repository to your server, then install from the catalogue:
+
+1. Open Dashboard → Plugins → Repositories.
+2. Add `https://alphagit.github.io/jellyfin-new-releases/manifest.json`.
+3. Install New Releases from Dashboard → Plugins → Catalogue, and restart the server.
 
 ## Build and test
 
-Needs the .NET 9 SDK.
+Needs the .NET 10 SDK.
 
 ```bash
 dotnet build --configuration Release

@@ -54,10 +54,10 @@ Jellyfin services, as `001`'s `AcceptanceRig` already does.
 | A5 | A configuration with every field set round-trips through the host serializer unchanged, and no collection gains a duplicate | US1-AS5, FR-002, SC-002 | example | DONE | existing: `Configuration/PluginConfigurationTests.cs::XmlRoundTrip_FullyChangedConfiguration_IsEqualFieldByField` + `U32` |
 | A6 | With the page integration present, the plugin registers its page on start and withdraws it on stop through the integration's own interface | US1-AS6, FR-015, FR-016 | example | DONE | `Integration/PluginPagesRegistrationTests.cs` (U8–U10); closed by running the suite |
 | A7 | With the page integration absent, the plugin still starts and everything that does not depend on it still works | US1-AS6, EC-1, FR-008 | example | DONE | `Integration/PluginPagesRegistrationTests.cs` (U11–U13) + the 001/002 suite |
-| A8 | A tagged version publishes the repository document and the package it points at, with no manual editing step | US2-AS1, FR-014 | example | PENDING | |
-| A9 | Every version the published repository lists carries a download location, a checksum and Jellyfin 12 as its server version | US2-AS2, FR-013, SC-004 | example | PENDING | |
-| A10 | The built package's own compatibility declaration names Jellyfin 12, matching its entry in the repository document | US2-AS3, FR-005, SC-004 | example | PENDING | |
-| A11 | The documentation states the supported Jellyfin version and the repository address an operator adds | US2-AS4, FR-006, SC-006 | example | PENDING | |
+| A8 | A tagged version publishes the repository document and the package it points at, with no manual editing step | US2-AS1, FR-014 | example | DONE | `Packaging/ReleaseWorkflowTests.cs` (U27–U28); proxy, see the list note |
+| A9 | Every version the published repository lists carries a download location, a checksum and Jellyfin 12 as its server version | US2-AS2, FR-013, SC-004 | example | DONE | `Packaging/RepositoryManifestTests.cs` (U23–U26) |
+| A10 | The built package's own compatibility declaration names Jellyfin 12, matching its entry in the repository document | US2-AS3, FR-005, SC-004 | example | DONE | `Packaging/BuildManifestTests.cs` (U17, U19) |
+| A11 | The documentation states the supported Jellyfin version and the repository address an operator adds | US2-AS4, FR-006, SC-006 | example | DONE | `Packaging/DocumentationTests.cs` (U29–U31); proxy, see the list note |
 
 **A8 and A11 are proxies, and the list says so rather than pretending otherwise.** Neither a tag
 push nor a reader of the README can be exercised hermetically. `A8` asserts that
@@ -118,10 +118,10 @@ injected seam so a test supplies the stand-in without touching load contexts.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U17 | Declares `targetAbi: "12.0.0.0"` | CM-5, FR-005, FR-012, SC-004 | example | PENDING | |
-| U18 | Declares `framework: "net10.0"` | CM-5 | example | PENDING | |
-| U19 | Its `guid` equals the GUID compiled into `Plugin.PluginGuid` | CM-5, FR-007 | example | PENDING | |
-| U20 | Its `artifacts` names the plugin DLL, the four SQLite assemblies and the native library | FR-009 | example | PENDING | |
+| U17 | Declares `targetAbi: "12.0.0.0"` | CM-5, FR-005, FR-012, SC-004 | example | DONE | `Packaging/BuildManifestTests.cs::BuildManifest_DeclaresJellyfin12AsTheTargetAbi` |
+| U18 | Declares `framework: "net10.0"` | CM-5 | example | DONE | `Packaging/BuildManifestTests.cs::BuildManifest_DeclaresNet10AsTheFramework` |
+| U19 | Its `guid` equals the GUID compiled into `Plugin.PluginGuid` | CM-5, FR-007 | example | DONE | `Packaging/BuildManifestTests.cs::BuildManifest_GuidMatchesTheOneCompiledIntoThePlugin` |
+| U20 | Its `artifacts` names the plugin DLL, the four SQLite assemblies and the native library | FR-009 | example | DONE | `Packaging/BuildManifestTests.cs::BuildManifest_ShipsThePluginItsSqliteAssembliesAndTheNativeLibrary` |
 
 ### `repo/manifest.json`
 
@@ -131,27 +131,27 @@ first tag.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U21 | Parses as a JSON array of exactly one object whose `guid` is the frozen plugin GUID | CM-1, FR-013 | example | PENDING | |
-| U22 | An empty `versions` array is accepted — the state before the first tag | CM-1, FR-014 | example | PENDING | |
-| U23 | Every entry carries a non-empty `version`, `sourceUrl`, `checksum` and `timestamp`, and a `targetAbi` of `12.0.0.0` | CM-2, FR-013, SC-004 | example | PENDING | |
-| U24 | An entry missing one of those fields, or carrying any other `targetAbi`, is rejected by that same check | CM-2, SC-004 | example | PENDING | |
-| U25 | Every `sourceUrl` sits under the published site root and its filename is `jellyfin-new-releases_<version>.zip` for that entry's version | CM-3, FR-013 | example | PENDING | |
-| U26 | A `sourceUrl` whose filename names a different version is rejected | CM-3 | example | PENDING | |
+| U21 | Parses as a JSON array of exactly one object whose `guid` is the frozen plugin GUID | CM-1, FR-013 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_IsAnArrayOfOnePlugin_CarryingTheFrozenGuid` |
+| U22 | An empty `versions` array is accepted — the state before the first tag | CM-1, FR-014 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_MayListNoVersionsAtAll` |
+| U23 | Every entry carries a non-empty `version`, `sourceUrl`, `checksum` and `timestamp`, and a `targetAbi` of `12.0.0.0` | CM-2, FR-013, SC-004 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_EveryVersionCarriesItsDownloadChecksumTimestampAndJellyfin12` |
+| U24 | An entry missing one of those fields, or carrying any other `targetAbi`, is rejected by that same check | CM-2, SC-004 | example | DONE | `Packaging/RepositoryManifestTests.cs::AnEntryMissingAFieldOrDeclaringAnotherAbi_IsRejected` |
+| U25 | Every `sourceUrl` sits under the published site root and its filename is `jellyfin-new-releases_<version>.zip` for that entry's version | CM-3, FR-013 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_EverySourceUrlIsUnderTheSiteRoot_AndNamesItsOwnVersion` |
+| U26 | A `sourceUrl` whose filename names a different version is rejected | CM-3 | example | DONE | `Packaging/RepositoryManifestTests.cs::ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected` |
 
 ### `.github/workflows/package.yml`
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U27 | The workflow builds with JPRM, adds the version with `jprm repo add`, commits `repo/` and deploys it to Pages, in that order and with no manual step between them | US2-AS1, FR-014 | example | PENDING | |
-| U28 | The workflow fails the run when the JPRM build leaves the project file modified | CM-6 | example | PENDING | |
+| U27 | The workflow builds with JPRM, adds the version with `jprm repo add`, commits `repo/` and deploys it to Pages, in that order and with no manual step between them | US2-AS1, FR-014 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_BuildsAddsToTheManifestCommitsAndDeploys_InThatOrder` |
+| U28 | The workflow fails the run when the JPRM build leaves the project file modified | CM-6 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_FailsTheRunIfPackagingLeftTheProjectFileModified` |
 
 ### `README.md`
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U29 | States Jellyfin 12 as the supported server version, and no longer claims 10.11.x | FR-006, FR-012, SC-006, EC-2 | example | PENDING | |
-| U30 | Gives the plugin repository URL and where an operator adds it | FR-006, US2-AS4 | example | PENDING | |
-| U31 | States the minimum Plugin Pages version the new registration needs | FR-006, FR-015 | example | PENDING | |
+| U29 | States Jellyfin 12 as the supported server version, and no longer claims 10.11.x | FR-006, FR-012, SC-006, EC-2 | example | DONE | `Packaging/DocumentationTests.cs::Readme_StatesJellyfin12_AndNoLongerClaims1011` |
+| U30 | Gives the plugin repository URL and where an operator adds it | FR-006, US2-AS4 | example | DONE | `Packaging/DocumentationTests.cs::Readme_GivesTheRepositoryUrlAndWhereToAddIt` |
+| U31 | States the minimum Plugin Pages version the new registration needs | FR-006, FR-015 | example | DONE | `Packaging/DocumentationTests.cs::Readme_StatesTheMinimumPluginPagesVersion` |
 
 ## Invariants and edge cases still to place
 
