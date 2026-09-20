@@ -272,7 +272,7 @@ remediation**, which is the reason this phase exists rather than a re-tick of th
 - [X] T058 Close finding D: the `10.11` negative check at `Packaging/DocumentationTests.cs:38` was narrowed to the Requirements section by T047 and no longer catches a stale claim elsewhere in the README. Restore whole-file scope with a needle that tolerates "no longer supported"
 - [X] T059 Close finding F: bind the csproj path to the `grep -q` it guards in `Packaging/ReleaseWorkflowTests.cs`; today `package.yml`'s `git checkout --` line satisfies the assertion on its own
 - [X] T060 Work through findings G, H, I, J, K and L, deciding case by case; record which are left and why
-- [ ] T061 Re-run `/speckit-tdd-verify` and confirm the verdict is no longer `FAIL`
+- [X] T061 Re-run `/speckit-tdd-verify` and confirm the verdict is no longer `FAIL`
 
 **Standing caveat, not a task.** Three audits have now been run by the session that wrote the
 code. Each delegated its smell pass to a fresh context and each found real defects the author had

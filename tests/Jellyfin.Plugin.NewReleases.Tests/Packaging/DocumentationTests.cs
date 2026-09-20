@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Jellyfin.Plugin.NewReleases.Tests.Support;
 using Xunit;
 
@@ -16,6 +17,21 @@ public class DocumentationTests
     /// One markdown section's body. Asserting against the whole README lets prose elsewhere
     /// satisfy a check about a section that may not even exist.
     /// </summary>
+    /// <summary>
+    /// Sentences that name 10.11 without saying it is gone. Whole-file: a stale claim in the
+    /// intro misleads as much as one under Requirements. Sentence-scoped so the README may still
+    /// say support ended — and split on sentence punctuation followed by a space, never on a bare
+    /// full stop, which would cut "10.11" in half.
+    /// </summary>
+    internal static IReadOnlyList<string> SentencesClaimingSupportFor1011(string markdown)
+        => Regex.Split(markdown, @"(?<=[.!?])\s|\n")
+            .Where(sentence => sentence.Contains("10.11", StringComparison.Ordinal))
+            .Where(sentence => !Regex.IsMatch(
+                sentence,
+                @"no longer|dropped|not supported|unsupported|ended",
+                RegexOptions.IgnoreCase))
+            .ToList();
+
     private static string SectionOf(string heading)
     {
         var start = Readme.IndexOf(heading, StringComparison.Ordinal);
@@ -33,12 +49,8 @@ public class DocumentationTests
     public void Readme_StatesJellyfin12_AndNoLongerClaims1011()
     {
         Assert.Contains("Jellyfin 12", SectionOf("## Requirements"), StringComparison.Ordinal);
-
-        // Whole-file, not section-scoped: a stale claim anywhere misleads. The needle allows a
-        // sentence that names 10.11 only to say it is gone.
-        Assert.DoesNotMatch(
-            @"(requires|supports|needs|works with|Requirements:)[^.\n]{0,40}10\.11",
-            Readme);
+        Assert.DoesNotContain("10.11", SectionOf("## Requirements"), StringComparison.Ordinal);
+        Assert.Empty(SentencesClaimingSupportFor1011(Readme));
     }
 
     /// <summary>
@@ -53,6 +65,36 @@ public class DocumentationTests
         Assert.Matches(@"https://\S+/manifest\.json", install);
         Assert.Contains("Dashboard", install, StringComparison.Ordinal);
         Assert.Contains("Repositories", install, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// U38: the rule above is a predicate, and a predicate needs a table. These cases were
+    /// written from the requirement — "the README must not claim support for 10.11, but may say
+    /// it was dropped" — before the predicate existed. An earlier attempt at this check passed a
+    /// single hand-picked example and was strictly weaker than what it replaced.
+    /// </summary>
+    [Theory]
+    [InlineData("Jellyfin 10.11 or newer.")]
+    [InlineData("Requires Jellyfin 10.11.")]
+    [InlineData("requires Jellyfin 10.11")]
+    [InlineData("Supports 10.11 and 12.")]
+    [InlineData("- Jellyfin 10.11+")]
+    [InlineData("Works with Jellyfin 10.11.x and later.")]
+    [InlineData("Minimum: Jellyfin 10.11")]
+    public void AClaimOfSupportFor1011_IsCaught(string sentence)
+    {
+        Assert.NotEmpty(SentencesClaimingSupportFor1011(sentence));
+    }
+
+    /// <summary>U38, the other side: saying support ended must remain sayable.</summary>
+    [Theory]
+    [InlineData("Jellyfin 10.11 is no longer supported.")]
+    [InlineData("Support for Jellyfin 10.11 was dropped in this release.")]
+    [InlineData("no longer supports 10.11")]
+    [InlineData("Jellyfin 12. Older servers are not supported.")]
+    public void SayingSupportFor1011Ended_IsAllowed(string sentence)
+    {
+        Assert.Empty(SentencesClaimingSupportFor1011(sentence));
     }
 
     /// <summary>

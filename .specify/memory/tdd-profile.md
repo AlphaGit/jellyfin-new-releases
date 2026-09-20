@@ -36,6 +36,9 @@ stacks:
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/FakePluginPages.cs
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/RecordingLogger.cs
       - tests/Jellyfin.Plugin.NewReleases.Tests/Support/RepositoryFiles.cs
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Support/HostContainer.cs
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Support/TargetVersions.cs
+      - tests/Jellyfin.Plugin.NewReleases.Tests/Support/ProcessGlobalStateCollection.cs
   node:
     cwd: .
     runner: node:test
@@ -143,6 +146,14 @@ the tree is clean.
   a green, which is exactly the red-phase hazard. **Drive the page side with `file`.**
   `node --test tests/web/checked.test.js` gives true counts, exits 1 on a real failure, and
   exits 1 with `Could not find …` on a wrong path — all three verified.
+- **A predicate needs a table, not an example.** Three consecutive remediations on this feature
+  each fixed one defect and introduced another, every time because the fix was demonstrated with
+  a single example chosen *after* the implementation was written. The README `10.11` check is the
+  clearest case: a regex proved with one hand-picked sentence turned out to be strictly weaker
+  than the assertion it replaced, missing `Requires Jellyfin 10.11.` on capitalisation alone.
+  When a fix is a predicate — a regex, a filter, a source scan — write the accepting and
+  rejecting cases from the requirement first, put them in the suite as a `[Theory]`, and only
+  then write the predicate. `Packaging/DocumentationTests.cs` carries such a table.
 - **The flaky database test is fixed.** It failed roughly once in ten full runs with
   `System.ObjectDisposedException : Cannot access a disposed object. Object name: 'SQLitePCL.sqlite3'`
   inside `SqliteConnection.Open()`, measured at 2 failures in 14 runs before the fix and 0 in 20

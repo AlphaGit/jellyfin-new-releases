@@ -737,3 +737,68 @@ remediation. Closing them, and the six `MED`/`LOW` that came with them. No produ
     resolution list. Added. **Proved**: removing its registration now fails.
 - suite: 243 passed, 0 failed.
 - commit: `6c5d6f3`
+
+## Cycle 37: third remediation, and the reason there were three
+
+The fourth audit returned `FAIL` on five `HIGH` smells. **The decisive one was mine**: `T058`'s
+README regex was strictly weaker than the assertion it replaced. Executed against the phrasings it
+must catch, `Jellyfin 10.11 or newer.` missed, `Requires Jellyfin 10.11.` missed on capitalisation
+alone, `Supports 10.11 and 12.` missed — and it *matched* `no longer supports 10.11`, the one
+sentence it existed to allow. Every one of those was caught by the `DoesNotContain` it replaced.
+
+### The root cause, which is a process defect and not a coding one
+
+Three consecutive remediations each closed a finding and opened another. The common factor: every
+fix was demonstrated with **one example, invented after the implementation was written**. For
+`T058` I proved it with `"This plugin requires Jellyfin 10.11 or newer."` — lowercase `requires`,
+which happened to match the verb list I had just typed. That is confirmation bias mechanised.
+
+The correction is recorded in `.specify/memory/tdd-profile.md`: when a fix is a predicate — a
+regex, a filter, a source scan — write the accepting and rejecting cases from the requirement
+first, commit them as a `[Theory]`, then write the predicate. This cycle did that, and the table
+rejected two candidate predicates before one passed (the first split sentences on a bare full
+stop, which cuts `10.11` in half).
+
+### Findings closed
+
+- **1, README** — section-scoped `DoesNotContain` restored *and* a whole-file, sentence-scoped
+  predicate added. `U38` carries the table: 7 rejecting cases, 4 accepting.
+- **2, the slug agreed with itself** — derived from `build.yaml` and used on both sides of every
+  source-URL assertion, so a wrong derivation was invisible. `U39` anchors it to the filename the
+  release workflow actually builds. **Proved**: changing `Replace(' ', '-')` to `'_'` now fails.
+- **3, `SiteRootOf` was tautological** — the site root was read from an entry the test itself
+  constructed from `ExampleSiteRoot`. `U40` uses two different literal roots and asserts the
+  second is rejected; `U41` feeds `SiteRootOf` a literal this class did not build. **Proved**:
+  returning `string.Empty` from `SiteRootOf` now fails.
+- **4 and 5, two tests that could not fail** — both asserted things that are true unless something
+  throws, and nothing can throw: after a global clear the pool is merely empty. Both carried doc
+  comments claiming to guard the regression. **Deleted**, and the class remark now states plainly
+  that the race cannot be pinned by a test and why.
+- **6, the source scan was defeatable** — it matched `.ClearAllPools(` on comment-stripped lines
+  in `tests/` only. Now an identifier-boundary regex over `src/` and `tests/`, with block comments
+  stripped. **Proved against all four defeat shapes the audit named**: `using static` + bare call,
+  a space before the paren, a call split across lines, and the ordinary form — all caught.
+  The first hardened version matched **its own test method name**, which contained the forbidden
+  letters followed by `()`; the method is renamed and the match now requires a non-identifier
+  character before it. `U37` is re-traced to a repository convention rather than to `FR-010`,
+  which a source scan cannot exercise.
+- **7, 8** — the `Manifest_*` tests no longer append synthetic entries; they assert about
+  `repo/manifest.json` alone, and the rules are exercised by the standalone positives.
+- **9, 10** — `A1` is reduced to `Assert.Same(plugin, Plugin.Instance)`, the one fact `U1` and
+  `U2` cannot see.
+- **11** — the stack profile's `helpers` list was stale: `HostContainer.cs`, `TargetVersions.cs`
+  and `ProcessGlobalStateCollection.cs` were never added. Added; 15 helpers recorded.
+- **12** — the resolution loop had no assertion in its body, so emptying the type list left it
+  green. Now `Assert.All` over a list whose length is pinned.
+- **13** — the sorted-set comparison dropped the duplicate check; a count assertion restores it.
+- **14** — `net10.0` was interpolated raw into a regex, so `net1000` matched. `Regex.Escape`.
+- **15** — dead usings left by the `HostContainer` extraction, removed.
+
+### Left open, and why
+
+- **Finding 6's better answer is a build-time analyzer**, not a test: `BannedApiAnalyzers` with
+  `SqliteConnection.ClearAllPools()` in `BannedSymbols.txt` would catch every call shape at
+  compile time, and `TreatWarningsAsErrors` is already on. That adds a package, which is a
+  specification decision rather than a remediation step. Recorded, not taken.
+- suite: 255 passed, 0 failed. 43 test references, all resolving.
+- commit: `44a4cb8`

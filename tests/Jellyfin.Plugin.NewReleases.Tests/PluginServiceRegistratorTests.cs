@@ -4,14 +4,9 @@ using Jellyfin.Plugin.NewReleases.ScheduledTasks;
 using Jellyfin.Plugin.NewReleases.Sources;
 using Jellyfin.Plugin.NewReleases.Storage;
 using Jellyfin.Plugin.NewReleases.Tests.Support;
-using MediaBrowser.Common.Configuration;
-using MediaBrowser.Controller;
-using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using NSubstitute;
 using Xunit;
 
 namespace Jellyfin.Plugin.NewReleases.Tests;
@@ -36,16 +31,16 @@ public class PluginServiceRegistratorTests
 
         // GetRequiredService throws, naming the type, when a registration is missing — the call
         // is the assertion. Wrapping each in NotNull only gave the test eleven reasons to fail.
-        foreach (var service in new[]
-                 {
-                     typeof(PluginDatabase), typeof(ArtistRepository), typeof(ReleaseRepository),
-                     typeof(ArchiveRepository), typeof(SourceStateRepository), typeof(TimeProvider),
-                     typeof(IHttpClientFactory), typeof(SourceHttpClient), typeof(LibraryScanner),
-                     typeof(IScheduledTask), typeof(PluginPagesGateway),
-                 })
-        {
-            provider.GetRequiredService(service);
-        }
+        Type[] registered =
+        [
+            typeof(PluginDatabase), typeof(ArtistRepository), typeof(ReleaseRepository),
+            typeof(ArchiveRepository), typeof(SourceStateRepository), typeof(TimeProvider),
+            typeof(IHttpClientFactory), typeof(SourceHttpClient), typeof(LibraryScanner),
+            typeof(IScheduledTask), typeof(PluginPagesGateway),
+        ];
+
+        Assert.Equal(11, registered.Length);
+        Assert.All(registered, service => Assert.NotNull(provider.GetService(service)));
 
         Assert.NotEmpty(provider.GetRequiredService<IEnumerable<IReleaseSource>>());
         Assert.Same(TimeProvider.System, provider.GetRequiredService<TimeProvider>());

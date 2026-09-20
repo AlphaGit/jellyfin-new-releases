@@ -65,6 +65,7 @@ public class BuildManifestTests
     [Fact]
     public void BuildManifest_ShipsThePluginItsSqliteAssembliesAndTheNativeLibrary()
     {
+        Assert.Equal(6, RepositoryFiles.Sequence(Manifest, "artifacts").Count);
         Assert.Equal(
             new SortedSet<string>(
             [

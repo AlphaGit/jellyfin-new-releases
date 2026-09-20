@@ -86,9 +86,49 @@ public class RepositoryManifestTests
         // so the count is stated first. This line is what fails the day the release chain adds a
         // version, which is exactly when these checks must start being read.
         AssertPublishedVersionCount(versions);
+        Assert.All(versions, AssertInstallable);
+    }
 
-        using var synthetic = WellFormedEntry();
-        Assert.All(versions.Append(synthetic.RootElement), AssertInstallable);
+    /// <summary>
+    /// U39: the slug is derived here from `build.yaml`, and used on both sides of every
+    /// source-URL assertion — so a wrong derivation agrees with itself. This anchors it to the
+    /// one place the filename is really produced: the release workflow's zip path.
+    /// </summary>
+    [Fact]
+    public void TheDerivedSlug_MatchesTheFilenameTheReleaseWorkflowBuilds()
+    {
+        var workflow = RepositoryFiles.ReadAllText(".github/workflows/package.yml");
+
+        Assert.Contains($"{Slug}_${{{{ steps.ver.outputs.version4 }}}}.zip", workflow, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// U40: the site-root rule must reject a second entry published somewhere else. Built from
+    /// two different literal roots, so neither side of the comparison is derived from the other.
+    /// </summary>
+    [Fact]
+    public void EntriesFromTwoDifferentSites_AreRejected()
+    {
+        using var here = WellFormedEntry("1.0.0.0", sourceUrl: $"https://one.invalid/p/{Slug}_1.0.0.0.zip");
+        using var elsewhere = WellFormedEntry("2.0.0.0", sourceUrl: $"https://two.invalid/p/{Slug}_2.0.0.0.zip");
+
+        var siteRoot = SiteRootOf(here.RootElement);
+
+        AssertSourceUrlNamesItsOwnVersion(here.RootElement, siteRoot);
+        Assert.ThrowsAny<Xunit.Sdk.XunitException>(
+            () => AssertSourceUrlNamesItsOwnVersion(elsewhere.RootElement, siteRoot));
+    }
+
+    /// <summary>
+    /// U41: `SiteRootOf` must return the entry's own directory, not something it constructed.
+    /// Fed a literal this class did not build.
+    /// </summary>
+    [Fact]
+    public void SiteRootOf_ReturnsTheDirectoryOfTheEntrysOwnSourceUrl()
+    {
+        using var entry = WellFormedEntry("3.0.0.0", sourceUrl: "https://host.invalid/a/b/pkg_3.0.0.0.zip");
+
+        Assert.Equal("https://host.invalid/a/b/", SiteRootOf(entry.RootElement));
     }
 
     /// <summary>
@@ -145,14 +185,11 @@ public class RepositoryManifestTests
 
         AssertPublishedVersionCount(versions);
 
-        // Two synthetic entries stand in while the published list is empty, so the rule runs on
-        // every execution rather than the day someone finally tags a release.
-        using var first = WellFormedEntry("1.0.0.0");
-        using var second = WellFormedEntry("2.0.0.0");
-        var entries = versions.Concat([first.RootElement, second.RootElement]).ToList();
-
-        var siteRoot = SiteRootOf(entries[0]);
-        Assert.All(entries, entry => AssertSourceUrlNamesItsOwnVersion(entry, siteRoot));
+        if (versions.Count > 0)
+        {
+            var siteRoot = SiteRootOf(versions[0]);
+            Assert.All(versions, entry => AssertSourceUrlNamesItsOwnVersion(entry, siteRoot));
+        }
     }
 
     /// <summary>

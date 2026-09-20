@@ -124,7 +124,8 @@ Grouped by the component from `plan.md` that owns them.
 | U6 | `IScheduledTask` resolves as the refresh task | US1-AS2, FR-001 | characterization | BASELINE | `PluginServiceRegistratorTests.cs::RegisterServices_TheScheduledTaskResolvesAsTheRefreshTask` |
 | U7 | The page-registration hosted service is registered and resolves as an `IHostedService` | FR-015, US1-AS6 | example | DONE | `PluginServiceRegistratorTests.cs::RegisterServices_ThePageRegistrationRunsAsAHostedService` |
 | U34 | The gateway the registrator builds can reach a type in a genuinely loaded assembly, not only an injected stand-in source | US1-AS6, FR-015, CR-1 | example | DONE | `Integration/PluginPagesRegistrationTests.cs::TheGatewayTheRegistratorBuilds_CanReachATypeInALoadedAssembly` |
-| U37 | No test teardown calls the process-global `SqliteConnection.ClearAllPools()` | FR-010, SC-005 | example | DONE | `Storage/TestDatabaseIsolationTests.cs::NoTestTeardown_CallsTheProcessGlobalClearAllPools` |
+| U37 | No source file calls the process-global pool clear, in any call shape | repository convention (see cycle 37) | example | DONE | `Storage/TestDatabaseIsolationTests.cs::NoSourceFile_CallsTheProcessGlobalPoolClear` |
+| U42 | Two test databases never share a connection string, so clearing one pool cannot reach the other | FR-010 | example | DONE | `Storage/TestDatabaseIsolationTests.cs::TwoDatabases_DoNotShareAConnectionString` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Integration/PluginPagesRegistrationService.cs`
 
@@ -169,6 +170,9 @@ first tag.
 | U21 | Parses as a JSON array of exactly one object whose `guid` is the frozen plugin GUID | CM-1, FR-013 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_IsAnArrayOfOnePlugin_CarryingTheFrozenGuid` |
 | U22 | An empty `versions` array is accepted — the state before the first tag | CM-1, FR-014 | example | DROPPED | subsumed by U23's count assertion; its test asserted only that a JSON array is an array |
 | U36 | A well-formed version entry is accepted by the installability and source-URL rules | CM-2, CM-3 | example | DONE | `Packaging/RepositoryManifestTests.cs::AWellFormedEntry_IsAccepted`, `::AWellFormedEntry_SourceUrlIsAccepted` |
+| U39 | The slug the tests derive matches the filename the release workflow builds | CM-3, FR-014 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheDerivedSlug_MatchesTheFilenameTheReleaseWorkflowBuilds` |
+| U40 | Two entries published under different site roots are rejected | CM-3 | example | DONE | `Packaging/RepositoryManifestTests.cs::EntriesFromTwoDifferentSites_AreRejected` |
+| U41 | The site root is read from the entry's own source location | CM-3 | example | DONE | `Packaging/RepositoryManifestTests.cs::SiteRootOf_ReturnsTheDirectoryOfTheEntrysOwnSourceUrl` |
 | U23 | Every entry carries a non-empty `version`, `sourceUrl`, `checksum` and `timestamp`, and a `targetAbi` of `12.0.0.0` | CM-2, FR-013, SC-004 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_EveryVersionCarriesItsDownloadChecksumTimestampAndJellyfin12` |
 | U24 | An entry missing one of those fields, or carrying any other `targetAbi`, is rejected by that same check | CM-2, SC-004 | example | DONE | `Packaging/RepositoryManifestTests.cs::AnEntryMissingAFieldOrDeclaringAnotherAbi_IsRejected` |
 | U25 | Every `sourceUrl` sits under the published site root and its filename is `jellyfin-new-releases_<version>.zip` for that entry's version | CM-3, FR-013 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` |
@@ -189,6 +193,7 @@ first tag.
 | U29 | States Jellyfin 12 as the supported server version, and no longer claims 10.11.x | FR-006, FR-012, SC-006, EC-2 | example | DONE | `Packaging/DocumentationTests.cs::Readme_StatesJellyfin12_AndNoLongerClaims1011` |
 | U30 | Gives the plugin repository URL and where an operator adds it | FR-006, US2-AS4 | example | DONE | `Packaging/DocumentationTests.cs::Readme_GivesTheRepositoryUrlAndWhereToAddIt` |
 | U31 | States the minimum Plugin Pages version the new registration needs | FR-006, FR-015 | example | DONE | `Packaging/DocumentationTests.cs::Readme_StatesTheMinimumPluginPagesVersion` |
+| U38 | The README check accepts every way of saying support for 10.11 ended and rejects every way of claiming it | FR-006, SC-006 | example | DONE | `Packaging/DocumentationTests.cs::AClaimOfSupportFor1011_IsCaught`, `::SayingSupportFor1011Ended_IsAllowed` |
 
 ## Invariants and edge cases still to place
 
