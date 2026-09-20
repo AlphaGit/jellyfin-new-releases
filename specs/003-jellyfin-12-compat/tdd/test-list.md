@@ -47,7 +47,7 @@ Jellyfin services, as `001`'s `AcceptanceRig` already does.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| A1 | The entry point, constructed with the host's application paths and serializer, reports the frozen identity and offers its configuration page | US1-AS1, FR-007 | example | PENDING | part in `PluginSanityTests.cs` |
+| A1 | The entry point, constructed with the host's application paths and serializer, reports the frozen identity and offers its configuration page | US1-AS1, FR-007 | example | DONE | `PluginSanityTests.cs::Plugin_ConstructedWithHostServices_ReportsItsIdentityAndOffersAConfigurationPage` |
 | A2 | Every service the plugin registers resolves from a container holding the Jellyfin 12 host services, the scheduled task and both sources included | US1-AS2, FR-001, SC-001 | example | PENDING | |
 | A3 | A music library read through the Jellyfin 12 library reader produces the same Missing, Incomplete and Upcoming results `001` specifies | US1-AS3, FR-002, FR-003, SC-003, EC-4, EC-5 | example | PENDING | existing: `Acceptance/BrowseReleasesTests.cs`, `Library/LibraryScannerTests.cs`, `Matching/*Tests.cs` |
 | A4 | An authenticated request answers for the list, for the Archive and for a decision, with per-user library access still enforced | US1-AS4, FR-002, SC-002 | example | PENDING | existing: `Api/ReleasesControllerTests.cs`, `Api/AdminControllerTests.cs`, `Acceptance/ArchiveTests.cs` |
@@ -78,8 +78,8 @@ Grouped by the component from `plan.md` that owns them.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U1 | The plugin reports the frozen GUID `b8a15db8-e368-42c4-9048-390faf0094db` | FR-007, US1-AS1 | example | PENDING | existing: `PluginSanityTests.cs::Plugin_Guid_IsStable` |
-| U2 | `GetPages` offers exactly one page, the embedded `Web.admin.html` | US1-AS1, FR-001 | example | PENDING | |
+| U1 | The plugin reports the frozen GUID `b8a15db8-e368-42c4-9048-390faf0094db` | FR-007, US1-AS1 | example | DONE | `PluginSanityTests.cs::Plugin_Guid_IsStable` |
+| U2 | `GetPages` offers exactly one page, the embedded `Web.admin.html` | US1-AS1, FR-001 | example | DONE | `PluginSanityTests.cs::GetPages_OffersExactlyOnePage_TheEmbeddedAdminPage` |
 | U3 | Constructing the plugin writes nothing into the plugin-configurations tree | FR-015, US1-AS1 | example | PENDING | |
 
 ### `src/Jellyfin.Plugin.NewReleases/PluginServiceRegistrator.cs`

@@ -44,3 +44,21 @@ failed before the implementation.
   `Assert.Equal(new Guid("b8a15db8-e368-42c4-9048-390faf0094db"), plugin.Id)` — and it now runs
   on `net10.0` against Jellyfin 12.0.0, which is the evidence `003` needs. Marked `DONE` per
   `/speckit-tdd-run` Phase 1 rather than rewritten.
+
+## Cycle 2: U2 GetPages offers exactly one page, the embedded admin page
+
+- target: `net10.0` against Jellyfin 12.0.0.
+- test: `PluginSanityTests.cs::GetPages_OffersExactlyOnePage_TheEmbeddedAdminPage` (new)
+- red: passed on its first run, like cycle 1 and for the same reason. Deliberate mutant:
+  `EmbeddedResourcePath` pointed at `.Web.user-view.html` instead of `.Web.admin.html`.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~PluginSanityTests.GetPages_OffersExactlyOnePage_TheEmbeddedAdminPage" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Strings differ` (1 failed)
+- restore: `cp` from a file copy, verified with `cmp -s`.
+- green: no implementation needed. Suite `dotnet test --configuration Release`
+  -> 197 passed, 0 failed
+- refactor: none needed. The two constructions of `Plugin` in this class are two lines and
+  share no setup worth extracting; an xunit fixture would hide which test constructs what.
+- commit: `82d2821`
+- notes: test-after in the strict sense, as cycle 1. The mutant chosen changes the resource
+  path rather than dropping the page, so it kills a test that `Assert.Single` alone would
+  survive. `Assert.Single` covers the count half.

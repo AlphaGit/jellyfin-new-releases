@@ -30,4 +30,19 @@ public class PluginSanityTests
         Assert.Equal(new Guid(Plugin.PluginGuid), plugin.Id);
         Assert.NotEmpty(plugin.GetPages());
     }
+
+    /// <summary>
+    /// U2: the host renders whatever <c>GetPages</c> returns. A second entry would put an
+    /// unintended page in the dashboard; a wrong resource path renders an empty one.
+    /// </summary>
+    [Fact]
+    public void GetPages_OffersExactlyOnePage_TheEmbeddedAdminPage()
+    {
+        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+
+        var page = Assert.Single(plugin.GetPages());
+
+        Assert.Equal("newreleases", page.Name);
+        Assert.Equal("Jellyfin.Plugin.NewReleases.Web.admin.html", page.EmbeddedResourcePath);
+    }
 }
