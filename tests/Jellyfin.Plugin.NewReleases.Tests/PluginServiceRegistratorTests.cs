@@ -51,17 +51,21 @@ public class PluginServiceRegistratorTests
         // SourceHttpClient is IAsyncDisposable only, so the container needs DisposeAsync.
         await using var provider = BuildContainerAsTheHostWould();
 
-        Assert.NotNull(provider.GetRequiredService<PluginDatabase>());
-        Assert.NotNull(provider.GetRequiredService<ArtistRepository>());
-        Assert.NotNull(provider.GetRequiredService<ReleaseRepository>());
-        Assert.NotNull(provider.GetRequiredService<ArchiveRepository>());
-        Assert.NotNull(provider.GetRequiredService<SourceStateRepository>());
-        Assert.NotNull(provider.GetRequiredService<TimeProvider>());
-        Assert.NotNull(provider.GetRequiredService<IHttpClientFactory>());
-        Assert.NotNull(provider.GetRequiredService<SourceHttpClient>());
-        Assert.NotNull(provider.GetRequiredService<LibraryScanner>());
+        // GetRequiredService throws, naming the type, when a registration is missing — the call
+        // is the assertion. Wrapping each in NotNull only gave the test eleven reasons to fail.
+        foreach (var service in new[]
+                 {
+                     typeof(PluginDatabase), typeof(ArtistRepository), typeof(ReleaseRepository),
+                     typeof(ArchiveRepository), typeof(SourceStateRepository), typeof(TimeProvider),
+                     typeof(IHttpClientFactory), typeof(SourceHttpClient), typeof(LibraryScanner),
+                     typeof(IScheduledTask),
+                 })
+        {
+            provider.GetRequiredService(service);
+        }
+
         Assert.NotEmpty(provider.GetRequiredService<IEnumerable<IReleaseSource>>());
-        Assert.NotNull(provider.GetRequiredService<IScheduledTask>());
+        Assert.Same(TimeProvider.System, provider.GetRequiredService<TimeProvider>());
     }
 
     /// <summary>

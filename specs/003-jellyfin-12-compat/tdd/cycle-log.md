@@ -626,3 +626,55 @@ is to a test that was passing while proving less than its name claimed.
 - commit: `f45a429`
 - still open: `T052` (the MED and LOW findings worth acting on) and `T053` (re-run the audit).
   Findings 13-18 and 20-24 are untouched.
+
+## Cycle 35: T052, the MED and LOW findings
+
+Worked case by case, not swept. Acted on 13, 15, 17, 18, 20, 21, 23. Left 10, 14, 16, 19, 22, 24
+alone, each with a reason below. No production code changed.
+
+**Acted on:**
+
+- **13** — `Assert.ThrowsAny<Exception>` accepted a `KeyNotFoundException` from `GetProperty`
+  rather than the rule being enforced. `AssertInstallable` now reads fields with a `TryGetProperty`
+  helper and the theories assert `ThrowsAny<Xunit.Sdk.XunitException>`. The first attempt used
+  `Assert.Throws<XunitException>`, which demands an exact type and failed with
+  `Assert.Throws() Failure: Exception type was not an exact match` — xunit's `FalseException` and
+  `EqualException` are subclasses. `ThrowsAny` over the xunit base is the narrowing that works.
+- **15** — `AfterAFailedRegistration_...` asserted `Assert.Single(logger.Entries)` after Start then
+  Stop, which passes if Start logged nothing and Stop logged once, the exact inversion the name
+  forbids. Now captures the count after Start, asserts it is 1, and asserts Stop left it unchanged.
+- **17** — the tag trigger was pinned to one YAML quoting style. Now a regex. **Verified both
+  ways**: rewritten as a block sequence (`tags:\n  - "v*"`) it passes; changed to `tags: ['*']` it
+  fails with `Assert.Matches() Failure: Pattern not found in value`. The first regex failed the
+  block-style case — it had no room for the `- ` — and was corrected before being kept.
+- **18** — `DoesNotContain("Jellyfin 10.11")` over the whole README would have failed on a
+  legitimate "no longer supported" sentence. Closed by T047's `SectionOf`, which scopes it to
+  Requirements.
+- **20** — eleven `Assert.NotNull` wrappers around `GetRequiredService<T>()`, which throws and
+  names the type. Replaced with a loop over the service types plus two specific assertions: both
+  sources present, and the clock is `TimeProvider.System` (the registrator uses `TryAddSingleton`,
+  so a host-supplied clock would win and that is worth pinning). **Verified**: removing the
+  `TimeProvider` registration fails the test.
+- **21** — `12.0.0.0`, `net10.0` and `3.0.0.0` were hard-coded across four files.
+  `Support/TargetVersions.cs` (new) holds them once.
+- **23** — the payload key assertion relied on `Dictionary<,>.Keys` enumeration order, which is
+  not guaranteed. Now compares an ordinal-sorted sequence.
+
+**Left alone, deliberately:**
+
+- **10** — closed by T048 already; the `version4` check now asserts the zip path interpolation.
+- **14** (`Slug` re-derives JPRM's naming rule) — the alternative is a recorded fixture of a real
+  JPRM output, which is worth having but is a change to how packaging is tested, not a fix to a
+  weak assertion. The quickstart dry run in `T035` is what currently proves the real rule matches.
+- **16** (`Manifest_MayListNoVersionsAtAll` asserts an array is an array) — superseded in
+  substance by T044's count assertion, which now fails when the count moves. The test is
+  redundant rather than wrong; deleting it is a judgement for the next author.
+- **19** — same as 18, already closed by scoping.
+- **22** (`GetReferencedAssemblies` misses an unused package reference) — real, and the cycle-16
+  mutant had to add a `JObject` field to trip it. Closing it properly means asserting on the
+  csproj too, which duplicates what a human reading the project file sees. Recorded, not fixed.
+- **24** (`RepositoryFiles.Root` depends on the binaries sitting under the repository) — true, and
+  it fails loudly with a clear message if that stops holding. No change.
+
+- suite: 238 passed, 0 failed.
+- commit: `0b7ffa8`

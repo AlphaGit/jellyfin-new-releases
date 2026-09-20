@@ -55,7 +55,7 @@ public class ReleaseWorkflowTests
     [Fact]
     public void ReleaseWorkflow_FailsTheRunIfPackagingDidNotRestoreTheTargetFramework()
     {
-        Assert.Contains("grep -q '<TargetFramework>net10.0</TargetFramework>'", Steps, StringComparison.Ordinal);
+        Assert.Contains($"grep -q '<TargetFramework>{TargetVersions.Framework}</TargetFramework>'", Steps, StringComparison.Ordinal);
         Assert.Contains("src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj", Steps, StringComparison.Ordinal);
     }
 
@@ -76,7 +76,8 @@ public class ReleaseWorkflowTests
     [Fact]
     public void ReleaseWorkflow_RunsOnAVersionTag_AndDerivesTheVersionFromIt()
     {
-        Assert.Contains("tags: ['v*']", Workflow, StringComparison.Ordinal);
-        Assert.Contains("GITHUB_REF_NAME#v", Workflow, StringComparison.Ordinal);
+        // Quote style is the author's choice; that the trigger is a v-prefixed tag is not.
+        Assert.Matches(@"tags:\s*(\[\s*|-\s*)?['""]?v\*['""]?", Steps);
+        Assert.Contains("GITHUB_REF_NAME#v", Steps, StringComparison.Ordinal);
     }
 }

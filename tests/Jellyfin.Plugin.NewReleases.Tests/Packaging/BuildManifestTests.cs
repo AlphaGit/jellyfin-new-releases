@@ -18,7 +18,7 @@ public class BuildManifestTests
     [Fact]
     public void BuildManifest_DeclaresJellyfin12AsTheTargetAbi()
     {
-        Assert.Equal("12.0.0.0", RepositoryFiles.Scalar(Manifest, "targetAbi"));
+        Assert.Equal(TargetVersions.JellyfinAbi, RepositoryFiles.Scalar(Manifest, "targetAbi"));
     }
 
     /// <summary>
@@ -28,7 +28,7 @@ public class BuildManifestTests
     [Fact]
     public void BuildManifest_DeclaresNet10AsTheFramework()
     {
-        Assert.Equal("net10.0", RepositoryFiles.Scalar(Manifest, "framework"));
+        Assert.Equal(TargetVersions.Framework, RepositoryFiles.Scalar(Manifest, "framework"));
     }
 
     /// <summary>

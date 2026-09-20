@@ -95,7 +95,7 @@ public class PluginPagesRegistrationTests
         Assert.Equal("/Plugins/NewReleases/UserView", payload["Url"]);
         Assert.Equal("New Releases", payload["DisplayText"]);
         Assert.Equal("new_releases", payload["Icon"]);
-        Assert.Equal(["Id", "Url", "DisplayText", "Icon"], payload.Keys);
+        Assert.Equal(["DisplayText", "Icon", "Id", "Url"], payload.Keys.OrderBy(key => key, StringComparer.Ordinal));
     }
 
     /// <summary>
@@ -189,9 +189,11 @@ public class PluginPagesRegistrationTests
         var logger = new RecordingLogger<PluginPagesRegistrationService>();
         var service = new PluginPagesRegistrationService(new PluginPagesGateway(() => []), logger);
         await service.StartAsync(CancellationToken.None);
+        var afterStart = logger.Entries.Count;
 
         await service.StopAsync(CancellationToken.None);
 
-        Assert.Single(logger.Entries);
+        Assert.Equal(1, afterStart);
+        Assert.Equal(afterStart, logger.Entries.Count);
     }
 }

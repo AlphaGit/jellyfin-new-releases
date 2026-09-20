@@ -16,6 +16,7 @@ namespace Jellyfin.Plugin.NewReleases.Tests.Packaging;
 public class RepositoryManifestTests
 {
     private const string ManifestPath = "repo/manifest.json";
+    private const string Jellyfin12Abi = TargetVersions.JellyfinAbi;
 
     /// <summary>
     /// How many versions the published repository lists right now. Zero is correct until the
@@ -95,7 +96,7 @@ public class RepositoryManifestTests
     {
         using var entry = JsonDocument.Parse(json);
 
-        Assert.ThrowsAny<Exception>(() => AssertInstallable(entry.RootElement));
+        Assert.ThrowsAny<Xunit.Sdk.XunitException>(() => AssertInstallable(entry.RootElement));
     }
 
     /// <summary>
@@ -135,18 +136,23 @@ public class RepositoryManifestTests
                 ["sourceUrl"] = sourceUrl,
             }));
 
-        Assert.ThrowsAny<Exception>(
+        Assert.ThrowsAny<Xunit.Sdk.XunitException>(
             () => AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleSiteRoot));
     }
 
     private static void AssertInstallable(JsonElement version)
     {
-        Assert.False(string.IsNullOrWhiteSpace(version.GetProperty("version").GetString()));
-        Assert.False(string.IsNullOrWhiteSpace(version.GetProperty("sourceUrl").GetString()));
-        Assert.False(string.IsNullOrWhiteSpace(version.GetProperty("checksum").GetString()));
-        Assert.False(string.IsNullOrWhiteSpace(version.GetProperty("timestamp").GetString()));
-        Assert.Equal("12.0.0.0", version.GetProperty("targetAbi").GetString());
+        // TryGetProperty, not GetProperty: a missing field must fail as an assertion about the
+        // rule, not as a KeyNotFoundException that the negative theories would accept either way.
+        Assert.False(string.IsNullOrWhiteSpace(Field(version, "version")), "version is missing or blank");
+        Assert.False(string.IsNullOrWhiteSpace(Field(version, "sourceUrl")), "sourceUrl is missing or blank");
+        Assert.False(string.IsNullOrWhiteSpace(Field(version, "checksum")), "checksum is missing or blank");
+        Assert.False(string.IsNullOrWhiteSpace(Field(version, "timestamp")), "timestamp is missing or blank");
+        Assert.Equal(Jellyfin12Abi, Field(version, "targetAbi"));
     }
+
+    private static string? Field(JsonElement version, string name)
+        => version.TryGetProperty(name, out var value) ? value.GetString() : null;
 
     /// <summary>A stand-in site root for the rejecting cases. Test data, not this project's URL.</summary>
     private const string ExampleSiteRoot = "https://example.invalid/repo/plugin/";

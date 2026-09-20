@@ -63,6 +63,6 @@ public class DocumentationTests
         var requirements = SectionOf("## Requirements");
 
         Assert.Contains("Plugin Pages", requirements, StringComparison.Ordinal);
-        Assert.Contains("3.0.0.0", requirements, StringComparison.Ordinal);
+        Assert.Contains(TargetVersions.MinimumPluginPages, requirements, StringComparison.Ordinal);
     }
 }
