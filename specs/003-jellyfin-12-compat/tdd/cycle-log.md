@@ -62,3 +62,11 @@ failed before the implementation.
 - notes: test-after in the strict sense, as cycle 1. The mutant chosen changes the resource
   path rather than dropping the page, so it kills a test that `Assert.Single` alone would
   survive. `Assert.Single` covers the count half.
+
+## Correction to cycle 1
+
+Cycle 1's entry records `commit: 4da6cf9`. **No such commit exists.** The SHA was written into
+the entry before the commit was made, so it is invented, not observed. The real commit for
+cycle 1 is **`f49b789`**, "test: pin that the plugin entry point reports its identity and offers
+its page". The entry above is left as written, per the append-only rule; this entry is the
+correction. From cycle 2 on, the SHA is substituted into the entry after `git commit` returns it.
