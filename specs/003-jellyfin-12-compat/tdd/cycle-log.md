@@ -70,3 +70,32 @@ the entry before the commit was made, so it is invented, not observed. The real 
 cycle 1 is **`f49b789`**, "test: pin that the plugin entry point reports its identity and offers
 its page". The entry above is left as written, per the append-only rule; this entry is the
 correction. From cycle 2 on, the SHA is substituted into the entry after `git commit` returns it.
+
+## Cycle 3: A2 every service the plugin registers resolves from the host container
+
+- target: `net10.0` against Jellyfin 12.0.0.
+- test: `PluginServiceRegistratorTests.cs::RegisterServices_EveryServiceThePluginRegisters_ResolvesFromTheHostContainer` (new file)
+- first run: **not a valid red.** It failed on container teardown, not on a behaviour:
+  `System.InvalidOperationException : 'Jellyfin.Plugin.NewReleases.Sources.SourceHttpClient' type only implements IAsyncDisposable. Use DisposeAsync to dispose the container.`
+  That is the playbook's "bad fixture setup" row — the test was broken, not the code. Fixed by
+  making the test `async Task` and disposing with `await using`, then re-run: passed.
+- red: passed after the fix, so the deliberate mutant is the evidence. Mutant:
+  `serviceCollection.AddSingleton<LibraryScanner>();` removed from `PluginServiceRegistrator`.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~PluginServiceRegistratorTests.RegisterServices_EveryServiceThePluginRegisters_ResolvesFromTheHostContainer" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.InvalidOperationException : No service for type 'Jellyfin.Plugin.NewReleases.Library.LibraryScanner' has been registered.` (1 failed)
+- restore: `cp` from a file copy, verified with `cmp -s`.
+- green: no implementation needed. Suite `dotnet test --configuration Release`
+  -> 198 passed, 0 failed
+- refactor: the container build was extracted to `BuildContainerAsTheHostWould()` as the test was
+  written, so the sharper unit tests below can reuse it rather than repeat the host wiring.
+- commit: `c498be9`
+
+## U4 dropped as a duplicate of A2
+
+- `U4` reads "Every service the registrator registers resolves from a collection holding
+  substituted Jellyfin 12 host services". That is A2's observable in different words, not a
+  narrower one: a single missing registration fails both, so by the test-list template's quality
+  bar they are one behaviour, and A2 has the clearer wording.
+- `U5` and `U6` are **not** duplicates of A2 and stay: each asserts something A2's
+  `NotEmpty`/`NotNull` deliberately does not — which two sources, and which task type.
+- `U4` is marked `DROPPED` in the list with this reason. Its id is not reused.

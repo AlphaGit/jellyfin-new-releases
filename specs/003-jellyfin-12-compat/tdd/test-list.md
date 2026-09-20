@@ -48,7 +48,7 @@ Jellyfin services, as `001`'s `AcceptanceRig` already does.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | A1 | The entry point, constructed with the host's application paths and serializer, reports the frozen identity and offers its configuration page | US1-AS1, FR-007 | example | DONE | `PluginSanityTests.cs::Plugin_ConstructedWithHostServices_ReportsItsIdentityAndOffersAConfigurationPage` |
-| A2 | Every service the plugin registers resolves from a container holding the Jellyfin 12 host services, the scheduled task and both sources included | US1-AS2, FR-001, SC-001 | example | PENDING | |
+| A2 | Every service the plugin registers resolves from a container holding the Jellyfin 12 host services, the scheduled task and both sources included | US1-AS2, FR-001, SC-001 | example | DONE | `PluginServiceRegistratorTests.cs::RegisterServices_EveryServiceThePluginRegisters_ResolvesFromTheHostContainer` |
 | A3 | A music library read through the Jellyfin 12 library reader produces the same Missing, Incomplete and Upcoming results `001` specifies | US1-AS3, FR-002, FR-003, SC-003, EC-4, EC-5 | example | PENDING | existing: `Acceptance/BrowseReleasesTests.cs`, `Library/LibraryScannerTests.cs`, `Matching/*Tests.cs` |
 | A4 | An authenticated request answers for the list, for the Archive and for a decision, with per-user library access still enforced | US1-AS4, FR-002, SC-002 | example | PENDING | existing: `Api/ReleasesControllerTests.cs`, `Api/AdminControllerTests.cs`, `Acceptance/ArchiveTests.cs` |
 | A5 | A configuration with every field set round-trips through the host serializer unchanged, and no collection gains a duplicate | US1-AS5, FR-002, SC-002 | example | PENDING | existing: `Configuration/PluginConfigurationTests.cs::XmlRoundTrip_FullyChangedConfiguration_IsEqualFieldByField` |
@@ -86,7 +86,7 @@ Grouped by the component from `plan.md` that owns them.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U4 | Every service the registrator registers resolves from a collection holding substituted Jellyfin 12 host services | US1-AS2, SC-001 | example | PENDING | |
+| U4 | Every service the registrator registers resolves from a collection holding substituted Jellyfin 12 host services | US1-AS2, SC-001 | example | DROPPED | duplicate of A2 — same observable, see cycle log |
 | U5 | `IEnumerable<IReleaseSource>` yields both MusicBrainz and Deezer, not one of them | US1-AS2 | example | PENDING | |
 | U6 | `IScheduledTask` resolves as the refresh task | US1-AS2, FR-001 | example | PENDING | |
 | U7 | The page-registration hosted service is registered and resolves as an `IHostedService` | FR-015, US1-AS6 | example | PENDING | |
