@@ -169,10 +169,21 @@ documented requirement "Plugin Pages 3.0.0.0 or later" was **incomplete** — it
 Transformation, and it omits that the menu entry does not currently appear on Jellyfin 12.1 at
 all. Both are now stated in `README.md` and in the catalogue description.
 
-**Not verified.** Whether the entry appears for a signed-in user. This pass could authenticate the
-API but not the web client — an API key is not a user session, and the web client rejects one —
-so the final check is a person opening the client and looking. The gate above predicts it will
-not appear; that prediction is worth confirming rather than trusting.
+**Confirmed by the maintainer.** After both plugins were installed and the client hard-refreshed,
+the entry did not appear, as the gate predicts.
+
+**The view itself works on Jellyfin 12.** Injected into a signed-in client by hand — fetched with
+`ApiClient.ajax` and appended to the document — `user-view.html` rendered correctly and showed its
+empty state. Its markup, styling, bootstrap and `ApiClient` calls are all sound against the
+rewritten client. Nothing in this plugin's user-facing half is broken on Jellyfin 12; only the
+menu link that Plugin Pages is responsible for.
+
+**A note on the injection snippet, because it produced a misleading 401 first.**
+`ApiClient.getUrl(path)` builds a URL but attaches no credentials, so a plain `fetch` of
+`/Plugins/NewReleases/UserView` returns 401 even for a signed-in administrator — the controller is
+`[Authorize]`. `ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(...), dataType: 'text' })`
+sends the session's `Authorization: MediaBrowser Token=...` header and succeeds. This is the same
+Jellyfin 12 header rule recorded below, met from the other direction.
 
 ## Three facts about Jellyfin 12 worth keeping
 
