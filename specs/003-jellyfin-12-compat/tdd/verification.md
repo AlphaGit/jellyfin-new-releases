@@ -1,32 +1,68 @@
 ---
 feature: 003-jellyfin-12-compat
-verdict: FAIL
-verified_at: 70b72db
+verdict: PASS_WITH_GAPS
+verified_at: b40efee
 standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md
 profile: .specify/memory/tdd-profile.md
-behaviors: 44
-proven: 19
+behaviors: 45
+proven: 26
 test_after: 21
 not_applicable: 3
 dropped: 1
-high_findings: 9
+high_findings: 0
 criteria_total: 10
 criteria_covered: 10
 criteria_with_entry_point_test: 6
-suite: 236 passed, 0 failed, 10 s (xunit) + 33 passed, 0 failed, 123 ms (node)
+suite: 238 passed, 0 failed, 10 s (xunit) + 33 passed, 0 failed, 123 ms (node)
 mutation_tool: none (profile records mutation: null)
-deliberate_mutants: 4 applied, 3 killed, 1 survived
+deliberate_mutants: 5 applied, 5 killed, 0 survived
 independent: false
 ---
 
 # TDD Verification: Run on Jellyfin 12
 
-**Verdict: FAIL.** A deliberate mutant that disconnects the page registration from every real
-assembly — the single wire this feature exists to install — passes all 236 tests, so the
-feature's headline behaviour could be dead on a running server with nothing to say so.
+**Verdict: PASS_WITH_GAPS.** Every `HIGH` finding of the first audit is closed and re-verified;
+what remains is weak evidence, not weak tests — twenty-one behaviours still carry no recorded red
+because they pin code this feature never changed.
 
-Two further FAIL conditions stand behind it: two tests assert nothing at all in the committed
-state, and twenty-one behaviours have no recorded red.
+**Re-audited at `b40efee`, after `T043`-`T053`.** The first audit's verdict and its nine `HIGH`
+findings are preserved below under "First audit", because the record of what was wrong is the
+point of keeping one.
+
+### What changed
+
+- **Finding 1 is closed and proved.** `U34` resolves `PluginPagesGateway` from the container the
+  registrator populates and drives it against genuinely loaded assemblies. Mutant M4 —
+  `() => []` in place of the `AssemblyLoadContext.All` scan — now fails with
+  `the registrator gave the gateway an assembly source that cannot see loaded assemblies`.
+- **Findings 2-9 closed** by `T044`-`T051`: the two vacuous manifest tests now pin the published
+  version count first (proved by writing a bad entry into `repo/manifest.json` and watching both
+  fail); the tautological `Assert.Empty` on a configured double is gone; the re-implemented GUID
+  expectation uses the literal; documentation assertions are scoped to their own README section;
+  the workflow guard asserts its `grep -q` mechanism; the stale test-list reference is corrected
+  and all 36 references resolve; and one `DisableParallelization` collection now holds every test
+  touching process-global state.
+- **The pre-existing flaky test is fixed.** Two teardowns called the process-global
+  `ClearAllPools()`; both now scope to their own pool. Measured 2 failures in 14 runs before,
+  0 in 20 after. `suite_baseline` in the stack profile is back to `green`.
+- **Mutation re-run: 5 applied, 5 killed, none survived.**
+
+### Gaps that remain, and why this is not a `PASS`
+
+- Twenty-one behaviours are `TEST_AFTER` on the rubric's literal rule. They pin pre-existing,
+  untouched code and were planned `kind: example` rather than `kind: characterization`. Correcting
+  that is a `/speckit-tdd-plan refresh` decision, not a test change, and it is not made here.
+- Four acceptance criteria rest on declared proxies or file-text assertions rather than a real
+  entry point (`US2-AS1`, `US2-AS2`, `US2-AS3`, `US2-AS4`).
+- Mutation remains a sample of five on the Plugin Pages path; no tool is installed and none was
+  added. Coverage is still unavailable.
+- Findings 14, 16, 22 and 24 were judged and deliberately left; see the cycle log for each reason.
+
+---
+
+## First audit (verdict FAIL, at `70b72db`)
+
+Kept for the record. Every `HIGH` below is now closed.
 
 **This audit is not independent.** The same session wrote these tests, planned the list and ran
 the loop. The smell pass in Phase 3 was delegated to a fresh-context subagent for that reason,

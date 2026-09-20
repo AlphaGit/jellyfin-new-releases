@@ -231,7 +231,7 @@ that proves it done.
 - [X] T050 Close verification finding 11: put the four tests in `PluginSanityTests.cs` that construct `Plugin` — and so assign the process-global `Plugin.Instance` — into one xunit collection with `DisableParallelization`, as `.specify/memory/tdd-profile.md` requires once a second such test exists
 - [X] T051 Close verification finding 12: give `PluginServiceRegistratorTests.BuildContainerAsTheHostWould` an empty assembly source, or add the class to the `PluginPagesRegistrationTests` collection, so the production gateway's scan cannot reach the static stand-in when a future test starts that hosted service
 - [X] T052 Work through the remaining `MED` findings 10, 13–20 and the `LOW` findings 21–24 in [tdd/verification.md](./tdd/verification.md), deciding case by case which are worth acting on; record the ones deliberately left alone and why
-- [ ] T053 Re-run `/speckit-tdd-verify` and confirm the verdict is no longer `FAIL`
+- [X] T053 Re-run `/speckit-tdd-verify` and confirm the verdict is no longer `FAIL`
 
 **Out of this phase, reported not fixed:** the pre-existing flaky test
 `Api.ReleasesControllerTests.Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204`
