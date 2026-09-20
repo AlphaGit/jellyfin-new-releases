@@ -19,12 +19,12 @@ public class RepositoryManifestTests
     private const string Jellyfin12Abi = TargetVersions.JellyfinAbi;
 
     /// <summary>
-    /// How many versions the published repository lists right now. Zero is correct until the
-    /// maintainer tags the first release: `FR-014` builds the publishing chain, and running it is
-    /// a separate act. Raising this is the deliberate step that turns the per-entry checks below
-    /// from vacuous into binding.
+    /// How many versions the published repository lists right now. 0.1.0.0 was published on
+    /// 2026-09-20 for the real-server review, so the per-entry checks below now run against a
+    /// genuinely published entry rather than only against synthetic ones. Raise this with each
+    /// release; the failure message says so.
     /// </summary>
-    private const int PublishedVersionsToday = 0;
+    private const int PublishedVersionsToday = 1;
 
     /// <summary>
     /// The package slug JPRM derives from the plugin's name. Read from <c>build.yaml</c> rather

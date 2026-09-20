@@ -802,3 +802,27 @@ stop, which cuts `10.11` in half).
   specification decision rather than a remediation step. Recorded, not taken.
 - suite: 255 passed, 0 failed. 43 test references, all resolving.
 - commit: `44a4cb8`
+
+## Cycle 38: the published-version tripwire fires for real
+
+Tagging `v0.1.0` for the real-server review put a genuine entry in `repo/manifest.json`, and
+`AssertPublishedVersionCount` failed exactly as designed:
+
+```
+repo/manifest.json lists 1 version(s), expected 0. If the release chain has published one,
+raise PublishedVersionsToday — the per-entry checks in this class only start binding once it
+is above zero.
+```
+
+`PublishedVersionsToday` raised 0 -> 1. **This is the moment the per-entry rules stopped being
+vacuous**: they now run over a real published entry rather than only synthetic ones. Confirmed by
+setting the published entry's `targetAbi` to `10.11.0.0` —
+`Assert.All() Failure: 1 out of 1 items in the collection did not pass` — then restoring and
+verifying with `cmp -s`.
+
+The tripwire was added in cycle 34 for precisely this handover and is the one piece of the
+packaging tests that needed a real release to prove. It worked, and its failure message carried
+the instruction rather than requiring the next author to read the class.
+
+- suite: 255 passed, 0 failed; page side 33 passed.
+- commit: `b8d2de9`
