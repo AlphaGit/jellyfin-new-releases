@@ -159,6 +159,55 @@ The lesson is the same one the test suite keeps teaching in this project: a nega
 taken in the wrong context is worse than no observation, because it is acted upon. No issue was
 filed upstream; there was no upstream bug.
 
+## Finding 4 — both embedded pages are blank on Jellyfin 12: the API's JSON casing changed
+
+**Severity: high, user-visible, and the reason to hold 1.0.0. This is a defect in this plugin.**
+
+With 812 releases stored and the API returning them correctly, **the New Releases view shows
+"No data yet. New Releases is waiting for its first refresh." and the administrator page shows a
+dash for every status value.** Neither page can display anything on Jellyfin 12.
+
+**Cause.** The two embedded pages read the API response in camelCase; the Jellyfin 12 host
+serialises it in PascalCase.
+
+| The pages read | Jellyfin 12 returns |
+| --- | --- |
+| `data.items` | `Items` |
+| `data.hasStoredReleases` | `HasStoredReleases` |
+| `data.releasesLastCheckedAt` | `ReleasesLastCheckedAt` |
+| `data.refreshIntervalHours` | `RefreshIntervalHours` |
+| `.sources`, `.lastRun`, `.libraryArtists` | `Sources`, `LastRun`, `LibraryArtists` |
+
+`user-view.html` renders the empty state from `if (!data.hasStoredReleases && !archived)`. That
+property is `undefined` on Jellyfin 12, so the branch is always taken no matter how much data
+exists. `admin.html` fails the same way for every status field.
+
+The plugin never configures a naming policy for its API; it relies on the host's serializer. The
+pages were written against Jellyfin 10.11, where that produced camelCase. That the casing differed
+on 10.11 is inferred from the pages having been written that way and having worked, not measured
+against a 10.11 server.
+
+**Confirmed against the running server, not deduced.** The page's own request was traced in the
+browser: `HTTP 200 /Plugins/NewReleases/api/releases`, a full `Items` array in the response, and
+the empty state rendered anyway. The administrator page was checked the same way.
+
+**Why no test caught it, which is the part worth acting on.** The gap is exact and was documented
+as a limitation all along:
+
+- The C# tests assert the *DTO shape* the controllers return — a C# object graph, before the host
+  serialises it. They never see the JSON the browser receives.
+- The page tests under `tests/web/` cover only pure helpers. `002`'s test list says so explicitly:
+  "Anything that reads or writes elements (`row`, `render`, `refreshStatus`, `read`, `fill`,
+  `query`) needs a simulated browser this project does not have; those stay manual."
+
+`render` is exactly the function that reads `data.hasStoredReleases`. The one function that
+consumes the response is the one function deliberately left untested, and the retarget changed the
+response's shape underneath it. `003`'s `FR-002` — "every behaviour specified in `001` and `002`
+MUST hold on Jellyfin 12, unchanged" — is not met, and the suite reports green.
+
+**Not fixed here.** Per `spec.md` a real-server finding becomes its own specification. Seeded in
+`specs/005-page-json-casing/`.
+
 ## Three facts about Jellyfin 12 worth keeping
 
 1. **The legacy API authentication headers are gone.** On 12.1, both of these return **401**:
@@ -181,7 +230,12 @@ filed upstream; there was no upstream bug.
    to work. The signed-in DOM also still provides `.mainDrawer-scrollContainer`. Probing the
    **login page** shows none of the signed-in structure and will mislead anyone who measures there.
 
-4. **First-party plugins track the server version.** TMDb, OMDb, MusicBrainz, Studio Images and
+4. **The API's JSON casing changed.** A plugin controller's response reaches the browser in
+   PascalCase on 12 where 10.11 produced camelCase. Any embedded page that reads response fields
+   by name needs checking; nothing in a C# test will reveal it, because the change happens in the
+   host's serializer after the controller returns.
+
+5. **First-party plugins track the server version.** TMDb, OMDb, MusicBrainz, Studio Images and
    AudioDB all report `12.1.0.0` on a 12.1 server, while third-party ones keep their own numbering
    (AniList 15.0.0.0, Open Subtitles 25.0.0.0, TVmaze 14.0.0.0).
 
