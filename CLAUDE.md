@@ -29,7 +29,8 @@ Installed extensions (`specify extension list`; hooks in `.specify/extensions.ym
 
 ## Conventions (inherited from concert-radar)
 
-- Target `net9.0`, `Jellyfin.Controller`/`Jellyfin.Model` pinned to the server version (10.11.11),
+- Target `net10.0`, `Jellyfin.Controller`/`Jellyfin.Model`/`Jellyfin.Data`/
+  `Jellyfin.Database.Implementations` pinned to the server version (12.0.0),
   `ExcludeAssets=runtime` in the plugin project, not in the test project.
 - Plugin GUID `b8a15db8-e368-42c4-9048-390faf0094db` is frozen. Guarded by `PluginSanityTests`.
 - `PluginConfiguration` collections are `List<T>`, never seeded in the constructor (XmlSerializer
@@ -42,5 +43,5 @@ Installed extensions (`specify extension list`; hooks in `.specify/extensions.ym
 
 ## Build
 
-Needs .NET 9 SDK. `dotnet build --configuration Release && dotnet test`.
+Needs .NET 10 SDK. `dotnet build --configuration Release && dotnet test`.
 Packaging: `jprm plugin build . --version X.Y.Z --output ./artifacts` (CI does this on `v*` tags).

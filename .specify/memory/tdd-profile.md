@@ -1,5 +1,5 @@
 ---
-detected_at: ed8d2f5
+detected_at: a9f1ba4
 ecosystems: [dotnet, node]
 default: dotnet
 stacks:
@@ -7,7 +7,8 @@ stacks:
     cwd: .
     runner: xunit
     # `--` RunConfiguration.TreatNoTestsAsError=true is mandatory: without it a filter that
-    # matches nothing exits 0 (verified), which would turn every red into a false green.
+    # matches nothing exits 0 (re-verified on SDK 10 / Test.Sdk 18.9.0), which would turn every
+    # red into a false green.
     single: 'dotnet test --configuration Release --filter "FullyQualifiedName~{name}" -- RunConfiguration.TreatNoTestsAsError=true'
     file: null
     suite: dotnet test --configuration Release
@@ -38,7 +39,9 @@ stacks:
     # Node's built-in runner. No package.json, no install step: `node:test`, `node:assert`
     # and `node:vm` are standard library, so the suite still passes with no network.
     # The path must be a glob, not a directory: `node --test tests/web` resolves it as a module.
-    single: 'node --test --test-name-pattern "{name}" "tests/web/*.test.js"'
+    # single is null on purpose: no node invocation fails when the name matches nothing, which
+    # constitution II forbids. `file` is the loop's unit of work here. See the note below.
+    single: null
     file: 'node --test tests/web/{file}'
     suite: 'node --test "tests/web/*.test.js"'
     watch: 'node --test --watch "tests/web/*.test.js"'
@@ -54,12 +57,17 @@ stacks:
     helpers:
       - tests/web/load-page.js
       - tests/web/fixed-clock.js
-verified: [single, suite]
+verified: [single, file, suite]  # single: dotnet only; node's is null, see the note
 suite_baseline: green
-suite_seconds: 10
+suite_seconds: 13
 ---
 
 # TDD Stack Profile
+
+Refreshed 2026-09-20, after feature `003-jellyfin-12-compat` moved the plugin to `net10.0` and
+Jellyfin 12.0.0. `detected_at` is `a9f1ba4`, the same SHA as the previous detection, because that
+retarget is **not committed yet**: the working tree holds it. Re-run
+`/speckit-tdd-setup refresh` after the feature lands if the stack moves again.
 
 ## Conventions to match
 
@@ -80,8 +88,11 @@ suite_seconds: 10
 - Jellyfin services (`ILibraryManager`, `IApplicationPaths`, `IXmlSerializer`) are substituted,
   never real. Tests that construct `Plugin` set the static `Plugin.Instance`; put them in one
   xunit collection when a second such test appears.
-- Exemplar to imitate: `tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs` (unit).
-  There is no acceptance exemplar yet.
+- Exemplar to imitate: `tests/Jellyfin.Plugin.NewReleases.Tests/Matching/TitleNormalizerTests.cs`
+  for a unit test, `tests/.../Acceptance/BrowseReleasesTests.cs` for an acceptance-shaped one.
+  The latter is an integration test over the real entry points with substituted Jellyfin
+  services, not a host-level end-to-end test; `acceptance: null` records that no such runner
+  exists.
 
 ## Page-side conventions (`node` ecosystem)
 
@@ -102,26 +113,52 @@ suite_seconds: 10
 
 ## Notes and constraints
 
-- Suite wall time is 2 s including build. Per-cycle full runs are fine.
-- Build requires .NET SDK 9 (`net9.0`). On this Mac `~/.zshenv` puts Homebrew `dotnet@9` first;
-  CI uses `actions/setup-dotnet` 9.0.x. `--no-build` variants are safe after one build.
-- CI gate: `dotnet build --configuration Release` then
-  `dotnet test --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"`.
-- `file: null` — xunit has no run-one-file switch; filter by class name instead
+- **The toolchain moved to .NET SDK 10.** `net9.0` is gone from both csproj files. Homebrew keeps
+  three kegs — `dotnet` (10.0.400), `dotnet@9`, `dotnet@8` — and each reports only its own SDK
+  from `dotnet --list-sdks`, so that command never shows all three. `~/.zshenv` now puts
+  `/opt/homebrew/opt/dotnet/bin` first and sets `DOTNET_ROOT` to match, verified with
+  `env -i HOME=$HOME /bin/zsh -lc 'dotnet --version'` → `10.0.400`. A plain `dotnet` is therefore
+  correct in any newly started shell. **A shell started before 2026-09-20 keeps a stale `PATH`**
+  and still resolves `dotnet@9`, which fails with
+  `NETSDK1045: The current .NET SDK does not support targeting .NET 10.0`. In such a shell,
+  prefix with `PATH=/opt/homebrew/opt/dotnet/bin:$PATH DOTNET_ROOT=/opt/homebrew/opt/dotnet/libexec`.
+- **`single: null` for the `node` stack, because no invocation of it can be made safe.**
+  Constitution II requires that a single-test invocation fail when it matches no test. Node's
+  does not. Verified on node v22.20.0, three ways, all exiting **0** on a name that matches
+  nothing:
+  - `--test-name-pattern "ZzzNope" "tests/web/*.test.js"` → `# pass 5`. Those five are the five
+    test *files*, each reporting `1..0` subtests — not five passing tests.
+  - the same pattern against one file → `# pass 1`, the file itself.
+  - `--test-reporter=tap` shows the truth (`1..0` then `1..1`) but still exits 0.
+
+  `--test-skip-pattern` is the inverse filter, not a guard, and node 22 has no "fail on no
+  match" switch. The pattern flag *does* report a real failure correctly (a deliberate mutant on
+  `checked.test.js:19` gave exit 1, `# fail 1`), so the flaw is narrow: a mistyped name reads as
+  a green, which is exactly the red-phase hazard. **Drive the page side with `file`.**
+  `node --test tests/web/checked.test.js` gives true counts, exits 1 on a real failure, and
+  exits 1 with `Could not find …` on a wrong path — all three verified.
+- Suite wall time is 13 s including build, 10 s of it the test run. Per-cycle full runs are fine.
+- CI gate: `dotnet restore`, then `dotnet build --configuration Release --no-restore`, then
+  `dotnet test --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"`,
+  then `node --test "tests/web/*.test.js"`. `actions/setup-dotnet` is pinned to `10.0.x`.
+- `file: null` for dotnet — xunit has no run-one-file switch; filter by class name instead
   (`FullyQualifiedName~<ClassName>`).
-- `coverage: null` — `--collect:"XPlat Code Coverage"` fails: no `coverlet.collector` package.
-  Audit falls back to trace checking. Ecosystem default to add: `coverlet.collector`.
-- `mutation: null` — Stryker.NET not installed (`dotnet tool list -g`). Audit uses deliberate
-  mutants. Ecosystem default to add: `dotnet-stryker` global tool.
+- `coverage: null` — re-checked on SDK 10: `--collect:"XPlat Code Coverage"` still fails with
+  `Unable to find a datacollector with friendly name 'XPlat Code Coverage'`, because no
+  `coverlet.collector` package is referenced. Audit falls back to trace checking. Ecosystem
+  default to add: `coverlet.collector`.
+- `mutation: null` — `dotnet tool list -g` is empty; Stryker.NET is not installed. Audit uses
+  deliberate mutants. Ecosystem default to add: `dotnet-stryker` global tool.
 - `property: null` — no FsCheck/CsCheck. Invariants become boundary example tests.
 - `acceptance: null` — no host-level runner. Controller and scheduled-task behaviour is tested
   at the class level with substituted Jellyfin services, as in concert-radar.
-- `watch: null` — `dotnet watch test` exists in the SDK but was not run here.
+- `watch: null` for dotnet — `dotnet watch test` exists in the SDK but was not run here.
 - **Restore a deliberate mutant from a file copy, never with `git checkout`.** `git checkout -- <file>`
   reverts the whole file to HEAD, taking any uncommitted work with it. This has now cost work twice
   on `002`: cycle 3 of its cycle log, and mutant M1 of its verification report. Copy the file aside,
   apply the mutant, run, copy back, and verify the restore with `cmp -s`. `git diff` being empty is
-  not proof when the baseline itself is uncommitted.
+  not proof when the baseline itself is uncommitted. The retarget is uncommitted right now, so this
+  matters more than usual.
 - **Page tests must not depend on the machine's locale.** The pages pass `undefined` to
   `Intl.RelativeTimeFormat` on purpose, so a Jellyfin user reads the sentence in their own language.
   `tests/web/load-page.js` pins the sandbox's `Intl` to `en` for that reason. Check a change with
@@ -133,6 +170,6 @@ suite_seconds: 10
   promoting `U29`-`U33` to `DONE`; that would falsify the record. Reporting it upstream was
   considered and dropped: the conflict is in the third-party extension, not in this plugin. Keep
   ticking such tasks and leave this note in place.
-- Constitution principle applied: `.specify/memory/constitution.md` has been at version 1.2.0
-  since 2026-09-06 and its principle II, "Test-Driven Development (NON-NEGOTIABLE)", governs this
+- Constitution principle applied: `.specify/memory/constitution.md` has been at version 1.3.0
+  since 2026-09-19 and its principle II, "Test-Driven Development (NON-NEGOTIABLE)", governs this
   profile. Nothing further to add.

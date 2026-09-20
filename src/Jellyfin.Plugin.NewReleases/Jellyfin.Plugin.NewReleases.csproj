@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -23,17 +23,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Server runs Jellyfin 10.11.11 (net9.0). Keep package versions in lockstep with the server ABI. -->
-    <PackageReference Include="Jellyfin.Controller" Version="10.11.11">
+    <!-- Server runs Jellyfin 12.0.0 (net10.0). Keep package versions in lockstep with the server ABI. -->
+    <PackageReference Include="Jellyfin.Controller" Version="12.0.0">
       <ExcludeAssets>runtime</ExcludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Jellyfin.Model" Version="10.11.11">
+    <PackageReference Include="Jellyfin.Model" Version="12.0.0">
+      <ExcludeAssets>runtime</ExcludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <!-- Direct from Jellyfin 12: both were transitive through Jellyfin.Controller before (research R2). -->
+    <PackageReference Include="Jellyfin.Data" Version="12.0.0">
+      <ExcludeAssets>runtime</ExcludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Jellyfin.Database.Implementations" Version="12.0.0">
       <ExcludeAssets>runtime</ExcludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <!-- SQLite persistence. Exact pin (constitution VI); native libe_sqlite3 ships via build.yaml artifacts. -->
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.19" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
   </ItemGroup>
 
 </Project>

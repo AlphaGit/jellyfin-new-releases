@@ -1,9 +1,19 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 1.2.0
-- Modified principles: none
-- Modified sections: Development Workflow (CI on `main` is the final gate: a pushed feature is
-  not done until its CI run is verified green)
+- Version change: 1.2.0 → 1.3.0
+- Modified principles: IV. Jellyfin Compatibility (the pinned server version becomes Jellyfin
+  12.0.x, and the two packages that stop being transitive there are pinned with it)
+- Modified sections: Technical Constraints (language and runtime become C# on `net10.0`,
+  matching the Jellyfin 12 host)
+- Reason: the Jellyfin target major version changed, which this constitution's own Governance
+  section names as a trigger for review. Feature `003-jellyfin-12-compat` carried the change;
+  this amendment closes the deviation its `plan.md` recorded.
+- Considered and not added: a standing principle that the plugin takes a host's or an
+  integration's newest supported interaction over an older tolerated one. It stays a
+  requirement of `003-jellyfin-12-compat` (`FR-016`); one exercised case is thin evidence for
+  a standing rule.
+- Previous amendment (1.2.0): Development Workflow (CI on `main` is the final gate: a pushed
+  feature is not done until its CI run is verified green)
 - Previous amendment (1.1.0): Development Workflow (single-maintainer branching model: commit
   to `main`, no feature branches, no pull requests), Governance (review wording no longer
   assumes pull requests)
@@ -76,9 +86,9 @@ The plugin MUST load, upgrade, and degrade cleanly on the Jellyfin version it ta
 
 - The plugin GUID `b8a15db8-e368-42c4-9048-390faf0094db` never changes. Jellyfin keys installs
   by it; a test guards it.
-- `Jellyfin.Controller` and `Jellyfin.Model` are pinned to the exact server version in
-  production (10.11.x) with `ExcludeAssets=runtime`. `targetAbi` in `build.yaml` moves with
-  them.
+- `Jellyfin.Controller`, `Jellyfin.Model`, `Jellyfin.Data` and
+  `Jellyfin.Database.Implementations` are pinned to the exact server version in production
+  (12.0.x) with `ExcludeAssets=runtime`. `targetAbi` in `build.yaml` moves with them.
 - `PluginConfiguration` MUST round-trip through `XmlSerializer`: collections are `List<T>`,
   never seeded in constructors, no dictionaries or sets.
 - Optional integrations (Plugin Pages, File Transformation) MUST be optional at runtime. When
@@ -119,7 +129,7 @@ Ship the smallest change that satisfies the spec.
 
 ## Technical Constraints
 
-- Language and runtime: C# on `net9.0`, matching the Jellyfin 10.11 host. Nullable and implicit
+- Language and runtime: C# on `net10.0`, matching the Jellyfin 12 host. Nullable and implicit
   usings enabled; `LangVersion` latest.
 - Test stack: xunit and NSubstitute. An assertion library may be added when xunit `Assert`
   becomes limiting; the choice is made in the feature's `plan.md`.
@@ -171,4 +181,4 @@ This constitution supersedes every other practice document in the repository.
 - The constitution is reviewed when the Jellyfin target major version changes, when Spec Kit
   changes its artifact contract, or at the first release, whichever comes first.
 
-**Version**: 1.2.0 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-09-06
+**Version**: 1.3.0 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-09-19
