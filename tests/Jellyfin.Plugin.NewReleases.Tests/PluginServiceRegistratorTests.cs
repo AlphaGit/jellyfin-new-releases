@@ -3,6 +3,7 @@ using Jellyfin.Plugin.NewReleases.Library;
 using Jellyfin.Plugin.NewReleases.ScheduledTasks;
 using Jellyfin.Plugin.NewReleases.Sources;
 using Jellyfin.Plugin.NewReleases.Storage;
+using Jellyfin.Plugin.NewReleases.Tests.Support;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Library;
@@ -20,6 +21,7 @@ namespace Jellyfin.Plugin.NewReleases.Tests;
 /// to. A service that registers but cannot resolve fails at the moment the server first needs it,
 /// which is long after the plugin reports itself loaded.
 /// </summary>
+[Collection(ProcessGlobalStateCollection.Name)]
 public class PluginServiceRegistratorTests
 {
     /// <summary>

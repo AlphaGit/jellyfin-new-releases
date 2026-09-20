@@ -13,15 +13,29 @@ public class DocumentationTests
     private static readonly string Readme = RepositoryFiles.ReadAllText("README.md");
 
     /// <summary>
+    /// One markdown section's body. Asserting against the whole README lets prose elsewhere
+    /// satisfy a check about a section that may not even exist.
+    /// </summary>
+    private static string SectionOf(string heading)
+    {
+        var start = Readme.IndexOf(heading, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"README.md has no {heading} section");
+
+        var next = Readme.IndexOf("\n## ", start + heading.Length, StringComparison.Ordinal);
+        return next < 0 ? Readme[start..] : Readme[start..next];
+    }
+
+    /// <summary>
     /// U29: an operator on 10.11.x must not read this and expect the plugin to work. Support for
     /// it ended with this feature, and the old claim is worse than no claim.
     /// </summary>
     [Fact]
     public void Readme_StatesJellyfin12_AndNoLongerClaims1011()
     {
-        Assert.Contains("Jellyfin 12", Readme, StringComparison.Ordinal);
-        Assert.DoesNotContain("Jellyfin 10.11", Readme, StringComparison.Ordinal);
-        Assert.DoesNotContain("10.11.x", Readme, StringComparison.Ordinal);
+        var requirements = SectionOf("## Requirements");
+
+        Assert.Contains("Jellyfin 12", requirements, StringComparison.Ordinal);
+        Assert.DoesNotContain("10.11", requirements, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -31,9 +45,11 @@ public class DocumentationTests
     [Fact]
     public void Readme_GivesTheRepositoryUrlAndWhereToAddIt()
     {
-        Assert.Contains("manifest.json", Readme, StringComparison.Ordinal);
-        Assert.Contains("Dashboard", Readme, StringComparison.Ordinal);
-        Assert.Contains("Repositories", Readme, StringComparison.Ordinal);
+        var install = SectionOf("## Install");
+
+        Assert.Matches(@"https://\S+/manifest\.json", install);
+        Assert.Contains("Dashboard", install, StringComparison.Ordinal);
+        Assert.Contains("Repositories", install, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -44,7 +60,9 @@ public class DocumentationTests
     [Fact]
     public void Readme_StatesTheMinimumPluginPagesVersion()
     {
-        Assert.Contains("Plugin Pages", Readme, StringComparison.Ordinal);
-        Assert.Contains("3.0.0.0", Readme, StringComparison.Ordinal);
+        var requirements = SectionOf("## Requirements");
+
+        Assert.Contains("Plugin Pages", requirements, StringComparison.Ordinal);
+        Assert.Contains("3.0.0.0", requirements, StringComparison.Ordinal);
     }
 }

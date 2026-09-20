@@ -1,10 +1,12 @@
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Serialization;
+using Jellyfin.Plugin.NewReleases.Tests.Support;
 using NSubstitute;
 using Xunit;
 
 namespace Jellyfin.Plugin.NewReleases.Tests;
 
+[Collection(ProcessGlobalStateCollection.Name)]
 public class PluginSanityTests
 {
     /// <summary>
@@ -27,8 +29,8 @@ public class PluginSanityTests
     {
         var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
 
-        Assert.Equal(new Guid(Plugin.PluginGuid), plugin.Id);
-        Assert.NotEmpty(plugin.GetPages());
+        Assert.Equal(new Guid("b8a15db8-e368-42c4-9048-390faf0094db"), plugin.Id);
+        Assert.Equal("newreleases", Assert.Single(plugin.GetPages()).Name);
     }
 
     /// <summary>

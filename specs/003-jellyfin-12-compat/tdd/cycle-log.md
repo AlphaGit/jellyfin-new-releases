@@ -566,3 +566,63 @@ added by `2e08b54` during `001` — and it breaches constitution III.
   it. Constitution I says behaviour exists only where a spec describes it; constitution III
   requires the suite to pass hermetically, which this restores. Recorded here rather than raised
   as a new feature, on the maintainer's explicit instruction.
+
+## Cycle 34: audit remediation T044-T051
+
+Closing eight of the nine `HIGH` findings in `tdd/verification.md`. Finding 1 was closed in
+cycle 32; finding 9's fix is bookkeeping. No production code changed in this cycle — every change
+is to a test that was passing while proving less than its name claimed.
+
+- **T044, findings 2 and 3** — `Manifest_EveryVersionCarriesItsDownloadChecksumTimestampAndJellyfin12`
+  and `Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` iterated an empty list and
+  asserted nothing. Both now call `AssertPublishedVersionCount` first, against a
+  `PublishedVersionsToday` constant of `0`, then `Assert.All`. **Proved it bites**: a crafted entry
+  with `targetAbi 10.11.0.0`, an off-site `sourceUrl` naming a different version and an empty
+  checksum was written into `repo/manifest.json` -> 2 failed, with
+  `repo/manifest.json lists 1 version(s), expected 0. If the release chain has published one,
+  raise PublishedVersionsToday …`. Manifest restored and verified with `cmp -s`.
+  The xunit analyzer rejected the first attempt — `error xUnit2013: Do not use Assert.Equal() to
+  check for collection size` — so the count assertion is an explicit predicate carrying that
+  message rather than `Assert.Equal`.
+- **T045, finding 4** — `WhenRegisterPageThrows_...` asserted `Assert.Empty(FakePluginPages.Registered)`
+  after configuring the fake to throw instead of recording: it asserted the double did what the
+  test told it to, and could not fail for any implementation. Replaced with an assertion on the
+  subject: the single log entry's level is below `Error`.
+- **T046, findings 5 and 6** — `Plugin_ConstructedWithHostServices_...` compared `plugin.Id`
+  against `new Guid(Plugin.PluginGuid)`, the same expression the property itself evaluates.
+  Now the literal, as `Plugin_Guid_IsStable` already did. `Assert.NotEmpty(GetPages())` became
+  `Assert.Equal("newreleases", Assert.Single(...).Name)`.
+- **T047, finding 7** — `DocumentationTests` asserted bare substrings against the whole README, so
+  four pre-existing "Dashboard" mentions satisfied a check about the Install section. A `SectionOf`
+  helper now scopes each assertion to its own heading, and the repository address is matched as a
+  URL shape (`https://\S+/manifest\.json`) rather than the words around it. The 10.11 check is
+  scoped to Requirements, which also fixes finding 19's false positive on a sentence like
+  "Jellyfin 10.11 is no longer supported".
+- **T048, finding 8** — the test named "fails the run if packaging did not restore the target
+  framework" asserted only that the workflow text mentioned the element. It now asserts the
+  mechanism, `grep -q '<TargetFramework>net10.0</TargetFramework>'`, over the comment-stripped
+  `Steps` view. Finding 10 is closed with it: the `version4` check now asserts the zip path
+  interpolates `${{ steps.ver.outputs.version4 }}`, not that the string appears somewhere.
+- **T049, finding 9** — the `U25` row named a test renamed during the de-hardcoding. Corrected;
+  all **36** `file.cs::method` references in the list now resolve.
+- **T050 and T051, findings 11 and 12** — `Support/ProcessGlobalStateCollection.cs` (new) defines
+  one `DisableParallelization` collection for tests touching process-global state, and
+  `PluginSanityTests` (four `new Plugin(...)`, each assigning the static `Plugin.Instance`),
+  `PluginServiceRegistratorTests` (wires the production gateway, whose scan can reach the static
+  stand-in) and `PluginPagesRegistrationTests` all join it. `PluginPagesRegistrationTests` no
+  longer defines its own. **The live risk was checked, not assumed**: all five construction sites
+  of the task, the controllers and the HTTP client pass an explicit `() => configuration`, so no
+  test reads `Plugin.Instance` today. The grouping is the stack profile's recorded convention
+  ("put them in one xunit collection when a second such test appears"; there are four) and closes
+  the trap before someone uses a convenience constructor.
+- **U34 re-verified after the collection change**: mutant M4 re-applied -> the wiring test still
+  fails with `the registrator gave the gateway an assembly source that cannot see loaded assemblies`.
+  Restored, `cmp -s` clean.
+- **A false alarm, recorded so it is not re-chased.** Eight consecutive `--no-build` runs failed
+  straight after that mutant check. The source was restored but the *binaries* still held the
+  mutant, because `--no-build` reuses them. `dotnet build` then gave 0 failures in 8 runs. When a
+  mutant check is followed by `--no-build`, rebuild first.
+- suite: 238 passed, 0 failed.
+- commit: `f45a429`
+- still open: `T052` (the MED and LOW findings worth acting on) and `T053` (re-run the audit).
+  Findings 13-18 and 20-24 are untouched.

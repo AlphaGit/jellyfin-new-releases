@@ -136,7 +136,7 @@ first tag.
 | U22 | An empty `versions` array is accepted — the state before the first tag | CM-1, FR-014 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_MayListNoVersionsAtAll` |
 | U23 | Every entry carries a non-empty `version`, `sourceUrl`, `checksum` and `timestamp`, and a `targetAbi` of `12.0.0.0` | CM-2, FR-013, SC-004 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_EveryVersionCarriesItsDownloadChecksumTimestampAndJellyfin12` |
 | U24 | An entry missing one of those fields, or carrying any other `targetAbi`, is rejected by that same check | CM-2, SC-004 | example | DONE | `Packaging/RepositoryManifestTests.cs::AnEntryMissingAFieldOrDeclaringAnotherAbi_IsRejected` |
-| U25 | Every `sourceUrl` sits under the published site root and its filename is `jellyfin-new-releases_<version>.zip` for that entry's version | CM-3, FR-013 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_EverySourceUrlIsUnderTheSiteRoot_AndNamesItsOwnVersion` |
+| U25 | Every `sourceUrl` sits under the published site root and its filename is `jellyfin-new-releases_<version>.zip` for that entry's version | CM-3, FR-013 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` |
 | U26 | A `sourceUrl` whose filename names a different version is rejected | CM-3 | example | DONE | `Packaging/RepositoryManifestTests.cs::ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected` |
 
 ### `.github/workflows/package.yml`

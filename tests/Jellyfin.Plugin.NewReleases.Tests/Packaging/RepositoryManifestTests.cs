@@ -18,6 +18,14 @@ public class RepositoryManifestTests
     private const string ManifestPath = "repo/manifest.json";
 
     /// <summary>
+    /// How many versions the published repository lists right now. Zero is correct until the
+    /// maintainer tags the first release: `FR-014` builds the publishing chain, and running it is
+    /// a separate act. Raising this is the deliberate step that turns the per-entry checks below
+    /// from vacuous into binding.
+    /// </summary>
+    private const int PublishedVersionsToday = 0;
+
+    /// <summary>
     /// The package slug JPRM derives from the plugin's name. Read from <c>build.yaml</c> rather
     /// than written down, so a fork that renames the plugin still passes.
     /// </summary>
@@ -63,10 +71,13 @@ public class RepositoryManifestTests
     [Fact]
     public void Manifest_EveryVersionCarriesItsDownloadChecksumTimestampAndJellyfin12()
     {
-        foreach (var version in Versions())
-        {
-            AssertInstallable(version);
-        }
+        var versions = Versions();
+
+        // Pinned, not skipped: `Assert.All` over an empty list asserts nothing and reports green,
+        // so the count is stated first. This line is what fails the day the release chain adds a
+        // version, which is exactly when these checks must start being read.
+        AssertPublishedVersionCount(versions);
+        Assert.All(versions, AssertInstallable);
     }
 
     /// <summary>
@@ -97,16 +108,13 @@ public class RepositoryManifestTests
     public void Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion()
     {
         var versions = Versions();
-        if (versions.Count == 0)
-        {
-            return;
-        }
 
-        var siteRoot = SiteRootOf(versions[0]);
+        AssertPublishedVersionCount(versions);
 
-        foreach (var version in versions)
+        if (versions.Count > 0)
         {
-            AssertSourceUrlNamesItsOwnVersion(version, siteRoot);
+            var siteRoot = SiteRootOf(versions[0]);
+            Assert.All(versions, version => AssertSourceUrlNamesItsOwnVersion(version, siteRoot));
         }
     }
 
@@ -142,6 +150,17 @@ public class RepositoryManifestTests
 
     /// <summary>A stand-in site root for the rejecting cases. Test data, not this project's URL.</summary>
     private const string ExampleSiteRoot = "https://example.invalid/repo/plugin/";
+
+    /// <summary>
+    /// Fails when the published repository gains or loses a version, so neither per-entry check
+    /// above can sit green over an empty list without anyone noticing.
+    /// </summary>
+    private static void AssertPublishedVersionCount(IReadOnlyCollection<JsonElement> versions)
+        => Assert.True(
+            versions.Count == PublishedVersionsToday,
+            $"repo/manifest.json lists {versions.Count} version(s), expected {PublishedVersionsToday}. "
+            + "If the release chain has published one, raise PublishedVersionsToday — the per-entry "
+            + "checks in this class only start binding once it is above zero.");
 
     private static string SiteRootOf(JsonElement version)
     {

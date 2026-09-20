@@ -20,8 +20,7 @@ namespace Jellyfin.Plugin.NewReleases.Tests.Integration;
 /// The stand-in is static, like the real <c>PluginInterface</c>, so these tests share it and run
 /// in one collection.
 /// </summary>
-[Collection(nameof(PluginPagesRegistrationTests))]
-[CollectionDefinition(nameof(PluginPagesRegistrationTests), DisableParallelization = true)]
+[Collection(ProcessGlobalStateCollection.Name)]
 public class PluginPagesRegistrationTests
 {
     /// <summary>The assemblies a server with Plugin Pages installed would offer the gateway.</summary>
@@ -160,8 +159,8 @@ public class PluginPagesRegistrationTests
 
         await service.StartAsync(CancellationToken.None);
 
-        Assert.Single(logger.Entries);
-        Assert.Empty(FakePluginPages.Registered);
+        var entry = Assert.Single(logger.Entries);
+        Assert.True(entry.Level < LogLevel.Error, $"logged at {entry.Level}; a throwing optional integration is not a fault");
     }
 
     /// <summary>

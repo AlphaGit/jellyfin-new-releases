@@ -55,11 +55,8 @@ public class ReleaseWorkflowTests
     [Fact]
     public void ReleaseWorkflow_FailsTheRunIfPackagingDidNotRestoreTheTargetFramework()
     {
-        Assert.Contains("<TargetFramework>net10.0</TargetFramework>", Workflow, StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "git diff --quiet -- src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj",
-            Workflow,
-            StringComparison.Ordinal);
+        Assert.Contains("grep -q '<TargetFramework>net10.0</TargetFramework>'", Steps, StringComparison.Ordinal);
+        Assert.Contains("src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj", Steps, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -70,11 +67,7 @@ public class ReleaseWorkflowTests
     [Fact]
     public void ReleaseWorkflow_NamesThePackageByTheFourPartVersionJprmWrites()
     {
-        Assert.Contains("version4", Workflow, StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "jellyfin-new-releases_${{ steps.ver.outputs.version }}.zip",
-            Workflow,
-            StringComparison.Ordinal);
+        Assert.Contains("${{ steps.ver.outputs.version4 }}.zip", Steps, StringComparison.Ordinal);
     }
 
     /// <summary>
