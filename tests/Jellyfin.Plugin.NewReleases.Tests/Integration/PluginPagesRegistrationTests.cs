@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Reflection;
 using Jellyfin.Plugin.NewReleases.Integration;
+using Jellyfin.Plugin.NewReleases.Tests.Support;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using FakePluginPages = Jellyfin.Plugin.PluginPages.PluginInterface;
@@ -77,5 +79,87 @@ public class PluginPagesRegistrationTests
         await service.StopAsync(CancellationToken.None);
 
         Assert.Equal("Jellyfin.Plugin.NewReleases", Assert.Single(FakePluginPages.Removed));
+    }
+
+    /// <summary>
+    /// U11: an operator may run Jellyfin 12 without Plugin Pages at all. Nothing here may stop
+    /// the plugin loading, so neither host callback may throw.
+    /// </summary>
+    [Fact]
+    public async Task WithNoIntegrationAssembly_StartingAndStoppingBothSucceed()
+    {
+        var service = ServiceOver([]);
+
+        await service.StartAsync(CancellationToken.None);
+        await service.StopAsync(CancellationToken.None);
+
+        Assert.Empty(FakePluginPages.Registered);
+        Assert.Empty(FakePluginPages.Removed);
+    }
+
+    /// <summary>
+    /// U12: an absent optional integration is not a fault. It is said once, so an operator who
+    /// wonders why the menu entry is missing can find out, and below error level so it does not
+    /// read as a defect in a log the operator is scanning for real ones.
+    /// </summary>
+    [Fact]
+    public async Task WithNoIntegrationAssembly_LogsExactlyOnce_BelowErrorLevel()
+    {
+        var logger = new RecordingLogger<PluginPagesRegistrationService>();
+        var service = new PluginPagesRegistrationService(new PluginPagesGateway(() => []), logger);
+
+        await service.StartAsync(CancellationToken.None);
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.True(entry.Level < LogLevel.Error, $"logged at {entry.Level}, which reads as a fault");
+    }
+
+    /// <summary>
+    /// U13: Plugin Pages may be installed but not yet initialised, in which case its own static
+    /// entry point throws. A hosted service that lets that escape stops the server starting.
+    /// </summary>
+    [Fact]
+    public async Task WhenRegisterPageThrows_StartingDoesNotThrow_AndLogsOnce()
+    {
+        FakePluginPages.RegisterThrows = new InvalidOperationException("Plugin Pages is not ready");
+        var logger = new RecordingLogger<PluginPagesRegistrationService>();
+        var service = new PluginPagesRegistrationService(new PluginPagesGateway(WithPluginPages), logger);
+
+        await service.StartAsync(CancellationToken.None);
+
+        Assert.Single(logger.Entries);
+        Assert.Empty(FakePluginPages.Registered);
+    }
+
+    /// <summary>
+    /// U14: the message is worth saying once. Said on every start attempt it becomes noise in
+    /// the log of an operator who has simply chosen not to install Plugin Pages.
+    /// </summary>
+    [Fact]
+    public async Task StartingTwiceWithNoIntegration_LogsAtMostOnce()
+    {
+        var logger = new RecordingLogger<PluginPagesRegistrationService>();
+        var service = new PluginPagesRegistrationService(new PluginPagesGateway(() => []), logger);
+
+        await service.StartAsync(CancellationToken.None);
+        await service.StartAsync(CancellationToken.None);
+
+        Assert.Single(logger.Entries);
+    }
+
+    /// <summary>
+    /// U15: a registration that failed must not make shutdown noisy. The operator has already
+    /// been told once; repeating it while the server stops adds nothing.
+    /// </summary>
+    [Fact]
+    public async Task AfterAFailedRegistration_StoppingDoesNotThrow_AndLogsNothingFurther()
+    {
+        var logger = new RecordingLogger<PluginPagesRegistrationService>();
+        var service = new PluginPagesRegistrationService(new PluginPagesGateway(() => []), logger);
+        await service.StartAsync(CancellationToken.None);
+
+        await service.StopAsync(CancellationToken.None);
+
+        Assert.Single(logger.Entries);
     }
 }

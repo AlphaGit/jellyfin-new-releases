@@ -238,3 +238,59 @@ behaviour on new libraries; this is new code.
   -> 204 passed, 0 failed
 - refactor: the id constant is that refactor, taken while green.
 - commit: `3b3212e`
+
+## Cycle 10: U11 with no integration assembly, starting and stopping both succeed
+
+- test: `Integration/PluginPagesRegistrationTests.cs::WithNoIntegrationAssembly_StartingAndStoppingBothSucceed` (new)
+- red: passed on its first run — the cycle-7 gateway already returned false when the type was
+  not found. Deliberate mutant: the `if (register is null) return false;` guard replaced with
+  `FindInterfaceType()!.GetMethod(...)!`.
+  -> `System.NullReferenceException : Object reference not set to an instance of an object.` (1 failed)
+- restore: `cp` from a file copy, verified with `cmp -s`.
+- green: no implementation needed. refactor: none. commit: `<cycle 10-13>`
+
+## Cycle 11: U12 with no integration assembly, exactly one message below error level
+
+- support: `Support/RecordingLogger.cs` (new). No log-capturing helper existed — every test in
+  the suite uses `NullLogger` — so one was written. **It belongs in the stack profile's
+  `helpers` list; this command may not write the profile, so it is reported instead.**
+- test: `Integration/PluginPagesRegistrationTests.cs::WithNoIntegrationAssembly_LogsExactlyOnce_BelowErrorLevel` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~PluginPagesRegistrationTests.WithNoIntegrationAssembly_LogsExactlyOnce_BelowErrorLevel" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Single() Failure: The collection was empty` (1 failed). Real red: nothing logged at all.
+- green: `ReportUnavailableOnce()` added to the service, guarded by a `_reportedUnavailable`
+  field, logging at Information. Suite -> 206 passed
+- refactor: none. commit: `<cycle 10-13>`
+
+## Cycle 12: U13 when RegisterPage throws, starting does not throw and logs once
+
+- test: `Integration/PluginPagesRegistrationTests.cs::WhenRegisterPageThrows_StartingDoesNotThrow_AndLogsOnce` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~PluginPagesRegistrationTests.WhenRegisterPageThrows_StartingDoesNotThrow_AndLogsOnce" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `System.InvalidOperationException : Plugin Pages is not ready` (1 failed). Real red: the
+  exception escaped `StartAsync`, which on a real server stops the host starting.
+- green: `TryRegisterPage` and `TryRemovePage` each wrap a private `Register`/`Remove` in
+  `try/catch (Exception)` and return false. The contract makes every failure the same failure —
+  not installed, wrong version, not yet initialised, or throwing — so they share one path.
+  Suite -> 207 passed
+- refactor: the try/catch split is that refactor: the reflection stayed put and only moved
+  behind a guarded entry point.
+- commit: `99a3c32`
+
+## Cycle 13: U14 starting twice logs at most once; U15 stopping after a failure logs nothing further
+
+- tests: `::StartingTwiceWithNoIntegration_LogsAtMostOnce` and
+  `::AfterAFailedRegistration_StoppingDoesNotThrow_AndLogsNothingFurther` (both new)
+- red: both passed on their first run, because cycle 11's `_reportedUnavailable` guard already
+  produced the behaviour. Two deliberate mutants, one per behaviour:
+  - U14: `_reportedUnavailable = true` changed to `= false`, so the guard never latches.
+    -> `Assert.Single() Failure: The collection contained 2 items` (1 failed)
+  - U15: `StopAsync` made to log when `TryRemovePage` returns false.
+    -> `Assert.Single() Failure: The collection contained 2 items` (1 failed)
+- deviation: the first attempt at the U14 mutant deleted the guard block outright. That does not
+  compile — `_reportedUnavailable` becomes an unused field and `TreatWarningsAsErrors` rejects
+  it — so no test ran and no evidence was produced. Recorded because the log must not imply a
+  mutant run that did not happen. The mutant above is the corrected one.
+- restore: `cp` from a file copy after each, verified with `cmp -s`.
+- green: no implementation needed for either. Suite `dotnet test --configuration Release`
+  -> 209 passed, 0 failed
+- refactor: none needed.
+- commit: `99a3c32`

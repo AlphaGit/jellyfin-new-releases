@@ -24,6 +24,8 @@ public sealed class PluginPagesRegistrationService : IHostedService
     private readonly PluginPagesGateway _gateway;
     private readonly ILogger<PluginPagesRegistrationService> _logger;
 
+    private bool _reportedUnavailable;
+
     public PluginPagesRegistrationService(PluginPagesGateway gateway, ILogger<PluginPagesRegistrationService> logger)
     {
         _gateway = gateway;
@@ -33,7 +35,11 @@ public sealed class PluginPagesRegistrationService : IHostedService
     /// <inheritdoc />
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _gateway.TryRegisterPage(PageEntryJson);
+        if (!_gateway.TryRegisterPage(PageEntryJson))
+        {
+            ReportUnavailableOnce();
+        }
+
         return Task.CompletedTask;
     }
 
@@ -42,5 +48,20 @@ public sealed class PluginPagesRegistrationService : IHostedService
     {
         _gateway.TryRemovePage(PageEntryId);
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Plugin Pages is optional, so its absence is stated once per run and never as an error.
+    /// </summary>
+    private void ReportUnavailableOnce()
+    {
+        if (_reportedUnavailable)
+        {
+            return;
+        }
+
+        _reportedUnavailable = true;
+        _logger.LogInformation(
+            "Plugin Pages is not available, so the New Releases page is not in the menu. Everything else works.");
     }
 }

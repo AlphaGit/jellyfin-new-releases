@@ -29,6 +29,34 @@ public sealed class PluginPagesGateway
     /// <param name="payloadJson">The page entry, as JSON.</param>
     public bool TryRegisterPage(string payloadJson)
     {
+        try
+        {
+            return Register(payloadJson);
+        }
+        catch (Exception)
+        {
+            // Unavailable covers a Plugin Pages that is present but not ready, or that changed
+            // shape. The plugin must load either way, so every failure is the same failure.
+            return false;
+        }
+    }
+
+    /// <summary>Withdraws the page. Returns false when the integration is unavailable.</summary>
+    /// <param name="id">The page entry's identifier.</param>
+    public bool TryRemovePage(string id)
+    {
+        try
+        {
+            return Remove(id);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private bool Register(string payloadJson)
+    {
         var register = FindInterfaceType()?.GetMethod("RegisterPage", BindingFlags.Public | BindingFlags.Static);
         if (register is null)
         {
@@ -46,9 +74,7 @@ public sealed class PluginPagesGateway
         return true;
     }
 
-    /// <summary>Withdraws the page. Returns false when the integration is unavailable.</summary>
-    /// <param name="id">The page entry's identifier.</param>
-    public bool TryRemovePage(string id)
+    private bool Remove(string id)
     {
         var remove = FindInterfaceType()?.GetMethod("RemovePage", BindingFlags.Public | BindingFlags.Static);
         if (remove is null)
