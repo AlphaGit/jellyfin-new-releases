@@ -167,7 +167,7 @@ first tag.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U21 | Parses as a JSON array of exactly one object whose `guid` is the frozen plugin GUID | CM-1, FR-013 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_IsAnArrayOfOnePlugin_CarryingTheFrozenGuid` |
-| U22 | An empty `versions` array is accepted — the state before the first tag | CM-1, FR-014 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_MayListNoVersionsAtAll` |
+| U22 | An empty `versions` array is accepted — the state before the first tag | CM-1, FR-014 | example | DROPPED | subsumed by U23's count assertion; its test asserted only that a JSON array is an array |
 | U36 | A well-formed version entry is accepted by the installability and source-URL rules | CM-2, CM-3 | example | DONE | `Packaging/RepositoryManifestTests.cs::AWellFormedEntry_IsAccepted`, `::AWellFormedEntry_SourceUrlIsAccepted` |
 | U23 | Every entry carries a non-empty `version`, `sourceUrl`, `checksum` and `timestamp`, and a `targetAbi` of `12.0.0.0` | CM-2, FR-013, SC-004 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_EveryVersionCarriesItsDownloadChecksumTimestampAndJellyfin12` |
 | U24 | An entry missing one of those fields, or carrying any other `targetAbi`, is rejected by that same check | CM-2, SC-004 | example | DONE | `Packaging/RepositoryManifestTests.cs::AnEntryMissingAFieldOrDeclaringAnotherAbi_IsRejected` |
