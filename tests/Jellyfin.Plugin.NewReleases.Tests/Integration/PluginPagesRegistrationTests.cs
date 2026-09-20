@@ -2,6 +2,11 @@ using System.Text.Json;
 using System.Reflection;
 using Jellyfin.Plugin.NewReleases.Integration;
 using Jellyfin.Plugin.NewReleases.Tests.Support;
+using MediaBrowser.Common.Configuration;
+using MediaBrowser.Controller;
+using MediaBrowser.Controller.Library;
+using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -28,6 +33,34 @@ public class PluginPagesRegistrationTests
             NullLogger<PluginPagesRegistrationService>.Instance);
 
     public PluginPagesRegistrationTests() => FakePluginPages.Reset();
+
+    /// <summary>
+    /// U34: the gateway the *registrator* builds must be able to see a real loaded assembly.
+    /// Every other test here injects its own assembly source, so all of them stay green even if
+    /// the registrator hands the gateway nothing — which is exactly the mutant that survived the
+    /// first audit. This resolves the gateway from the container the host would build and drives
+    /// it against the assemblies actually loaded in this process, the stand-in among them.
+    /// </summary>
+    [Fact]
+    public async Task TheGatewayTheRegistratorBuilds_CanReachATypeInALoadedAssembly()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton(Substitute.For<IApplicationPaths>());
+        services.AddSingleton(Substitute.For<ILibraryManager>());
+        new PluginServiceRegistrator().RegisterServices(services, Substitute.For<IServerApplicationHost>());
+
+        await using var provider = services.BuildServiceProvider();
+        var gateway = provider.GetRequiredService<PluginPagesGateway>();
+
+        Assert.True(
+            gateway.TryRegisterPage("""{"Id":"probe","Url":"/u","DisplayText":"d","Icon":"i"}"""),
+            "the registrator gave the gateway an assembly source that cannot see loaded assemblies");
+        Assert.Equal("probe", ProbeIdOf(Assert.Single(FakePluginPages.Registered)));
+    }
+
+    private static string? ProbeIdOf(Jellyfin.Plugin.PluginPages.FakePayload payload)
+        => JsonSerializer.Deserialize<Dictionary<string, string>>(payload.Json)?["Id"];
 
     /// <summary>
     /// U8: the entry appears because the host start registers it, once. Registering on every

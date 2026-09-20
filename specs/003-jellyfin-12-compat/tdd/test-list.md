@@ -91,6 +91,7 @@ Grouped by the component from `plan.md` that owns them.
 | U5 | `IEnumerable<IReleaseSource>` yields both MusicBrainz and Deezer, not one of them | US1-AS2 | example | DONE | `PluginServiceRegistratorTests.cs::RegisterServices_BothReleaseSourcesAreRegistered_NotOneOfThemTwice` |
 | U6 | `IScheduledTask` resolves as the refresh task | US1-AS2, FR-001 | example | DONE | `PluginServiceRegistratorTests.cs::RegisterServices_TheScheduledTaskResolvesAsTheRefreshTask` |
 | U7 | The page-registration hosted service is registered and resolves as an `IHostedService` | FR-015, US1-AS6 | example | DONE | `PluginServiceRegistratorTests.cs::RegisterServices_ThePageRegistrationRunsAsAHostedService` |
+| U34 | The gateway the registrator builds can reach a type in a genuinely loaded assembly, not only an injected stand-in source | US1-AS6, FR-015, CR-1 | example | DONE | `Integration/PluginPagesRegistrationTests.cs::TheGatewayTheRegistratorBuilds_CanReachATypeInALoadedAssembly` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Integration/PluginPagesRegistrationService.cs`
 

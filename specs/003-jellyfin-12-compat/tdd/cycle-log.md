@@ -499,3 +499,31 @@ placeholders, so the implementation had over-specified against its own contract.
   plugin GUID. Neither blocks a fork from building or publishing, but a fork that publishes without
   changing the GUID would collide with this plugin's identity in Jellyfin's install keying. The
   GUID is frozen by constitution IV, so changing it is not this loop's call.
+
+## Cycle 32: U34 closes the audit's surviving mutant (T043)
+
+`tdd/verification.md` returned `FAIL` on finding 1: mutant **M4** — replacing the registrator's
+`AssemblyLoadContext.All.SelectMany(...)` with `() => []` — passed all 236 tests. Every Plugin
+Pages test injected its own assembly source, so none of them could see that the registrator might
+hand the gateway nothing. On a real server the page would never register and no test would say so.
+
+- behaviour: `U34`, appended to the list. Traces `US1-AS6`, `FR-015`, contract statement 1.
+- test: `Integration/PluginPagesRegistrationTests.cs::TheGatewayTheRegistratorBuilds_CanReachATypeInALoadedAssembly` (new).
+  It resolves `PluginPagesGateway` from the container `PluginServiceRegistrator` populates — the
+  production wiring, not a stand-in source — and drives it against the assemblies actually loaded
+  in the test process, where `Support/FakePluginPages.cs` supplies a real
+  `Jellyfin.Plugin.PluginPages.PluginInterface`. Placed in this file, not
+  `PluginServiceRegistratorTests`, so it inherits the non-parallel collection that guards the
+  static stand-in.
+- red: mutant M4 re-applied deliberately, per `T043`'s own acceptance condition.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~PluginPagesRegistrationTests" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `the registrator gave the gateway an assembly source that cannot see loaded assemblies`
+  (1 failed, 8 passed). The mutant that survived the audit is now killed, and the failure names
+  the cause rather than reporting a bare false.
+- restore: `cp` from a file copy, verified with `cmp -s`; `git status src/` clean afterwards.
+- green: no production change needed — the wiring was always right, it was simply never proved.
+  Suite `dotnet test --configuration Release` -> 237 passed, 0 failed
+- refactor: none needed.
+- commit: `903ccd0`
+- note: this closes verification finding 1 only. Findings 2-9 remain open as `T044`-`T051`, and
+  the verdict in `tdd/verification.md` still reads `FAIL` until `T053` re-runs the audit.
