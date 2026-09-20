@@ -294,3 +294,67 @@ behaviour on new libraries; this is new code.
   -> 209 passed, 0 failed
 - refactor: none needed.
 - commit: `99a3c32`
+
+## Cycle 14: U7 the page registration runs as a hosted service
+
+- test: `PluginServiceRegistratorTests.cs::RegisterServices_ThePageRegistrationRunsAsAHostedService` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~PluginServiceRegistratorTests.RegisterServices_ThePageRegistrationRunsAsAHostedService" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Contains() Failure: Filter not matched in collection` (1 failed). Real red: the
+  service existed and was tested, but nothing registered it, so on a real server it never ran.
+- green: `PluginServiceRegistrator` now registers the gateway with the production assembly source
+  (`AssemblyLoadContext.All.SelectMany(c => c.Assemblies)`) and
+  `AddHostedService<PluginPagesRegistrationService>()`. Suite -> 210 passed
+- refactor: none needed.
+- commit: `cdc9e14`
+
+## Cycle 15: U3 constructing the plugin writes nothing into the plugin configurations tree
+
+- test: `PluginSanityTests.cs::Constructing_WritesNothingIntoThePluginConfigurationsTree` (new)
+- **first version of the test was too weak and was fixed before any implementation change.** It
+  pointed `PluginsPath` at an empty directory, so `IsPluginPagesInstalled` returned false and the
+  old writer bailed out before writing: the test passed against the code it was meant to
+  condemn. Rewritten to arrange the case where the old writer *does* write — a plugins directory
+  containing `Jellyfin.Plugin.PluginPages_3.0.0.0`, and a separate configurations directory.
+  Recorded because a weak test that passes is the failure mode this log exists to catch.
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~PluginSanityTests.Constructing_WritesNothingIntoThePluginConfigurationsTree" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Empty() Failure: Collection was not empty` (1 failed). Real red: the old code wrote
+  `Jellyfin.Plugin.PluginPages/config.json` into another plugin's configuration directory.
+- green: `Plugin.TryRegisterPluginPagesEntry`, `Plugin.IsPluginPagesInstalled`, the
+  `PluginPagesEntryVersion` constant and the now-unused `System.IO`/`System.Text.Json` usings
+  deleted. `Plugin.cs` goes from 174 lines to 54 — entry point and configuration page only.
+  Suite -> 211 passed
+- refactor: the deletion *is* the refactor T024 asks for, and it happened here because the test
+  demanded it. Nothing further.
+- commit: `cdc9e14`
+
+## Cycle 16: U16 the plugin assembly references neither Plugin Pages nor Newtonsoft
+
+- test: `PluginSanityTests.cs::ThePluginAssembly_ReferencesNeitherPluginPagesNorNewtonsoft` (new)
+- red: passed on its first run — the gateway was written by reflection from the start, so the
+  references were never added. Deliberate mutant: a `Newtonsoft.Json` 13.0.3 `PackageReference`
+  added to the plugin csproj **and** a `JObject` field added to the gateway, since an unused
+  package reference is not emitted into the assembly's reference list.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~PluginSanityTests.ThePluginAssembly_ReferencesNeitherPluginPagesNorNewtonsoft" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.DoesNotContain() Failure: Item found in collection` (1 failed)
+- restore: both files `cp`-restored and verified with `cmp -s`, then `dotnet restore --force-evaluate`
+  to put `packages.lock.json` back. `git status` confirms both lock files unmodified.
+- green: no implementation needed. Suite `dotnet test --configuration Release`
+  -> 212 passed, 0 failed
+- refactor: none needed.
+- commit: `cdc9e14`
+
+## Outer loop closed: A6 and A7
+
+With `U8`-`U16` green, the two acceptance behaviours were run rather than asserted separately:
+
+- **A6** (registers on start, withdraws on stop through the integration's own interface):
+  `dotnet test --configuration Release --filter "FullyQualifiedName~PluginPagesRegistrationTests"`
+  -> 8 passed, 0 failed.
+- **A7** (integration absent: the plugin still starts and everything not depending on it works):
+  the same 8, plus
+  `--filter "FullyQualifiedName~Acceptance|FullyQualifiedName~PluginServiceRegistratorTests|FullyQualifiedName~PluginSanityTests"`
+  -> 29 passed, 0 failed. The acceptance rig drives the refresh and the API with no Plugin Pages
+  assembly loaded anywhere, which is A7's condition by construction.
+
+Neither needed a separate test: A6 is the conjunction of `U8`-`U10`, A7 of `U11`-`U13` plus the
+untouched 001/002 suite. Recorded here rather than adding a test that would only re-run them.

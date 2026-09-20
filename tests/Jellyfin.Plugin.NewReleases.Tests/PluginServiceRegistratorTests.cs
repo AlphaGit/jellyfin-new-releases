@@ -1,3 +1,4 @@
+using Jellyfin.Plugin.NewReleases.Integration;
 using Jellyfin.Plugin.NewReleases.Library;
 using Jellyfin.Plugin.NewReleases.ScheduledTasks;
 using Jellyfin.Plugin.NewReleases.Sources;
@@ -7,6 +8,7 @@ using MediaBrowser.Controller;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
@@ -87,5 +89,20 @@ public class PluginServiceRegistratorTests
         await using var provider = BuildContainerAsTheHostWould();
 
         Assert.IsType<RefreshNewReleasesTask>(provider.GetRequiredService<IScheduledTask>());
+    }
+
+    /// <summary>
+    /// U7: the page registration runs as a hosted service so it happens after every plugin
+    /// object exists, which the plugin constructor cannot guarantee. Unregistered, the page
+    /// never reaches the menu and nothing says so.
+    /// </summary>
+    [Fact]
+    public async Task RegisterServices_ThePageRegistrationRunsAsAHostedService()
+    {
+        await using var provider = BuildContainerAsTheHostWould();
+
+        Assert.Contains(
+            provider.GetRequiredService<IEnumerable<IHostedService>>(),
+            service => service is PluginPagesRegistrationService);
     }
 }

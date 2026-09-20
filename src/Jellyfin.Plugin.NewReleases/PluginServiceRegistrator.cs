@@ -1,3 +1,5 @@
+using System.Runtime.Loader;
+using Jellyfin.Plugin.NewReleases.Integration;
 using Jellyfin.Plugin.NewReleases.Library;
 using Jellyfin.Plugin.NewReleases.ScheduledTasks;
 using Jellyfin.Plugin.NewReleases.Sources;
@@ -40,5 +42,12 @@ public sealed class PluginServiceRegistrator : IPluginServiceRegistrator
 
         // The Refresh; Jellyfin picks up IScheduledTask implementations from the container.
         serviceCollection.AddSingleton<IScheduledTask, RefreshNewReleasesTask>();
+
+        // The New Releases page entry, registered with Plugin Pages at host start and withdrawn
+        // at stop. A hosted service, not the Plugin constructor: construction order between two
+        // plugins is not guaranteed, and the generic host starts these once every plugin exists.
+        serviceCollection.AddSingleton(new PluginPagesGateway(
+            () => AssemblyLoadContext.All.SelectMany(context => context.Assemblies)));
+        serviceCollection.AddHostedService<PluginPagesRegistrationService>();
     }
 }

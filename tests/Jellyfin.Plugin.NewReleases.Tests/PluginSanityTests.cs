@@ -45,4 +45,52 @@ public class PluginSanityTests
         Assert.Equal("newreleases", page.Name);
         Assert.Equal("Jellyfin.Plugin.NewReleases.Web.admin.html", page.EmbeddedResourcePath);
     }
+
+    /// <summary>
+    /// U3: the page entry is registered through Plugin Pages' own interface now. Reaching into
+    /// another plugin's stored configuration is what that replaces, so constructing this plugin
+    /// must leave the configurations tree untouched.
+    /// </summary>
+    [Fact]
+    public void Constructing_WritesNothingIntoThePluginConfigurationsTree()
+    {
+        var root = Directory.CreateTempSubdirectory(nameof(Constructing_WritesNothingIntoThePluginConfigurationsTree));
+        try
+        {
+            // Plugin Pages installed and its configuration already present: the arrangement in
+            // which the deleted writer would have edited another plugin's file.
+            var plugins = root.CreateSubdirectory("plugins");
+            plugins.CreateSubdirectory("Jellyfin.Plugin.PluginPages_3.0.0.0");
+            var configurations = root.CreateSubdirectory("configurations");
+
+            var paths = Substitute.For<IApplicationPaths>();
+            paths.PluginConfigurationsPath.Returns(configurations.FullName);
+            paths.PluginsPath.Returns(plugins.FullName);
+
+            _ = new Plugin(paths, Substitute.For<IXmlSerializer>());
+
+            Assert.Empty(configurations.GetFileSystemInfos());
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// U16: Plugin Pages is optional, and a reference to it — or to the Newtonsoft type its
+    /// entry point takes — would make it mandatory, so the plugin would fail to load without it.
+    /// The gateway reaches both by reflection precisely to keep this list clean.
+    /// </summary>
+    [Fact]
+    public void ThePluginAssembly_ReferencesNeitherPluginPagesNorNewtonsoft()
+    {
+        var referenced = typeof(Plugin).Assembly
+            .GetReferencedAssemblies()
+            .Select(assembly => assembly.Name!)
+            .ToList();
+
+        Assert.DoesNotContain("Jellyfin.Plugin.PluginPages", referenced);
+        Assert.DoesNotContain("Newtonsoft.Json", referenced);
+    }
 }

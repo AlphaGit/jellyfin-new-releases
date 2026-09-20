@@ -52,8 +52,8 @@ Jellyfin services, as `001`'s `AcceptanceRig` already does.
 | A3 | A music library read through the Jellyfin 12 library reader produces the same Missing, Incomplete and Upcoming results `001` specifies | US1-AS3, FR-002, FR-003, SC-003, EC-4, EC-5 | example | DONE | existing: `Acceptance/BrowseReleasesTests.cs` A1/A7/A8, `Library/LibraryScannerTests.cs` |
 | A4 | An authenticated request answers for the list, for the Archive and for a decision, with per-user library access still enforced | US1-AS4, FR-002, SC-002 | example | DONE | existing: `Api/ReleasesControllerTests.cs`, `Api/AdminControllerTests.cs`, `Acceptance/ArchiveTests.cs` |
 | A5 | A configuration with every field set round-trips through the host serializer unchanged, and no collection gains a duplicate | US1-AS5, FR-002, SC-002 | example | DONE | existing: `Configuration/PluginConfigurationTests.cs::XmlRoundTrip_FullyChangedConfiguration_IsEqualFieldByField` + `U32` |
-| A6 | With the page integration present, the plugin registers its page on start and withdraws it on stop through the integration's own interface | US1-AS6, FR-015, FR-016 | example | PENDING | |
-| A7 | With the page integration absent, the plugin still starts and everything that does not depend on it still works | US1-AS6, EC-1, FR-008 | example | PENDING | |
+| A6 | With the page integration present, the plugin registers its page on start and withdraws it on stop through the integration's own interface | US1-AS6, FR-015, FR-016 | example | DONE | `Integration/PluginPagesRegistrationTests.cs` (U8–U10); closed by running the suite |
+| A7 | With the page integration absent, the plugin still starts and everything that does not depend on it still works | US1-AS6, EC-1, FR-008 | example | DONE | `Integration/PluginPagesRegistrationTests.cs` (U11–U13) + the 001/002 suite |
 | A8 | A tagged version publishes the repository document and the package it points at, with no manual editing step | US2-AS1, FR-014 | example | PENDING | |
 | A9 | Every version the published repository lists carries a download location, a checksum and Jellyfin 12 as its server version | US2-AS2, FR-013, SC-004 | example | PENDING | |
 | A10 | The built package's own compatibility declaration names Jellyfin 12, matching its entry in the repository document | US2-AS3, FR-005, SC-004 | example | PENDING | |
@@ -80,7 +80,7 @@ Grouped by the component from `plan.md` that owns them.
 | --- | --- | --- | --- | --- | --- |
 | U1 | The plugin reports the frozen GUID `b8a15db8-e368-42c4-9048-390faf0094db` | FR-007, US1-AS1 | example | DONE | `PluginSanityTests.cs::Plugin_Guid_IsStable` |
 | U2 | `GetPages` offers exactly one page, the embedded `Web.admin.html` | US1-AS1, FR-001 | example | DONE | `PluginSanityTests.cs::GetPages_OffersExactlyOnePage_TheEmbeddedAdminPage` |
-| U3 | Constructing the plugin writes nothing into the plugin-configurations tree | FR-015, US1-AS1 | example | PENDING | |
+| U3 | Constructing the plugin writes nothing into the plugin-configurations tree | FR-015, US1-AS1 | example | DONE | `PluginSanityTests.cs::Constructing_WritesNothingIntoThePluginConfigurationsTree` |
 | U32 | `PluginConfiguration` exposes no collection property, so the `XmlSerializer` round-trip has nothing that could gain a duplicate entry | US1-AS5, FR-002 | example | DONE | `Configuration/PluginConfigurationTests.cs::Configuration_ExposesNoCollectionProperty_SoNothingCanGainADuplicateOnRoundTrip` |
 
 ### `src/Jellyfin.Plugin.NewReleases/PluginServiceRegistrator.cs`
@@ -90,7 +90,7 @@ Grouped by the component from `plan.md` that owns them.
 | U4 | Every service the registrator registers resolves from a collection holding substituted Jellyfin 12 host services | US1-AS2, SC-001 | example | DROPPED | duplicate of A2 — same observable, see cycle log |
 | U5 | `IEnumerable<IReleaseSource>` yields both MusicBrainz and Deezer, not one of them | US1-AS2 | example | DONE | `PluginServiceRegistratorTests.cs::RegisterServices_BothReleaseSourcesAreRegistered_NotOneOfThemTwice` |
 | U6 | `IScheduledTask` resolves as the refresh task | US1-AS2, FR-001 | example | DONE | `PluginServiceRegistratorTests.cs::RegisterServices_TheScheduledTaskResolvesAsTheRefreshTask` |
-| U7 | The page-registration hosted service is registered and resolves as an `IHostedService` | FR-015, US1-AS6 | example | PENDING | |
+| U7 | The page-registration hosted service is registered and resolves as an `IHostedService` | FR-015, US1-AS6 | example | DONE | `PluginServiceRegistratorTests.cs::RegisterServices_ThePageRegistrationRunsAsAHostedService` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Integration/PluginPagesRegistrationService.cs`
 
@@ -112,7 +112,7 @@ injected seam so a test supplies the stand-in without touching load contexts.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U16 | The plugin assembly references neither `Jellyfin.Plugin.PluginPages` nor `Newtonsoft.Json` | CR-6, FR-008 | example | PENDING | |
+| U16 | The plugin assembly references neither `Jellyfin.Plugin.PluginPages` nor `Newtonsoft.Json` | CR-6, FR-008 | example | DONE | `PluginSanityTests.cs::ThePluginAssembly_ReferencesNeitherPluginPagesNorNewtonsoft` |
 
 ### `build.yaml`
 
