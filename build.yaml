@@ -7,7 +7,7 @@ targetAbi: "12.0.0.0"
 framework: "net10.0"
 owner: "Alpha"
 overview: "Releases by your library artists that your library does not have yet."
-description: "Tracks releases by the library artists in your Jellyfin music library that the library does not yet contain. A daily Refresh reads MusicBrainz and Deezer, decides ownership by track list, and lists Missing, Incomplete and Upcoming releases in a New Releases view; users can Ignore a release or mark it Have it. Requires Jellyfin 12. The configuration page, the API and the daily refresh need nothing else installed. The New Releases entry in the side menu additionally needs the Plugin Pages plugin (3.0.0.0 or later) and File Transformation, and on Jellyfin 12 that entry does not currently render at all because Plugin Pages has not been updated for the rewritten web client; see the project README."
+description: "Tracks releases by the library artists in your Jellyfin music library that the library does not yet contain. A daily Refresh reads MusicBrainz and Deezer, decides ownership by track list, and lists Missing, Incomplete and Upcoming releases in a New Releases view; users can Ignore a release or mark it Have it. Requires Jellyfin 12. The configuration page, the API and the daily refresh need nothing else installed. The New Releases entry in the web client's avatar menu additionally needs two plugins from the same third-party repository: Plugin Pages (3.0.0.0 or later) and File Transformation, which is what loads Plugin Pages' browser script. Install only Plugin Pages and the entry never appears. See the project README."
 category: "General"
 changelog: "Initial scaffold."
 artifacts:

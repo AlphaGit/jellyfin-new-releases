@@ -54,25 +54,22 @@ Jellyfin 12. Older servers are not supported and are not offered the plugin.
 The plugin works on its own: the configuration page, the API and the daily refresh need nothing
 else installed.
 
-**The New Releases entry in the side menu is a different matter, and on Jellyfin 12 it currently
-does not appear at all.** It is published by [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages),
-a separate plugin, which in turn needs
-[File Transformation](https://www.iamparadox.dev/jellyfin/plugins/manifest.json) to load its
-browser script — a chain of two third-party plugins:
+**The New Releases entry in the side menu needs two other plugins**, both from the same
+repository (`https://www.iamparadox.dev/jellyfin/plugins/manifest.json`):
 
 ```
 New Releases  ->  Plugin Pages 3.0.0.0+  ->  File Transformation
 ```
 
-With both installed, this plugin's half works: the page is registered and Plugin Pages serves it
-to the client. The entry still does not render, because Plugin Pages 3.0.1.0 only initialises when
-it finds the pre-12 web client's navigation drawer, and Jellyfin 12 replaced the client with a
-React application that has no such element. That is a Plugin Pages issue, not one this plugin can
-fix or work around. Details and evidence:
-[`docs/real-server-install-0.1.0.md`](docs/real-server-install-0.1.0.md) finding 3.
+[Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) publishes the entry, and
+[File Transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) is what
+patches the web client so Plugin Pages' script loads at all. Install only the first and the entry
+silently never appears. With both installed on Jellyfin 12, the entry shows up under your **avatar
+menu** (top right), below Preferences, and opens the New Releases view.
 
-Until that is resolved, reach the plugin through Dashboard → Plugins → New Releases, and drive the
-refresh from Dashboard → Scheduled Tasks → Refresh new releases.
+Without them the plugin still loads and works; the view is simply not linked from the menu. Reach
+it through Dashboard → Plugins → New Releases, and Dashboard → Scheduled Tasks → Refresh new
+releases.
 
 Data lives in `<data>/newreleases/newreleases.db` (SQLite).
 

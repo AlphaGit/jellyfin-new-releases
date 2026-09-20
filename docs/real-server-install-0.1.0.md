@@ -116,74 +116,48 @@ No test could have caught this. `ReleaseWorkflowTests` asserts the workflow's sh
 workflow's shape was correct; the blocker was in repository settings, which the suite cannot see.
 It is recorded here because a fork, or a restored repository, will hit it again.
 
-## Finding 3 — the user-facing page needs a two-plugin chain, and still does not render on 12.1
+## Finding 3 — the user-facing page needs a two-plugin chain
 
-**Severity: the plugin's user-facing half is unreachable on Jellyfin 12.1. The cause is entirely
-outside this plugin.**
+**Severity: documentation only. The menu entry works once the chain is complete.**
 
-The New Releases view reaches the web client's menu through Plugin Pages. On a Jellyfin 12.1
-server that turns out to need **two** third-party plugins, and to fail anyway:
+The New Releases view reaches the web client's menu through Plugin Pages, and on Jellyfin 12 that
+needs **two** third-party plugins, not one:
 
 ```
-New Releases  ->  Plugin Pages  ->  File Transformation
+New Releases  ->  Plugin Pages 3.0.0.0+  ->  File Transformation
 ```
 
-**What each link does, and what was observed.**
+Plugin Pages serves its browser script at `/PluginPages/inject.js`, but nothing references it from
+`index.html` on its own. **File Transformation is what patches the client to add the script tag**
+(`[FileTransformation] Registering transformation for 'index.html'`). Without it the script is
+served but never loaded, and no menu entry can appear. Neither Plugin Pages' catalogue description
+nor its assembly metadata mentions this; it was found by reading the served HTML.
 
-1. **Our registration works.** With Plugin Pages installed, `GET /PluginPages/User` — the endpoint
-   the menu renders from — returns our entry with exactly the payload `data-model.md` fixes:
-   `Id`, `Url`, `DisplayText`, `Icon`, and none of the three `IsEnabled*` fields. This is the
-   first proof the registration interface works against a real Plugin Pages rather than the
-   stand-in, and it closes the server-side half of `A6`.
-2. **Plugin Pages needs File Transformation.** Its browser script is served at
-   `/PluginPages/inject.js` (200, ~5 KB), but nothing referenced it from `index.html`, so it never
-   loaded. File Transformation is the plugin that patches the web client's files to add the script
-   tag. Installing it produced
-   `[FileTransformation] Registering transformation for 'index.html'` and the tag appeared.
-   Nothing in Plugin Pages' catalogue description or its assembly metadata mentions this
-   requirement; it was found by reading the served HTML.
-3. **It still does not render, and the reason is a Plugin Pages bug on Jellyfin 12.** Its
-   `inject.js` initialises only through this gate:
+With both installed, the whole path works and was driven end to end in a signed-in browser:
 
-   ```js
-   if ($('.mainDrawer-scrollContainer').length > 0) {
-       if ($(".mainDrawer-scrollContainer").children('.userMenuOptions').length > 0) {
-           PluginPages.initialized = true;
-           PluginPages.onReady();
-           PluginPages.populateSidebar();
-   ```
+- `GET /PluginPages/User` returns this plugin's entry with exactly the payload `data-model.md`
+  fixes — `Id`, `Url`, `DisplayText`, `Icon`, and none of the three `IsEnabled*` fields.
+- Plugin Pages injects into the **user avatar menu** (`div#app-user-menu`), after the
+  `[href='#/mypreferencesmenu']` anchor — its Jellyfin 12 layout path, not the legacy drawer.
+- Clicking the entry navigates to `#/userpluginsettings.html?pageUrl=/Plugins/NewReleases/UserView`
+  and renders `user-view.html`: both tabs, every filter, and the "No data yet" empty state.
 
-   Jellyfin 12 replaced the web client with a React and MUI application — confirmed in the
-   browser: `#reactRoot`, `@mui/material` and `@tanstack/react-query` bundles, and
-   `.mainDrawer-scrollContainer` absent. The legacy drawer that gate requires no longer exists, so
-   `populateSidebar()` never runs.
+**This closes `A6` end to end**, the one acceptance behaviour no test could reach.
 
-   The script is not simply out of date: `onReady()` already carries a Jellyfin 12 branch that
-   anchors to `[href='#/mypreferencesmenu']` and emits `MuiMenuItem` markup. Only the gate that
-   reaches it was left on the old selector.
+### A correction, recorded because the first version of this document was wrong
 
-**What this means for this plugin.** Nothing to fix here, and nothing that contradicts `FR-008`:
-the plugin loads, the configuration page, the API and the daily refresh all work, and the
-registration it is responsible for is demonstrably correct. What it does mean is that the
-documented requirement "Plugin Pages 3.0.0.0 or later" was **incomplete** — it omits File
-Transformation, and it omits that the menu entry does not currently appear on Jellyfin 12.1 at
-all. Both are now stated in `README.md` and in the catalogue description.
+This finding first claimed Plugin Pages 3.0.1.0 was broken on Jellyfin 12 and that the entry could
+never render, on the reasoning that its `inject.js` initialises only when it finds
+`.mainDrawer-scrollContainer`, which appeared absent. **That was measured on the login page.** In a
+signed-in client the element is present, the gate passes, and Plugin Pages takes its new-layout
+branch correctly. Two intermediate hypotheses were also wrong and are recorded so the method is
+visible: that `window.PluginPages` being undefined indicated failure (it is declared `const`, so it
+is never a global), and that jQuery was absent from the 12 client (it is bundled and `window.$` is
+a function).
 
-**Confirmed by the maintainer.** After both plugins were installed and the client hard-refreshed,
-the entry did not appear, as the gate predicts.
-
-**The view itself works on Jellyfin 12.** Injected into a signed-in client by hand — fetched with
-`ApiClient.ajax` and appended to the document — `user-view.html` rendered correctly and showed its
-empty state. Its markup, styling, bootstrap and `ApiClient` calls are all sound against the
-rewritten client. Nothing in this plugin's user-facing half is broken on Jellyfin 12; only the
-menu link that Plugin Pages is responsible for.
-
-**A note on the injection snippet, because it produced a misleading 401 first.**
-`ApiClient.getUrl(path)` builds a URL but attaches no credentials, so a plain `fetch` of
-`/Plugins/NewReleases/UserView` returns 401 even for a signed-in administrator — the controller is
-`[Authorize]`. `ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(...), dataType: 'text' })`
-sends the session's `Authorization: MediaBrowser Token=...` header and succeeds. This is the same
-Jellyfin 12 header rule recorded below, met from the other direction.
+The lesson is the same one the test suite keeps teaching in this project: a negative observation
+taken in the wrong context is worse than no observation, because it is acted upon. No issue was
+filed upstream; there was no upstream bug.
 
 ## Three facts about Jellyfin 12 worth keeping
 
@@ -201,10 +175,11 @@ Jellyfin 12 header rule recorded below, met from the other direction.
    during the upgrade, as Jellyfin's own upgrade guidance instructs, and their settings survived.
    A reinstall therefore picks up the old configuration.
 
-3. **The web client is a different application.** Jellyfin 12 replaced the jQuery client with
-   React and MUI. Any plugin that manipulates the client's DOM by selector — Plugin Pages, and
-   anything like it — is working against a rewritten target, and a selector that worked on 10.11
-   tells you nothing about 12.
+3. **The web client is a different application, but it still carries jQuery.** Jellyfin 12
+   replaced the client with React and MUI (`#reactRoot`, `@mui/material`, `@tanstack/react-query`)
+   — and still bundles jQuery and exposes `window.$`, which is how Plugin Pages' script continues
+   to work. The signed-in DOM also still provides `.mainDrawer-scrollContainer`. Probing the
+   **login page** shows none of the signed-in structure and will mislead anyone who measures there.
 
 4. **First-party plugins track the server version.** TMDb, OMDb, MusicBrainz, Studio Images and
    AudioDB all report `12.1.0.0` on a 12.1 server, while third-party ones keep their own numbering
