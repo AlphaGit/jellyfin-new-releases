@@ -31,12 +31,18 @@
 
 ## Notes
 
+Revalidated after the grilling session. All 16 items still pass; none regressed.
+
 Deliberate choices, recorded so planning does not relitigate them:
 
-- **The word "casing" appears nowhere in the requirements.** `FR-003` states the rule — the plugin
-  must not silently depend on the host's naming — rather than the fix. Naming the fix in the spec
-  would foreclose the planning decision between pinning the plugin's own serialization and making
-  the pages tolerant.
+- **The fix side is now settled, not left open.** The first draft left `FR-003` deliberately vague
+  so planning could choose. The interview closed it: the plugin declares the naming on its own
+  endpoints, the pages are untouched, and `001`'s contract already specified those field names —
+  so this restores a recorded contract rather than choosing a new one.
+- **The feature grew beyond the defect, on purpose.** It now settles the plugin's whole HTTP
+  surface convention — route naming, casing, field naming, a single source for the route prefix —
+  because the defect existed only because no convention was written down. `FR-011` to `FR-016`
+  carry that, and they supersede the routes `001` and `002` recorded.
 - **`SC-003` names a count (24).** It is a measured fact about the pages as they stand, not a
   design constraint, and it is there so "every field" cannot quietly become "the ones we noticed".
 - **User Story 3 is P1 alongside the two user-facing stories.** The mismatch is trivial; the
