@@ -238,3 +238,21 @@ that proves it done.
 (`Support/TestDatabase.cs` calls the process-global `SqliteConnection.ClearAllPools()`, roughly
 one failure in ten runs). It predates this feature, breaches constitution III, and needs its own
 specification rather than a fix smuggled into this phase.
+
+---
+
+## Note: tasks ticked against BASELINE behaviours
+
+The `/speckit-tdd-plan refresh` of 2026-09-20 recast twelve behaviours from `example`/`DONE` to
+`characterization`/`BASELINE`, because they pin code this feature never changed — see the "Refresh
+of 2026-09-20" section of [tdd/test-list.md](./tdd/test-list.md) for the per-behaviour evidence.
+
+Five completed tasks name one or more of them: **T007** (`A3`, `A4`, `A5`), **T012** (`A1`, `U1`,
+`U2`), **T013** (`A2`, `U5`, `U6`), **T025** (`U19`, `U20`) and **T039** (`A1`-`A5`).
+
+They stay ticked. `/speckit-tdd-run` Phase 6 forbids ticking a task whose behaviour is `BASELINE`,
+but a characterization behaviour terminates at `BASELINE` and can never reach `DONE`, so such a
+task could never be ticked at all. `.specify/memory/tdd-profile.md` records this as a known
+conflict in the third-party `tdd` extension and the same precedent from `002` (`T023`, `T024`).
+The work these tasks describe is done; unticking them to satisfy a literal reading would falsify
+the record.
