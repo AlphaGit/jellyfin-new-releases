@@ -62,7 +62,10 @@ Data lives in `<data>/newreleases/newreleases.db` (SQLite).
 Add the plugin repository to your server, then install from the catalogue:
 
 1. Open Dashboard → Plugins → Repositories.
-2. Add `https://alphagit.github.io/jellyfin-new-releases/manifest.json`.
+2. Add the repository URL: `https://<owner>.github.io/<repository>/manifest.json`, where
+   `<owner>` and `<repository>` are this project's GitHub owner and repository name. For this
+   repository that resolves to the address shown on its GitHub Pages settings page; a fork
+   publishes to its own.
 3. Install New Releases from Dashboard → Plugins → Catalogue, and restart the server.
 
 ## Build and test

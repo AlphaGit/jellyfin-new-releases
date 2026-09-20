@@ -471,3 +471,31 @@ had passed over. All three would have broken a real release.
   `targetAbi` `12.0.0.0` and the frozen guid; `jprm repo add` merged an entry with a `sourceUrl`
   under the given site root, an MD5 `checksum` and a `timestamp`, matching
   `contracts/plugin-repository-manifest.md` field for field.
+
+## Cycle 31: the published-repository behaviours stop hard-coding this repository's identity
+
+Requested after `T032`: a fork must work the same without editing files. Four literals named this
+repository or its default branch; the contract itself already used `<owner>`/`<repository>`
+placeholders, so the implementation had over-specified against its own contract.
+
+- `Packaging/RepositoryManifestTests.cs`: the `SiteRoot` constant
+  (`https://alphagit.github.io/jellyfin-new-releases`) is gone. `U25` now derives the site root
+  from the document's own first entry and asserts every entry shares it — the real invariant, and
+  one that holds for any fork. The package slug is read from `build.yaml`'s `name`, lowercased with
+  spaces replaced, rather than written down, so a fork that renames the plugin still passes.
+  `U26`'s rejecting cases use an explicit `ExampleSiteRoot` of `https://example.invalid/...`,
+  which is test data rather than anyone's address.
+- `.github/workflows/package.yml`: `ref: main` and `git push origin HEAD:main` become
+  `${{ github.event.repository.default_branch }}`. A fork whose default branch is not `main` would
+  otherwise have checked out and pushed to a branch that does not exist.
+- `README.md`: the literal catalogue URL becomes the `https://<owner>.github.io/<repository>/manifest.json`
+  pattern.
+- Already fork-safe and left alone: the workflow's `jprm repo add --url`, which derives from
+  `github.repository_owner` and the repository name.
+- suite: `dotnet test --configuration Release` -> 236 passed, 0 failed.
+  `node --test "tests/web/*.test.js"` -> 33 passed, 0 failed
+- commit: `b1a6059`
+- **not changed, and reported instead**: `build.yaml` still carries `owner: "Alpha"` and the frozen
+  plugin GUID. Neither blocks a fork from building or publishing, but a fork that publishes without
+  changing the GUID would collide with this plugin's identity in Jellyfin's install keying. The
+  GUID is frozen by constitution IV, so changing it is not this loop's call.

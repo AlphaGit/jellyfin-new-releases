@@ -16,7 +16,15 @@ namespace Jellyfin.Plugin.NewReleases.Tests.Packaging;
 public class RepositoryManifestTests
 {
     private const string ManifestPath = "repo/manifest.json";
-    private const string SiteRoot = "https://alphagit.github.io/jellyfin-new-releases";
+
+    /// <summary>
+    /// The package slug JPRM derives from the plugin's name. Read from <c>build.yaml</c> rather
+    /// than written down, so a fork that renames the plugin still passes.
+    /// </summary>
+    private static readonly string Slug =
+        RepositoryFiles.Scalar(RepositoryFiles.ReadAllText("build.yaml"), "name")!
+            .ToLowerInvariant()
+            .Replace(' ', '-');
 
     private static JsonElement TheOnlyPlugin()
     {
@@ -81,14 +89,24 @@ public class RepositoryManifestTests
 
     /// <summary>
     /// U25: the package must come from the same site as the document, under the name the version
-    /// says, or the entry points at bytes that are not that version.
+    /// says, or the entry points at bytes that are not that version. The site root is taken from
+    /// the document itself, never written down here: this repository and every fork of it publish
+    /// to their own Pages site, and the invariant is that all entries share one.
     /// </summary>
     [Fact]
-    public void Manifest_EverySourceUrlIsUnderTheSiteRoot_AndNamesItsOwnVersion()
+    public void Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion()
     {
-        foreach (var version in Versions())
+        var versions = Versions();
+        if (versions.Count == 0)
         {
-            AssertSourceUrlNamesItsOwnVersion(version);
+            return;
+        }
+
+        var siteRoot = SiteRootOf(versions[0]);
+
+        foreach (var version in versions)
+        {
+            AssertSourceUrlNamesItsOwnVersion(version, siteRoot);
         }
     }
 
@@ -97,9 +115,9 @@ public class RepositoryManifestTests
     /// different version, points a server at bytes that are not the version it asked for.
     /// </summary>
     [Theory]
-    [InlineData("1.0.0.0", "https://example.invalid/jellyfin-new-releases/jellyfin-new-releases_1.0.0.0.zip")]
-    [InlineData("1.0.0.0", SiteRoot + "/jellyfin-new-releases/jellyfin-new-releases_2.0.0.0.zip")]
-    [InlineData("1.0.0.0", SiteRoot + "/jellyfin-new-releases/jellyfin-new-releases.zip")]
+    [InlineData("1.0.0.0", "https://elsewhere.invalid/x/jellyfin-new-releases_1.0.0.0.zip")]
+    [InlineData("1.0.0.0", ExampleSiteRoot + "jellyfin-new-releases_2.0.0.0.zip")]
+    [InlineData("1.0.0.0", ExampleSiteRoot + "jellyfin-new-releases.zip")]
     public void ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected(string number, string sourceUrl)
     {
         using var entry = JsonDocument.Parse(
@@ -109,7 +127,8 @@ public class RepositoryManifestTests
                 ["sourceUrl"] = sourceUrl,
             }));
 
-        Assert.ThrowsAny<Exception>(() => AssertSourceUrlNamesItsOwnVersion(entry.RootElement));
+        Assert.ThrowsAny<Exception>(
+            () => AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleSiteRoot));
     }
 
     private static void AssertInstallable(JsonElement version)
@@ -121,12 +140,22 @@ public class RepositoryManifestTests
         Assert.Equal("12.0.0.0", version.GetProperty("targetAbi").GetString());
     }
 
-    private static void AssertSourceUrlNamesItsOwnVersion(JsonElement version)
+    /// <summary>A stand-in site root for the rejecting cases. Test data, not this project's URL.</summary>
+    private const string ExampleSiteRoot = "https://example.invalid/repo/plugin/";
+
+    private static string SiteRootOf(JsonElement version)
+    {
+        var sourceUrl = version.GetProperty("sourceUrl").GetString()!;
+        Assert.StartsWith("https://", sourceUrl, StringComparison.Ordinal);
+        return sourceUrl[..(sourceUrl.LastIndexOf('/') + 1)];
+    }
+
+    private static void AssertSourceUrlNamesItsOwnVersion(JsonElement version, string siteRoot)
     {
         var number = version.GetProperty("version").GetString();
         var sourceUrl = version.GetProperty("sourceUrl").GetString()!;
 
-        Assert.StartsWith(SiteRoot, sourceUrl, StringComparison.Ordinal);
-        Assert.EndsWith($"jellyfin-new-releases_{number}.zip", sourceUrl, StringComparison.Ordinal);
+        Assert.StartsWith(siteRoot, sourceUrl, StringComparison.Ordinal);
+        Assert.EndsWith($"{Slug}_{number}.zip", sourceUrl, StringComparison.Ordinal);
     }
 }
