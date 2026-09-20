@@ -61,13 +61,8 @@ stacks:
       - tests/web/load-page.js
       - tests/web/fixed-clock.js
 verified: [single, file, suite]  # single: dotnet only; node's is null, see the note
-suite_baseline: red   # INTERMITTENT, not reproducibly red — see "A flaky test" below before cycling
+suite_baseline: green
 suite_seconds: 13
-suite_flaky:
-  - test: Api.ReleasesControllerTests.Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204
-    failure: "System.ObjectDisposedException : Cannot access a disposed object. Object name: 'SQLitePCL.sqlite3'"
-    rate: 1 failure in 10 consecutive runs on 2026-09-20
-    cause: TestDatabase.DisposeAsync calls the process-global SqliteConnection.ClearAllPools()
 ---
 
 # TDD Stack Profile
@@ -148,21 +143,17 @@ the tree is clean.
   a green, which is exactly the red-phase hazard. **Drive the page side with `file`.**
   `node --test tests/web/checked.test.js` gives true counts, exits 1 on a real failure, and
   exits 1 with `Could not find …` on a wrong path — all three verified.
-- **A flaky test, pre-existing and not fixed here.**
-  `Api.ReleasesControllerTests.Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204`
-  failed once in ten consecutive runs on 2026-09-20 with
-  `System.ObjectDisposedException : Cannot access a disposed object. Object name: 'SQLitePCL.sqlite3'`,
-  thrown inside `SqliteConnection.Open()`. Cause: `Support/TestDatabase.cs` `DisposeAsync` calls
-  **`SqliteConnection.ClearAllPools()`**, which is process-global, while xunit runs collections in
-  parallel and the project sets no parallelism policy. One test's teardown can therefore invalidate
-  a pooled handle another test is opening. `ClearAllPools()` predates this feature — it is in the
-  tree at `a9f1ba4` and was added by `2e08b54` during `001` — but `Microsoft.Data.Sqlite` moving
-  9.0.19 -> 10.0.11 changes pooling behaviour, so the retarget is the likely reason it started
-  showing. **This command may only write this profile, so nothing was changed.** Fixing it is a
-  spec'd change, not a loop step: the candidates are dropping `ClearAllPools()` and deleting the
-  temp directory only, or giving the database-backed tests one non-parallel xunit collection.
-  Until then, **re-run a red before attributing it to your own change**, and never record a first
-  red without confirming it names your test.
+- **The flaky database test is fixed.** It failed roughly once in ten full runs with
+  `System.ObjectDisposedException : Cannot access a disposed object. Object name: 'SQLitePCL.sqlite3'`
+  inside `SqliteConnection.Open()`, measured at 2 failures in 14 runs before the fix and 0 in 20
+  after. Cause: two teardowns called the **process-global** `SqliteConnection.ClearAllPools()`
+  while xunit runs collections in parallel, so one test's teardown could dispose a pooled handle
+  another test was opening. Both now call `SqliteConnection.ClearPool(connection)`, which clears
+  only that connection string's pool; every test database has its own temp path, so its pool is
+  its own. **Never reintroduce `ClearAllPools()` in this suite** — `grep` should find no live
+  call. Sites: `Support/TestDatabase.cs` `DisposeAsync`, `Storage/DatabaseTests.cs`
+  `SqliteConnectionPoolReset`. `Storage/TestDatabaseIsolationTests.cs` is the regression guard,
+  and it is a weak one: it could not reproduce the race before the fix either.
 - Suite wall time is 13 s including build, 10 s of it the test run. Per-cycle full runs are fine.
 - CI gate: `dotnet restore`, then `dotnet build --configuration Release --no-restore`, then
   `dotnet test --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"`,
@@ -198,6 +189,5 @@ the tree is clean.
   ticking such tasks and leave this note in place.
 - Constitution principle applied: `.specify/memory/constitution.md` has been at version 1.3.0
   since 2026-09-19 and its principle II, "Test-Driven Development (NON-NEGOTIABLE)", governs this
-  profile. Nothing further to add. Note that principle III, "Hermetic Tests", says the suite "MUST
-  pass on a machine with no network and no Jellyfin server" — the flaky test above is a standing
-  breach of that, which is the strongest argument for fixing it as its own change.
+  profile. Nothing further to add. Principle III, "Hermetic Tests", requires the suite to pass on
+  a machine with no network and no Jellyfin server; the flaky test that breached it is fixed.
