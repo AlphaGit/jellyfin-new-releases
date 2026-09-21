@@ -1,6 +1,7 @@
 using System.Globalization;
 using Jellyfin.Data;
 using Jellyfin.Database.Implementations.Enums;
+using Jellyfin.Extensions.Json;
 using Jellyfin.Plugin.NewReleases.Configuration;
 using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.ScheduledTasks;
@@ -17,6 +18,7 @@ namespace Jellyfin.Plugin.NewReleases.Api;
 /// <summary>User-facing endpoints (any authenticated user): the list, the Archive, the artist filter, status, and decisions (FR-007, FR-008, FR-015, FR-016).</summary>
 [ApiController]
 [Authorize]
+[Produces(JsonDefaults.CamelCaseMediaType)]
 [Route("Plugins/NewReleases/api")]
 public sealed class ReleasesController : ControllerBase
 {

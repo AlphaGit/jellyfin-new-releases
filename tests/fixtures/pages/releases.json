@@ -1,0 +1,64 @@
+{
+  "items": [
+    {
+      "id": 101,
+      "artistName": "Chromatics",
+      "artistJellyfinId": "6f3a9c1d7b0e4f2a8c5d1e9b3a7f6c04",
+      "title": "Closer to Grey",
+      "type": "Album",
+      "date": "2019-10-02",
+      "datePrecision": "Day",
+      "state": "Missing",
+      "sources": [
+        { "source": "musicbrainz", "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000101" },
+        { "source": "deezer", "url": "https://www.deezer.com/album/101" }
+      ]
+    },
+    {
+      "id": 102,
+      "artistName": "Chromatics",
+      "artistJellyfinId": "6f3a9c1d7b0e4f2a8c5d1e9b3a7f6c04",
+      "title": "Kill for Love",
+      "type": "Album",
+      "date": "2012-03-26",
+      "datePrecision": "Day",
+      "state": "Incomplete",
+      "missingTracks": ["Into the Black", "Birds of Paradise"],
+      "comparedEdition": { "source": "musicbrainz", "title": "Kill for Love (deluxe edition)" },
+      "sources": [
+        { "source": "musicbrainz", "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000102" }
+      ]
+    },
+    {
+      "id": 103,
+      "artistName": "Desire",
+      "artistJellyfinId": "b21e7d4a9f3c48d6a0e5b8c2f7d1a930",
+      "title": "Escape",
+      "type": "Single",
+      "date": "2027-01-15",
+      "datePrecision": "Day",
+      "state": "Upcoming",
+      "sources": [
+        { "source": "deezer", "url": "https://www.deezer.com/album/103" }
+      ]
+    },
+    {
+      "id": 104,
+      "artistName": "Desire",
+      "artistJellyfinId": "b21e7d4a9f3c48d6a0e5b8c2f7d1a930",
+      "title": "II",
+      "type": "Album",
+      "datePrecision": "None",
+      "state": "Missing",
+      "archived": { "kind": "HaveIt", "decidedAt": "2026-09-18T11:04:00+00:00" },
+      "sources": [
+        { "source": "musicbrainz", "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000104" }
+      ]
+    }
+  ],
+  "total": 4,
+  "hasStoredReleases": true,
+  "releasesLastCheckedAt": "2026-09-19T03:15:00+00:00",
+  "refreshIntervalHours": 24,
+  "serverToday": "2026-09-20"
+}

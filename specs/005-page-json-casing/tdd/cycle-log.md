@@ -25,3 +25,30 @@ The host default an endpoint receives when it declares nothing writes `Items`, n
 is the production defect, reproducible in-process, and it is why `U1`, `U2`, `U3` and `U9` must
 resolve the serializer options from the endpoint's own declaration rather than reaching for
 `CamelCaseOptions` directly.
+
+## Cycle 1: U1 the list response carries the names the list page reads
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ResponseNamingTests.cs::ListResponse_AsTheReleasesEndpointDeclaresIt_CarriesTheNamesTheListPageReads` (new), with
+  `tests/fixtures/pages/releases.json` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ResponseNamingTests.ListResponse_AsTheReleasesEndpointDeclaresIt_CarriesTheNamesTheListPageReads" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ`
+  Expected `[""] = ["hasStoredReleases", "items", "refreshIntervalHours", "releasesLastCheckedAt", "serverToday", ···]`
+  Actual `[""] = ["HasStoredReleases", "Items", "RefreshIntervalHours", "ReleasesLastCheckedAt", "ServerToday", ···]`
+  (1 failed) — the production defect, reproduced in the suite
+- green: `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs:20` added
+  `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level. Suite `dotnet test --configuration Release`
+  -> 258 passed, 0 failed
+- refactor: none needed. The options resolution and the name walk are used by one test so far; the
+  duplication that would justify extracting them into `Support/` does not exist yet.
+- commit: see below
+
+### Note: what this cycle necessarily also satisfied
+
+The declaration is per-controller, so the one attribute that made `U1` pass also makes `U2`
+(`ArtistsResponse`) and `U3` (`StatusResponse`) pass — both are returned by the same controller.
+Their cycles therefore cannot produce a first-run red, and the playbook's deliberate-mutant check
+stands in for one. Recorded here so the audit does not read those cycles as test-after.
+
+The smaller alternative — an action-level attribute per endpoint — was rejected: `FR-010` requires
+every endpoint that returns a body to declare the naming, including ones added later, and a
+class-level declaration is what makes a new action inherit it rather than silently omit it.
