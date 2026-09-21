@@ -2,11 +2,19 @@
     {
         "guid": "b8a15db8-e368-42c4-9048-390faf0094db",
         "name": "Jellyfin New Releases",
-        "description": "Tracks releases by the library artists in your Jellyfin music library that the library does not yet contain. A daily Refresh reads MusicBrainz and Deezer, decides ownership by track list, and lists Missing, Incomplete and Upcoming releases in a New Releases view; users can Ignore a release or mark it Have it.",
+        "description": "Tracks releases by the library artists in your Jellyfin music library that the library does not yet contain. A daily Refresh reads MusicBrainz and Deezer, decides ownership by track list, and lists Missing, Incomplete and Upcoming releases in a New Releases view; users can Ignore a release or mark it Have it. Requires Jellyfin 12. The configuration page, the API and the daily refresh need nothing else installed. The New Releases entry in the web client's avatar menu additionally needs two plugins from the same third-party repository: Plugin Pages (3.0.0.0 or later) and File Transformation, which is what loads Plugin Pages' browser script. Install only Plugin Pages and the entry never appears. See the project README.",
         "overview": "Releases by your library artists that your library does not have yet.",
         "owner": "Alpha",
         "category": "General",
         "versions": [
+            {
+                "version": "0.1.1.0",
+                "changelog": "Fixes both embedded pages on Jellyfin 12: the plugin now states the naming of its own JSON responses instead of inheriting the host default, which the pages could not read. Routes renamed to Jellyfin's own convention.",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://AlphaGit.github.io/jellyfin-new-releases/jellyfin-new-releases/jellyfin-new-releases_0.1.1.0.zip",
+                "checksum": "7bcfa2a8cd87c19dc24055355a0c0c3d",
+                "timestamp": "2026-09-21T01:53:12Z"
+            },
             {
                 "version": "0.1.0.0",
                 "changelog": "Initial scaffold.",
