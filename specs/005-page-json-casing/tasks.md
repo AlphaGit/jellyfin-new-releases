@@ -217,7 +217,7 @@ the suite fails (`quickstart.md` pass 1 scenarios 1–6).
 - [X] T067 [P] Add a `## Unreleased` entry to `CHANGELOG.md` covering the renamed HTTP surface and the stated response naming
 - [X] T068 Run `dotnet build --configuration Release` (zero warnings), `dotnet test --configuration Release`, `node --test "tests/web/*.test.js"` and `LANG=de_DE.UTF-8 node --test "tests/web/*.test.js"`; all four green
 - [X] T069 Run the remaining `quickstart.md` pass 1 mutants — scenarios 1, 4, 5 and 6 — each failing the suite and restored from a file copy verified with `cmp -s`
-- [ ] T070 Push to `main` and verify the CI run green (`gh run watch`). Constitution: a feature is done when the CI run for that push is verified green, not when it is pushed
+- [X] T070 Push to `main` and verify the CI run green (`gh run watch`). Constitution: a feature is done when the CI run for that push is verified green, not when it is pushed
 - [ ] T071 `quickstart.md` pass 2 — the real-server pass on a running Jellyfin 12, all ten steps, recorded in `docs/` as `003`'s was. **JD's own pass.** `SC-001`, `SC-002`, `SC-003` and `SC-005` are met here, not by the suite. Anything it finds becomes its own specification
 
 ---
