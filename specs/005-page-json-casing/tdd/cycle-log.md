@@ -80,3 +80,9 @@ class-level declaration is what makes a new action inherit it rather than silent
 - notes: no page reads this response. It is covered because `FR-010` is one rule over every endpoint
   that returns a body, deliberately without a judgement about which bodies matter
 - commit: see below
+
+### Deviation: cycles 2 and 3 share one commit
+
+The playbook asks for one commit per cycle. Cycles 2 and 3 added only tests, made no production
+change, and were committed together as `test: pin the releases controller's response naming against
+what the pages read`. Recorded rather than rewritten. Later cycles commit one to one.

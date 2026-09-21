@@ -126,7 +126,7 @@ returns (`quickstart.md` pass 2 steps 1–4).
 ### Implementation for User Story 1
 
 - [ ] T027 [US1] Expose `render` on `globalThis.NewReleasesInternals` in `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`, keeping the assignment as the first statement of the IIFE, and add `render` to the exact set asserted in `tests/web/exposure.test.js` [U40]
-- [ ] T028 [US1] Add `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level on `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs`, with `using Jellyfin.Extensions.Json;`, until T015, T016 are green [U1] [U2]
+- [X] T028 [US1] Add `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level on `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs`, with `using Jellyfin.Extensions.Json;`, until T015, T016 are green [U1] [U2]
 - [ ] T029 [US1] Rename `ReleasesController` routes to `[Route(PluginRoutes.Base)]` with `[HttpGet("Releases")]`, `[HttpGet("Artists")]`, `[HttpGet("Status")]`, `[HttpPost("Releases/{id:long}/Ignore")]`, `[HttpPost("Releases/{id:long}/HaveIt")]`, `[HttpPost("Releases/{id:long}/Restore")]` until T025 is green [U4] [U5] [U6] [U7] [U8]
 - [ ] T030 [US1] Update `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` until T026 is green: the `API` literal becomes `'Plugins/NewReleases/'`, the request paths become `'Releases' + query()` and `'Artists'`, and the three `data-action` values become `Ignore`, `HaveIt`, `Restore`. Paths still go through `ApiClient.getUrl` (`FR-014`) [U39]
 - [ ] T031 [US1] Replace the stale `// Jellyfin serializes camelCase` comment in `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs` with a reference to `contracts/http-surface.md` — the naming is now stated to the host, not assumed in a comment
