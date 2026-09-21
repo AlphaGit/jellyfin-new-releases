@@ -25,7 +25,7 @@ Assertions match against the captured string.
 | `element.insertAdjacentHTML('beforeend', …)` | appends to `innerHTML` |
 | `element.appendChild` | records the child |
 | `element.setAttribute`, `element.hidden`, `element.dataset` | plain property stores |
-| `element.addEventListener` | recorded, never fired |
+| `element.addEventListener` | recorded; a test may invoke a recorded listener directly |
 
 ## What it does **not** cover
 
@@ -33,8 +33,11 @@ Assertions match against the captured string.
   the page *wrote*, never what a browser would *render*. Malformed markup passes.
 - **No events.** Listeners are recorded and never invoked, so tab switching, filter changes, form
   submission and the Ignore / Have it / Restore buttons are not exercised here.
-- **No traversal.** `closest`, `parentNode` and sibling access are absent. The click handler in
-  `user-view.html` depends on `closest` and stays outside this stand-in.
+- **No traversal.** `closest`, `parentNode` and sibling access are absent. The list page's click
+  handler reads `e.target.closest('button[data-action]')`, so the path it builds from a row's
+  `data-action` value is **not** exercised here. What is checked instead: the page sends
+  `Releases/{id}/{action}`, and a rendered row carries the action names the plugin registers. The
+  click that joins them is driven only by the real-server pass.
 - **No layout, no CSS, no focus, no accessibility tree.** Nothing about how the page looks or reads
   to assistive technology is asserted by any test using this fake.
 - **No network.** `ApiClient.ajax` is already stubbed by `load-page.js` and stays stubbed.

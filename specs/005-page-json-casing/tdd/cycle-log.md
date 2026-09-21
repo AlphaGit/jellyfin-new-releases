@@ -270,3 +270,30 @@ only the real-server pass would notice. Recorded as the accepted cost.
 - refactor: `load-page.js`'s header still said "Every element lookup answers null" and that the page
   "is expected to fail" after exposing its helpers. Both were now false. Rewritten to describe the
   stand-in and why the catch stays. Node suite re-run green after the edit
+
+## Cycle 21: U39 the New Releases view asks for the artist filter and the list
+
+- test: `tests/web/requests.test.js::the New Releases view asks for the artist filter and the list`
+  (new file), driving the page with an `ApiClient` that records requests instead of answering them
+- red: `node --test tests/web/requests.test.js` ->
+  `+ 'GET Plugins/NewReleases/artists', + 'GET Plugins/NewReleases/releases'` against
+  `- 'GET Plugins/NewReleases/Artists', - 'GET Plugins/NewReleases/Releases'`, `# fail 1`
+- green: `user-view.html` now requests `Releases` and `Artists`, posts to
+  `Releases/{id}/{action}`, and its three `data-action` values became `Ignore`, `HaveIt`,
+  `Restore` — the announcement text reads the same values, so it moved with them.
+  Node suite -> 38 passed
+- refactor: none needed
+
+## Cycle 22: U50 the administrator page asks for its status and posts its actions
+
+- test: `tests/web/requests.test.js::the administrator page asks for its status and posts its actions`
+- red: `Expected values to be strictly deep-equal` — actual `['GET Plugins/NewReleases/Admin/status']`
+  against the four expected requests, `# fail 1`. The lower-case `status` is the defect; the three
+  missing posts are the test not yet answering `Dashboard.confirm`
+- green: `admin.html` now requests `Status` and posts `RunNow`, `Purge`, `ClearArchive`.
+  `load-page.js` gained `Dashboard.showLoadingMsg`/`hideLoadingMsg` stubs, without which the page's
+  `pageshow` handler cannot run at all. Node suite -> 39 passed
+- notes: **the stand-in's stated limits moved.** A test may now invoke a listener the fake recorded,
+  which is how `pageshow` and the three action buttons are driven. Nothing is dispatched, nothing
+  bubbles, and no event object is synthesized. `contracts/page-sandbox.md` is updated to say so
+- refactor: none needed

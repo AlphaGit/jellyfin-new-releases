@@ -121,14 +121,14 @@ returns (`quickstart.md` pass 2 steps 1–4).
 - [ ] T023 [US1] Add a failing `render.test.js` case for the Archive tab — the archived badge and the kind of the decision [U37]
 - [ ] T024 [US1] Add failing `render.test.js` cases for the staleness line: `releasesLastCheckedAt: null` writes no sentence and does not hide the list; `tests/fixtures/pages/releases-stale.json` writes `002`'s sentence [U38] [A8]
 - [X] T025 [US1] Write failing `HttpSurfaceTests.cs` cases for `ReleasesController`'s registered routes — `Releases`, `Artists`, `Status`, and `Releases/{id}/Ignore|HaveIt|Restore` under prefix `PluginRoutes.Base` [U4] [U5] [U6] [U7] [U8]
-- [ ] T026 [US1] Write failing `render.test.js` cases for the paths the page sends — `Releases`, `Artists`, and `Releases/{id}/Ignore|HaveIt|Restore` — driving them through a recording `ApiClient` override [U39]
+- [X] T026 [US1] Write failing `render.test.js` cases for the paths the page sends — `Releases`, `Artists`, and `Releases/{id}/Ignore|HaveIt|Restore` — driving them through a recording `ApiClient` override [U39]
 
 ### Implementation for User Story 1
 
 - [ ] T027 [US1] Expose `render` on `globalThis.NewReleasesInternals` in `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`, keeping the assignment as the first statement of the IIFE, and add `render` to the exact set asserted in `tests/web/exposure.test.js` [U40]
 - [X] T028 [US1] Add `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level on `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs`, with `using Jellyfin.Extensions.Json;`, until T015, T016 are green [U1] [U2]
 - [X] T029 [US1] Rename `ReleasesController` routes to `[Route(PluginRoutes.Base)]` with `[HttpGet("Releases")]`, `[HttpGet("Artists")]`, `[HttpGet("Status")]`, `[HttpPost("Releases/{id:long}/Ignore")]`, `[HttpPost("Releases/{id:long}/HaveIt")]`, `[HttpPost("Releases/{id:long}/Restore")]` until T025 is green [U4] [U5] [U6] [U7] [U8]
-- [ ] T030 [US1] Update `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` until T026 is green: the `API` literal becomes `'Plugins/NewReleases/'`, the request paths become `'Releases' + query()` and `'Artists'`, and the three `data-action` values become `Ignore`, `HaveIt`, `Restore`. Paths still go through `ApiClient.getUrl` (`FR-014`) [U39]
+- [X] T030 [US1] Update `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` until T026 is green: the `API` literal becomes `'Plugins/NewReleases/'`, the request paths become `'Releases' + query()` and `'Artists'`, and the three `data-action` values become `Ignore`, `HaveIt`, `Restore`. Paths still go through `ApiClient.getUrl` (`FR-014`) [U39]
 - [ ] T031 [US1] Replace the stale `// Jellyfin serializes camelCase` comment in `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs` with a reference to `contracts/http-surface.md` — the naming is now stated to the host, not assumed in a comment
 - [ ] T032 [US1] Outer loop green before the story is complete: `A1`, `A2`, `A3`, `A4` and `A8` all pass against their fixtures, and `tdd/test-list.md` records each with its test [A1] [A2] [A3] [A4] [A8]
 
@@ -153,14 +153,14 @@ each status value matches the API (`quickstart.md` pass 2 steps 5–8).
 - [ ] T037 [US2] Add failing `render-status.test.js` cases for `tests/fixtures/pages/admin-status-quiet.json` — `releasesLastCheckedAt: null` writes a dash, and `isRunning: true` writes "Running now" for the next run [U49] [U43]
 - [ ] T038 [US2] Add a failing `render-status.test.js` case for a source whose `lastError` is present while its health is `Ok` — the error is suppressed, driven from a real response shape [U45]
 - [X] T039 [US2] Write failing `HttpSurfaceTests.cs` cases for `AdminController`'s registered routes — `Status`, `RunNow`, `Purge`, `ClearArchive` under prefix `PluginRoutes.Admin` [U10] [U11] [U12]
-- [ ] T040 [US2] Write failing `render-status.test.js` cases for the paths the page sends — `Status`, `RunNow`, `Purge`, `ClearArchive` — through a recording `ApiClient` override [U50]
+- [X] T040 [US2] Write failing `render-status.test.js` cases for the paths the page sends — `Status`, `RunNow`, `Purge`, `ClearArchive` — through a recording `ApiClient` override [U50]
 
 ### Implementation for User Story 2
 
 - [ ] T041 [US2] Expose `renderStatus` on `globalThis.NewReleasesInternals` in `src/Jellyfin.Plugin.NewReleases/Web/admin.html` as the first statement of the IIFE, and add `renderStatus` to the exact set asserted in `tests/web/exposure.test.js` [U51]
 - [X] T042 [US2] Add `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level on `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, with `using Jellyfin.Extensions.Json;`, until T033 is green [U9]
 - [X] T043 [US2] Rename `AdminController` routes to `[Route(PluginRoutes.Admin)]` with `[HttpGet("Status")]`, `[HttpPost("RunNow")]`, `[HttpPost("Purge")]`, `[HttpPost("ClearArchive")]` until T039 is green [U10] [U11] [U12]
-- [ ] T044 [US2] Update `src/Jellyfin.Plugin.NewReleases/Web/admin.html` until T040 is green: the `API` literal becomes `'Plugins/NewReleases/Admin/'` and the three `confirmed(...)` call sites pass `RunNow`, `Purge`, `ClearArchive` [U50]
+- [X] T044 [US2] Update `src/Jellyfin.Plugin.NewReleases/Web/admin.html` until T040 is green: the `API` literal becomes `'Plugins/NewReleases/Admin/'` and the three `confirmed(...)` call sites pass `RunNow`, `Purge`, `ClearArchive` [U50]
 - [ ] T045 [US2] Outer loop green before the story is complete: `A5`, `A6`, `A7` and `A8`'s administrator half all pass against their fixtures [A5] [A6] [A7]
 
 **Checkpoint**: the administrator page shows real values, and both JSON controllers state their

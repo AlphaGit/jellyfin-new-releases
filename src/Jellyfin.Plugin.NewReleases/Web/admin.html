@@ -168,7 +168,7 @@
             }
 
             function refreshStatus() {
-                return api('GET', 'status').then(renderStatus).catch(function () { /* status is best effort */ });
+                return api('GET', 'Status').then(renderStatus).catch(function () { /* status is best effort */ });
             }
 
             page.addEventListener('pageshow', function () {
@@ -206,13 +206,13 @@
             }
 
             page.querySelector('#nr-run-now').addEventListener('click', function () {
-                confirmed('Start a refresh now? It reads the enabled sources for every library artist.', 'Run now', 'run-now', 'Refresh queued.');
+                confirmed('Start a refresh now? It reads the enabled sources for every library artist.', 'Run now', 'RunNow', 'Refresh queued.');
             });
             page.querySelector('#nr-purge').addEventListener('click', function () {
-                confirmed('Delete all stored releases and ownership results? The Archive is kept. The next refresh rebuilds the list.', 'Purge release data', 'purge', 'Release data purged.');
+                confirmed('Delete all stored releases and ownership results? The Archive is kept. The next refresh rebuilds the list.', 'Purge release data', 'Purge', 'Release data purged.');
             });
             page.querySelector('#nr-clear-archive').addEventListener('click', function () {
-                confirmed('Remove every Ignore and Have it decision? Archived releases reappear in the list.', 'Clear Archive', 'clear-archive', 'Archive cleared.');
+                confirmed('Remove every Ignore and Have it decision? Archived releases reappear in the list.', 'Clear Archive', 'ClearArchive', 'Archive cleared.');
             });
         })();
     </script>

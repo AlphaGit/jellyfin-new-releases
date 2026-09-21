@@ -162,7 +162,7 @@ terminate at `BASELINE`; the value is the guard, not a red.
 | U36 | A rendered row carries one link per entry in `sources` | US1-AS4, SC-003 | characterization | PENDING | |
 | U37 | On the Archive tab a rendered row carries its archived badge and the kind of the decision | FR-002 | characterization | PENDING | |
 | U38 | `render` with `releasesLastCheckedAt: null` writes no staleness sentence and does not hide the list | FR-005 | characterization | PENDING | |
-| U39 | The page requests `Releases` and `Artists`, and posts `Releases/{id}/Ignore`, `/HaveIt`, `/Restore` | FR-016 | example | PENDING | |
+| U39 | The page requests `Releases` and `Artists`, and posts `Releases/{id}/Ignore`, `/HaveIt`, `/Restore` | FR-016 | example | DONE | `tests/web/requests.test.js::the New Releases view asks for the artist filter and the list` |
 | U40 | `render` is on `NewReleasesInternals` and `exposure.test.js` asserts the enlarged set | FR-017 | example | PENDING | |
 
 `U39` is red today: the page requests `releases`, `artists` and posts `have-it`.
@@ -185,7 +185,7 @@ reaches it from a response of the real shape.
 | U47 | `renderStatus` writes one unmatched row per artist, with its per-source reasons and the hint | US2-AS3 | characterization | PENDING | |
 | U48 | `renderStatus` with no unmatched artists hides the table and shows the empty line | US2-AS3 | characterization | PENDING | |
 | U49 | `renderStatus` with `releasesLastCheckedAt: null` writes a dash rather than a sentence | FR-005 | characterization | PENDING | |
-| U50 | The page requests `Status` and posts `RunNow`, `Purge`, `ClearArchive` | FR-016 | example | PENDING | |
+| U50 | The page requests `Status` and posts `RunNow`, `Purge`, `ClearArchive` | FR-016 | example | DONE | `tests/web/requests.test.js::the administrator page asks for its status and posts its actions` |
 | U51 | `renderStatus` is on `NewReleasesInternals` and `exposure.test.js` asserts the enlarged set | FR-017 | example | PENDING | |
 
 `U50` is red today: the page requests `status` and posts `run-now`, `purge`, `clear-archive`

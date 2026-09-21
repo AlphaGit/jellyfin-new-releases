@@ -160,10 +160,10 @@
                 });
                 html += '</div></div><div class="nr-actions">';
                 if (archived) {
-                    html += '<button type="button" data-action="restore" aria-label="Restore ' + esc(item.title) + '">Restore</button>';
+                    html += '<button type="button" data-action="Restore" aria-label="Restore ' + esc(item.title) + '">Restore</button>';
                 } else {
-                    html += '<button type="button" data-action="ignore" aria-label="Ignore ' + esc(item.title) + '">Ignore</button>';
-                    html += '<button type="button" data-action="have-it" aria-label="Mark ' + esc(item.title) + ' as Have it">Have it</button>';
+                    html += '<button type="button" data-action="Ignore" aria-label="Ignore ' + esc(item.title) + '">Ignore</button>';
+                    html += '<button type="button" data-action="HaveIt" aria-label="Mark ' + esc(item.title) + ' as Have it">Have it</button>';
                 }
                 return html + '</div></article>';
             }
@@ -193,13 +193,13 @@
             }
 
             function load() {
-                return api('GET', 'releases' + query()).then(render).catch(function () {
+                return api('GET', 'Releases' + query()).then(render).catch(function () {
                     panel.innerHTML = '<p class="nr-empty">Could not load New Releases.</p>';
                 });
             }
 
             function loadArtists() {
-                return api('GET', 'artists').then(function (data) {
+                return api('GET', 'Artists').then(function (data) {
                     data.items.forEach(function (a) {
                         var option = document.createElement('option');
                         option.value = a.jellyfinId;
@@ -232,9 +232,9 @@
                 var article = button.closest('.nr-row');
                 var id = article.dataset.id, title = article.dataset.title, action = button.dataset.action;
                 button.disabled = true;
-                api('POST', 'releases/' + id + '/' + action).then(function () {
+                api('POST', 'Releases/' + id + '/' + action).then(function () {
                     article.remove(); // optimistic removal, then reload
-                    announce.textContent = action === 'ignore' ? 'Ignored ' + title : action === 'have-it' ? 'Marked ' + title + ' as Have it' : 'Restored ' + title;
+                    announce.textContent = action === 'Ignore' ? 'Ignored ' + title : action === 'HaveIt' ? 'Marked ' + title + ' as Have it' : 'Restored ' + title;
                     return load();
                 }).catch(function () {
                     button.disabled = false;

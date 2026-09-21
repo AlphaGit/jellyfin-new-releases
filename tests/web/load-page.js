@@ -44,7 +44,15 @@ function sandboxGlobals(fileName, overrides) {
             getPluginConfiguration: () => Promise.resolve({}),
             updatePluginConfiguration: () => Promise.resolve({}),
         },
-        Dashboard: { alert: () => {}, confirm: () => Promise.resolve(true), processPluginConfigurationUpdateResult: () => {} },
+        // `confirm` ignores its callback by default, so a destructive action is never taken
+        // unless a test opts in by overriding it.
+        Dashboard: {
+            alert: () => {},
+            confirm: () => Promise.resolve(true),
+            processPluginConfigurationUpdateResult: () => {},
+            showLoadingMsg: () => {},
+            hideLoadingMsg: () => {},
+        },
         // The pages pass `undefined` as the locale on purpose, so a Jellyfin user reads the
         // sentence in their own language. That makes the runtime's ambient locale an input, and
         // the assertions are English: without this the suite is green on an English machine and
