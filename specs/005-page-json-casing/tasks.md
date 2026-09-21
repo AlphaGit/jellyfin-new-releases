@@ -130,7 +130,7 @@ returns (`quickstart.md` pass 2 steps 1–4).
 - [X] T029 [US1] Rename `ReleasesController` routes to `[Route(PluginRoutes.Base)]` with `[HttpGet("Releases")]`, `[HttpGet("Artists")]`, `[HttpGet("Status")]`, `[HttpPost("Releases/{id:long}/Ignore")]`, `[HttpPost("Releases/{id:long}/HaveIt")]`, `[HttpPost("Releases/{id:long}/Restore")]` until T025 is green [U4] [U5] [U6] [U7] [U8]
 - [X] T030 [US1] Update `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` until T026 is green: the `API` literal becomes `'Plugins/NewReleases/'`, the request paths become `'Releases' + query()` and `'Artists'`, and the three `data-action` values become `Ignore`, `HaveIt`, `Restore`. Paths still go through `ApiClient.getUrl` (`FR-014`) [U39]
 - [ ] T031 [US1] Replace the stale `// Jellyfin serializes camelCase` comment in `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs` with a reference to `contracts/http-surface.md` — the naming is now stated to the host, not assumed in a comment
-- [ ] T032 [US1] Outer loop green before the story is complete: `A1`, `A2`, `A3`, `A4` and `A8` all pass against their fixtures, and `tdd/test-list.md` records each with its test [A1] [A2] [A3] [A4] [A8]
+- [X] T032 [US1] Outer loop green before the story is complete: `A1`, `A2`, `A3`, `A4` and `A8` all pass against their fixtures, and `tdd/test-list.md` records each with its test [A1] [A2] [A3] [A4] [A8]
 
 **Checkpoint**: the user view renders real data against a real response shape, and the empty state
 is still reachable.
@@ -161,7 +161,7 @@ each status value matches the API (`quickstart.md` pass 2 steps 5–8).
 - [X] T042 [US2] Add `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level on `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, with `using Jellyfin.Extensions.Json;`, until T033 is green [U9]
 - [X] T043 [US2] Rename `AdminController` routes to `[Route(PluginRoutes.Admin)]` with `[HttpGet("Status")]`, `[HttpPost("RunNow")]`, `[HttpPost("Purge")]`, `[HttpPost("ClearArchive")]` until T039 is green [U10] [U11] [U12]
 - [X] T044 [US2] Update `src/Jellyfin.Plugin.NewReleases/Web/admin.html` until T040 is green: the `API` literal becomes `'Plugins/NewReleases/Admin/'` and the three `confirmed(...)` call sites pass `RunNow`, `Purge`, `ClearArchive` [U50]
-- [ ] T045 [US2] Outer loop green before the story is complete: `A5`, `A6`, `A7` and `A8`'s administrator half all pass against their fixtures [A5] [A6] [A7]
+- [X] T045 [US2] Outer loop green before the story is complete: `A5`, `A6`, `A7` and `A8`'s administrator half all pass against their fixtures [A5] [A6] [A7]
 
 **Checkpoint**: the administrator page shows real values, and both JSON controllers state their
 naming.
@@ -270,6 +270,16 @@ verification.
 ---
 
 ## Notes
+
+- **`T032` and `T045` are ticked against `BASELINE` behaviours on purpose.** `/speckit-tdd-run`
+  phase 6 forbids ticking a task whose behaviour is `BASELINE`, but a characterization behaviour
+  terminates at `BASELINE` and can never reach `DONE`, so such a task could never be ticked at all.
+  `.specify/memory/tdd-profile.md` records this conflict in the `tdd` extension and the precedent
+  set by `002`: tick them, and do not "fix" it by promoting the behaviours to `DONE`, which would
+  falsify the record.
+- **`T001`-`T011` were completed by the loop** — the fixtures and `PluginRoutes` are prerequisites
+  no test could be written without — but they carry no behaviour marker, so the loop must not tick
+  them. They are done; `/speckit-implement` will find the files already present.
 
 - `[P]` = different files, no dependency on an incomplete task.
 - Commit after each task or logical group. Conventional Commits; no AI co-author trailer.
