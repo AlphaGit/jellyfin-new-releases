@@ -62,10 +62,12 @@ stacks:
       unit: tests/web/staleness.test.js
     helpers:
       - tests/web/load-page.js
+      - tests/web/fake-dom.js
+      - tests/web/fixtures.js
       - tests/web/fixed-clock.js
 verified: [single, file, suite]  # single: dotnet only; node's is null, see the note
 suite_baseline: green
-suite_seconds: 13
+suite_seconds: 13  # dotnet; the node suite is under a second
 ---
 
 # TDD Stack Profile
@@ -87,7 +89,11 @@ the tree is clean.
   `Class.Method` to hit exactly one test.
 - No live network calls in tests. External HTTP goes through `HttpClient` with a stubbed
   `HttpMessageHandler`; recorded, scrubbed bodies live in `tests/fixtures/<source>/` and are
-  copied to the test output as `fixtures/` (see the test csproj). Sibling project
+  copied to the test output as `fixtures/` (see the test csproj, which globs the whole tree, so a
+  new folder needs no csproj change). `tests/fixtures/pages/` is different in kind: those are
+  **synthetic** plugin responses, not recorded third-party ones, and they are the single artifact
+  the C# and node suites meet at — `ResponseNamingTests` asserts the server produces exactly those
+  names, `render.test.js` and `render-status.test.js` assert the pages read exactly those names. Sibling project
   `../jellyfin-concert-radar/tests/.../Support/` shows the shape of stub handler, fixture
   loader and temp SQLite helpers; port them into `tests/.../Support/` when first needed and
   add them to `helpers` here.
@@ -108,17 +114,30 @@ the tree is clean.
 - Tests live in `tests/web/*.test.js` and use `node:test` (`test`, `describe`) with `node:assert`
   in strict mode. No assertion library, no framework, no `package.json`.
 - One file per subject, named for it: `staleness.test.js` and `checked.test.js` hold the two
-  copies of the unit ladder (`user-view.html` and `admin.html`), `esc.test.js` the escaping, and
-  `page-helpers.test.js` what is left. The two ladder files are twins — change one page's ladder
+  copies of the unit ladder (`user-view.html` and `admin.html`), `esc.test.js` the escaping,
+  `page-helpers.test.js` what is left, `render.test.js` and `render-status.test.js` what each page
+  does with a real response, `requests.test.js` the paths each page sends, and `fake-dom.test.js`
+  the stand-in's own contract. The two ladder files are twins — change one page's ladder
   and the other must follow. Fixed instants and the `ago`/`ahead` helpers come from
   `tests/web/fixed-clock.js`; never redeclare them in a test file.
 - The embedded pages under `src/Jellyfin.Plugin.NewReleases/Web/` are not modules. Each exposes
   its pure helpers on `NewReleasesInternals` as the first statement of its IIFE; the recorded
   helper `tests/web/load-page.js` runs the page's script in a `node:vm` sandbox and returns them.
   Never hand-roll a second loader, and never read a page's source as text to assert on it.
-- Only the helpers that can be computed without a page are reachable this way. Anything that
-  reads or writes elements (`row`, `render`, `refreshStatus`, `read`, `fill`, `query`) needs a
-  simulated browser this project does not have; those stay manual.
+- **This project now has a stand-in browser**, added by `005-page-json-casing`:
+  `tests/web/fake-dom.js`, written here with no third-party library. `loadPageDom(file, overrides)`
+  returns the fake `document` alongside the helpers, and a page runs its initialization to
+  completion against it, so `render` and `renderStatus` are testable.
+  **What it covers**: the elements a page's own markup declares (an undeclared id answers `null`),
+  writes to `innerHTML` / `textContent` / `hidden` / `setAttribute` / `dataset` read back as
+  written, `insertAdjacentHTML('beforeend', …)` appends, and a test may invoke a listener the fake
+  recorded (that is how `pageshow` and the administrator page's action buttons are driven).
+  **What it does not**: it parses no markup, so an assertion on `innerHTML` proves what the page
+  *wrote*, never what a browser would render. Nothing is dispatched, nothing bubbles, no event
+  object is synthesized, and there is no traversal — so `closest`, and therefore the list page's
+  click handler, stays outside it. `row`, `read`, `fill` and `query` remain manual.
+  Full statement: `specs/005-page-json-casing/contracts/page-sandbox.md`. Do not read a passing
+  page test as proof of anything in the second list.
 
 ## Notes and constraints
 

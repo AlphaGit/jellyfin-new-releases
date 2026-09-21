@@ -39,6 +39,8 @@ Installed extensions (`specify extension list`; hooks in `.specify/extensions.ym
   `user-view.html` is a fragment served by `UserViewController` for Plugin Pages.
 - Tests: xunit + NSubstitute. No live network calls. Recorded responses go in `tests/fixtures/`,
   scrubbed of keys and PII.
+- HTTP surface: route naming, response field naming, and the one place the route prefix lives
+  are fixed by [`docs/http-surface.md`](docs/http-surface.md). Read it before adding an endpoint.
 - `TreatWarningsAsErrors` is on. Keep it on.
 
 ## Build

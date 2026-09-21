@@ -64,16 +64,16 @@ Built from `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs` and the name tables in
 [`data-model.md` §1.1](./data-model.md). Synthetic data only; no keys, no personal data
 (constitution III).
 
-- [ ] T001 [P] Create `tests/fixtures/pages/releases.json` — a `ListResponse` with one row of each `state` (`Missing`, `Incomplete`, `Upcoming`), the `Incomplete` row carrying `missingTracks` and `comparedEdition`, one row with `date: null`, one row carrying `archived.kind`, and every row carrying `sources[]`
-- [ ] T002 [P] Create `tests/fixtures/pages/releases-empty.json` — `hasStoredReleases: false`, `items: []`, `releasesLastCheckedAt: null`
-- [ ] T003 [P] Create `tests/fixtures/pages/releases-filtered.json` — `hasStoredReleases: true` with a single `items` entry, the shape a narrowed filter returns
-- [ ] T004 [P] Create `tests/fixtures/pages/releases-stale.json` — `hasStoredReleases: true` with a `releasesLastCheckedAt` older than its `refreshIntervalHours`
-- [ ] T005 [P] Create `tests/fixtures/pages/artists.json` — an `ArtistsResponse` with two `ArtistDto` entries
-- [ ] T006 [P] Create `tests/fixtures/pages/admin-status.json` — both sources (one `Ok` carrying a `lastError`, one `CoolingDown` with `cooldownUntil` and `lastError`), a completed `lastRun`, non-null `nextRunAt` and `releasesLastCheckedAt`, and two `unmatched[]` entries with per-source reasons and the hint
-- [ ] T007 [P] Create `tests/fixtures/pages/admin-status-quiet.json` — `unmatched: []`, `releasesLastCheckedAt: null`, `isRunning: true`
-- [ ] T008 [P] Create `tests/fixtures/pages/status.json` — a `StatusResponse`, read by no page but covered by `FR-010`
-- [ ] T009 Add `tests/fixtures/pages/` to the copy-to-output item group in `tests/Jellyfin.Plugin.NewReleases.Tests/Jellyfin.Plugin.NewReleases.Tests.csproj`, following the existing `tests/fixtures/<source>/` entry
-- [ ] T010 Record the new fixture folder and its purpose in `tests/fixtures/README.md`
+- [X] T001 [P] Create `tests/fixtures/pages/releases.json` — a `ListResponse` with one row of each `state` (`Missing`, `Incomplete`, `Upcoming`), the `Incomplete` row carrying `missingTracks` and `comparedEdition`, one row with `date: null`, one row carrying `archived.kind`, and every row carrying `sources[]`
+- [X] T002 [P] Create `tests/fixtures/pages/releases-empty.json` — `hasStoredReleases: false`, `items: []`, `releasesLastCheckedAt: null`
+- [X] T003 [P] Create `tests/fixtures/pages/releases-filtered.json` — `hasStoredReleases: true` with a single `items` entry, the shape a narrowed filter returns
+- [X] T004 [P] Create `tests/fixtures/pages/releases-stale.json` — `hasStoredReleases: true` with a `releasesLastCheckedAt` older than its `refreshIntervalHours`
+- [X] T005 [P] Create `tests/fixtures/pages/artists.json` — an `ArtistsResponse` with two `ArtistDto` entries
+- [X] T006 [P] Create `tests/fixtures/pages/admin-status.json` — both sources (one `Ok` carrying a `lastError`, one `CoolingDown` with `cooldownUntil` and `lastError`), a completed `lastRun`, non-null `nextRunAt` and `releasesLastCheckedAt`, and two `unmatched[]` entries with per-source reasons and the hint
+- [X] T007 [P] Create `tests/fixtures/pages/admin-status-quiet.json` — `unmatched: []`, `releasesLastCheckedAt: null`, `isRunning: true`
+- [X] T008 [P] Create `tests/fixtures/pages/status.json` — a `StatusResponse`, read by no page but covered by `FR-010`
+- [X] T009 ~~Add `tests/fixtures/pages/` to the copy-to-output item group~~ — no change needed: the test csproj already globs `..\..\tests\fixtures\**\*`, so the new folder is copied without editing it
+- [X] T010 Record the new fixture folder and its purpose in `tests/fixtures/README.md`
 
 **Checkpoint**: eight fixtures exist and reach the test output.
 
@@ -129,7 +129,7 @@ returns (`quickstart.md` pass 2 steps 1–4).
 - [X] T028 [US1] Add `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level on `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs`, with `using Jellyfin.Extensions.Json;`, until T015, T016 are green [U1] [U2]
 - [X] T029 [US1] Rename `ReleasesController` routes to `[Route(PluginRoutes.Base)]` with `[HttpGet("Releases")]`, `[HttpGet("Artists")]`, `[HttpGet("Status")]`, `[HttpPost("Releases/{id:long}/Ignore")]`, `[HttpPost("Releases/{id:long}/HaveIt")]`, `[HttpPost("Releases/{id:long}/Restore")]` until T025 is green [U4] [U5] [U6] [U7] [U8]
 - [X] T030 [US1] Update `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` until T026 is green: the `API` literal becomes `'Plugins/NewReleases/'`, the request paths become `'Releases' + query()` and `'Artists'`, and the three `data-action` values become `Ignore`, `HaveIt`, `Restore`. Paths still go through `ApiClient.getUrl` (`FR-014`) [U39]
-- [ ] T031 [US1] Replace the stale `// Jellyfin serializes camelCase` comment in `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs` with a reference to `contracts/http-surface.md` — the naming is now stated to the host, not assumed in a comment
+- [X] T031 [US1] Replace the stale `// Jellyfin serializes camelCase` comment in `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs` with a reference to `contracts/http-surface.md` — the naming is now stated to the host, not assumed in a comment
 - [X] T032 [US1] Outer loop green before the story is complete: `A1`, `A2`, `A3`, `A4` and `A8` all pass against their fixtures, and `tdd/test-list.md` records each with its test [A1] [A2] [A3] [A4] [A8]
 
 **Checkpoint**: the user view renders real data against a real response shape, and the empty state
@@ -209,14 +209,14 @@ the suite fails (`quickstart.md` pass 1 scenarios 1–6).
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T062 [P] Create `docs/http-surface.md` from [`contracts/http-surface.md`](./contracts/http-surface.md) — the convention a future author reads before adding an endpoint, with the route table and the exceptions list (`FR-011`)
-- [ ] T063 [P] Add a one-line link to `docs/http-surface.md` in the Conventions section of `CLAUDE.md`
+- [X] T062 [P] Create `docs/http-surface.md` from [`contracts/http-surface.md`](./contracts/http-surface.md) — the convention a future author reads before adding an endpoint, with the route table and the exceptions list (`FR-011`)
+- [X] T063 [P] Add a one-line link to `docs/http-surface.md` in the Conventions section of `CLAUDE.md`
 - [X] T064 [P] Amend `specs/001-track-new-releases/contracts/http-api.md` to the renamed routes, leaving field names, status codes, query parameters and ownership rules untouched (`FR-015`)
 - [X] T065 [P] Amend `specs/002-report-data-age/contracts/http-api.md` to the renamed routes, same constraint (`FR-015`)
-- [ ] T066 Record in `.specify/memory/tdd-profile.md`: `tests/web/fake-dom.js` joins the node `helpers` list, `tests/fixtures/pages/` joins the fixture conventions, and the page-side note that "anything that reads or writes elements needs a simulated browser this project does not have" is amended to name what the stand-in now covers and what it still does not (`FR-018`)
-- [ ] T067 [P] Add a `## Unreleased` entry to `CHANGELOG.md` covering the renamed HTTP surface and the stated response naming
-- [ ] T068 Run `dotnet build --configuration Release` (zero warnings), `dotnet test --configuration Release`, `node --test "tests/web/*.test.js"` and `LANG=de_DE.UTF-8 node --test "tests/web/*.test.js"`; all four green
-- [ ] T069 Run the remaining `quickstart.md` pass 1 mutants — scenarios 1, 4, 5 and 6 — each failing the suite and restored from a file copy verified with `cmp -s`
+- [X] T066 Record in `.specify/memory/tdd-profile.md`: `tests/web/fake-dom.js` joins the node `helpers` list, `tests/fixtures/pages/` joins the fixture conventions, and the page-side note that "anything that reads or writes elements needs a simulated browser this project does not have" is amended to name what the stand-in now covers and what it still does not (`FR-018`)
+- [X] T067 [P] Add a `## Unreleased` entry to `CHANGELOG.md` covering the renamed HTTP surface and the stated response naming
+- [X] T068 Run `dotnet build --configuration Release` (zero warnings), `dotnet test --configuration Release`, `node --test "tests/web/*.test.js"` and `LANG=de_DE.UTF-8 node --test "tests/web/*.test.js"`; all four green
+- [X] T069 Run the remaining `quickstart.md` pass 1 mutants — scenarios 1, 4, 5 and 6 — each failing the suite and restored from a file copy verified with `cmp -s`
 - [ ] T070 Push to `main` and verify the CI run green (`gh run watch`). Constitution: a feature is done when the CI run for that push is verified green, not when it is pushed
 - [ ] T071 `quickstart.md` pass 2 — the real-server pass on a running Jellyfin 12, all ten steps, recorded in `docs/` as `003`'s was. **JD's own pass.** `SC-001`, `SC-002`, `SC-003` and `SC-005` are met here, not by the suite. Anything it finds becomes its own specification
 
@@ -277,9 +277,9 @@ verification.
   `.specify/memory/tdd-profile.md` records this conflict in the `tdd` extension and the precedent
   set by `002`: tick them, and do not "fix" it by promoting the behaviours to `DONE`, which would
   falsify the record.
-- **`T001`-`T011` were completed by the loop** — the fixtures and `PluginRoutes` are prerequisites
-  no test could be written without — but they carry no behaviour marker, so the loop must not tick
-  them. They are done; `/speckit-implement` will find the files already present.
+- **`T001`-`T011` were completed by the TDD loop** — the fixtures and `PluginRoutes` are
+  prerequisites no test could be written without — but they carry no behaviour marker, so the loop
+  could not tick them. `/speckit-implement` verified them present and ticked them.
 
 - `[P]` = different files, no dependency on an incomplete task.
 - Commit after each task or logical group. Conventional Commits; no AI co-author trailer.

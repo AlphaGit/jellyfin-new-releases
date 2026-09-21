@@ -30,6 +30,17 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The plugin's endpoints now state the naming of their own JSON responses with
+  `[Produces(JsonDefaults.CamelCaseMediaType)]` instead of inheriting the host's default. On
+  Jellyfin 12 that default writes PascalCase, which both embedded pages could not read: the New
+  Releases view showed its empty state with releases stored, and every value on the administrator
+  page showed a dash.
+- Routes renamed to the convention Jellyfin uses for its own endpoints: PascalCase segments,
+  multi-word segments concatenated, and no `api` segment. `Plugins/NewReleases/api/admin/run-now`
+  becomes `Plugins/NewReleases/Admin/RunNow`, and so on for every route;
+  `Plugins/NewReleases/UserView` is unchanged. The prefix now has one authoritative source. No
+  released version served the old names.
+
 - **The plugin now runs on Jellyfin 12, and only on Jellyfin 12.** It targets `net10.0` and pins
   `Jellyfin.Controller`, `Jellyfin.Model`, `Jellyfin.Data` and `Jellyfin.Database.Implementations`
   to `12.0.0`. Nothing a user sees behaves differently.

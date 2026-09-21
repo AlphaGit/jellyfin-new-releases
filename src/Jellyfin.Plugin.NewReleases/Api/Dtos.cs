@@ -1,6 +1,11 @@
 namespace Jellyfin.Plugin.NewReleases.Api;
 
-// Wire shapes from specs/001-track-new-releases/contracts/http-api.md. Jellyfin serializes camelCase.
+// Wire shapes from specs/001-track-new-releases/contracts/http-api.md.
+//
+// The naming these reach a browser under is NOT a property of this file. It is stated by the
+// endpoint that returns them, with [Produces(JsonDefaults.CamelCaseMediaType)]; see
+// docs/http-surface.md rule 2. An earlier comment here asserted "Jellyfin serializes camelCase"
+// as though it were a fact about the host, and on Jellyfin 12 it was not.
 
 public sealed record ListResponse(
     IReadOnlyList<ReleaseDto> Items,
