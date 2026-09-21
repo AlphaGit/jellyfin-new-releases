@@ -183,12 +183,12 @@ the suite fails (`quickstart.md` pass 1 scenarios 1–6).
 > introduced another, every time because the fix was demonstrated with a single example chosen
 > after the implementation was written.
 
-- [ ] T046 [P] [US3] Write the failing `[Theory]` table for the naming-declaration rule in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/HttpSurfaceTests.cs` — a JSON action without the profile fails; an action producing no `application/json` type passes; an action inheriting the profile from its controller passes. Table first, no scanning code [U15] [U16] [U17]
-- [ ] T047 [US3] Write failing `HttpSurfaceTests.cs::EveryJsonAction_DeclaresTheCamelCaseProfile` — reflect over every public action on every `ControllerBase` in the plugin assembly and apply the rule from T046 (`FR-010`, `SC-004`) [U18]
-- [ ] T048 [P] [US3] Write the failing `[Theory]` table for the route-casing rule in `HttpSurfaceTests.cs` — a lower-case segment fails, an `api` segment fails, a PascalCase multi-word segment with no separator passes. Table first [U19] [U20] [U21]
-- [ ] T049 [US3] Write failing `HttpSurfaceTests.cs::EveryRoute_UsesPascalCaseSegmentsWithNoApiSegment` applying the rule from T048 to every route the plugin registers [U22]
-- [ ] T050 [P] [US3] Write the failing `[Theory]` table for the contract-document rule in `HttpSurfaceTests.cs` — a path the plugin does not serve fails, a path it does serve passes. Table first [U25] [U26]
-- [ ] T051 [US3] Write failing `HttpSurfaceTests.cs::NoContractDocument_NamesARouteThePluginDoesNotServe` — scan `specs/**/contracts/*.md` through `Support/RepositoryFiles.cs` and apply the rule from T050 (`SC-008`) [U27]
+- [X] T046 [P] [US3] Write the failing `[Theory]` table for the naming-declaration rule in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/HttpSurfaceTests.cs` — a JSON action without the profile fails; an action producing no `application/json` type passes; an action inheriting the profile from its controller passes. Table first, no scanning code [U15] [U16] [U17]
+- [X] T047 [US3] Write failing `HttpSurfaceTests.cs::EveryJsonAction_DeclaresTheCamelCaseProfile` — reflect over every public action on every `ControllerBase` in the plugin assembly and apply the rule from T046 (`FR-010`, `SC-004`) [U18]
+- [X] T048 [P] [US3] Write the failing `[Theory]` table for the route-casing rule in `HttpSurfaceTests.cs` — a lower-case segment fails, an `api` segment fails, a PascalCase multi-word segment with no separator passes. Table first [U19] [U20] [U21]
+- [X] T049 [US3] Write failing `HttpSurfaceTests.cs::EveryRoute_UsesPascalCaseSegmentsWithNoApiSegment` applying the rule from T048 to every route the plugin registers [U22]
+- [X] T050 [P] [US3] Write the failing `[Theory]` table for the contract-document rule in `HttpSurfaceTests.cs` — a path the plugin does not serve fails, a path it does serve passes. Table first [U25] [U26]
+- [X] T051 [US3] Write failing `HttpSurfaceTests.cs::NoContractDocument_NamesARouteThePluginDoesNotServe` — scan `specs/**/contracts/*.md` through `Support/RepositoryFiles.cs` and apply the rule from T050 (`SC-008`) [U27]
 - [X] T052 [US3] Write failing `HttpSurfaceTests.cs::BothEmbeddedPages_BuildTheirPathsFromPluginRoutes` — each page's `API` literal begins with `PluginRoutes.Base`, and the failure message names the page that has not followed [U23]
 - [X] T053 [US3] ~~Write failing `HttpSurfaceTests.cs::EveryPageRequestPath_ResolvesToARegisteredRoute`~~ — dropped in cycle 16 with `U24`; see `tdd/cycle-log.md`. `U39` and `U50` capture the real requests instead [U24]
 - [X] T054 [P] [US3] Add a failing `ResponseNamingTests.cs` case for `StatusResponse` against `tests/fixtures/pages/status.json` — read by no page, covered by `FR-010` [U3]
@@ -200,8 +200,8 @@ the suite fails (`quickstart.md` pass 1 scenarios 1–6).
 
 - [X] T058 [US3] Set `src/Jellyfin.Plugin.NewReleases/Api/UserViewController.cs`'s route to `[Route(PluginRoutes.UserView)]`, leaving the served path and its `[Produces("text/html")]` unchanged, until T055, T056 are green [U13] [U14]
 - [X] T059 [US3] Build the Plugin Pages payload in `src/Jellyfin.Plugin.NewReleases/Integration/PluginPagesRegistrationService.cs` from `PluginRoutes.UserViewAbsolute` instead of the raw literal, keeping the payload byte-identical, until T057 is green [U28]
-- [ ] T060 [US3] Record `UserViewController` in the exceptions table of [`contracts/http-surface.md`](./contracts/http-surface.md) — the one deliberate exception (`FR-012`, `SC-006`)
-- [ ] T061 [US3] Outer loop green before the story is complete: run the `A9` and `A10` mutants from `quickstart.md` pass 1 scenarios 2 and 3, confirm each fails the suite, restore from a file copy verified with `cmp -s`, and record both in `tdd/cycle-log.md`. **Never restore with `git checkout --`** [A9] [A10] [A11]
+- [X] T060 [US3] Record `UserViewController` in the exceptions table of [`contracts/http-surface.md`](./contracts/http-surface.md) — the one deliberate exception (`FR-012`, `SC-006`)
+- [X] T061 [US3] Outer loop green before the story is complete: run the `A9` and `A10` mutants from `quickstart.md` pass 1 scenarios 2 and 3, confirm each fails the suite, restore from a file copy verified with `cmp -s`, and record both in `tdd/cycle-log.md`. **Never restore with `git checkout --`** [A9] [A10] [A11]
 
 **Checkpoint**: every guard `spec.md` asks for is in the suite, and the two mutants prove it.
 
@@ -211,8 +211,8 @@ the suite fails (`quickstart.md` pass 1 scenarios 1–6).
 
 - [ ] T062 [P] Create `docs/http-surface.md` from [`contracts/http-surface.md`](./contracts/http-surface.md) — the convention a future author reads before adding an endpoint, with the route table and the exceptions list (`FR-011`)
 - [ ] T063 [P] Add a one-line link to `docs/http-surface.md` in the Conventions section of `CLAUDE.md`
-- [ ] T064 [P] Amend `specs/001-track-new-releases/contracts/http-api.md` to the renamed routes, leaving field names, status codes, query parameters and ownership rules untouched (`FR-015`)
-- [ ] T065 [P] Amend `specs/002-report-data-age/contracts/http-api.md` to the renamed routes, same constraint (`FR-015`)
+- [X] T064 [P] Amend `specs/001-track-new-releases/contracts/http-api.md` to the renamed routes, leaving field names, status codes, query parameters and ownership rules untouched (`FR-015`)
+- [X] T065 [P] Amend `specs/002-report-data-age/contracts/http-api.md` to the renamed routes, same constraint (`FR-015`)
 - [ ] T066 Record in `.specify/memory/tdd-profile.md`: `tests/web/fake-dom.js` joins the node `helpers` list, `tests/fixtures/pages/` joins the fixture conventions, and the page-side note that "anything that reads or writes elements needs a simulated browser this project does not have" is amended to name what the stand-in now covers and what it still does not (`FR-018`)
 - [ ] T067 [P] Add a `## Unreleased` entry to `CHANGELOG.md` covering the renamed HTTP surface and the stated response naming
 - [ ] T068 Run `dotnet build --configuration Release` (zero warnings), `dotnet test --configuration Release`, `node --test "tests/web/*.test.js"` and `LANG=de_DE.UTF-8 node --test "tests/web/*.test.js"`; all four green

@@ -9,7 +9,7 @@ Base: `/Plugins/NewReleases`
 
 ## User endpoints (`ReleasesController`, any authenticated user)
 
-### GET `/api/releases`
+### GET `/Releases`
 
 Lists releases visible to the caller (FR-007, FR-008, FR-015).
 
@@ -67,7 +67,7 @@ Response `200`:
 - Rows whose artist is in no library the caller may access are omitted; if the caller can
   access no music library the response is an empty list, not an error.
 
-### GET `/api/artists`
+### GET `/Artists`
 
 Library artists visible to the caller, for the artist filter.
 
@@ -75,7 +75,7 @@ Library artists visible to the caller, for the artist filter.
 { "items": [ { "jellyfinId": "b2c3…", "name": "Daft Punk" } ] }
 ```
 
-### POST `/api/releases/{id}/ignore` · POST `/api/releases/{id}/have-it` · POST `/api/releases/{id}/restore`
+### POST `/Releases/{id}/Ignore` · POST `/Releases/{id}/HaveIt` · POST `/Releases/{id}/Restore`
 
 Record or remove a decision (FR-005b, FR-016). `ignore` and `have-it` upsert the decision for
 the release's natural key with the caller's user id; `restore` deletes it.
@@ -87,7 +87,7 @@ the release's natural key with the caller's user id; `restore` deletes it.
 | release not visible to the caller (library access) | `403` |
 | no user id claim | `401` |
 
-### GET `/api/status`
+### GET `/Status`
 
 Small status for the fragment header (also embedded in the list response; kept for polling).
 
@@ -97,7 +97,7 @@ Small status for the fragment header (also embedded in the list response; kept f
 
 ## Admin endpoints (`AdminController`, `Policies.RequiresElevation`)
 
-### GET `/api/admin/status`
+### GET `/Admin/Status`
 
 ```json
 {
@@ -129,18 +129,18 @@ last run and the age of the data diverge.
 Field names and the meaning of `releasesLastCheckedAt` are settled by
 `specs/002-report-data-age/contracts/http-api.md`.
 
-### POST `/api/admin/run-now`
+### POST `/Admin/RunNow`
 
 Queues "Refresh new releases" via `ITaskManager.QueueScheduledTask<RefreshNewReleasesTask>()`.
 `202 Accepted`. If Jellyfin reports the task already running, `409 Conflict` with
 `{ "message": "A refresh is already running." }`.
 
-### POST `/api/admin/purge`
+### POST `/Admin/Purge`
 
 Deletes all `release`, `source_entry`, `edition` rows and resets `artist_source.resume_offset`.
 Leaves `decision`, `library_artist`, `artist_source` match status. `204`.
 
-### POST `/api/admin/clear-archive`
+### POST `/Admin/ClearArchive`
 
 Deletes all `decision` rows. `204`.
 

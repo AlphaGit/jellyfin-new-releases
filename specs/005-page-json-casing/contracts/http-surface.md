@@ -39,8 +39,14 @@ Returned object fields are therefore camelCase, at every level of nesting.
 
 > For every public action on every `ControllerBase` subclass in the plugin assembly, the effective
 > produced content types — the action's `ProducesAttribute` if present, otherwise its controller's
-> — MUST either contain `JsonDefaults.CamelCaseMediaType`, or contain no `application/json` type
-> at all.
+> — MUST be **non-empty**, and MUST either contain `JsonDefaults.CamelCaseMediaType` or contain no
+> `application/json` type at all.
+
+**The non-empty clause is the whole rule, not a detail.** An endpoint that declares nothing is an
+endpoint that inherits whatever the host does, which is the defect. The first version of this rule
+omitted it and a deliberate mutant proved the omission: with the declaration removed from
+`AdminController`, the scan still passed. Recorded in `specs/005-page-json-casing/tdd/cycle-log.md`,
+cycle 37.
 
 ## Rule 3 — The route prefix has one authoritative source
 

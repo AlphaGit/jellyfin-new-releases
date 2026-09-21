@@ -358,3 +358,64 @@ nothing asserted them: `U39` captures the two GET requests, and the POST path is
   this behaviour had to prove is that the narrowed response still renders. Mutant A above fails it
   along with the rest
 - green: no production change. Node suite -> 64 passed
+
+## Cycles 37 to 40: U15 to U22 — the naming and casing rules, and the scans that apply them
+
+- tests: `Api/HttpSurfaceTests.cs` gained two `[Theory]` tables and two scans. Both tables were
+  written from the requirement **before** either predicate existed, per the profile's standing rule
+- red: the tables constrain their predicates on both sides, so a predicate that always answers
+  `true` fails the rejecting rows. The two scans passed on their first run, because cycles 1 to 12
+  had already made the surface correct; each was therefore verified with a deliberate mutant
+
+### The mutant that mattered: the naming rule as first written was worthless
+
+- **U18 mutant, first attempt**: `[Produces(JsonDefaults.CamelCaseMediaType)]` removed from
+  `AdminController` -> `Passed! Failed: 0, Passed: 1`. **The scan did not notice.**
+- Cause: the rule read "carries the camelCase profile, or carries no `application/json` type at
+  all". An endpoint that declares **nothing** has no `application/json` type, so it passed — and
+  declaring nothing is exactly how an endpoint inherits the host default. The rule had a hole
+  shaped like the defect it was written to catch
+- Fix, taken as its own step before any production change, per forbidden shortcut 2: the predicate
+  now also requires the effective declaration to be non-empty, and the table row
+  `[InlineData(true)]` (declares nothing) became `[InlineData(false)]` with the reason beside it
+- **U18 mutant, after the fix**: same removal ->
+  `Assert.Empty() Failure: Collection was not empty`,
+  `["AdminController.RunNow", "AdminController.GetStatusAsync", "AdminController.PurgeAsync", "AdminController.ClearArchiveAsync"]`.
+  Restored from a file copy, verified with `cmp -s`
+- `contracts/http-surface.md` rule 2 is corrected to match, with the hole named
+
+### U22
+
+- **mutant**: `[HttpPost("ClearArchive")]` back to `[HttpPost("clear-archive")]` ->
+  `Assert.Empty() Failure: Collection was not empty`,
+  `["POST Plugins/NewReleases/Admin/clear-archive"]`. Restored, verified with `cmp -s`
+
+## Cycles 41 to 43: U25 to U27 — no contract names a route the plugin does not serve
+
+- tests: `Api/HttpSurfaceTests.cs::TheDocumentRule_AcceptsOnlyPathsThePluginActuallyServes` (nine
+  rows, both sides, written first) and `::NoContractDocument_NamesARouteThePluginDoesNotServe`
+- red: the scan failed on `specs/001-track-new-releases/contracts/http-api.md`, which still named
+  `/api/releases` and eight more
+- **a defect in the test itself, found before the green**: the scan normalised `written.Value`, the
+  whole regex match **including its backticks**, so every path was an offender — the correct ones
+  too. The table passed throughout because it calls the predicate directly. Fixed to
+  `written.Groups[1].Value`; without that fix the scan would have been a permanent red that says
+  nothing, which is as useless as a permanent green
+- green: `001`'s and `002`'s API contracts amended to the renamed routes (`FR-015`). `003`'s
+  registration contract needed no change: `/Plugins/NewReleases/UserView` is unchanged.
+  Suite -> 303 passed, 0 failed
+- **mutant**: one amended path in `001` reverted to `/api/admin/run-now` ->
+  `specs/001-track-new-releases/contracts/http-api.md: /api/admin/run-now`. Restored, verified with `cmp -s`
+- notes: a document may state the base its paths are relative to (`Base: /Plugins/NewReleases`).
+  That is a prefix, not a route, and the scan skips a path that normalises to exactly the base
+- refactor: both scans report through `Assert.True(offenders.Count == 0, string.Join(...))` rather
+  than `Assert.Empty`, which truncated the list and hid which document was at fault
+
+## A9 and A10: the suite notices, proved by mutant
+
+- **A9** (renaming the server's responses the way Jellyfin 12 renamed them fails at least one test):
+  cycles 2, 3 and 4. Removing the declaration makes the host default write PascalCase, and the
+  `ResponseNamingTests` cases fail with the exact name-set difference
+- **A10** (changing a page to read a field the server does not send fails at least one test):
+  cycles 25 to 34, mutant A — `data.HasStoredReleases` fails 8 of 12 render behaviours — and
+  mutant C, which fails all 11 administrator behaviours

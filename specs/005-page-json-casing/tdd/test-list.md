@@ -66,8 +66,8 @@ One per acceptance scenario in `spec.md`.
 | A6 | The administrator page shows each source's health, calls today, daily budget, cooldown and last error | US2-AS2 | characterization | BASELINE | `tests/web/render-status.test.js::each source shows its health, calls today and daily budget` |
 | A7 | The administrator page lists the artists no source matched, each with its reason and the hint | US2-AS3 | characterization | BASELINE | `tests/web/render-status.test.js::every artist no source matched is listed with its reasons and the hint` |
 | A8 | With data older than one refresh interval, both pages show `002`'s staleness wording | US2-AS4 | example | BASELINE | `tests/web/render.test.js::with an instant older than the refresh interval the staleness sentence appears` |
-| A9 | Renaming the server's responses the way Jellyfin 12 renamed them fails at least one test | US3-AS1 | example | PENDING | |
-| A10 | Changing a page to read a field the server does not send fails at least one test | US3-AS2 | example | PENDING | |
+| A9 | Renaming the server's responses the way Jellyfin 12 renamed them fails at least one test | US3-AS1 | example | DONE | cycles 2-4 mutants, recorded in `tdd/cycle-log.md` |
+| A10 | Changing a page to read a field the server does not send fails at least one test | US3-AS2 | example | DONE | cycles 25-34 mutants A and C, recorded in `tdd/cycle-log.md` |
 | A11 | The decision between the list and the empty state is exercised against a response of the shape the server really produces | US3-AS3 | characterization | BASELINE | `tests/web/render.test.js::with no stored releases the panel holds the waiting message` |
 
 `A3` is `example`, not characterization: the filters build a query string the server already
@@ -123,19 +123,19 @@ the fix was demonstrated with a single example chosen after the implementation w
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U15 | An action whose effective produced types include an `application/json` type without the camelCase profile fails the rule | FR-010, SC-004 | example | PENDING | |
-| U16 | An action whose effective produced types include no `application/json` type passes the rule | FR-010, FR-012 | example | PENDING | |
-| U17 | An action that inherits the camelCase profile from its controller rather than declaring its own passes the rule | FR-010 | example | PENDING | |
-| U18 | Every action on every `ControllerBase` in the plugin assembly satisfies the rule | FR-010, SC-004 | example | PENDING | |
-| U19 | A route segment that is lower-case fails the casing rule | FR-016, SC-006 | example | PENDING | |
-| U20 | A route segment named `api` fails the casing rule | FR-016, SC-006 | example | PENDING | |
-| U21 | A PascalCase multi-word segment with no separator passes the casing rule | FR-016, SC-006 | example | PENDING | |
-| U22 | Every route the plugin registers satisfies the casing rule | FR-016, SC-006 | example | PENDING | |
+| U15 | An action whose effective produced types include an `application/json` type without the camelCase profile fails the rule | FR-010, SC-004 | example | DONE | `Api/HttpSurfaceTests.cs::TheNamingRule_AcceptsOnlyJsonThatCarriesTheCamelCaseProfile` |
+| U16 | An action whose effective produced types include no `application/json` type passes the rule | FR-010, FR-012 | example | DONE | `Api/HttpSurfaceTests.cs::TheNamingRule_AcceptsOnlyJsonThatCarriesTheCamelCaseProfile` |
+| U17 | An action that inherits the camelCase profile from its controller rather than declaring its own passes the rule | FR-010 | example | DONE | `Api/HttpSurfaceTests.cs::AnActionWithNoProducesOfItsOwn_InheritsItsControllersDeclaration` |
+| U18 | Every action on every `ControllerBase` in the plugin assembly satisfies the rule | FR-010, SC-004 | example | DONE | `Api/HttpSurfaceTests.cs::EveryActionThatReturnsJson_DeclaresTheCamelCaseProfile` |
+| U19 | A route segment that is lower-case fails the casing rule | FR-016, SC-006 | example | DONE | `Api/HttpSurfaceTests.cs::TheCasingRule_AcceptsOnlyPascalCaseSegmentsAndNoApiSegment` |
+| U20 | A route segment named `api` fails the casing rule | FR-016, SC-006 | example | DONE | `Api/HttpSurfaceTests.cs::TheCasingRule_AcceptsOnlyPascalCaseSegmentsAndNoApiSegment` |
+| U21 | A PascalCase multi-word segment with no separator passes the casing rule | FR-016, SC-006 | example | DONE | `Api/HttpSurfaceTests.cs::TheCasingRule_AcceptsOnlyPascalCaseSegmentsAndNoApiSegment` |
+| U22 | Every route the plugin registers satisfies the casing rule | FR-016, SC-006 | example | DONE | `Api/HttpSurfaceTests.cs::EveryRouteThePluginServes_UsesPascalCaseSegmentsAndNoApiSegment` |
 | U23 | Each embedded page's `API` literal is exactly the prefix its endpoints are served under, and the failure names the page that has not followed | FR-013, SC-007 | example | DONE | `Api/HttpSurfaceTests.cs::EachEmbeddedPage_BuildsItsPathsFromThePrefixItsEndpointsAreServedUnder` |
 | U24 | Every request path literal either page sends resolves to a route the plugin registers | FR-013, FR-014 | example | DROPPED | dropped in cycle 16: source extraction is unreliable; `U39` and `U50` capture the real requests instead |
-| U25 | A path written in a contract document that the plugin does not serve fails the document rule | FR-015, SC-008 | example | PENDING | |
-| U26 | A path written in a contract document that the plugin does serve passes the document rule | FR-015, SC-008 | example | PENDING | |
-| U27 | No `specs/**/contracts/*.md` names a route the plugin does not serve | FR-015, SC-008 | example | PENDING | |
+| U25 | A path written in a contract document that the plugin does not serve fails the document rule | FR-015, SC-008 | example | DONE | `Api/HttpSurfaceTests.cs::TheDocumentRule_AcceptsOnlyPathsThePluginActuallyServes` |
+| U26 | A path written in a contract document that the plugin does serve passes the document rule | FR-015, SC-008 | example | DONE | `Api/HttpSurfaceTests.cs::TheDocumentRule_AcceptsOnlyPathsThePluginActuallyServes` |
+| U27 | No `specs/**/contracts/*.md` names a route the plugin does not serve | FR-015, SC-008 | example | DONE | `Api/HttpSurfaceTests.cs::NoContractDocument_NamesARouteThePluginDoesNotServe` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Integration/PluginPagesRegistrationService.cs`
 

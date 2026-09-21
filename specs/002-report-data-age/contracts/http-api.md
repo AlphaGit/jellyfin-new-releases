@@ -14,7 +14,7 @@ Only the fields below change; every other field, route, status code and authoriz
 Both names change in every response that carries them. No alias is kept: the only consumers are
 this plugin's own embedded pages, which ship in the same assembly.
 
-## GET `/Plugins/NewReleases/api/releases`
+## GET `/Plugins/NewReleases/Releases`
 
 ```json
 {
@@ -35,7 +35,7 @@ this plugin's own embedded pages, which ship in the same assembly.
 `releasesLastCheckedAt` is `null`, never absent, when there is no value. A run that reached no
 source leaves it unchanged (`FR-003`).
 
-## GET `/Plugins/NewReleases/api/status`
+## GET `/Plugins/NewReleases/Status`
 
 ```json
 { "hasStoredReleases": true, "releasesLastCheckedAt": "…", "refreshIntervalHours": 24, "isRunning": false }
@@ -44,7 +44,7 @@ source leaves it unchanged (`FR-003`).
 Both fields MUST equal the values the list response returns for the same caller at the same
 instant (`FR-011`). They come from the same repository call, not a second derivation.
 
-## GET `/Plugins/NewReleases/api/admin/status`
+## GET `/Plugins/NewReleases/Admin/Status`
 
 Adds one field to `001`'s response; nothing is removed.
 
