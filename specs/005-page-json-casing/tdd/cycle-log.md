@@ -52,3 +52,31 @@ stands in for one. Recorded here so the audit does not read those cycles as test
 The smaller alternative — an action-level attribute per endpoint — was rejected: `FR-010` requires
 every endpoint that returns a body to declare the naming, including ones added later, and a
 class-level declaration is what makes a new action inherit it rather than silently omit it.
+
+## Cycle 2: U2 the artists response carries the names the artist filter reads
+
+- test: `Api/ResponseNamingTests.cs::ArtistsResponse_AsTheArtistsEndpointDeclaresIt_CarriesTheNamesTheArtistFilterReads` (new), with `tests/fixtures/pages/artists.json` (new)
+- red: **passed on the first run**, as cycle 1's note predicted — the class-level declaration that
+  made `U1` pass covers every response this controller returns. Deliberate-mutant check per the
+  playbook: removed `[Produces(JsonDefaults.CamelCaseMediaType)]` from
+  `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs` ->
+  `Assert.Equal() Failure: Collections differ`,
+  Expected `[""] = ["items"], ["items[]"] = ["jellyfinId", "name"]`,
+  Actual `[""] = ["Items"], ["Items[]"] = ["JellyfinId", "Name"]` (1 failed)
+- green: mutant restored from a file copy, verified with `cmp -s`. Suite
+  `dotnet test --configuration Release` -> 259 passed, 0 failed. No production change in this cycle
+- refactor: none needed
+- commit: see below
+
+## Cycle 3: U3 the small status response carries the names its contract records
+
+- test: `Api/ResponseNamingTests.cs::StatusResponse_AsTheStatusEndpointDeclaresIt_CarriesTheNamesItsContractRecords` (new), with `tests/fixtures/pages/status.json` (new)
+- red: passed on the first run, same reason as cycle 2. Deliberate mutant, same removal ->
+  Expected `[""] = ["hasStoredReleases", "isRunning", "refreshIntervalHours", "releasesLastCheckedAt"]`,
+  Actual `[""] = ["HasStoredReleases", "IsRunning", "RefreshIntervalHours", "ReleasesLastCheckedAt"]`
+  (1 failed)
+- green: mutant restored from a file copy, verified with `cmp -s`. No production change in this cycle
+- refactor: none needed
+- notes: no page reads this response. It is covered because `FR-010` is one rule over every endpoint
+  that returns a body, deliberately without a judgement about which bodies matter
+- commit: see below

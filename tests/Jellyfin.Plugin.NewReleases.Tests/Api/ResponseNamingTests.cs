@@ -26,6 +26,30 @@ public class ResponseNamingTests
         Assert.Equal(NamesByPath(Fixture("releases.json")), NamesByPath(written));
     }
 
+    [Fact]
+    public void ArtistsResponse_AsTheArtistsEndpointDeclaresIt_CarriesTheNamesTheArtistFilterReads()
+    {
+        var artists = new ArtistsResponse(new[] { new ArtistDto(Guid.NewGuid(), "Chromatics"), new ArtistDto(Guid.NewGuid(), "Desire") });
+
+        var written = Serialize(typeof(ReleasesController), artists);
+
+        Assert.Equal(NamesByPath(Fixture("artists.json")), NamesByPath(written));
+    }
+
+    /// <summary>
+    /// No page reads this response. `FR-010` covers it all the same: one rule, no judgement about
+    /// which bodies matter, so the endpoint that returns it declares its naming like the rest.
+    /// </summary>
+    [Fact]
+    public void StatusResponse_AsTheStatusEndpointDeclaresIt_CarriesTheNamesItsContractRecords()
+    {
+        var status = new StatusResponse(true, DateTimeOffset.UnixEpoch, 24, false);
+
+        var written = Serialize(typeof(ReleasesController), status);
+
+        Assert.Equal(NamesByPath(Fixture("status.json")), NamesByPath(written));
+    }
+
     /// <summary>
     /// A <see cref="ListResponse"/> covering every name the list page reads: one row of each state,
     /// one carrying missing tracks and a compared edition, one undated, one archived. Fields the

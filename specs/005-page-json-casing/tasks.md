@@ -111,7 +111,7 @@ returns (`quickstart.md` pass 2 steps 1–4).
 > for the right reason and that it fails under the T060 mutant.
 
 - [X] T015 [P] [US1] Write failing `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ResponseNamingTests.cs` with the options-resolution helper (effective `[Produces]` → `CamelCaseOptions` / `PascalCaseOptions` / `JsonDefaults.Options`) and its first case: `ListResponse` serialized through `ReleasesController`'s declaration carries the names in `tests/fixtures/pages/releases.json`, at every nesting level [U1]
-- [ ] T016 [P] [US1] Add failing `ResponseNamingTests.cs` case for `ArtistsResponse` against `tests/fixtures/pages/artists.json` [U2]
+- [X] T016 [P] [US1] Add failing `ResponseNamingTests.cs` case for `ArtistsResponse` against `tests/fixtures/pages/artists.json` [U2]
 - [ ] T017 [US1] Write failing `tests/web/render.test.js` — `render` with `tests/fixtures/pages/releases.json` writes a row per item, and writes no "waiting for its first refresh" message [U29] [U30]
 - [ ] T018 [US1] Add failing `render.test.js` cases for `tests/fixtures/pages/releases-empty.json` — the message appears and no row does [U31] [U32]
 - [ ] T019 [US1] Add a failing `render.test.js` case for stored releases with an empty `items` — "Nothing missing for this selection." [U33]
@@ -191,7 +191,7 @@ the suite fails (`quickstart.md` pass 1 scenarios 1–6).
 - [ ] T051 [US3] Write failing `HttpSurfaceTests.cs::NoContractDocument_NamesARouteThePluginDoesNotServe` — scan `specs/**/contracts/*.md` through `Support/RepositoryFiles.cs` and apply the rule from T050 (`SC-008`) [U27]
 - [ ] T052 [US3] Write failing `HttpSurfaceTests.cs::BothEmbeddedPages_BuildTheirPathsFromPluginRoutes` — each page's `API` literal begins with `PluginRoutes.Base`, and the failure message names the page that has not followed [U23]
 - [ ] T053 [US3] Write failing `HttpSurfaceTests.cs::EveryPageRequestPath_ResolvesToARegisteredRoute` — every request path literal either page sends resolves to a route the plugin registers [U24]
-- [ ] T054 [P] [US3] Add a failing `ResponseNamingTests.cs` case for `StatusResponse` against `tests/fixtures/pages/status.json` — read by no page, covered by `FR-010` [U3]
+- [X] T054 [P] [US3] Add a failing `ResponseNamingTests.cs` case for `StatusResponse` against `tests/fixtures/pages/status.json` — read by no page, covered by `FR-010` [U3]
 - [ ] T055 [US3] Write failing `HttpSurfaceTests.cs::UserViewController_DeclaresTextHtmlAndNoJsonProfile` — the one endpoint the naming rule exempts, and the only entry in the exceptions table [U14]
 - [ ] T056 [US3] Write failing `HttpSurfaceTests.cs::UserViewController_ServesPluginRoutesUserView` — the route is `PluginRoutes.UserView` and the served path is still `Plugins/NewReleases/UserView` [U13]
 - [ ] T057 [US3] Write failing `Integration/PluginPagesRegistrationTests.cs::PageEntryUrl_EqualsPluginRoutesUserViewAbsolute` alongside the existing literal assertion, which stays [U28]

@@ -86,8 +86,8 @@ is repeated against a real Jellyfin 12 server in `tasks.md` T054, which is where
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U1 | The naming produced by this controller's declared media type writes `ListResponse` with the names `tests/fixtures/pages/releases.json` carries, at every nesting level | FR-003, FR-006, SC-004 | example | DONE | `Api/ResponseNamingTests.cs::ListResponse_AsTheReleasesEndpointDeclaresIt_CarriesTheNamesTheListPageReads` |
-| U2 | The same declaration writes `ArtistsResponse` with the names `tests/fixtures/pages/artists.json` carries | FR-003, FR-006 | example | PENDING | |
-| U3 | The same declaration writes `StatusResponse` with the names `tests/fixtures/pages/status.json` carries, though no page reads it | FR-010 | example | PENDING | |
+| U2 | The same declaration writes `ArtistsResponse` with the names `tests/fixtures/pages/artists.json` carries | FR-003, FR-006 | example | DONE | `Api/ResponseNamingTests.cs::ArtistsResponse_AsTheArtistsEndpointDeclaresIt_CarriesTheNamesTheArtistFilterReads` |
+| U3 | The same declaration writes `StatusResponse` with the names `tests/fixtures/pages/status.json` carries, though no page reads it | FR-010 | example | DONE | `Api/ResponseNamingTests.cs::StatusResponse_AsTheStatusEndpointDeclaresIt_CarriesTheNamesItsContractRecords` |
 | U4 | `GET Plugins/NewReleases/Releases` is the registered route for the list | FR-016 | example | PENDING | |
 | U5 | `GET Plugins/NewReleases/Artists` is the registered route for the artist filter | FR-016 | example | PENDING | |
 | U6 | `GET Plugins/NewReleases/Status` is the registered route for the small status | FR-016 | example | PENDING | |
