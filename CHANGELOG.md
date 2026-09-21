@@ -3,7 +3,27 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## Unreleased
+## 0.1.1 — 2026-09-20
+
+### Fixed
+
+- **Both embedded pages were unusable on Jellyfin 12 and now work.** The plugin never stated how
+  its own JSON responses should be named, so it inherited the host's default; on Jellyfin 12 that
+  default writes PascalCase, which neither page could read. The New Releases view showed "No data
+  yet" with releases stored, and every value on the administrator page showed a dash. Each endpoint
+  now declares its naming with `[Produces(JsonDefaults.CamelCaseMediaType)]`, so a later change to
+  the host's default cannot silently blank the pages again.
+
+### Changed
+
+- Routes renamed to the convention Jellyfin uses for its own endpoints: PascalCase segments,
+  multi-word segments concatenated, and no `api` segment. `Plugins/NewReleases/api/admin/run-now`
+  becomes `Plugins/NewReleases/Admin/RunNow`, and so on for every route;
+  `Plugins/NewReleases/UserView` is unchanged. The prefix now has one authoritative source, and
+  `docs/http-surface.md` records the convention. **No installed client is affected**: only the
+  plugin's own pages call these paths.
+
+## 0.1.0 — 2026-09-20
 
 ### Added
 
@@ -29,17 +49,6 @@ All notable changes to this project are documented here. The format follows
   version it supports, so no older server is offered a build it cannot load.
 
 ### Changed
-
-- The plugin's endpoints now state the naming of their own JSON responses with
-  `[Produces(JsonDefaults.CamelCaseMediaType)]` instead of inheriting the host's default. On
-  Jellyfin 12 that default writes PascalCase, which both embedded pages could not read: the New
-  Releases view showed its empty state with releases stored, and every value on the administrator
-  page showed a dash.
-- Routes renamed to the convention Jellyfin uses for its own endpoints: PascalCase segments,
-  multi-word segments concatenated, and no `api` segment. `Plugins/NewReleases/api/admin/run-now`
-  becomes `Plugins/NewReleases/Admin/RunNow`, and so on for every route;
-  `Plugins/NewReleases/UserView` is unchanged. The prefix now has one authoritative source. No
-  released version served the old names.
 
 - **The plugin now runs on Jellyfin 12, and only on Jellyfin 12.** It targets `net10.0` and pins
   `Jellyfin.Controller`, `Jellyfin.Model`, `Jellyfin.Data` and `Jellyfin.Database.Implementations`
