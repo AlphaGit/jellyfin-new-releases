@@ -74,9 +74,11 @@ these paths. The field naming is *not* superseded — `001` already specifies `i
 - Q: Is this a Jellyfin 12 bug or ours? → A: Ours. The plugin never states how its own responses
   should be named and inherits whatever the host does. A host is entitled to change that; a plugin
   that silently depends on it is the thing at fault.
-- Q: Scope — the two fields observed failing, or all of them? → A: All. Twenty-four distinct field
-  names are read across the two pages and every one is affected. Fixing the observed two would
-  leave the same defect everywhere else.
+- Q: Scope — the two fields observed failing, or all of them? → A: All. Every distinct field name
+  read across the two pages is affected. Fixing the observed two would leave the same defect
+  everywhere else. The count was estimated at twenty-four when this question was answered; the
+  mechanical enumeration `FR-002` requires later measured **thirty-seven**, and the enumeration
+  governs.
 - Q: How wide should the naming declaration be — every endpoint with a body, only the four the pages read, or all endpoints including empty ones? → A: Every endpoint that returns a body, read or not. One rule, no judgement about which bodies matter, and the check for it stays structural rather than a curated list that ages.
 - Q: Should this feature stop at the naming, or settle the plugin's HTTP surface generally? → A: Settle it generally. Adopt one standard for the plugin's HTTP surface — resource naming, casing, and object property names — and hold to it, rather than fixing one symptom. Build paths through the host's own facility for relative URLs instead of writing them out.
 - Q: Which standard — follow Jellyfin's own surface, use the wider REST convention, or keep both shapes and record the boundary? → A: Follow Jellyfin's own surface. PascalCase route segments and camelCase returned fields, matching the host's first-party endpoints, so the plugin reads as part of the server rather than a visitor on it.
@@ -170,7 +172,7 @@ defect whose cause is still present.
   share the list's fate.
 - **A host that changes naming again.** The fix must not merely match Jellyfin 12; it must remove
   the plugin's silent dependence on whatever the host happens to do.
-- **The fields no observation covered.** Twenty-four are read; only a handful were seen failing.
+- **The fields no observation covered.** Thirty-seven are read; only a handful were seen failing.
   The rest must be established, not presumed correct.
 
 ## Requirements *(mandatory)*
@@ -208,9 +210,11 @@ defect whose cause is still present.
   name theirs.
 - **FR-012**: Every existing route and returned object MUST conform to that convention, or be
   recorded as a deliberate exception with its reason.
-- **FR-013**: The route prefix MUST have a single source rather than being written out in each
-  controller, each page, and the registration payload. Where a path must be server-absolute, that
-  MUST be derived from the same source rather than written again.
+- **FR-013**: The route prefix MUST have a single authoritative source. Every controller and the
+  registration payload MUST read it from there rather than restating it, and where a path must be
+  server-absolute, that MUST be derived from the same source rather than written again. The
+  embedded pages are static resources with no build step, so each MAY hold one derived literal;
+  where it does, a test MUST fail when that literal and the authoritative source disagree.
 - **FR-014**: Request paths MUST continue to be built through the host's facility for relative
   URLs. No page may construct a path that assumes a server address or a deployment sub-path.
 - **FR-015**: The API contracts of `001` and `002` MUST be amended to the renamed routes, so no
@@ -242,14 +246,15 @@ defect whose cause is still present.
   state. Both verified against a real server.
 - **SC-002**: Every status value on the administrator page shows a real value after a completed
   refresh; none shows a dash.
-- **SC-003**: All 24 field names read by the two pages resolve against a real response.
+- **SC-003**: All 37 field names read by the two pages resolve against a real response.
 - **SC-004**: Removing the naming declaration from any of the plugin's JSON endpoints fails the
   suite.
 - **SC-005**: 100% of the acceptance scenarios specified for `001` and `002` that concern the
   pages hold on Jellyfin 12.
 - **SC-006**: Every route the plugin serves, and every field name in every object it returns,
   conforms to the recorded convention or appears in its list of deliberate exceptions.
-- **SC-007**: Changing the route prefix requires editing exactly one place.
+- **SC-007**: The route prefix has exactly one authoritative source. Changing it there and nowhere
+  else turns the suite red, naming every derived literal that has not followed.
 - **SC-008**: No specification or contract in the repository names a route the plugin does not
   serve.
 - **SC-009**: The whole suite, including the new page test, runs on a machine with no network and
