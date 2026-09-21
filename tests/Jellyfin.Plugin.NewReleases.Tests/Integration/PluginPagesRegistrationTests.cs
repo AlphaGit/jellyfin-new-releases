@@ -1,3 +1,4 @@
+using Jellyfin.Plugin.NewReleases.Api;
 using System.Text.Json;
 using System.Reflection;
 using Jellyfin.Plugin.NewReleases.Integration;
@@ -83,6 +84,9 @@ public class PluginPagesRegistrationTests
         Assert.NotNull(payload);
         Assert.Equal("Jellyfin.Plugin.NewReleases", payload["Id"]);
         Assert.Equal("/Plugins/NewReleases/UserView", payload["Url"]);
+        // FR-013: the payload derives the path from the one authoritative source rather than
+        // restating it, so a prefix change cannot leave the menu entry pointing at nothing.
+        Assert.Equal(PluginRoutes.UserViewAbsolute, payload["Url"]);
         Assert.Equal("New Releases", payload["DisplayText"]);
         Assert.Equal("new_releases", payload["Icon"]);
         Assert.Equal(["DisplayText", "Icon", "Id", "Url"], payload.Keys.OrderBy(key => key, StringComparer.Ordinal));

@@ -102,3 +102,100 @@ what the pages read`. Recorded rather than rewritten. Later cycles commit one to
   naming policy (`["matchedArtists"] = ["deezer", "musicbrainz"]` on both sides). Keys are data, not
   contract names, which is why the fixture can state them exactly
 - commit: see below
+
+## Cycle 5: U8 the releases controller is served under the PluginRoutes base
+
+- test: `Api/HttpSurfaceTests.cs::ReleasesController_IsServedUnderThePluginRoutesBase` (new file),
+  with `src/Jellyfin.Plugin.NewReleases/Api/PluginRoutes.cs` added as the minimal declaration the
+  test needs to resolve the symbol, per the playbook's step 3
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~HttpSurfaceTests.ReleasesController_IsServedUnderThePluginRoutesBase" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Strings differ` Expected `"Plugins/NewReleases"` Actual `"Plugins/NewReleases/api"` (1 failed)
+- green: `[Route("Plugins/NewReleases/api")]` -> `[Route(PluginRoutes.Base)]`. Suite -> 262 passed
+- refactor: none needed
+
+## Cycle 6: U4 the list is served at Releases
+
+- test: `Api/HttpSurfaceTests.cs::ReleasesController_ServesTheListAtReleases`
+- red: `Assert.Contains() Failure: Item not found in collection` Not found `"GET Plugins/NewReleases/Releases"` (1 failed)
+- green: `[HttpGet("releases")]` -> `[HttpGet("Releases")]`. Suite -> 263 passed
+- refactor: none needed
+
+## Cycle 7: U5 the artist filter is served at Artists
+
+- test: `Api/HttpSurfaceTests.cs::ReleasesController_ServesTheArtistFilterAtArtists`
+- red: Not found `"GET Plugins/NewReleases/Artists"` (1 failed)
+- green: `[HttpGet("artists")]` -> `[HttpGet("Artists")]`. Suite -> 264 passed
+- refactor: none needed
+
+## Cycle 8: U6 the small status is served at Status
+
+- test: `Api/HttpSurfaceTests.cs::ReleasesController_ServesTheSmallStatusAtStatus`
+- red: Not found `"GET Plugins/NewReleases/Status"` (1 failed)
+- green: `[HttpGet("status")]` -> `[HttpGet("Status")]`. Suite -> 265 passed
+- refactor: none needed
+
+## Cycle 9: U7 the decisions are served under the release they decide
+
+- test: `Api/HttpSurfaceTests.cs::ReleasesController_ServesTheDecisionsUnderTheReleaseTheyDecide`
+- red: Not found `"POST Plugins/NewReleases/Releases/{id:long}/Ignore"` (1 failed)
+- green: the three `[HttpPost]` templates became `Releases/{id:long}/Ignore`, `/HaveIt`, `/Restore`.
+  Suite -> 266 passed
+- refactor: none needed
+
+## Cycle 10: U12 the administrator controller is served under the PluginRoutes admin prefix
+
+- test: `Api/HttpSurfaceTests.cs::AdminController_IsServedUnderThePluginRoutesAdmin`
+- red: Expected `"Plugins/NewReleases/Admin"` Actual `"Plugins/NewReleases/api/admin"` (1 failed)
+- green: `[Route("Plugins/NewReleases/api/admin")]` -> `[Route(PluginRoutes.Admin)]`. Suite -> 267 passed
+- refactor: none needed
+
+## Cycle 11: U10 the administrator status is served at Status
+
+- test: `Api/HttpSurfaceTests.cs::AdminController_ServesItsStatusAtStatus`
+- red: Not found `"GET Plugins/NewReleases/Admin/Status"` (1 failed)
+- green: `[HttpGet("status")]` -> `[HttpGet("Status")]`. Suite -> 268 passed
+- refactor: none needed
+
+## Cycle 12: U11 the administrator actions are PascalCase segments
+
+- test: `Api/HttpSurfaceTests.cs::AdminController_ServesItsActionsAsPascalCaseSegments`
+- red: Not found `"POST Plugins/NewReleases/Admin/RunNow"` (1 failed)
+- green: `run-now`, `purge`, `clear-archive` became `RunNow`, `Purge`, `ClearArchive`. Suite -> 269 passed
+- refactor: none needed
+
+## Cycle 13: U13 the user view is served at the PluginRoutes user view
+
+- test: `Api/HttpSurfaceTests.cs::UserViewController_IsServedAtThePluginRoutesUserView`
+- red: passed on the first run — the literal already spelled the same path, so only the *derivation*
+  was missing and no assertion could see it. Deliberate mutant: `PluginRoutes.Base` changed to
+  `"Plugins/NewReleasesX"` -> Expected `"Plugins/NewReleasesX/UserView"` Actual
+  `"Plugins/NewReleases/UserView"` (1 failed). Restored from a file copy, verified with `cmp -s`
+- green: `[Route("Plugins/NewReleases/UserView")]` -> `[Route(PluginRoutes.UserView)]`. Suite -> 271 passed
+- refactor: none needed
+
+## Cycle 14: U14 the user view declares text/html and no JSON profile
+
+- test: `Api/HttpSurfaceTests.cs::UserViewController_DeclaresTextHtmlAndNoJsonProfile`
+- red: passed on the first run. Deliberate mutant: the action's `[Produces("text/html")]` widened to
+  `[Produces("text/html", "application/json")]` -> `Assert.DoesNotContain() Failure: Filter matched in collection`
+  (1 failed). Restored from a file copy, verified with `cmp -s`
+- green: no production change. This behaviour records an exemption that already holds, and the test
+  is what stops it widening into an unstated JSON endpoint
+- refactor: none needed
+
+## Cycle 15: U28 the Plugin Pages entry derives its Url from PluginRoutes
+
+- test: `Integration/PluginPagesRegistrationTests.cs::RegistersThePageEntry…` gained a second
+  assertion against `PluginRoutes.UserViewAbsolute`; the existing literal assertion stays, so the
+  payload is pinned both ways
+- red: passed on the first run, same reason as cycle 13 — the literal already matched. The cycle 13
+  mutant on `PluginRoutes.Base` is the same proof for this assertion
+- green: the payload's raw string became a constant interpolated one carrying
+  `{{PluginRoutes.UserViewAbsolute}}`, so the path is written once. Suite -> 271 passed
+- refactor: none needed
+
+### Deviation: cycles 5 to 15 are committed per controller, not per cycle
+
+Eleven cycles, three commits: the releases routes, the administrator routes, and the user view with
+its registration payload. Each cycle's red was observed and recorded before its own implementation;
+only the commit boundary is coarser than the playbook's one-per-cycle. Recorded rather than hidden.

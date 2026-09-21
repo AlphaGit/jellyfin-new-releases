@@ -1,3 +1,4 @@
+using Jellyfin.Plugin.NewReleases.Api;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -12,10 +13,10 @@ public sealed class PluginPagesRegistrationService : IHostedService
     private const string PageEntryId = "Jellyfin.Plugin.NewReleases";
 
     /// <summary>The page entry, exactly as `data-model.md` fixes it.</summary>
-    private const string PageEntryJson = """
+    private const string PageEntryJson = $$"""
         {
           "Id": "Jellyfin.Plugin.NewReleases",
-          "Url": "/Plugins/NewReleases/UserView",
+          "Url": "{{PluginRoutes.UserViewAbsolute}}",
           "DisplayText": "New Releases",
           "Icon": "new_releases"
         }

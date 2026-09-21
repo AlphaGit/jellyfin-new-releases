@@ -12,7 +12,7 @@ namespace Jellyfin.Plugin.NewReleases.Api;
 /// </summary>
 [ApiController]
 [Authorize]
-[Route("Plugins/NewReleases/UserView")]
+[Route(PluginRoutes.UserView)]
 public sealed class UserViewController : ControllerBase
 {
     private const string ResourceName = "Jellyfin.Plugin.NewReleases.Web.user-view.html";

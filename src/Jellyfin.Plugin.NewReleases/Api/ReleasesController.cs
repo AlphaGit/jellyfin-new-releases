@@ -19,7 +19,7 @@ namespace Jellyfin.Plugin.NewReleases.Api;
 [ApiController]
 [Authorize]
 [Produces(JsonDefaults.CamelCaseMediaType)]
-[Route("Plugins/NewReleases/api")]
+[Route(PluginRoutes.Base)]
 public sealed class ReleasesController : ControllerBase
 {
     /// <summary>Claim Jellyfin's authentication handler puts on the principal (`Jellyfin.Api.Constants.InternalClaimTypes.UserId`, not on NuGet — R5).</summary>
@@ -53,7 +53,7 @@ public sealed class ReleasesController : ControllerBase
         _configuration = configuration;
     }
 
-    [HttpGet("releases")]
+    [HttpGet("Releases")]
     [ProducesResponseType(typeof(ListResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ListResponse>> GetReleasesAsync(
@@ -95,7 +95,7 @@ public sealed class ReleasesController : ControllerBase
         return new ListResponse(visible, visible.Count, hasStored, lastChecked, RefreshIntervalHours(), today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
     }
 
-    [HttpGet("artists")]
+    [HttpGet("Artists")]
     [ProducesResponseType(typeof(ArtistsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ArtistsResponse>> GetArtistsAsync(CancellationToken cancellationToken = default)
@@ -109,15 +109,15 @@ public sealed class ReleasesController : ControllerBase
         return new ArtistsResponse(artists.Where(a => access.CanSee(a.LibraryIds)).Select(a => new ArtistDto(a.JellyfinId, a.Name)).ToList());
     }
 
-    [HttpPost("releases/{id:long}/ignore")]
+    [HttpPost("Releases/{id:long}/Ignore")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<ActionResult> IgnoreAsync(long id, CancellationToken cancellationToken = default) => DecideAsync(id, DecisionKind.Ignore, cancellationToken);
 
-    [HttpPost("releases/{id:long}/have-it")]
+    [HttpPost("Releases/{id:long}/HaveIt")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<ActionResult> HaveItAsync(long id, CancellationToken cancellationToken = default) => DecideAsync(id, DecisionKind.HaveIt, cancellationToken);
 
-    [HttpPost("releases/{id:long}/restore")]
+    [HttpPost("Releases/{id:long}/Restore")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<ActionResult> RestoreAsync(long id, CancellationToken cancellationToken = default) => DecideAsync(id, null, cancellationToken);
 
@@ -154,7 +154,7 @@ public sealed class ReleasesController : ControllerBase
     }
 
     /// <summary>Small status for the fragment header (also embedded in the list response; kept for polling).</summary>
-    [HttpGet("status")]
+    [HttpGet("Status")]
     [ProducesResponseType(typeof(StatusResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<StatusResponse>> GetStatusAsync(CancellationToken cancellationToken = default)
     {

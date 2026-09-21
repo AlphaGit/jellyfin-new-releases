@@ -88,11 +88,11 @@ is repeated against a real Jellyfin 12 server in `tasks.md` T054, which is where
 | U1 | The naming produced by this controller's declared media type writes `ListResponse` with the names `tests/fixtures/pages/releases.json` carries, at every nesting level | FR-003, FR-006, SC-004 | example | DONE | `Api/ResponseNamingTests.cs::ListResponse_AsTheReleasesEndpointDeclaresIt_CarriesTheNamesTheListPageReads` |
 | U2 | The same declaration writes `ArtistsResponse` with the names `tests/fixtures/pages/artists.json` carries | FR-003, FR-006 | example | DONE | `Api/ResponseNamingTests.cs::ArtistsResponse_AsTheArtistsEndpointDeclaresIt_CarriesTheNamesTheArtistFilterReads` |
 | U3 | The same declaration writes `StatusResponse` with the names `tests/fixtures/pages/status.json` carries, though no page reads it | FR-010 | example | DONE | `Api/ResponseNamingTests.cs::StatusResponse_AsTheStatusEndpointDeclaresIt_CarriesTheNamesItsContractRecords` |
-| U4 | `GET Plugins/NewReleases/Releases` is the registered route for the list | FR-016 | example | PENDING | |
-| U5 | `GET Plugins/NewReleases/Artists` is the registered route for the artist filter | FR-016 | example | PENDING | |
-| U6 | `GET Plugins/NewReleases/Status` is the registered route for the small status | FR-016 | example | PENDING | |
-| U7 | `POST Plugins/NewReleases/Releases/{id}/Ignore`, `/HaveIt` and `/Restore` are the registered decision routes | FR-016 | example | PENDING | |
-| U8 | The controller's route prefix is `PluginRoutes.Base`, not a literal of its own | FR-013, SC-007 | example | PENDING | |
+| U4 | `GET Plugins/NewReleases/Releases` is the registered route for the list | FR-016 | example | DONE | `Api/HttpSurfaceTests.cs::ReleasesController_ServesTheListAtReleases` |
+| U5 | `GET Plugins/NewReleases/Artists` is the registered route for the artist filter | FR-016 | example | DONE | `Api/HttpSurfaceTests.cs::ReleasesController_ServesTheArtistFilterAtArtists` |
+| U6 | `GET Plugins/NewReleases/Status` is the registered route for the small status | FR-016 | example | DONE | `Api/HttpSurfaceTests.cs::ReleasesController_ServesTheSmallStatusAtStatus` |
+| U7 | `POST Plugins/NewReleases/Releases/{id}/Ignore`, `/HaveIt` and `/Restore` are the registered decision routes | FR-016 | example | DONE | `Api/HttpSurfaceTests.cs::ReleasesController_ServesTheDecisionsUnderTheReleaseTheyDecide` |
+| U8 | The controller's route prefix is `PluginRoutes.Base`, not a literal of its own | FR-013, SC-007 | example | DONE | `Api/HttpSurfaceTests.cs::ReleasesController_IsServedUnderThePluginRoutesBase` |
 
 `U1`–`U3` are red today for the reason recorded at the top of this file: with no declaration the
 resolved options are `JsonDefaults.Options` and the names come out PascalCase.
@@ -102,16 +102,16 @@ resolved options are `JsonDefaults.Options` and the names come out PascalCase.
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U9 | The naming produced by this controller's declared media type writes `AdminStatusResponse` with the names `tests/fixtures/pages/admin-status.json` carries, including `sources[]`, `lastRun`, `unmatched[]` and `unmatched[].sources[]` | FR-003, FR-006 | example | DONE | `Api/ResponseNamingTests.cs::AdminStatusResponse_AsTheAdminStatusEndpointDeclaresIt_CarriesTheNamesTheAdministratorPageReads` |
-| U10 | `GET Plugins/NewReleases/Admin/Status` is the registered status route | FR-016 | example | PENDING | |
-| U11 | `POST Plugins/NewReleases/Admin/RunNow`, `/Purge` and `/ClearArchive` are the registered action routes | FR-016 | example | PENDING | |
-| U12 | The controller's route prefix is `PluginRoutes.Admin`, not a literal of its own | FR-013, SC-007 | example | PENDING | |
+| U10 | `GET Plugins/NewReleases/Admin/Status` is the registered status route | FR-016 | example | DONE | `Api/HttpSurfaceTests.cs::AdminController_ServesItsStatusAtStatus` |
+| U11 | `POST Plugins/NewReleases/Admin/RunNow`, `/Purge` and `/ClearArchive` are the registered action routes | FR-016 | example | DONE | `Api/HttpSurfaceTests.cs::AdminController_ServesItsActionsAsPascalCaseSegments` |
+| U12 | The controller's route prefix is `PluginRoutes.Admin`, not a literal of its own | FR-013, SC-007 | example | DONE | `Api/HttpSurfaceTests.cs::AdminController_IsServedUnderThePluginRoutesAdmin` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Api/UserViewController.cs`
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U13 | The controller's route is `PluginRoutes.UserView` and the served path stays `Plugins/NewReleases/UserView` | FR-013, FR-016 | example | PENDING | |
-| U14 | The controller declares `text/html` and no JSON profile, and is the only endpoint the naming rule exempts | FR-012, SC-006 | example | PENDING | |
+| U13 | The controller's route is `PluginRoutes.UserView` and the served path stays `Plugins/NewReleases/UserView` | FR-013, FR-016 | example | DONE | `Api/HttpSurfaceTests.cs::UserViewController_IsServedAtThePluginRoutesUserView` |
+| U14 | The controller declares `text/html` and no JSON profile, and is the only endpoint the naming rule exempts | FR-012, SC-006 | example | DONE | `Api/HttpSurfaceTests.cs::UserViewController_DeclaresTextHtmlAndNoJsonProfile` |
 
 ### The plugin's HTTP surface, assembly-wide
 
@@ -141,7 +141,7 @@ the fix was demonstrated with a single example chosen after the implementation w
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U28 | The registered page entry's `Url` equals `PluginRoutes.UserViewAbsolute` | FR-013, SC-007 | example | PENDING | |
+| U28 | The registered page entry's `Url` equals `PluginRoutes.UserViewAbsolute` | FR-013, SC-007 | example | DONE | `Integration/PluginPagesRegistrationTests.cs::PageEntryUrl_EqualsPluginRoutesUserViewAbsolute` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`
 

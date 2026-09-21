@@ -16,7 +16,7 @@ namespace Jellyfin.Plugin.NewReleases.Api;
 [ApiController]
 [Authorize(Policy = Policies.RequiresElevation)]
 [Produces(JsonDefaults.CamelCaseMediaType)]
-[Route("Plugins/NewReleases/api/admin")]
+[Route(PluginRoutes.Admin)]
 public sealed class AdminController : ControllerBase
 {
     private readonly ArtistRepository _artists;
@@ -46,7 +46,7 @@ public sealed class AdminController : ControllerBase
     }
 
     /// <summary>Run now (FR-009). Jellyfin refuses to start a task that is already running; report that as 409 instead of queueing.</summary>
-    [HttpPost("run-now")]
+    [HttpPost("RunNow")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public ActionResult RunNow()
@@ -60,7 +60,7 @@ public sealed class AdminController : ControllerBase
         return Accepted();
     }
 
-    [HttpGet("status")]
+    [HttpGet("Status")]
     [ProducesResponseType(typeof(AdminStatusResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<AdminStatusResponse>> GetStatusAsync(CancellationToken cancellationToken = default)
     {
@@ -104,7 +104,7 @@ public sealed class AdminController : ControllerBase
     }
 
     /// <summary>Purge release data (FR-013): releases, entries, editions and ownership go; decisions, artists and match state stay; paging passes restart.</summary>
-    [HttpPost("purge")]
+    [HttpPost("Purge")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<ActionResult> PurgeAsync(CancellationToken cancellationToken = default)
     {
@@ -115,7 +115,7 @@ public sealed class AdminController : ControllerBase
     }
 
     /// <summary>Clear Archive (FR-013): every Ignore and Have-it decision; release rows untouched.</summary>
-    [HttpPost("clear-archive")]
+    [HttpPost("ClearArchive")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<ActionResult> ClearArchiveAsync(CancellationToken cancellationToken = default)
     {
