@@ -1,16 +1,21 @@
 'use strict';
 
-// Loads an embedded page's script into a sandbox so its pure helpers can be tested
-// without a browser. Standard library only: no package.json, no install step (FR-014).
+// Loads an embedded page's script into a sandbox so it can be tested without a browser.
+// Standard library only: no package.json, no install step (FR-014, 005 FR-017).
 //
 // Each page assigns its helpers to `NewReleasesInternals` as the first statement of its
 // IIFE, before it touches the DOM. Function declarations hoist, so the assignment sees
-// them all. Everything after that point wires the page to elements that do not exist
-// here and is expected to fail; the catch below is deliberate, not defensive.
+// them all.
+//
+// The sandbox's `document` is the stand-in in `fake-dom.js`, which models exactly the
+// elements the page's own markup declares, so a page now runs its initialization to
+// completion here. The catch below stays for a page that fails before exposing its
+// helpers: that is a real problem and is rethrown.
 
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { documentFor } = require('./fake-dom.js');
 
 const WEB_DIR = path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web');
 
@@ -25,15 +30,13 @@ function extractScript(html, fileName) {
 }
 
 /**
- * The browser and Jellyfin globals the pages reach for. Every element lookup answers null.
- * `overrides` merges one level down, so a test that pins `ApiClient.serverId` keeps the rest of
+ * The browser and Jellyfin globals the pages reach for. `overrides` merges one level down, so a test that pins `ApiClient.serverId` keeps the rest of
  * `ApiClient` rather than restating it.
  */
-function sandboxGlobals(overrides) {
-    const none = () => null;
+function sandboxGlobals(fileName, overrides) {
     const defaults = {
         console,
-        document: { getElementById: none, querySelector: none, querySelectorAll: () => [] },
+        document: documentFor(fileName),
         ApiClient: {
             ajax: () => Promise.resolve({}),
             getUrl: p => p,
@@ -78,8 +81,17 @@ function sandboxGlobals(overrides) {
  * can pin what `artistLink` reads from `ApiClient` without restating the rest of it.
  */
 function loadPage(fileName, overrides = {}) {
+    return loadPageDom(fileName, overrides).internals;
+}
+
+/**
+ * The same load, returning the fake `document` alongside the helpers so a test can read what the
+ * page wrote into it. See specs/005-page-json-casing/contracts/page-sandbox.md for what the
+ * stand-in does and, more importantly, does not cover.
+ */
+function loadPageDom(fileName, overrides = {}) {
     const html = fs.readFileSync(path.join(WEB_DIR, fileName), 'utf8');
-    const sandbox = sandboxGlobals(overrides);
+    const sandbox = sandboxGlobals(fileName, overrides);
 
     try {
         vm.runInNewContext(extractScript(html, fileName), sandbox, { filename: fileName });
@@ -91,7 +103,7 @@ function loadPage(fileName, overrides = {}) {
         throw new Error(`${fileName} exposed no NewReleasesInternals; see tests/web/load-page.js`);
     }
 
-    return sandbox.NewReleasesInternals;
+    return { internals: sandbox.NewReleasesInternals, document: sandbox.document };
 }
 
-module.exports = { loadPage };
+module.exports = { loadPage, loadPageDom };

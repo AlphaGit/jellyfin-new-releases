@@ -86,9 +86,9 @@ Built from `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs` and the name tables in
 **⚠️ CRITICAL**: no user story work begins until this phase is complete.
 
 - [ ] T011 Create `src/Jellyfin.Plugin.NewReleases/Api/PluginRoutes.cs` — `const string` members `Base = "Plugins/NewReleases"`, `Admin = Base + "/Admin"`, `UserView = Base + "/UserView"`, `UserViewAbsolute = "/" + UserView`, with an XML comment stating it is the single authoritative source (`FR-013`)
-- [ ] T012 Write failing `tests/web/fake-dom.test.js` for the stand-in's own contract, before the stand-in exists [U52] [U53] [U54]
-- [ ] T013 Create `tests/web/fake-dom.js` until T012 is green — the string-capturing stand-in specified in [`contracts/page-sandbox.md`](./contracts/page-sandbox.md). **No HTML parser.** The file header records what it does not cover, verbatim from that contract (`FR-017`, `FR-018`) [U52] [U53] [U54]
-- [ ] T014 Extend `tests/web/load-page.js` to install the fake DOM in place of the null-returning `document` stub, keeping the existing `Intl` and `Date` pinning and the `overrides` merge behaviour unchanged; `node --test "tests/web/*.test.js"` stays green [U55]
+- [X] T012 Write failing `tests/web/fake-dom.test.js` for the stand-in's own contract, before the stand-in exists [U52] [U53] [U54]
+- [X] T013 Create `tests/web/fake-dom.js` until T012 is green — the string-capturing stand-in specified in [`contracts/page-sandbox.md`](./contracts/page-sandbox.md). **No HTML parser.** The file header records what it does not cover, verbatim from that contract (`FR-017`, `FR-018`) [U52] [U53] [U54]
+- [X] T014 Extend `tests/web/load-page.js` to install the fake DOM in place of the null-returning `document` stub, keeping the existing `Intl` and `Date` pinning and the `overrides` merge behaviour unchanged; `node --test "tests/web/*.test.js"` stays green [U55]
 
 **Checkpoint**: `PluginRoutes` exists, the sandbox has a DOM, the existing page suite is untouched.
 

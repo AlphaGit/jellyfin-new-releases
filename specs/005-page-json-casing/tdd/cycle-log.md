@@ -229,3 +229,44 @@ exists on neither side still fails one of those.
 
 What the drop does give up: a page could request a well-formed path that no controller registers, and
 only the real-server pass would notice. Recorded as the accepted cost.
+
+## Cycle 17: U52 an element gives back what was written to it
+
+- test: `tests/web/fake-dom.test.js::an element gives back what was written to it` (new), with
+  `tests/web/fake-dom.js` added as a stub that throws
+- red: `node --test tests/web/fake-dom.test.js`
+  -> `error: 'fake-dom: documentFor is not implemented'`, `# fail 1` — a deliberate
+  not-implemented signal from a stub the test drives
+- green: `FakeElement` with `innerHTML`, `textContent`, `hidden`, `setAttribute`/`getAttribute`,
+  and a `documentFor` that hands one out per id. Node suite -> 34 passed
+- refactor: none needed
+
+## Cycle 18: U53 insertAdjacentHTML beforeend appends rather than replacing
+
+- test: `tests/web/fake-dom.test.js::insertAdjacentHTML beforeend appends rather than replacing`
+- red: `error: 'row.insertAdjacentHTML is not a function'`, `# fail 1`
+- green: `insertAdjacentHTML` appends to `innerHTML`, and throws for any position but `beforeend`
+  rather than silently modelling one it does not have
+- refactor: none needed
+
+## Cycle 19: U54 an id the page does not declare answers null
+
+- test: `tests/web/fake-dom.test.js::an id the page does not declare answers null, so reaching for an unmodelled element fails loudly`
+- red: `# fail 1` — `getElementById` created an element for any id, so the assertion that an
+  undeclared id answers `null` failed with an object where `null` was expected
+- green: `declaredIds` reads the page's own markup and the lookup answers `null` outside that set.
+  Ids built at runtime inside a JS string (`id="' + item.id + '"`) are excluded by the identifier
+  shape, so they cannot widen the model by accident. Node suite -> 36 passed
+- refactor: none needed
+
+## Cycle 20: U55 a page loaded through the sandbox runs its initialization to completion
+
+- test: `tests/web/fake-dom.test.js::a page loaded through the sandbox runs its initialization to completion`
+- red: `error: 'loadPageDom is not a function'`, `# fail 1`
+- green: element `querySelector` resolves `#id` through the owning document and treats any other
+  selector as a child it owns; `load-page.js` builds its sandbox `document` from `documentFor` and
+  gained `loadPageDom`, which returns the document alongside the helpers. `loadPage` keeps its
+  signature, so every existing page test is untouched. Node suite -> 37 passed
+- refactor: `load-page.js`'s header still said "Every element lookup answers null" and that the page
+  "is expected to fail" after exposing its helpers. Both were now false. Rewritten to describe the
+  stand-in and why the catch stays. Node suite re-run green after the edit

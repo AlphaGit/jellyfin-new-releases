@@ -198,10 +198,10 @@ limits rather than a private helper.
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U52 | An element's `innerHTML`, `textContent`, `hidden` and `setAttribute` writes are readable back as what was written | FR-017 | example | PENDING | |
-| U53 | `insertAdjacentHTML('beforeend', …)` appends to `innerHTML` rather than replacing it | FR-017 | example | PENDING | |
-| U54 | A selector the page does not use answers `null`, so a page reaching for an element the fake does not model fails loudly | FR-017 | example | PENDING | |
-| U55 | Loading a page through the extended sandbox leaves the existing helper tests green | FR-017 | example | PENDING | |
+| U52 | An element's `innerHTML`, `textContent`, `hidden` and `setAttribute` writes are readable back as what was written | FR-017 | example | DONE | `tests/web/fake-dom.test.js::an element gives back what was written to it` |
+| U53 | `insertAdjacentHTML('beforeend', …)` appends to `innerHTML` rather than replacing it | FR-017 | example | DONE | `tests/web/fake-dom.test.js::insertAdjacentHTML beforeend appends rather than replacing` |
+| U54 | A selector the page does not use answers `null`, so a page reaching for an element the fake does not model fails loudly | FR-017 | example | DONE | `tests/web/fake-dom.test.js::an id the page does not declare answers null…` |
+| U55 | Loading a page through the extended sandbox leaves the existing helper tests green | FR-017 | example | DONE | `tests/web/fake-dom.test.js::a page loaded through the sandbox runs its initialization to completion` |
 
 ## Invariants and edge cases still to place
 
