@@ -131,8 +131,8 @@ the fix was demonstrated with a single example chosen after the implementation w
 | U20 | A route segment named `api` fails the casing rule | FR-016, SC-006 | example | PENDING | |
 | U21 | A PascalCase multi-word segment with no separator passes the casing rule | FR-016, SC-006 | example | PENDING | |
 | U22 | Every route the plugin registers satisfies the casing rule | FR-016, SC-006 | example | PENDING | |
-| U23 | Each embedded page's `API` literal begins with `PluginRoutes.Base`, and the failure names the page that has not followed | FR-013, SC-007 | example | PENDING | |
-| U24 | Every request path literal either page sends resolves to a route the plugin registers | FR-013, FR-014 | example | PENDING | |
+| U23 | Each embedded page's `API` literal is exactly the prefix its endpoints are served under, and the failure names the page that has not followed | FR-013, SC-007 | example | DONE | `Api/HttpSurfaceTests.cs::EachEmbeddedPage_BuildsItsPathsFromThePrefixItsEndpointsAreServedUnder` |
+| U24 | Every request path literal either page sends resolves to a route the plugin registers | FR-013, FR-014 | example | DROPPED | dropped in cycle 16: source extraction is unreliable; `U39` and `U50` capture the real requests instead |
 | U25 | A path written in a contract document that the plugin does not serve fails the document rule | FR-015, SC-008 | example | PENDING | |
 | U26 | A path written in a contract document that the plugin does serve passes the document rule | FR-015, SC-008 | example | PENDING | |
 | U27 | No `specs/**/contracts/*.md` names a route the plugin does not serve | FR-015, SC-008 | example | PENDING | |

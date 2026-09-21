@@ -1,5 +1,7 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Jellyfin.Plugin.NewReleases.Api;
+using Jellyfin.Plugin.NewReleases.Tests.Support;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Xunit;
@@ -100,6 +102,29 @@ public class HttpSurfaceTests
         return own.Count > 0
             ? own
             : action.DeclaringType!.GetCustomAttributes<ProducesAttribute>(inherit: true).SelectMany(a => a.ContentTypes).ToList();
+    }
+
+    /// <summary>
+    /// The pages are static resources served with no build step, and <c>admin.html</c> never passes
+    /// through plugin code, so neither can read <see cref="PluginRoutes"/> at load time. Each holds
+    /// one derived literal and this is what holds it to the source (FR-013, SC-007).
+    /// </summary>
+    [Theory]
+    [InlineData("user-view.html", PluginRoutes.Base + "/")]
+    [InlineData("admin.html", PluginRoutes.Admin + "/")]
+    public void EachEmbeddedPage_BuildsItsPathsFromThePrefixItsEndpointsAreServedUnder(string page, string expected)
+    {
+        Assert.Equal(expected, ApiPrefixOf(page));
+    }
+
+    /// <summary>The <c>API</c> literal an embedded page declares, read from the shipped resource.</summary>
+    internal static string ApiPrefixOf(string page)
+    {
+        var html = RepositoryFiles.ReadAllText("src/Jellyfin.Plugin.NewReleases/Web/" + page);
+        var match = Regex.Match(html, @"var API = '([^']*)';");
+
+        Assert.True(match.Success, $"{page} declares no `var API = '...';` line; the prefix guard cannot read it.");
+        return match.Groups[1].Value;
     }
 
     /// <summary>The <c>[Route]</c> template a controller declares.</summary>

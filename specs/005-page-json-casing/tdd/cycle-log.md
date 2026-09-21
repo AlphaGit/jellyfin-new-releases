@@ -199,3 +199,33 @@ what the pages read`. Recorded rather than rewritten. Later cycles commit one to
 Eleven cycles, three commits: the releases routes, the administrator routes, and the user view with
 its registration payload. Each cycle's red was observed and recorded before its own implementation;
 only the commit boundary is coarser than the playbook's one-per-cycle. Recorded rather than hidden.
+
+## Cycle 16: U23 each embedded page builds its paths from the prefix its endpoints are served under
+
+- test: `Api/HttpSurfaceTests.cs::EachEmbeddedPage_BuildsItsPathsFromThePrefixItsEndpointsAreServedUnder`
+  (a `[Theory]`, one row per page)
+- list edit before the red: the behaviour read "begins with `PluginRoutes.Base`", which
+  `'Plugins/NewReleases/api/'` already satisfied — an assertion that could not fail. Tightened to
+  "is exactly the prefix its endpoints are served under" before writing the test. Recorded here
+  because a behaviour reworded mid-loop must be visible to the audit
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~HttpSurfaceTests.EachEmbeddedPage_BuildsItsPathsFromThePrefixItsEndpointsAreServedUnder" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> Expected `"Plugins/NewReleases/"` Actual `"Plugins/NewReleases/api/"`; Expected
+  `"Plugins/NewReleases/Admin/"` Actual `"Plugins/NewReleases/api/admin/"` (2 failed)
+- green: both pages' `var API = '...'` literals updated. Suite -> 273 passed, 0 failed
+- refactor: none needed
+
+### U24 dropped
+
+`U24` ("every request path literal either page sends resolves to a route the plugin registers") is
+dropped. Extracting those paths from the page source is unreliable: `user-view.html` completes a
+decision path at runtime from a `data-action` attribute, and `admin.html` passes its action paths
+through `confirmed(...)` rather than to `api(` directly, so a source scan would read a prefix and
+guess the rest.
+
+The guard is not lost. `U39` and `U50` assert the **actual** URLs each page requests, captured from a
+recording `ApiClient` while the page runs, which is stronger extraction than any regex over the
+source; `U23` pins the prefix; and `U4`-`U7`, `U10`-`U12` pin what the plugin registers. A path that
+exists on neither side still fails one of those.
+
+What the drop does give up: a page could request a well-formed path that no controller registers, and
+only the real-server pass would notice. Recorded as the accepted cost.
