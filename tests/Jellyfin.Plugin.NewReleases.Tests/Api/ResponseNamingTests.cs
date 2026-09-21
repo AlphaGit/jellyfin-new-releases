@@ -50,6 +50,44 @@ public class ResponseNamingTests
         Assert.Equal(NamesByPath(Fixture("status.json")), NamesByPath(written));
     }
 
+    [Fact]
+    public void AdminStatusResponse_AsTheAdminStatusEndpointDeclaresIt_CarriesTheNamesTheAdministratorPageReads()
+    {
+        var written = Serialize(typeof(AdminController), PopulatedAdminStatusResponse());
+
+        Assert.Equal(NamesByPath(Fixture("admin-status.json")), NamesByPath(written));
+    }
+
+    /// <summary>
+    /// An <see cref="AdminStatusResponse"/> covering every name the administrator page reads: a
+    /// healthy source and a cooling-down one, a completed run, and two unmatched artists with their
+    /// per-source reasons. `matchedArtists` is a dictionary, so its keys are data rather than
+    /// contract names; the fixture uses the same two source ids so the comparison stays exact.
+    /// </summary>
+    private static AdminStatusResponse PopulatedAdminStatusResponse()
+    {
+        var checkedAt = DateTimeOffset.UnixEpoch;
+        var hint = AdminController.UnmatchedHint;
+
+        return new AdminStatusResponse(
+            new[]
+            {
+                new SourceStatusDto("musicbrainz", "MusicBrainz", true, "Ok", "503 from ws/2/release-group", 412, 1000, null, checkedAt),
+                new SourceStatusDto("deezer", "Deezer", true, "CoolingDown", "Quota exceeded", 200, 200, checkedAt.AddHours(6), checkedAt),
+            },
+            new RunDto(checkedAt, checkedAt.AddMinutes(15), "Completed", 79, 812, 64, 2),
+            checkedAt,
+            checkedAt.AddDays(1),
+            false,
+            83,
+            new Dictionary<string, int> { ["musicbrainz"] = 41, ["deezer"] = 38 },
+            new[]
+            {
+                new UnmatchedArtistDto(Guid.NewGuid(), "Various Artists", new[] { new UnmatchedSourceDto("musicbrainz", "NoConfidentMatch"), new UnmatchedSourceDto("deezer", "NoResults") }, hint),
+                new UnmatchedArtistDto(Guid.NewGuid(), "The Blue Nile", new[] { new UnmatchedSourceDto("musicbrainz", "AmbiguousMatch") }, hint),
+            });
+    }
+
     /// <summary>
     /// A <see cref="ListResponse"/> covering every name the list page reads: one row of each state,
     /// one carrying missing tracks and a compared edition, one undated, one archived. Fields the

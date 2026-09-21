@@ -86,3 +86,19 @@ class-level declaration is what makes a new action inherit it rather than silent
 The playbook asks for one commit per cycle. Cycles 2 and 3 added only tests, made no production
 change, and were committed together as `test: pin the releases controller's response naming against
 what the pages read`. Recorded rather than rewritten. Later cycles commit one to one.
+
+## Cycle 4: U9 the administrator status response carries the names that page reads
+
+- test: `Api/ResponseNamingTests.cs::AdminStatusResponse_AsTheAdminStatusEndpointDeclaresIt_CarriesTheNamesTheAdministratorPageReads` (new), with `tests/fixtures/pages/admin-status.json` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ResponseNamingTests.AdminStatusResponse_AsTheAdminStatusEndpointDeclaresIt" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ`
+  Expected `["lastRun"] = ["artistsProcessed", "editionsFetched", "endedAt", "errors", "outcome", ···]`
+  Actual `["LastRun"] = ["ArtistsProcessed", "EditionsFetched", "EndedAt", "Errors", "Outcome", ···]`
+  (1 failed) — a real first-run red: `AdminController` is a different controller and declared nothing
+- green: `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs:18` added
+  `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level. Suite -> 261 passed, 0 failed
+- refactor: none needed
+- notes: the red output also confirms `matchedArtists`' dictionary **keys** are untouched by the
+  naming policy (`["matchedArtists"] = ["deezer", "musicbrainz"]` on both sides). Keys are data, not
+  contract names, which is why the fixture can state them exactly
+- commit: see below

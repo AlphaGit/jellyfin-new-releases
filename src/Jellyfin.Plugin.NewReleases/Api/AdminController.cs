@@ -1,3 +1,4 @@
+using Jellyfin.Extensions.Json;
 using Jellyfin.Plugin.NewReleases.Configuration;
 using Jellyfin.Plugin.NewReleases.ScheduledTasks;
 using Jellyfin.Plugin.NewReleases.Sources;
@@ -14,6 +15,7 @@ namespace Jellyfin.Plugin.NewReleases.Api;
 /// <summary>Administrator endpoints (FR-009, FR-012, FR-013): status, Run now, Purge release data, Clear Archive.</summary>
 [ApiController]
 [Authorize(Policy = Policies.RequiresElevation)]
+[Produces(JsonDefaults.CamelCaseMediaType)]
 [Route("Plugins/NewReleases/api/admin")]
 public sealed class AdminController : ControllerBase
 {

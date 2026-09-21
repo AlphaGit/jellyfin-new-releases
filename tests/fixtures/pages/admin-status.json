@@ -1,0 +1,58 @@
+{
+  "sources": [
+    {
+      "id": "musicbrainz",
+      "displayName": "MusicBrainz",
+      "enabled": true,
+      "health": "Ok",
+      "lastError": "503 from ws/2/release-group on 2026-09-12",
+      "callsToday": 412,
+      "dailyBudget": 1000,
+      "lastSuccessAt": "2026-09-19T03:14:51+00:00"
+    },
+    {
+      "id": "deezer",
+      "displayName": "Deezer",
+      "enabled": true,
+      "health": "CoolingDown",
+      "lastError": "Quota exceeded",
+      "callsToday": 200,
+      "dailyBudget": 200,
+      "cooldownUntil": "2026-09-20T18:00:00+00:00",
+      "lastSuccessAt": "2026-09-19T02:58:03+00:00"
+    }
+  ],
+  "lastRun": {
+    "startedAt": "2026-09-19T03:00:00+00:00",
+    "endedAt": "2026-09-19T03:15:00+00:00",
+    "outcome": "Completed",
+    "artistsProcessed": 79,
+    "releasesFound": 812,
+    "editionsFetched": 64,
+    "errors": 2
+  },
+  "releasesLastCheckedAt": "2026-09-19T03:15:00+00:00",
+  "nextRunAt": "2026-09-21T03:00:00+00:00",
+  "isRunning": false,
+  "libraryArtists": 83,
+  "matchedArtists": { "musicbrainz": 41, "deezer": 38 },
+  "unmatched": [
+    {
+      "jellyfinId": "9c4e1a08d2b7436f85a3c6e0f1d7b25a",
+      "name": "Various Artists",
+      "sources": [
+        { "source": "musicbrainz", "reason": "NoConfidentMatch" },
+        { "source": "deezer", "reason": "NoResults" }
+      ],
+      "hint": "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin picks it up on the next refresh."
+    },
+    {
+      "jellyfinId": "3ad8f05b6c1e49279be4a7d0c82f16e3",
+      "name": "The Blue Nile",
+      "sources": [
+        { "source": "musicbrainz", "reason": "AmbiguousMatch" }
+      ],
+      "hint": "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin picks it up on the next refresh."
+    }
+  ]
+}

@@ -146,7 +146,7 @@ each status value matches the API (`quickstart.md` pass 2 steps 5–8).
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T033 [P] [US2] Add a failing `ResponseNamingTests.cs` case — `AdminStatusResponse` serialized through `AdminController`'s declaration carries the names in `tests/fixtures/pages/admin-status.json`, including `sources[]`, `lastRun`, `unmatched[]` and `unmatched[].sources[]` [U9]
+- [X] T033 [P] [US2] Add a failing `ResponseNamingTests.cs` case — `AdminStatusResponse` serialized through `AdminController`'s declaration carries the names in `tests/fixtures/pages/admin-status.json`, including `sources[]`, `lastRun`, `unmatched[]` and `unmatched[].sources[]` [U9]
 - [ ] T034 [US2] Write failing `tests/web/render-status.test.js` — `renderStatus` with `tests/fixtures/pages/admin-status.json` writes the last refresh instant and outcome, the releases-last-checked sentence, the next run, the artists processed and the releases found, **none a dash** [U41] [U42] [U43] [U44]
 - [ ] T035 [US2] Add failing `render-status.test.js` cases for each source's health, calls today and daily budget, and for a cooling-down source's `cooldownUntil` and last error [U45] [U46]
 - [ ] T036 [US2] Add failing `render-status.test.js` cases for the unmatched table — one row per artist with its per-source reasons and the hint; and with `tests/fixtures/pages/admin-status-quiet.json` the table is hidden and the empty line shown [U47] [U48]
@@ -158,7 +158,7 @@ each status value matches the API (`quickstart.md` pass 2 steps 5–8).
 ### Implementation for User Story 2
 
 - [ ] T041 [US2] Expose `renderStatus` on `globalThis.NewReleasesInternals` in `src/Jellyfin.Plugin.NewReleases/Web/admin.html` as the first statement of the IIFE, and add `renderStatus` to the exact set asserted in `tests/web/exposure.test.js` [U51]
-- [ ] T042 [US2] Add `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level on `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, with `using Jellyfin.Extensions.Json;`, until T033 is green [U9]
+- [X] T042 [US2] Add `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level on `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, with `using Jellyfin.Extensions.Json;`, until T033 is green [U9]
 - [ ] T043 [US2] Rename `AdminController` routes to `[Route(PluginRoutes.Admin)]` with `[HttpGet("Status")]`, `[HttpPost("RunNow")]`, `[HttpPost("Purge")]`, `[HttpPost("ClearArchive")]` until T039 is green [U10] [U11] [U12]
 - [ ] T044 [US2] Update `src/Jellyfin.Plugin.NewReleases/Web/admin.html` until T040 is green: the `API` literal becomes `'Plugins/NewReleases/Admin/'` and the three `confirmed(...)` call sites pass `RunNow`, `Purge`, `ClearArchive` [U50]
 - [ ] T045 [US2] Outer loop green before the story is complete: `A5`, `A6`, `A7` and `A8`'s administrator half all pass against their fixtures [A5] [A6] [A7]

@@ -101,7 +101,7 @@ resolved options are `JsonDefaults.Options` and the names come out PascalCase.
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U9 | The naming produced by this controller's declared media type writes `AdminStatusResponse` with the names `tests/fixtures/pages/admin-status.json` carries, including `sources[]`, `lastRun`, `unmatched[]` and `unmatched[].sources[]` | FR-003, FR-006 | example | PENDING | |
+| U9 | The naming produced by this controller's declared media type writes `AdminStatusResponse` with the names `tests/fixtures/pages/admin-status.json` carries, including `sources[]`, `lastRun`, `unmatched[]` and `unmatched[].sources[]` | FR-003, FR-006 | example | DONE | `Api/ResponseNamingTests.cs::AdminStatusResponse_AsTheAdminStatusEndpointDeclaresIt_CarriesTheNamesTheAdministratorPageReads` |
 | U10 | `GET Plugins/NewReleases/Admin/Status` is the registered status route | FR-016 | example | PENDING | |
 | U11 | `POST Plugins/NewReleases/Admin/RunNow`, `/Purge` and `/ClearArchive` are the registered action routes | FR-016 | example | PENDING | |
 | U12 | The controller's route prefix is `PluginRoutes.Admin`, not a literal of its own | FR-013, SC-007 | example | PENDING | |
