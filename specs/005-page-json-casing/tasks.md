@@ -112,20 +112,20 @@ returns (`quickstart.md` pass 2 steps 1–4).
 
 - [X] T015 [P] [US1] Write failing `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ResponseNamingTests.cs` with the options-resolution helper (effective `[Produces]` → `CamelCaseOptions` / `PascalCaseOptions` / `JsonDefaults.Options`) and its first case: `ListResponse` serialized through `ReleasesController`'s declaration carries the names in `tests/fixtures/pages/releases.json`, at every nesting level [U1]
 - [X] T016 [P] [US1] Add failing `ResponseNamingTests.cs` case for `ArtistsResponse` against `tests/fixtures/pages/artists.json` [U2]
-- [ ] T017 [US1] Write failing `tests/web/render.test.js` — `render` with `tests/fixtures/pages/releases.json` writes a row per item, and writes no "waiting for its first refresh" message [U29] [U30]
-- [ ] T018 [US1] Add failing `render.test.js` cases for `tests/fixtures/pages/releases-empty.json` — the message appears and no row does [U31] [U32]
-- [ ] T019 [US1] Add a failing `render.test.js` case for stored releases with an empty `items` — "Nothing missing for this selection." [U33]
-- [ ] T020 [US1] Add a failing `render.test.js` case for `tests/fixtures/pages/releases-filtered.json` — the narrowed response renders only its single row [A3]
-- [ ] T021 [US1] Add failing `render.test.js` cases for a rendered row's artist name, title, type, date and state; for an `Incomplete` row's missing track titles and compared edition; and for one link per `sources` entry [U34] [U35] [U36]
-- [ ] T022 [US1] Add a failing `render.test.js` case for a row whose `date` is null — grouped as `Undated` and printed as "Undated" [U34]
-- [ ] T023 [US1] Add a failing `render.test.js` case for the Archive tab — the archived badge and the kind of the decision [U37]
-- [ ] T024 [US1] Add failing `render.test.js` cases for the staleness line: `releasesLastCheckedAt: null` writes no sentence and does not hide the list; `tests/fixtures/pages/releases-stale.json` writes `002`'s sentence [U38] [A8]
+- [X] T017 [US1] Write failing `tests/web/render.test.js` — `render` with `tests/fixtures/pages/releases.json` writes a row per item, and writes no "waiting for its first refresh" message [U29] [U30]
+- [X] T018 [US1] Add failing `render.test.js` cases for `tests/fixtures/pages/releases-empty.json` — the message appears and no row does [U31] [U32]
+- [X] T019 [US1] Add a failing `render.test.js` case for stored releases with an empty `items` — "Nothing missing for this selection." [U33]
+- [X] T020 [US1] Add a failing `render.test.js` case for `tests/fixtures/pages/releases-filtered.json` — the narrowed response renders only its single row [A3]
+- [X] T021 [US1] Add failing `render.test.js` cases for a rendered row's artist name, title, type, date and state; for an `Incomplete` row's missing track titles and compared edition; and for one link per `sources` entry [U34] [U35] [U36]
+- [X] T022 [US1] Add a failing `render.test.js` case for a row whose `date` is null — grouped as `Undated` and printed as "Undated" [U34]
+- [X] T023 [US1] Add a failing `render.test.js` case for the Archive tab — the archived badge and the kind of the decision [U37]
+- [X] T024 [US1] Add failing `render.test.js` cases for the staleness line: `releasesLastCheckedAt: null` writes no sentence and does not hide the list; `tests/fixtures/pages/releases-stale.json` writes `002`'s sentence [U38] [A8]
 - [X] T025 [US1] Write failing `HttpSurfaceTests.cs` cases for `ReleasesController`'s registered routes — `Releases`, `Artists`, `Status`, and `Releases/{id}/Ignore|HaveIt|Restore` under prefix `PluginRoutes.Base` [U4] [U5] [U6] [U7] [U8]
 - [X] T026 [US1] Write failing `render.test.js` cases for the paths the page sends — `Releases`, `Artists`, and `Releases/{id}/Ignore|HaveIt|Restore` — driving them through a recording `ApiClient` override [U39]
 
 ### Implementation for User Story 1
 
-- [ ] T027 [US1] Expose `render` on `globalThis.NewReleasesInternals` in `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`, keeping the assignment as the first statement of the IIFE, and add `render` to the exact set asserted in `tests/web/exposure.test.js` [U40]
+- [X] T027 [US1] Expose `render` on `globalThis.NewReleasesInternals` in `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`, keeping the assignment as the first statement of the IIFE, and add `render` to the exact set asserted in `tests/web/exposure.test.js` [U40]
 - [X] T028 [US1] Add `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level on `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs`, with `using Jellyfin.Extensions.Json;`, until T015, T016 are green [U1] [U2]
 - [X] T029 [US1] Rename `ReleasesController` routes to `[Route(PluginRoutes.Base)]` with `[HttpGet("Releases")]`, `[HttpGet("Artists")]`, `[HttpGet("Status")]`, `[HttpPost("Releases/{id:long}/Ignore")]`, `[HttpPost("Releases/{id:long}/HaveIt")]`, `[HttpPost("Releases/{id:long}/Restore")]` until T025 is green [U4] [U5] [U6] [U7] [U8]
 - [X] T030 [US1] Update `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` until T026 is green: the `API` literal becomes `'Plugins/NewReleases/'`, the request paths become `'Releases' + query()` and `'Artists'`, and the three `data-action` values become `Ignore`, `HaveIt`, `Restore`. Paths still go through `ApiClient.getUrl` (`FR-014`) [U39]
@@ -147,17 +147,17 @@ each status value matches the API (`quickstart.md` pass 2 steps 5–8).
 ### Tests for User Story 2 ⚠️
 
 - [X] T033 [P] [US2] Add a failing `ResponseNamingTests.cs` case — `AdminStatusResponse` serialized through `AdminController`'s declaration carries the names in `tests/fixtures/pages/admin-status.json`, including `sources[]`, `lastRun`, `unmatched[]` and `unmatched[].sources[]` [U9]
-- [ ] T034 [US2] Write failing `tests/web/render-status.test.js` — `renderStatus` with `tests/fixtures/pages/admin-status.json` writes the last refresh instant and outcome, the releases-last-checked sentence, the next run, the artists processed and the releases found, **none a dash** [U41] [U42] [U43] [U44]
-- [ ] T035 [US2] Add failing `render-status.test.js` cases for each source's health, calls today and daily budget, and for a cooling-down source's `cooldownUntil` and last error [U45] [U46]
-- [ ] T036 [US2] Add failing `render-status.test.js` cases for the unmatched table — one row per artist with its per-source reasons and the hint; and with `tests/fixtures/pages/admin-status-quiet.json` the table is hidden and the empty line shown [U47] [U48]
-- [ ] T037 [US2] Add failing `render-status.test.js` cases for `tests/fixtures/pages/admin-status-quiet.json` — `releasesLastCheckedAt: null` writes a dash, and `isRunning: true` writes "Running now" for the next run [U49] [U43]
-- [ ] T038 [US2] Add a failing `render-status.test.js` case for a source whose `lastError` is present while its health is `Ok` — the error is suppressed, driven from a real response shape [U45]
+- [X] T034 [US2] Write failing `tests/web/render-status.test.js` — `renderStatus` with `tests/fixtures/pages/admin-status.json` writes the last refresh instant and outcome, the releases-last-checked sentence, the next run, the artists processed and the releases found, **none a dash** [U41] [U42] [U43] [U44]
+- [X] T035 [US2] Add failing `render-status.test.js` cases for each source's health, calls today and daily budget, and for a cooling-down source's `cooldownUntil` and last error [U45] [U46]
+- [X] T036 [US2] Add failing `render-status.test.js` cases for the unmatched table — one row per artist with its per-source reasons and the hint; and with `tests/fixtures/pages/admin-status-quiet.json` the table is hidden and the empty line shown [U47] [U48]
+- [X] T037 [US2] Add failing `render-status.test.js` cases for `tests/fixtures/pages/admin-status-quiet.json` — `releasesLastCheckedAt: null` writes a dash, and `isRunning: true` writes "Running now" for the next run [U49] [U43]
+- [X] T038 [US2] Add a failing `render-status.test.js` case for a source whose `lastError` is present while its health is `Ok` — the error is suppressed, driven from a real response shape [U45]
 - [X] T039 [US2] Write failing `HttpSurfaceTests.cs` cases for `AdminController`'s registered routes — `Status`, `RunNow`, `Purge`, `ClearArchive` under prefix `PluginRoutes.Admin` [U10] [U11] [U12]
 - [X] T040 [US2] Write failing `render-status.test.js` cases for the paths the page sends — `Status`, `RunNow`, `Purge`, `ClearArchive` — through a recording `ApiClient` override [U50]
 
 ### Implementation for User Story 2
 
-- [ ] T041 [US2] Expose `renderStatus` on `globalThis.NewReleasesInternals` in `src/Jellyfin.Plugin.NewReleases/Web/admin.html` as the first statement of the IIFE, and add `renderStatus` to the exact set asserted in `tests/web/exposure.test.js` [U51]
+- [X] T041 [US2] Expose `renderStatus` on `globalThis.NewReleasesInternals` in `src/Jellyfin.Plugin.NewReleases/Web/admin.html` as the first statement of the IIFE, and add `renderStatus` to the exact set asserted in `tests/web/exposure.test.js` [U51]
 - [X] T042 [US2] Add `[Produces(JsonDefaults.CamelCaseMediaType)]` at class level on `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, with `using Jellyfin.Extensions.Json;`, until T033 is green [U9]
 - [X] T043 [US2] Rename `AdminController` routes to `[Route(PluginRoutes.Admin)]` with `[HttpGet("Status")]`, `[HttpPost("RunNow")]`, `[HttpPost("Purge")]`, `[HttpPost("ClearArchive")]` until T039 is green [U10] [U11] [U12]
 - [X] T044 [US2] Update `src/Jellyfin.Plugin.NewReleases/Web/admin.html` until T040 is green: the `API` literal becomes `'Plugins/NewReleases/Admin/'` and the three `confirmed(...)` call sites pass `RunNow`, `Purge`, `ClearArchive` [U50]

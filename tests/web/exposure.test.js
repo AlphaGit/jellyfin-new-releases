@@ -22,11 +22,11 @@ const { loadPage } = require('./load-page.js');
 test('user-view.html exposes its pure helpers', () => {
     const internals = loadPage('user-view.html');
 
-    assert.deepEqual(Object.keys(internals).sort(), ['artistLink', 'esc', 'groupOf', 'stalenessText']);
+    assert.deepEqual(Object.keys(internals).sort(), ['artistLink', 'esc', 'groupOf', 'render', 'stalenessText']);
 });
 
 test('admin.html exposes its pure helpers', () => {
     const internals = loadPage('admin.html');
 
-    assert.deepEqual(Object.keys(internals).sort(), ['checkedText', 'esc', 'healthText']);
+    assert.deepEqual(Object.keys(internals).sort(), ['checkedText', 'esc', 'healthText', 'renderStatus']);
 });

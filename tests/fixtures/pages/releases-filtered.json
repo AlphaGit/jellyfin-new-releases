@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "id": 101,
+      "artistName": "Chromatics",
+      "artistJellyfinId": "6f3a9c1d7b0e4f2a8c5d1e9b3a7f6c04",
+      "title": "Closer to Grey",
+      "type": "Album",
+      "date": "2019-10-02",
+      "datePrecision": "Day",
+      "state": "Missing",
+      "sources": [
+        {
+          "source": "musicbrainz",
+          "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000101"
+        },
+        {
+          "source": "deezer",
+          "url": "https://www.deezer.com/album/101"
+        }
+      ]
+    }
+  ],
+  "total": 1,
+  "hasStoredReleases": true,
+  "releasesLastCheckedAt": "2026-09-19T03:15:00+00:00",
+  "refreshIntervalHours": 24,
+  "serverToday": "2026-09-20"
+}

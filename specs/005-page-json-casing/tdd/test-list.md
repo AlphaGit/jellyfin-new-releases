@@ -58,17 +58,17 @@ One per acceptance scenario in `spec.md`.
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| A1 | With releases stored, the view renders a row per item and not the "waiting for its first refresh" message | US1-AS1 | characterization | PENDING | |
-| A2 | With no releases stored, the view renders the "waiting for its first refresh" message and no row | US1-AS2 | characterization | PENDING | |
-| A3 | With a filter applied, the view lists only the narrowed set | US1-AS3 | example | PENDING | |
-| A4 | A rendered row shows its artist, title, type, date, state, missing track titles, compared edition and source links, none blank | US1-AS4 | characterization | PENDING | |
-| A5 | After a completed refresh, the administrator page shows the last refresh instant, the releases-last-checked instant, the next run, the artists processed and the releases found, none a dash | US2-AS1 | characterization | PENDING | |
-| A6 | The administrator page shows each source's health, calls today, daily budget, cooldown and last error | US2-AS2 | characterization | PENDING | |
-| A7 | The administrator page lists the artists no source matched, each with its reason and the hint | US2-AS3 | characterization | PENDING | |
-| A8 | With data older than one refresh interval, both pages show `002`'s staleness wording | US2-AS4 | example | PENDING | |
+| A1 | With releases stored, the view renders a row per item and not the "waiting for its first refresh" message | US1-AS1 | characterization | BASELINE | `tests/web/render.test.js::with stored releases the panel holds one row per item` |
+| A2 | With no releases stored, the view renders the "waiting for its first refresh" message and no row | US1-AS2 | characterization | BASELINE | `tests/web/render.test.js::with no stored releases the panel holds the waiting message` |
+| A3 | With a filter applied, the view lists only the narrowed set | US1-AS3 | example | BASELINE | `tests/web/render.test.js::a narrowed response lists only what it carries` |
+| A4 | A rendered row shows its artist, title, type, date, state, missing track titles, compared edition and source links, none blank | US1-AS4 | characterization | BASELINE | `tests/web/render.test.js::a rendered row carries its artist, title, type, date and state` |
+| A5 | After a completed refresh, the administrator page shows the last refresh instant, the releases-last-checked instant, the next run, the artists processed and the releases found, none a dash | US2-AS1 | characterization | BASELINE | `tests/web/render-status.test.js::after a completed refresh the last refresh shows its instant and outcome, not a dash` |
+| A6 | The administrator page shows each source's health, calls today, daily budget, cooldown and last error | US2-AS2 | characterization | BASELINE | `tests/web/render-status.test.js::each source shows its health, calls today and daily budget` |
+| A7 | The administrator page lists the artists no source matched, each with its reason and the hint | US2-AS3 | characterization | BASELINE | `tests/web/render-status.test.js::every artist no source matched is listed with its reasons and the hint` |
+| A8 | With data older than one refresh interval, both pages show `002`'s staleness wording | US2-AS4 | example | BASELINE | `tests/web/render.test.js::with an instant older than the refresh interval the staleness sentence appears` |
 | A9 | Renaming the server's responses the way Jellyfin 12 renamed them fails at least one test | US3-AS1 | example | PENDING | |
 | A10 | Changing a page to read a field the server does not send fails at least one test | US3-AS2 | example | PENDING | |
-| A11 | The decision between the list and the empty state is exercised against a response of the shape the server really produces | US3-AS3 | characterization | PENDING | |
+| A11 | The decision between the list and the empty state is exercised against a response of the shape the server really produces | US3-AS3 | characterization | BASELINE | `tests/web/render.test.js::with no stored releases the panel holds the waiting message` |
 
 `A3` is `example`, not characterization: the filters build a query string the server already
 honours, so what this feature must prove is that the narrowed response still renders. `A9` and
@@ -152,18 +152,19 @@ terminate at `BASELINE`; the value is the guard, not a red.
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U29 | `render` with stored releases writes a row per item into the panel | US1-AS1, FR-008 | characterization | PENDING | |
-| U30 | `render` with stored releases writes no "waiting for its first refresh" message | US1-AS1, FR-001 | characterization | PENDING | |
-| U31 | `render` with `hasStoredReleases: false` writes the "waiting for its first refresh" message | US1-AS2, FR-004 | characterization | PENDING | |
-| U32 | `render` with `hasStoredReleases: false` writes no row | US1-AS2, FR-004 | characterization | PENDING | |
-| U33 | `render` with stored releases but an empty `items` writes "Nothing missing for this selection." | US1-AS3, FR-004 | characterization | PENDING | |
-| U34 | A rendered row carries the item's artist name, title, type, date and state | US1-AS4, SC-003 | characterization | PENDING | |
-| U35 | A rendered `Incomplete` row carries its missing track titles and its compared edition | US1-AS4, SC-003 | characterization | PENDING | |
-| U36 | A rendered row carries one link per entry in `sources` | US1-AS4, SC-003 | characterization | PENDING | |
-| U37 | On the Archive tab a rendered row carries its archived badge and the kind of the decision | FR-002 | characterization | PENDING | |
-| U38 | `render` with `releasesLastCheckedAt: null` writes no staleness sentence and does not hide the list | FR-005 | characterization | PENDING | |
+| U29 | `render` with stored releases writes a row per item into the panel | US1-AS1, FR-008 | characterization | BASELINE | `tests/web/render.test.js::with stored releases the panel holds one row per item` |
+| U30 | `render` with stored releases writes no "waiting for its first refresh" message | US1-AS1, FR-001 | characterization | BASELINE | `tests/web/render.test.js::with stored releases the panel does not hold the waiting message` |
+| U31 | `render` with `hasStoredReleases: false` writes the "waiting for its first refresh" message | US1-AS2, FR-004 | characterization | BASELINE | `tests/web/render.test.js::with no stored releases the panel holds the waiting message` |
+| U32 | `render` with `hasStoredReleases: false` writes no row | US1-AS2, FR-004 | characterization | BASELINE | `tests/web/render.test.js::with no stored releases the panel holds no row` |
+| U33 | `render` with stored releases but an empty `items` writes "Nothing missing for this selection." | US1-AS3, FR-004 | characterization | BASELINE | `tests/web/render.test.js::with stored releases but nothing in this selection the panel says so` |
+| U34 | A rendered row carries the item's artist name, title, type, date and state | US1-AS4, SC-003 | characterization | BASELINE | `tests/web/render.test.js::a rendered row carries its artist, title, type, date and state`, `tests/web/render.test.js::an undated row is grouped and printed as Undated` |
+| U35 | A rendered `Incomplete` row carries its missing track titles and its compared edition | US1-AS4, SC-003 | characterization | BASELINE | `tests/web/render.test.js::an Incomplete row carries its missing tracks and the edition they were compared with` |
+| U36 | A rendered row carries one link per entry in `sources` | US1-AS4, SC-003 | characterization | BASELINE | `tests/web/render.test.js::a rendered row carries one link per source` |
+| U37 | On the Archive tab a rendered row carries its archived badge and the kind of the decision | FR-002 | characterization | BASELINE | `tests/web/render.test.js::on the Archive tab a row carries its archived badge and the kind of the decision` |
+| U38 | `render` with `releasesLastCheckedAt: null` writes no staleness sentence and does not hide the list | FR-005 | characterization | BASELINE | `tests/web/render.test.js::with no instant on record the staleness line is empty and the list still renders` |
 | U39 | The page requests `Releases` and `Artists`, and posts `Releases/{id}/Ignore`, `/HaveIt`, `/Restore` | FR-016 | example | DONE | `tests/web/requests.test.js::the New Releases view asks for the artist filter and the list` |
-| U40 | `render` is on `NewReleasesInternals` and `exposure.test.js` asserts the enlarged set | FR-017 | example | PENDING | |
+| U56 | A rendered row offers the actions under the names the decision routes are served under | FR-016 | characterization | BASELINE | `tests/web/render.test.js::a rendered row offers the actions under the names the decision routes are served under` |
+| U40 | `render` is on `NewReleasesInternals` and `exposure.test.js` asserts the enlarged set | FR-017 | example | DONE | `tests/web/exposure.test.js::user-view.html exposes its pure helpers` |
 
 `U39` is red today: the page requests `releases`, `artists` and posts `have-it`.
 
@@ -176,17 +177,17 @@ reaches it from a response of the real shape.
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U41 | `renderStatus` writes the last refresh instant and its outcome, not a dash | US2-AS1, SC-002 | characterization | PENDING | |
-| U42 | `renderStatus` writes the releases-last-checked sentence, not a dash | US2-AS1, SC-002 | characterization | PENDING | |
-| U43 | `renderStatus` writes the next run instant, or "Running now" while a refresh runs | US2-AS1, SC-002 | characterization | PENDING | |
-| U44 | `renderStatus` writes the artists processed as a count of the library total, and the releases found | US2-AS1, SC-002 | characterization | PENDING | |
-| U45 | `renderStatus` writes each source's health, calls today and daily budget | US2-AS2 | characterization | PENDING | |
-| U46 | `renderStatus` writes a cooling-down source's `cooldownUntil` instant and its last error | US2-AS2 | characterization | PENDING | |
-| U47 | `renderStatus` writes one unmatched row per artist, with its per-source reasons and the hint | US2-AS3 | characterization | PENDING | |
-| U48 | `renderStatus` with no unmatched artists hides the table and shows the empty line | US2-AS3 | characterization | PENDING | |
-| U49 | `renderStatus` with `releasesLastCheckedAt: null` writes a dash rather than a sentence | FR-005 | characterization | PENDING | |
+| U41 | `renderStatus` writes the last refresh instant and its outcome, not a dash | US2-AS1, SC-002 | characterization | BASELINE | `tests/web/render-status.test.js::after a completed refresh the last refresh shows its instant and outcome, not a dash` |
+| U42 | `renderStatus` writes the releases-last-checked sentence, not a dash | US2-AS1, SC-002 | characterization | BASELINE | `tests/web/render-status.test.js::after a completed refresh the releases-last-checked value is a sentence, not a dash` |
+| U43 | `renderStatus` writes the next run instant, or "Running now" while a refresh runs | US2-AS1, SC-002 | characterization | BASELINE | `tests/web/render-status.test.js::the next refresh shows its instant when no refresh is running`, `tests/web/render-status.test.js::while a refresh is running the next refresh says so` |
+| U44 | `renderStatus` writes the artists processed as a count of the library total, and the releases found | US2-AS1, SC-002 | characterization | BASELINE | `tests/web/render-status.test.js::the artists processed and releases found show their counts, not a dash` |
+| U45 | `renderStatus` writes each source's health, calls today and daily budget | US2-AS2 | characterization | BASELINE | `tests/web/render-status.test.js::each source shows its health, calls today and daily budget`, `tests/web/render-status.test.js::a healthy source hides its last error` |
+| U46 | `renderStatus` writes a cooling-down source's `cooldownUntil` instant and its last error | US2-AS2 | characterization | BASELINE | `tests/web/render-status.test.js::a cooling-down source shows the instant it resumes and its last error` |
+| U47 | `renderStatus` writes one unmatched row per artist, with its per-source reasons and the hint | US2-AS3 | characterization | BASELINE | `tests/web/render-status.test.js::every artist no source matched is listed with its reasons and the hint` |
+| U48 | `renderStatus` with no unmatched artists hides the table and shows the empty line | US2-AS3 | characterization | BASELINE | `tests/web/render-status.test.js::with no unmatched artists the table is hidden and the empty line is shown` |
+| U49 | `renderStatus` with `releasesLastCheckedAt: null` writes a dash rather than a sentence | FR-005 | characterization | BASELINE | `tests/web/render-status.test.js::with no instant on record the releases-last-checked value is a dash` |
 | U50 | The page requests `Status` and posts `RunNow`, `Purge`, `ClearArchive` | FR-016 | example | DONE | `tests/web/requests.test.js::the administrator page asks for its status and posts its actions` |
-| U51 | `renderStatus` is on `NewReleasesInternals` and `exposure.test.js` asserts the enlarged set | FR-017 | example | PENDING | |
+| U51 | `renderStatus` is on `NewReleasesInternals` and `exposure.test.js` asserts the enlarged set | FR-017 | example | DONE | `tests/web/exposure.test.js::admin.html exposes its pure helpers` |
 
 `U50` is red today: the page requests `status` and posts `run-now`, `purge`, `clear-archive`
 under an `api/admin/` prefix.

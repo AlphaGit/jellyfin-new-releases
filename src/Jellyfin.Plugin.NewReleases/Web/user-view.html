@@ -54,7 +54,7 @@
 
             // Exposed for tests/web/*: assigned before any DOM access, so a sandbox can reach these
             // without a browser. Function declarations hoist, so all of them are defined by now.
-            globalThis.NewReleasesInternals = { esc: esc, groupOf: groupOf, artistLink: artistLink, stalenessText: stalenessText };
+            globalThis.NewReleasesInternals = { esc: esc, groupOf: groupOf, artistLink: artistLink, stalenessText: stalenessText, render: render };
 
             var root = document.getElementById('nr-user-view');
             if (!root || root.dataset.nrReady) return;

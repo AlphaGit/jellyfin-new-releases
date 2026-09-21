@@ -297,3 +297,64 @@ only the real-server pass would notice. Recorded as the accepted cost.
   which is how `pageshow` and the three action buttons are driven. Nothing is dispatched, nothing
   bubbles, and no event object is synthesized. `contracts/page-sandbox.md` is updated to say so
 - refactor: none needed
+
+## Cycles 23 and 24: U40, U51 the pages expose render and renderStatus
+
+- test: `tests/web/exposure.test.js` — both exact-set assertions widened, before the pages changed
+- red: `node --test tests/web/exposure.test.js` -> `# fail 2`, each an exact-set mismatch. That file
+  asserts the set on purpose so a new helper cannot arrive without a behaviour on this list; the two
+  behaviours it demanded are the render characterizations below
+- green: `user-view.html` exposes `render`, `admin.html` exposes `renderStatus`, each still as the
+  first statement of its IIFE. Node suite -> 39 passed
+- refactor: none needed
+
+## Cycles 25 to 34: U29 to U38, U41 to U49 — what the pages do with a real response
+
+Characterization, per the playbook's brownfield section. `render` and `renderStatus` are correct as
+written; they simply had no test, which is exactly why the defect reached a real server. These
+capture what they already do against the committed fixtures, so they pass against untouched code
+and terminate at `BASELINE`.
+
+- tests: `tests/web/render.test.js` (14 behaviours) and `tests/web/render-status.test.js` (11), both new
+- green against untouched code on the first run: `node --test tests/web/render.test.js` -> 12 passed,
+  `node --test tests/web/render-status.test.js` -> 11 passed
+- **deliberate mutant A, the defect itself**: `user-view.html` reading `data.HasStoredReleases`
+  instead of `data.hasStoredReleases` -> `# fail 8` of 12. This is the proof the Jellyfin 12 defect
+  can no longer reach a browser unseen
+- **deliberate mutant B, one field**: the row stops printing `item.state` -> `# fail 1`, only
+  `a rendered row carries its artist, title, type, date and state`. The tests discriminate rather
+  than all failing together
+- **deliberate mutant C, the administrator page**: `status.Sources` / `status.LastRun` /
+  `status.Unmatched` -> `# fail 11` of 11. Coarse by nature: `renderStatus` reads `sources` first, so
+  the whole function throws
+- **deliberate mutant D, one field**: `run.ReleasesFound` -> `# fail 1`, only
+  `the artists processed and releases found show their counts, not a dash`. The discrimination check
+  mutant C could not give
+- every mutant restored from a file copy, each verified with `cmp -s`
+- refactor: the fixture reader was about to be duplicated in two test files, so it went into
+  `tests/web/fixtures.js` before the second file used it
+- notes: `tests/fixtures/pages/releases-empty.json`, `releases-stale.json`, `releases-filtered.json`
+  and `admin-status-quiet.json` were added as the cases these behaviours need
+
+## Cycle 35: U56 a rendered row offers the actions under the names the decision routes are served under
+
+New behaviour, appended mid-loop. Cycle 21 renamed the `data-action` values with the routes, and
+nothing asserted them: `U39` captures the two GET requests, and the POST path is joined from
+`data-action` inside a click handler the stand-in cannot drive.
+
+- test: `tests/web/render.test.js::a rendered row offers the actions under the names the decision routes are served under`
+- red: green on the first run (the values were renamed in cycle 21). Deliberate mutant:
+  `data-action="HaveIt"` back to `data-action="have-it"` -> `# fail 1`, that test alone. Restored
+  from a file copy, verified with `cmp -s`
+- green: no production change
+- notes: what this does **not** cover is the join itself — `e.target.closest('button[data-action]')`
+  needs traversal the stand-in does not model. `contracts/page-sandbox.md` records it, and the
+  real-server pass drives the buttons
+
+## Cycle 36: A3 a narrowed response lists only what it carries
+
+- test: `tests/web/render.test.js::a narrowed response lists only what it carries`
+- red: green on the first run — the filters build a query string the server already honours, so what
+  this behaviour had to prove is that the narrowed response still renders. Mutant A above fails it
+  along with the rest
+- green: no production change. Node suite -> 64 passed
