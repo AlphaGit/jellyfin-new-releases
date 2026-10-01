@@ -26,14 +26,21 @@ therefore working or broken depending on the restart, with no change by the oper
 the plugin's own behaviour to explain it. A person who checks after an upgrade, sees it working, and
 walks away has learned nothing about whether it will work tomorrow.
 
-**The cause is ours, not the host's.** The two installed releases disagree about what the plugin is
-called. The project states the plugin's name in two places — the packaging manifest and the plugin
-itself — and those two places say different things. The host writes the name it gets from the
-plugin into the installed copy's record when it retires that copy, so a retired release ends up
-filed under a different name than the live one. A release the host no longer recognises as an older
-copy of the live plugin is a release it will happily start beside it. The plugin's permanent
-identifier is identical in both copies, so that identifier alone is evidently not what the host
-groups by.
+**The cause is ours, not the host's, and the host already has the guarantee we need.** Read from the
+host's own source: when it discovers installed copies it keeps the newest **per name**, compared
+case-insensitively, and retires the rest *before* it starts any of them. The permanent identifier is
+not what it groups by. So a single-running-version guarantee already exists — and our two copies
+slipped through it only because they report different names.
+
+The project states the plugin's name in two places, the packaging manifest and the plugin itself,
+and those two places say different things. The host persists a name into each installed copy's
+record, taking it from the running plugin, so a copy that has been started ends up filed under a
+different name than one that has not. Two copies filed under two names are two plugins as far as
+the host is concerned, and it starts both.
+
+**This is therefore preventable outright, not merely survivable.** Making the two statements of the
+name agree puts every copy under one name and hands the problem back to a guarantee the host already
+enforces.
 
 **The operator's only remedy was to delete files.** The person who hit this had to remove the old
 release's directory by hand and restart the server. The project's own constitution forbids exactly
@@ -195,13 +202,16 @@ what the suite can reach has to be pinned precisely.
 
 ## Assumptions
 
-- The host groups installed copies by the plugin's stated name rather than by its permanent
-  identifier alone. Inferred from the measurement: both copies carried the same identifier and were
-  still loaded as separate plugins, and the only field that differed was the name. Not confirmed
-  against the host's source.
-- The host rewrites an installed copy's record from the running plugin's own name when it retires
-  that copy. Inferred from the same measurement: the retired copy's record carried the name the
-  plugin reports, while the live copy's still carried the name the packaging wrote.
+- The host groups installed copies by name, case-insensitively, and retires all but the newest
+  before starting any. **Confirmed against the host's source**, not inferred. The measurement on the
+  real server agrees with it: both copies carried the same permanent identifier, differed only in
+  name, and both were started.
+- Exactly which path persists which name into an installed copy's record is **not** fully
+  established. The host's source shows the running plugin's name being written into that record, and
+  shows a package-supplied name being preserved where one is already present; the observed server had
+  the retired copy under the plugin's name and the live copy under the packaging's. The feature does
+  not depend on resolving this, because making the two statements of the name identical removes the
+  difference whichever path runs.
 - Changing the address of the user-facing view is safe, because the page registration is rewritten
   every time the server starts. Established by `003`, not re-verified here.
 - Nothing outside the plugin calls its addresses. True as of the newest release and asserted by
