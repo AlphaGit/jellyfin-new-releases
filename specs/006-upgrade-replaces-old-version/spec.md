@@ -65,6 +65,7 @@ workflow does. This specification is written against the outcome, not against th
 - Q: What evidence is achievable, given the suite cannot load two copies into one host? → A: Three things in the suite — the two declared names agree, the cleanup selects the right directories when driven against a stand-in directory tree including every case it must refuse to delete, and the cleanup is actually invoked at startup — and then a real upgrade on a running server as the closing step. The startup wiring is tested rather than assumed, because correct code that nothing calls is the shape of defect a green suite hides.
 - Q: What is the cleanup allowed to delete? → A: Only a directory whose own record carries this plugin's permanent identifier, and never the version that is running. The identifier is the one thing about this plugin that is frozen and already guarded by a test; names and versions change across releases. A directory whose record is missing or unreadable is left alone. Matching on the directory name was rejected: a rename makes it miss, and a similarly named plugin makes it delete another author's files. Requiring the host to have marked the copy retired was also rejected, because a copy under a stale name may never be marked, which is the case being fixed.
 - Q: What happens when a delete fails — permissions, a locked file, a half-extracted directory? → A: Log it once and carry on. This matches how the plugin already treats an absent Plugin Pages: optional work that fails never stops the rest. A failed cleanup leaves the status quo, which is a server that works on most restarts, so refusing to start would be worse than the problem.
+- Q: Does the plugin record what it deleted? → A: Yes — each removal is logged by name, at Information level. Removing files from an operator's server without a trace is hard to defend, and the log is the only evidence anyone has if something later looks wrong.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -125,9 +126,9 @@ what the suite can reach has to be pinned precisely.
 - **A directory the cleanup cannot read or cannot delete.** Left alone, reported once, and the plugin
   carries on. A cleanup that cannot finish must never be worse than one that never ran.
 - **A directory belonging to another plugin, or to no plugin.** Never touched, whatever it is named.
-- **A release that renames the plugin on purpose.** If the displayed name is ever changed
-  deliberately, the same condition is created. Whether that is forbidden, or merely has to be done
-  in both places at once, must be stated.
+- **A release that renames the plugin on purpose.** Permitted, but both statements of the name must
+  change in the same release — `FR-004` requires them to agree — and the copies left under the old
+  name are removed by `FR-007`, which is the same mechanism this feature already needs.
 
 ## Requirements *(mandatory)*
 
@@ -162,6 +163,8 @@ what the suite can reach has to be pinned precisely.
   unreadable, or carries another identifier MUST be left untouched.
 - **FR-007b**: A failed removal MUST NOT stop the plugin from starting or affect anything else it
   does. It MUST be reported once per run, at most.
+- **FR-007c**: Each successful removal MUST be recorded, naming what was removed, so an operator can
+  see afterwards what the plugin deleted and when.
 - **FR-008**: The project MUST record, where a future author will find it before publishing a
   release, that the plugin's name is fixed and that addresses are never reused between releases.
 - **FR-009**: An operator MUST be able to return to any previously published release by reinstalling
