@@ -1,17 +1,16 @@
 <!--
 Sync Impact Report
-- Version change: 1.2.0 → 1.3.0
-- Modified principles: IV. Jellyfin Compatibility (the pinned server version becomes Jellyfin
-  12.0.x, and the two packages that stop being transitive there are pinned with it)
-- Modified sections: Technical Constraints (language and runtime become C# on `net10.0`,
-  matching the Jellyfin 12 host)
-- Reason: the Jellyfin target major version changed, which this constitution's own Governance
-  section names as a trigger for review. Feature `003-jellyfin-12-compat` carried the change;
-  this amendment closes the deviation its `plan.md` recorded.
-- Considered and not added: a standing principle that the plugin takes a host's or an
-  integration's newest supported interaction over an older tolerated one. It stays a
-  requirement of `003-jellyfin-12-compat` (`FR-016`); one exercised case is thin evidence for
-  a standing rule.
+- Version change: 1.3.0 → 1.4.0
+- Modified principles: V. Respectful Sources and Privacy (one exception: the viewer's browser
+  loads release cover images directly from a source's image host)
+- Modified sections: Technical Constraints (the "no external assets" rule for the Web UI gets
+  the same cover-image exception)
+- Reason: feature `006-user-view-polish` (`FR-008`) chose direct cover loading over a server
+  proxy. MINOR, not MAJOR: a scoped exception, no principle removed or redefined.
+- Templates: none need changes; they read the constitution at runtime.
+- Follow-up TODOs: none
+- Previous amendment (1.3.0): IV. Jellyfin Compatibility (pinned server version becomes
+  Jellyfin 12.0.x), Technical Constraints (C# on `net10.0`); carried by `003-jellyfin-12-compat`
 - Previous amendment (1.2.0): Development Workflow (CI on `main` is the final gate: a pushed
   feature is not done until its CI run is verified green)
 - Previous amendment (1.1.0): Development Workflow (single-maintainer branching model: commit
@@ -111,6 +110,11 @@ library data.
   operator's contact when configured, and never a hard-coded personal contact.
 - Only what a source needs leaves the server: artist names and public identifiers such as
   MusicBrainz IDs. No telemetry, no usage reporting, no library contents beyond that.
+- Exception, cover images only: the viewer's browser MAY load a release's cover image directly
+  from the image host of the source that reported it (Deezer, Cover Art Archive). That request
+  carries the viewer's address and the image URL, nothing else. The server MUST NOT pass any
+  other library data, key or token to the browser for this purpose, and no other asset type
+  is loaded from a third party.
 - Secrets live only in the plugin configuration. Logs and error messages redact API keys and
   tokens from URLs and headers.
 
@@ -140,7 +144,7 @@ Ship the smallest change that satisfies the spec.
   native library shipped in `build.yaml` artifacts.
 - Web UI ships as embedded resources under `Web/`. `admin.html` is a standard Jellyfin plugin
   configuration page; the user-facing view is an HTML fragment served to Plugin Pages. No build
-  step, no framework, no external assets.
+  step, no framework, no external assets except the cover images Principle V permits.
 - Packaging: JPRM `build.yaml`, `manifest.json` served from GitHub Pages, MIT licence. Every
   released version has a `CHANGELOG.md` entry.
 
@@ -181,4 +185,4 @@ This constitution supersedes every other practice document in the repository.
 - The constitution is reviewed when the Jellyfin target major version changes, when Spec Kit
   changes its artifact contract, or at the first release, whichever comes first.
 
-**Version**: 1.3.0 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-09-19
+**Version**: 1.4.0 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-09-30
