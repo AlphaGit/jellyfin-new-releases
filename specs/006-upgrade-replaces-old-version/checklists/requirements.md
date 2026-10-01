@@ -31,11 +31,18 @@
 
 ## Notes
 
+Revalidated against the spec after grilling (4 rounds, 8 questions). 16/16 → 16/16.
+
 - The spec body names no language, framework or API. `NOTES.md` carries the raw evidence —
   exception type, file paths, log lines — deliberately, as the seed record rather than the
   specification.
-- Two assumptions about the host's grouping behaviour are inferred from one measurement and are
-  labelled as inferred rather than confirmed. Both are candidates for the grilling phase.
+- The host's grouping behaviour is no longer an inference. It is confirmed against the host's own
+  source and stated as fact; the one remaining uncertainty — which code path persists which name —
+  is recorded in Assumptions along with why the feature does not depend on it.
 - The request that prompted this feature ("fix the deployment pipeline so the previous version is
-  removed") is answered in the spec body as an outcome rather than restated as a mechanism, because
-  the publishing workflow cannot reach a user's server.
+  removed") is answered as an outcome, because the publishing workflow cannot reach a user's server.
+  Grilling settled the mechanism: the plugin removes retired copies of itself at startup.
+- Two points are Outstanding, both deliberate: no success criterion restates the cleanup's refusal
+  and logging rules, because `FR-005a`, `FR-007b` and `FR-007c` already bind them; and the live
+  server's current record could not be read because SSH was unavailable, which stopped mattering
+  once the cleanup was specified to handle either state.
