@@ -1,0 +1,195 @@
+---
+feature: 006-user-view-polish
+loop: outside-in
+profile: .specify/memory/tdd-profile.md
+spec_criteria: 14
+planned_at: a3b3579
+updated_at: a3b3579
+suite_baseline: red
+---
+
+# Test List: Polish the New Releases view
+
+The baseline is red because of two tests that predate this feature:
+`RepositoryManifestTests.Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` and
+`…EveryVersionCarriesItsDownloadChecksumTimestampAndJellyfin12`. The 0.1.1 release put a second
+version into `repo/manifest.json`, and `PublishedVersionsToday` still says 1. The loop must not
+start until that is fixed outside this feature.
+
+**Acceptance level.** The profile has no end-to-end runner. Server criteria run through
+`AcceptanceRig`: the real controllers, repositories and refresh task over a temporary database
+and stubbed HTTP. Page criteria run through `tests/web/load-page.js`: the real `user-view.html`
+script in a `node:vm` sandbox with the string-capturing fake DOM. The committed fixtures in
+`tests/fixtures/pages/` connect the two sides, as in `005`. Layout criteria (US3) and real lazy
+loading cannot be observed by a fake DOM that does no layout. Their acceptance lines assert the
+declarations that produce them, and the real-browser pass in `quickstart.md` §2 checks the pixels.
+
+## Outer loop: acceptance behaviors
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| A1  | With artists "ASP", "Aspen" and "Wasp", the page's suggestion list offers all three labels | US1-AS1, FR-001 | example | PENDING | |
+| A2  | When the field text becomes the label "ASP", the page requests releases with ASP's `artistId` | US1-AS2, FR-002 | example | PENDING | |
+| A3  | After an artist is applied, emptying the field or pressing Clear requests releases with no `artistId` | US1-AS3, FR-003 | example | PENDING | |
+| A4  | Text that equals no label requests releases with no `artistId` | US1-AS4, FR-002 | example | PENDING | |
+| A5  | The Artist control is a native text input bound to the suggestion list by `list`, labelled "Artist", with no page key handling | US1-AS5, FR-004 | example | PENDING | |
+| A6  | After a refresh over two tagged artists named "Desire" and one "Chromatics", `GET Artists` returns both "Desire" with their texts and "Chromatics" with `null` | US1-AS6, FR-005a, FR-005b | example | PENDING | |
+| A7  | After a refresh stores one release at both sources, `GET Releases` returns its Deezer cover URL, then its Cover Art Archive URL | US2-AS1, FR-006, FR-006a | example | PENDING | |
+| A8  | On a card for a release with both sources, an `error` on the Deezer image puts the Cover Art Archive URL in its `src` | US2-AS2, FR-006a | example | PENDING | |
+| A9  | On a card whose every cover URL fails, the cover box remains and holds no `<img>` | US2-AS3, FR-007 | example | PENDING | |
+| A10 | A rendered cover image has empty alt text | US2-AS4 | example | PENDING | |
+| A11 | The stylesheet makes the List-tab buttons fill one shared column: `.nr-actions` stretches, and its buttons are `width: 100%` | US3-AS1, FR-009, SC-003 | example | PENDING | |
+| A12 | An Archive-tab card renders "Restore" inside `.nr-actions`, under the same button rule as "Ignore" and "Have it" | US3-AS2, FR-009 | example | PENDING | |
+| A13 | The declared source-link colour has a WCAG contrast of at least 4.5:1 against the card background `#1c1c1c` | US4-AS1, FR-010, SC-004 | example | PENDING | |
+| A14 | The source link keeps its underline, its `:visited` state has the same colour, and focus shows the outline | US4-AS2, FR-010 | example | PENDING | |
+
+## Inner loop: unit behaviors
+
+### `src/Jellyfin.Plugin.NewReleases/Storage/Migrations/002_artist_disambiguation.sql` (with `PluginDatabase`)
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U1  | A database at schema `001` gains `disambiguation` and `disambiguation_mbid`, `NULL` on every existing row | FR-005b, constitution IV | example | PENDING | |
+| U2  | A fresh first open reaches schema version 2 with two `schema_version` rows. This changes the baseline asserted by `DatabaseTests::OpenAsync_FirstOpenAppliesTheInitialMigration`, `…SecondOpenFromAFreshInstanceAppliesNothing` and `…TwoConcurrentFirstOpensRunTheMigrationOnce` | FR-005b | example | PENDING | |
+
+### `src/Jellyfin.Plugin.NewReleases/Storage/ArtistRepository.cs`
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U3  | A stored disambiguation text and its MBID read back unchanged | FR-005b | example | PENDING | |
+| U4  | A later library sync (`UpsertAsync`) of the same artist keeps the stored text and MBID | FR-005b | example | PENDING | |
+| U5  | A tagged artist whose name collides, with no text fetched yet, is a candidate under its tag MBID | FR-005b | example | PENDING | |
+| U6  | An untagged colliding artist with a `Matched` MusicBrainz source ID is a candidate under that ID | FR-005b | example | PENDING | |
+| U7  | An artist whose normalized name occurs once is not a candidate | FR-005b | example | PENDING | |
+| U8  | Two artists whose normalized name occurs exactly twice are both candidates (the other side of U7) | FR-005b | example | PENDING | |
+| U9  | Names that differ only in case or accents ("Björk", "bjork") count as a collision | FR-005a, FR-005b | example | PENDING | |
+| U10 | A colliding artist with no effective MBID is not a candidate | FR-005b | example | PENDING | |
+| U11 | A colliding artist already fetched for its current MBID is not a candidate | FR-005b | example | PENDING | |
+| U12 | A colliding artist whose effective MBID differs from the fetched one is a candidate again | FR-005b | example | PENDING | |
+
+### `src/Jellyfin.Plugin.NewReleases/Sources/MusicBrainzSource.cs`
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U13 | The lookup requests `artist/{mbid}?fmt=json` with the MBID URL-escaped | FR-005b, contracts/http-api.md | example | PENDING | |
+| U14 | The lookup returns the `disambiguation` of `artist_lookup.json` | FR-005b | example | PENDING | |
+| U15 | The lookup returns `""` for `artist_lookup_empty.json` | FR-005b | example | PENDING | |
+| U16 | With the MusicBrainz budget exhausted, the lookup throws `DailyBudgetExhaustedException` and sends nothing | FR-005b, constitution V | example | PENDING | |
+
+### `src/Jellyfin.Plugin.NewReleases/ScheduledTasks/RefreshNewReleasesTask.cs`
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U17 | A run over two homonyms and one unique artist sends exactly two lookups | FR-005b | example | PENDING | |
+| U18 | Each looked-up text is stored with the MBID it was fetched for | FR-005b | example | PENDING | |
+| U19 | A second run with an unchanged library sends no lookup | FR-005b | example | PENDING | |
+| U20 | An artist first matched by search in this run is looked up in the same run | FR-005b | example | PENDING | |
+| U21 | MusicBrainz disabled in configuration: the run sends no lookup | FR-005b | example | PENDING | |
+| U22 | MusicBrainz cooling down: the run sends no lookup | FR-005b, constitution V | example | PENDING | |
+| U23 | A budget exhausted mid-step stops the remaining lookups, and the run ends `Completed` | FR-005b | example | PENDING | |
+| U24 | A lookup that fails with another exception adds one error, and the next candidate is still looked up | FR-005b | example | PENDING | |
+
+### `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs`: `GET Artists`
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U25 | Two artists with the same normalized name and stored texts each get their own text | FR-005a | example | PENDING | |
+| U26 | A unique name gets `null`, even with a stale stored text | FR-005a | example | PENDING | |
+| U27 | A colliding artist with a stored `""` gets `null` | FR-005a | example | PENDING | |
+| U28 | A caller who sees one of two homonyms gets that artist's text | FR-005a | example | PENDING | |
+| U29 | A caller who sees one of two homonyms does not get the hidden one in `items` | FR-005a | example | PENDING | |
+| U30 | `ArtistsResponse`, serialized through the endpoint's declaration, carries the names in `tests/fixtures/pages/artists.json`, `disambiguation` included | contracts/http-api.md | contract | PENDING | |
+
+### `src/Jellyfin.Plugin.NewReleases/Storage/ReleaseRepository.cs`
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U31 | Each listed source link carries the `source_release_id` stored for it | FR-006 | example | PENDING | |
+
+### `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs`: `GET Releases`
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U32 | A release at both sources gets the Deezer URL first, then the Cover Art Archive URL | FR-006, FR-006a | example | PENDING | |
+| U33 | A Deezer-only release gets exactly `https://api.deezer.com/album/{id}/image?size=medium` | FR-006, FR-006a | example | PENDING | |
+| U34 | A MusicBrainz-only release gets exactly `https://coverartarchive.org/release-group/{id}/front-250` | FR-006, FR-006a | example | PENDING | |
+| U35 | A source ID containing URL-reserved characters is escaped in its cover URL | FR-006 | example | PENDING | |
+| U36 | `sources` keeps its existing order when `covers` is added | FR-011 | example | PENDING | |
+| U37 | `ListResponse`, serialized through the endpoint's declaration, carries the names in `tests/fixtures/pages/releases.json`, `covers` included | contracts/http-api.md | contract | PENDING | |
+
+### `tests/web/fake-dom.js` (test infrastructure the US2 page tests need)
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U38 | `addEventListener(type, handler, options)` keeps `options` readable by a test | invariant: A8 and U53 need the capture flag | example | PENDING | |
+| U39 | `remove()` detaches an element from its owner | invariant: A9 and U52 need removal | example | PENDING | |
+
+### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: Artist filter
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U40 | `artistLabel` of an artist with a disambiguation is `name — disambiguation` | FR-005a, FR-005c | example | PENDING | |
+| U41 | `artistLabel` of an artist with `disambiguation: null` is the name alone | FR-005a | example | PENDING | |
+| U42 | `artistIndex` maps each label to its `jellyfinId` | FR-002 | example | PENDING | |
+| U43 | `artistIndex` keeps the first artist when two share a label | FR-002 | example | PENDING | |
+| U44 | Loading artists writes one escaped `<option value>` per label into `#nr-f-artist-list` | FR-001, FR-005c | example | PENDING | |
+| U45 | When the Artists request fails, the field stays usable, and releases are requested with no `artistId` | spec edge case "artist list fails to load" | example | PENDING | |
+| U46 | Typing the same applied label again sends no second releases request | contracts/user-view.md ("when it changes, reload") | example | PENDING | |
+| U47 | `NewReleasesInternals` exposes exactly the existing members plus `artistLabel` and `artistIndex` (changes the baseline of `exposure.test.js`) | contracts/user-view.md | example | PENDING | |
+
+### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: release card cover
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U48 | A row's image `src` is `covers[0]` | FR-007 | example | PENDING | |
+| U49 | A row's `data-fallback` lists `covers[1..]` in order | FR-006a | example | PENDING | |
+| U50 | A row's image declares `loading="lazy"` | FR-007a | example | PENDING | |
+| U51 | A row's image declares `referrerpolicy="no-referrer"` | FR-008, constitution V | example | PENDING | |
+| U52 | A row's image declares `width="64" height="64"` | FR-007 | example | PENDING | |
+| U53 | A row with `covers: []` writes the cover box with no `<img>` | FR-007 | example | PENDING | |
+| U54 | Cover URLs are written through `esc` | invariant: page markup is string-built, so an unescaped URL is an injection | example | PENDING | |
+| U55 | `nextCover` with two fallbacks puts the first in `src` and keeps the second | FR-006a | example | PENDING | |
+| U56 | `nextCover` with no fallback removes the image | FR-007 | example | PENDING | |
+| U57 | The panel has one `error` listener registered for the capture phase | FR-006a | example | PENDING | |
+| U58 | `NewReleasesInternals` also exposes `nextCover` | contracts/user-view.md | example | PENDING | |
+
+### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: stylesheet (`tests/web/styles.test.js`)
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U59 | `@media (max-width: 600px)` puts `.nr-actions` on its own row, with equal-width columns | FR-009, spec edge case "narrow screen" | example | PENDING | |
+| U60 | `.nr-cover` declares a 64 × 64 box with a background | FR-007 | example | PENDING | |
+| U61 | `.nr-cover img` declares `object-fit: cover` | spec edge case "not square" | example | PENDING | |
+| U62 | The test's contrast function rates `#0000ee` on `#1c1c1c` below 4.5, which pins it against the defect the spec reports | FR-010 | example | PENDING | |
+| U63 | The test's contrast function rates `#ffffff` on `#000000` at 21, the formula's upper bound | FR-010 | example | PENDING | |
+
+## Invariants and edge cases still to place
+
+None. Every edge case in `spec.md` is placed above or named in "Out of scope".
+
+## Out of scope
+
+- **Matching rules and number of suggestions**: the browser's native list decides them
+  (FR-001, Clarifications 2026-10-01). No test can, or should, pin a browser's matching.
+- **Typing stays responsive for more than 1,000 artists**: the browser filters natively, and
+  the page does an O(1) map lookup per keystroke. There is no measurable requirement, so there
+  is no test.
+- **Pixel-equal button widths, rendered contrast, real lazy-load timing**: no layout in the
+  fake DOM. Checked in the real-browser pass, `quickstart.md` §2.
+- **Admin page**: unchanged (spec Assumptions).
+- **Light themes**: contrast is specified for the default dark theme only (spec Assumptions).
+- **Fetching or proxying images on the server**: forbidden by FR-008, so the server has no
+  behavior to test. U32–U35 assert only the URL strings.
+
+## Verification commands
+
+Copied verbatim from `.specify/memory/tdd-profile.md` (detected at `b1b4c7e`):
+
+- Single test (dotnet): `dotnet test --configuration Release --filter "FullyQualifiedName~{name}" -- RunConfiguration.TreatNoTestsAsError=true`
+- Full suite (dotnet): `dotnet test --configuration Release`
+- File (node): `node --test tests/web/{file}`
+- Full suite (node): `node --test "tests/web/*.test.js"`
+- Watch (node): `node --test --watch "tests/web/*.test.js"`
+- Coverage (node): `node --test --experimental-test-coverage "tests/web/*.test.js"`
+- Mutation: none in the profile. Use a deliberate-mutant spot check (constitution II).
+- Shell note: prefix `PATH=/opt/homebrew/opt/dotnet/bin:$PATH DOTNET_ROOT=/opt/homebrew/opt/dotnet/libexec` when `dotnet` resolves to SDK 9.
