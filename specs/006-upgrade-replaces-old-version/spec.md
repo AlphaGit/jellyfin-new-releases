@@ -180,9 +180,9 @@ what the suite can reach has to be pinned precisely.
 - **Published release**: a version that has been offered to operators. A copy of it may sit on a
   server forever, so the name it was published under is a fact the project cannot later take back —
   only clean up after.
-- **Installed copy**: one release present on one server, which the host may be running or may have
-  retired. Retired is not the same as absent, and — as this defect shows — not reliably the same as
-  stopped.
+- **Installed copy**: one release present on one server. The host deletes a copy it supersedes, but
+  only when it recognises it as an older copy of the live plugin — which it does by name. A copy
+  under a name it no longer groups is never superseded, never deleted, and started on every run.
 
 ## Success Criteria *(mandatory)*
 
@@ -201,10 +201,10 @@ what the suite can reach has to be pinned precisely.
 
 ## Assumptions
 
-- The host groups installed copies by name, case-insensitively, and retires all but the newest
-  before starting any. **Confirmed against the host's source**, not inferred. The measurement on the
-  real server agrees with it: both copies carried the same permanent identifier, differed only in
-  name, and both were started.
+- The host groups installed copies by name, case-insensitively, keeps the newest, and **deletes the
+  older ones' directories** at discovery, before starting any. **Confirmed against the host's
+  source**, not inferred. The measurement on the real server agrees: both copies carried the same
+  permanent identifier, differed only in name, and both were started.
 - Exactly which path persists which name into an installed copy's record is **not** fully
   established. The host's source shows the running plugin's name being written into that record, and
   shows a package-supplied name being preserved where one is already present; the observed server had

@@ -31,7 +31,7 @@
 
 ## Notes
 
-Revalidated against the spec after grilling (4 rounds, 8 questions). 16/16 → 16/16.
+Revalidated after grilling (5 rounds, 9 questions) and after the replan. 16/16 → 16/16.
 
 - The spec body names no language, framework or API. `NOTES.md` carries the raw evidence —
   exception type, file paths, log lines — deliberately, as the seed record rather than the
@@ -42,7 +42,10 @@ Revalidated against the spec after grilling (4 rounds, 8 questions). 16/16 → 1
 - The request that prompted this feature ("fix the deployment pipeline so the previous version is
   removed") is answered as an outcome, because the publishing workflow cannot reach a user's server.
   Grilling settled the mechanism: the plugin removes retired copies of itself at startup.
-- Two points are Outstanding, both deliberate: no success criterion restates the cleanup's refusal
-  and logging rules, because `FR-005a`, `FR-007b` and `FR-007c` already bind them; and the live
-  server's current record could not be read because SSH was unavailable, which stopped mattering
-  once the cleanup was specified to handle either state.
+- The automatic cleanup specified in round 2 was removed in round 5, after reading the host's
+  source showed it already deletes superseded same-name copies at discovery. The requirement it
+  rested on — that the host never retires a stale copy — was true only across names. The spec now
+  carries a one-time documented removal instead, and `plan.md` records the correction.
+- One bounded constitution exception is recorded rather than hidden: the renaming release asks the
+  operator to delete one directory. Constitution IV governs the finished product, not a pre-release
+  transition.
