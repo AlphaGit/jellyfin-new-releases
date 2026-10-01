@@ -63,6 +63,8 @@ workflow does. This specification is written against the outcome, not against th
 - Q: Who removes the installed copy that is filed under the old name, given Jellyfin's dedup can never retire it? → A: The plugin, at startup, automatically. An operator instruction was considered and rejected: the constitution forbids a release that requires the operator to delete plugin data, and a copy under a stale name would otherwise load forever beside the live one, sharing its database and registering a second refresh task. Overwriting the old directory in place was also considered and rejected — the plugin does not choose its install location, so an overwrite would leave a directory whose name contradicts its contents, written by code overwriting its own loaded assembly.
 - Q: That conflicts with the recorded requirement that rollback stay possible. Which gives way? → A: The requirement is narrowed, not dropped. The published manifest retains every released version and the host's catalogue can reinstall any of them, so what is lost is *instant local* rollback to a copy already on disk, not the ability to return to a published release. The requirement now states the guarantee as rollback by reinstall.
 - Q: What evidence is achievable, given the suite cannot load two copies into one host? → A: Three things in the suite — the two declared names agree, the cleanup selects the right directories when driven against a stand-in directory tree including every case it must refuse to delete, and the cleanup is actually invoked at startup — and then a real upgrade on a running server as the closing step. The startup wiring is tested rather than assumed, because correct code that nothing calls is the shape of defect a green suite hides.
+- Q: What is the cleanup allowed to delete? → A: Only a directory whose own record carries this plugin's permanent identifier, and never the version that is running. The identifier is the one thing about this plugin that is frozen and already guarded by a test; names and versions change across releases. A directory whose record is missing or unreadable is left alone. Matching on the directory name was rejected: a rename makes it miss, and a similarly named plugin makes it delete another author's files. Requiring the host to have marked the copy retired was also rejected, because a copy under a stale name may never be marked, which is the case being fixed.
+- Q: What happens when a delete fails — permissions, a locked file, a half-extracted directory? → A: Log it once and carry on. This matches how the plugin already treats an absent Plugin Pages: optional work that fails never stops the rest. A failed cleanup leaves the status quo, which is a server that works on most restarts, so refusing to start would be worse than the problem.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -116,11 +118,13 @@ what the suite can reach has to be pinned precisely.
 - **An upgrade across more than one release** — from the oldest published version straight to the
   newest, skipping those in between. The guarantee must hold for every published version, not only
   the immediately preceding one.
-- **A downgrade, or a deliberate rollback** to an older release. The host offers this; whatever this
-  feature changes must not take it away.
-- **The already-broken server.** Someone who upgraded before this fix has two releases on disk right
-  now. Installing the fixed release has to resolve that, or the specification has to say plainly
-  what the operator must do and why it is a one-time cost.
+- **A deliberate rollback** to an older release, which now means reinstalling it from the catalogue
+  rather than the host switching to a copy still on disk.
+- **The already-broken server.** Someone who upgraded before this fix has two copies on disk right
+  now, under two different names. Installing the fixed release must return them to one by itself.
+- **A directory the cleanup cannot read or cannot delete.** Left alone, reported once, and the plugin
+  carries on. A cleanup that cannot finish must never be worse than one that never ran.
+- **A directory belonging to another plugin, or to no plugin.** Never touched, whatever it is named.
 - **A release that renames the plugin on purpose.** If the displayed name is ever changed
   deliberately, the same condition is created. Whether that is forbidden, or merely has to be done
   in both places at once, must be stated.
@@ -153,6 +157,11 @@ what the suite can reach has to be pinned precisely.
   copies filed under a name it no longer uses, so that a server which already carries two copies
   returns to one without operator action. A copy filed under a superseded name is the case the host
   cannot resolve on its own, because its grouping never matches the live copy.
+- **FR-007a**: The cleanup MUST only remove a directory whose own record carries this plugin's
+  permanent identifier, and MUST NOT remove the running version. A directory whose record is absent,
+  unreadable, or carries another identifier MUST be left untouched.
+- **FR-007b**: A failed removal MUST NOT stop the plugin from starting or affect anything else it
+  does. It MUST be reported once per run, at most.
 - **FR-008**: The project MUST record, where a future author will find it before publishing a
   release, that the plugin's name is fixed and that addresses are never reused between releases.
 - **FR-009**: An operator MUST be able to return to any previously published release by reinstalling
