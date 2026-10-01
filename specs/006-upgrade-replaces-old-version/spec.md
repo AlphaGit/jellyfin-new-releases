@@ -153,7 +153,8 @@ what the suite can reach has to be pinned precisely.
   remove, driven against a stand-in directory tree rather than a real installation.
 - **FR-005b**: A test MUST fail if the cleanup stops being invoked at startup.
 - **FR-006**: This feature MUST NOT change what any endpoint returns, what data is stored, who may
-  see what, or how sources are used. It changes identity and addresses only.
+  see what, or how sources are used, and MUST NOT change any address the plugin serves. It changes
+  the plugin's displayed name and what it removes from disk, nothing else.
 - **FR-007**: The plugin MUST remove installed copies of itself that the host has retired, including
   copies filed under a name it no longer uses, so that a server which already carries two copies
   returns to one without operator action. A copy filed under a superseded name is the case the host
@@ -166,7 +167,8 @@ what the suite can reach has to be pinned precisely.
 - **FR-007c**: Each successful removal MUST be recorded, naming what was removed, so an operator can
   see afterwards what the plugin deleted and when.
 - **FR-008**: The project MUST record, where a future author will find it before publishing a
-  release, that the plugin's name is fixed and that addresses are never reused between releases.
+  release, that the plugin's displayed name is fixed, that it is stated in more than one place, and
+  that those places must never disagree.
 - **FR-009**: An operator MUST be able to return to any previously published release by reinstalling
   it from the catalogue. Instant rollback to a copy still on disk is explicitly **not** guaranteed,
   because `FR-007` removes those copies; the published manifest retains every released version, which
@@ -177,8 +179,9 @@ what the suite can reach has to be pinned precisely.
 - **Plugin identity**: what the host uses to recognise two installed copies as the same plugin. Not
   the same thing as the permanent identifier, as this defect shows: the identifier was identical in
   both copies and they were still treated as separate.
-- **Published release**: a version that has been offered to operators. Its addresses are a matter of
-  record from the moment it is published, because a copy of it may be installed somewhere forever.
+- **Published release**: a version that has been offered to operators. A copy of it may sit on a
+  server forever, so the name it was published under is a fact the project cannot later take back —
+  only clean up after.
 - **Installed copy**: one release present on one server, which the host may be running or may have
   retired. Retired is not the same as absent, and — as this defect shows — not reliably the same as
   stopped.
