@@ -4,9 +4,9 @@
 
 ---
 
-## R1 — Why two copies load, and why one line fixes it
+## R1 — Why two copies loaded
 
-**Measured**, from Jellyfin's `Emby.Server.Implementations/Plugins/PluginManager.cs`:
+**Measured**, from `Emby.Server.Implementations/Plugins/PluginManager.cs`:
 
 ```csharp
 if (!string.Equals(lastName, entry.Name, StringComparison.OrdinalIgnoreCase))
@@ -15,106 +15,79 @@ if (!string.Equals(lastName, entry.Name, StringComparison.OrdinalIgnoreCase))
 `DiscoverPlugins()` sorts installed copies, walks them backward, keeps the newest **per name**, and
 supersedes the rest **before** `LoadAssemblies()` runs. The grouping key is the name, not the GUID.
 
-So a single-running-copy guarantee already exists in the host. Our copies escaped it because
-`build.yaml` declares `Jellyfin New Releases` and `Plugin.cs` declares `New Releases`, and the host
-persists a name into each copy's `meta.json` (`manifest.Name = plugin.Instance.Name` on
-instantiation; a package-supplied name is preserved where one is already present). Two names, two
-plugins, both loaded.
+Our copies escaped it because `build.yaml` declares `Jellyfin New Releases` and `Plugin.cs` declares
+`New Releases`. The host persists a name into each copy's `meta.json` — `manifest.Name =
+plugin.Instance.Name` on instantiation, with a package-supplied name preserved where one already
+exists — so copies end up under two names. Two names, two plugins, both loaded.
 
-**Decision**: align `build.yaml` to `Plugin.Name` — `New Releases` everywhere.
+## R2 — What the host already does about it
 
-**Rationale**: the instance name is what the host writes into a copy that has run, so aligning the
-package to the instance makes every path converge on one string. The reverse leaves every existing
-copy under the old name.
+**Measured**, same file and `Emby.Server.Implementations/Updates/InstallationManager.cs`:
 
-**Alternatives rejected**: aligning `Plugin.Name` to the package (recreates the condition on the
-next upgrade); a third name (same hazard, no benefit).
+- **Install/update** extracts to a version-specific directory — `targetDir += "_" + package.Version`
+  — and deletes only that exact path if it already exists. It never touches other versions. So an
+  update always leaves two directories.
+- **The next discovery** cleans up: where a newer enabled copy of the same name exists, the older
+  one's directory is removed with `Directory.Delete(path, true)`. If that fails it is marked
+  `PluginStatus.Deleted`.
 
-## R2 — Why the host cannot clean up the copies that already exist
+**So the host's cleanup is complete within one name.** The only copies it cannot reach are those
+filed under a name it no longer groups — and a name change is the only thing that creates those.
 
-Grouping is by name, so a copy filed under `Jellyfin New Releases` and a copy filed under
-`New Releases` are **never** compared. The host will not retire either. Left alone, the old copy
-loads on every start, shares the plugin database, and registers a second refresh task.
+**This corrects an earlier version of this plan**, which asserted the host never retires a stale
+copy and specified an automatic cleanup inside the plugin on that basis. The assertion was true only
+for the cross-name case, not generally.
 
-**Decision**: the plugin removes retired copies of itself at startup.
+## R3 — Decision: fix the name, document one manual step, add no cleanup code
 
-**Rationale**: it is the only actor that can see both names. The constitution forbids a release that
-requires the operator to delete plugin data.
+**Decision**: align `build.yaml` to `Plugin.Name` — `New Releases` everywhere — and have the
+renaming release's notes tell the operator to remove the one directory left under the old name.
 
-**Alternatives rejected**: an operator instruction in the release notes (breaches constitution IV);
-overwriting the old directory in place (the plugin does not choose its install location, so the
-directory name would contradict its contents, written by code overwriting its own loaded assembly).
+**Rationale**: the rename is a single event in the project's life. A permanent destructive code path
+to tidy up after it would re-implement deletion the host already performs, and would uniquely add
+only the clearing of that one orphan. The constitution's "no release requires the operator to delete
+plugin data" governs the finished product, not a pre-release transition, so this is a bounded
+exception recorded in the spec rather than a breach.
 
-## R3 — Where the cleanup runs
+**Alternatives rejected**:
 
-**Decision**: an `IHostedService`, registered in `PluginServiceRegistrator` beside
-`PluginPagesRegistrationService`.
+- **A cleanup inside the plugin** (`IHostedService` enumerating `IApplicationPaths.PluginsPath`,
+  matching the frozen GUID, never the running directory, never a version at or above running).
+  Fully automatic and needs no operator step, but it is permanent irreversible code whose only
+  unique job happens once, and a bug in it destroys a working install.
+- **Keeping `Jellyfin New Releases` as the name.** Costs nothing and creates no orphan on the one
+  server known to be affected, because the copy surviving there is already under that name. Rejected
+  because the plugin is not part of the official distribution and should not imply it.
 
-**Rationale**: the existing registration already records why — construction order between plugins is
-not guaranteed, and the generic host starts hosted services once every plugin exists. Reusing that
-shape costs nothing and keeps one startup pattern in the plugin.
+## R4 — Which name is canonical, and why that direction
 
-**Alternatives rejected**: the `Plugin` constructor (runs during discovery, before the host is up).
+`Plugin.Name` wins; `build.yaml` is aligned to it. The host writes the running plugin's name into a
+copy that has run, so aligning the package to the instance makes every path converge on one string.
+Aligning the other way leaves every already-installed copy under the old name.
 
-## R4 — Finding the directories
-
-- The plugins directory: `IApplicationPaths.PluginsPath`, confirmed present on `Jellyfin.Common`
-  12.0.0.
-- The running copy's directory: the directory containing `typeof(Plugin).Assembly.Location`.
-  Jellyfin loads plugin assemblies from their install directory, so this is exact and needs no
-  name or version comparison.
-- Each candidate's record: `meta.json` in the directory, camelCase fields. Verified against a real
-  install: `guid`, `name`, `version`, `status`, `targetAbi`, `timestamp`, `autoUpdate`.
-
-Shape fixed in [`contracts/installed-copy-record.md`](./contracts/installed-copy-record.md).
-
-## R5 — Which copies are removable
-
-`FR-007a` says "carries our GUID, and not the running version". Taken literally that also removes a
-**newer** copy sitting beside an older running one — which happens when an operator deliberately
-runs an older version with the newer one disabled. Deleting their chosen rollback target is the one
-way this feature could destroy something an operator wanted.
-
-**Decision**: remove a copy only when its GUID is ours, its directory is not the running one, **and
-its version is lower than the running version**. A copy at or above the running version is left
-alone.
-
-**Rationale**: it satisfies the goal — every stale copy goes — while making the destructive path
-monotonic. Nothing newer is ever removed, so no deliberate downgrade is undone.
-
-**This narrows `FR-007a`, which the grilling did not settle.** Recorded here rather than assumed
-silently; it needs a line in the spec and is flagged in the completion report.
-
-**Alternatives rejected**: requiring the host's `status` to be `Superseded` (a stale-name copy is
-never marked, so nothing would be removed — the case being fixed); removing anything that is not
-running (destroys a deliberate downgrade).
-
-## R6 — What the display-name change touches
+## R5 — What the rename touches
 
 | Place | Change |
 | --- | --- |
 | `build.yaml` `name` | `Jellyfin New Releases` → `New Releases` |
-| `repo/manifest.json` | regenerated by CI from `build.yaml`; not edited by hand |
-| `specs/003-jellyfin-12-compat/contracts/plugin-repository-manifest.md` | pins `"name": "Jellyfin New Releases"`; must be amended, same rule `005` applied to its route contracts |
+| `repo/manifest.json` | regenerated by CI from `build.yaml`; never edited by hand |
+| `specs/003-jellyfin-12-compat/contracts/plugin-repository-manifest.md` | pins `"name": "Jellyfin New Releases"`; amended, as `005` amended its route contracts |
+| `CHANGELOG.md` | the renaming release's entry carries the one-time removal step |
 | `Plugin.cs` `Name` | unchanged — it is the canonical value |
 | `Jellyfin.Plugin.NewReleases` namespace, `PageEntryId`, migration prefix, embedded resource paths | unchanged, per `FR-004a` |
 | `README.md`, `CLAUDE.md`, constitution titles | unchanged — they name the repository, not the plugin |
 
-The install directory for new installs becomes `New Releases_<version>`. That is what makes R2's
-cleanup necessary for one release, and harmless forever after.
+New installs land in `New Releases_<version>`. The copy under `Jellyfin New Releases_<version>` is
+the orphan the release notes name.
 
-## R7 — Evidence without a second host
+## R6 — Evidence
 
-The suite cannot load two copies into one host. What it can reach:
+The suite cannot load two copies into one host, and after this decision there is no new code to
+test. What remains is the assertion that would have prevented the whole defect:
 
-1. `build.yaml`'s name equals `Plugin.Name` — one assertion, and the whole defect.
-2. Directory selection, driven against a temp tree: a stale-name copy is removed; an older same-name
-   copy is removed; the running directory is never removed; a newer copy is never removed; another
-   GUID is never removed; a missing or unreadable record is never removed.
-3. The cleanup is registered as a hosted service — `PluginServiceRegistratorTests` already asserts
-   registrations, so this follows an existing pattern.
+- `build.yaml`'s `name` equals `Plugin.Name`. One test, in `Packaging/BuildManifestTests.cs`, which
+  already reads `build.yaml` through `Support/RepositoryFiles.cs`.
 
-Not reachable: that a real upgrade leaves one copy running. That is `SC-001`/`SC-005`, closed by the
-real-server pass in [`quickstart.md`](./quickstart.md).
+The rest is closed on a real server: [`quickstart.md`](./quickstart.md).
 
-**No new dependency.** Everything needed is in the base library and packages already referenced.
+**No new dependency, and no new source file.**

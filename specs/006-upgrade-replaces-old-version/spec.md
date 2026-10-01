@@ -38,9 +38,14 @@ record, taking it from the running plugin, so a copy that has been started ends 
 different name than one that has not. Two copies filed under two names are two plugins as far as
 the host is concerned, and it starts both.
 
+**The host also cleans up after itself, within one name.** When it finds a newer enabled copy, it
+deletes the older one's directory outright at discovery — not merely marks it retired. Two copies
+under two names are never compared, so neither is ever deleted. That is the entire gap, and a name
+change is the only thing that opens it.
+
 **This is therefore preventable outright, not merely survivable.** Making the two statements of the
 name agree puts every copy under one name and hands the problem back to a guarantee the host already
-enforces.
+enforces, including its own deletion of what it supersedes.
 
 **The operator's only remedy was to delete files.** The person who hit this had to remove the old
 release's directory by hand and restart the server. The project's own constitution forbids exactly
@@ -66,6 +71,8 @@ workflow does. This specification is written against the outcome, not against th
 - Q: What is the cleanup allowed to delete? → A: Only a directory whose own record carries this plugin's permanent identifier, and never the version that is running. The identifier is the one thing about this plugin that is frozen and already guarded by a test; names and versions change across releases. A directory whose record is missing or unreadable is left alone. Matching on the directory name was rejected: a rename makes it miss, and a similarly named plugin makes it delete another author's files. Requiring the host to have marked the copy retired was also rejected, because a copy under a stale name may never be marked, which is the case being fixed.
 - Q: What happens when a delete fails — permissions, a locked file, a half-extracted directory? → A: Log it once and carry on. This matches how the plugin already treats an absent Plugin Pages: optional work that fails never stops the rest. A failed cleanup leaves the status quo, which is a server that works on most restarts, so refusing to start would be worse than the problem.
 - Q: Does the plugin record what it deleted? → A: Yes — each removal is logged by name, at Information level. Removing files from an operator's server without a trace is hard to defend, and the log is the only evidence anyone has if something later looks wrong.
+- Q: Does the host really never retire a stale copy — the premise the automatic cleanup rested on? → A: No, and the premise was wrong. Read from the host's source: at discovery it calls `Directory.Delete(path, true)` on an older copy whenever a newer enabled copy **of the same name** exists, and marks it deleted if the delete fails. Its cleanup is complete within one name. The only copies it cannot reach are those under a name it no longer groups, and a name change is the only thing that creates those.
+- Q: Given that, does the plugin still remove copies itself? → A: No. Removing it would re-implement deletion the host already performs, and the only thing it uniquely adds is clearing the orphan left by this one rename. That is permanent destructive code for a transition that happens once. The rename release documents a single manual removal instead. The constitution's "no release requires the operator to delete plugin data" is about the finished product, not a pre-release transition, so this is a bounded exception rather than a breach.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -121,11 +128,9 @@ what the suite can reach has to be pinned precisely.
   the immediately preceding one.
 - **A deliberate rollback** to an older release, which now means reinstalling it from the catalogue
   rather than the host switching to a copy still on disk.
-- **The already-broken server.** Someone who upgraded before this fix has two copies on disk right
-  now, under two different names. Installing the fixed release must return them to one by itself.
-- **A directory the cleanup cannot read or cannot delete.** Left alone, reported once, and the plugin
-  carries on. A cleanup that cannot finish must never be worse than one that never ran.
-- **A directory belonging to another plugin, or to no plugin.** Never touched, whatever it is named.
+- **The already-broken server.** Someone who upgraded before this fix has a copy under the old name.
+  The renaming release's notes must name it precisely enough that the operator removes the right
+  directory and nothing else.
 - **A release that renames the plugin on purpose.** Permitted, but both statements of the name must
   change in the same release — `FR-004` requires them to agree — and the copies left under the old
   name are removed by `FR-007`, which is the same mechanism this feature already needs.
@@ -138,8 +143,9 @@ what the suite can reach has to be pinned precisely.
   exactly one release of the plugin running.
 - **FR-002**: That outcome MUST NOT depend on which restart it is. Repeated restarts of an upgraded
   server MUST produce the same set of running releases every time.
-- **FR-003**: An upgrade MUST NOT require the operator to delete files, edit configuration, or run
-  any command on the server beyond the restart the host already asks for.
+- **FR-003**: Every upgrade after the release that renames the plugin MUST NOT require the operator
+  to delete files, edit configuration, or run any command beyond the restart the host already asks
+  for. The renaming release is the single exception, and `FR-007` governs it.
 - **FR-004**: The plugin MUST state its displayed name identically everywhere it is stated, so that a
   release the host retires stays recognisable as an older copy of the live plugin. The canonical
   value is the name the plugin itself reports, `New Releases`; the packaging manifest is aligned to
@@ -149,30 +155,22 @@ what the suite can reach has to be pinned precisely.
   convention for plugin assemblies rather than a claim of provenance, and the Plugin Pages entry id,
   the migration resource prefix and both pages' embedded resource paths are derived from it.
 - **FR-005**: A test MUST fail when the places that state the plugin's displayed name stop agreeing.
-- **FR-005a**: A test MUST cover which directories the cleanup removes and which it refuses to
-  remove, driven against a stand-in directory tree rather than a real installation.
-- **FR-005b**: A test MUST fail if the cleanup stops being invoked at startup.
 - **FR-006**: This feature MUST NOT change what any endpoint returns, what data is stored, who may
   see what, or how sources are used, and MUST NOT change any address the plugin serves. It changes
   the plugin's displayed name and what it removes from disk, nothing else.
-- **FR-007**: The plugin MUST remove installed copies of itself that the host has retired, including
-  copies filed under a name it no longer uses, so that a server which already carries two copies
-  returns to one without operator action. A copy filed under a superseded name is the case the host
-  cannot resolve on its own, because its grouping never matches the live copy.
-- **FR-007a**: The cleanup MUST only remove a directory whose own record carries this plugin's
-  permanent identifier, and MUST NOT remove the running version. A directory whose record is absent,
-  unreadable, or carries another identifier MUST be left untouched.
-- **FR-007b**: A failed removal MUST NOT stop the plugin from starting or affect anything else it
-  does. It MUST be reported once per run, at most.
-- **FR-007c**: Each successful removal MUST be recorded, naming what was removed, so an operator can
-  see afterwards what the plugin deleted and when.
+- **FR-007**: The release that renames the plugin MUST tell the operator, in its release notes, that
+  one directory left under the old name must be removed once, which directory it is, and how to
+  recognise it. After that single step the host's own cleanup covers every later upgrade.
+- **FR-007a**: No release after the renaming one MUST require any manual step. If a future release
+  ever changes the displayed name again it inherits this same one-time cost, which is why `FR-008`
+  records the rule.
 - **FR-008**: The project MUST record, where a future author will find it before publishing a
   release, that the plugin's displayed name is fixed, that it is stated in more than one place, and
   that those places must never disagree.
 - **FR-009**: An operator MUST be able to return to any previously published release by reinstalling
-  it from the catalogue. Instant rollback to a copy still on disk is explicitly **not** guaranteed,
-  because `FR-007` removes those copies; the published manifest retains every released version, which
-  is what makes the guarantee hold.
+  it from the catalogue. Rollback to a copy still on disk was never available — the host deletes a
+  superseded copy at discovery — so nothing here takes it away. The published manifest retains every
+  released version, which is what makes the guarantee hold.
 
 ### Key Entities
 
@@ -194,12 +192,12 @@ what the suite can reach has to be pinned precisely.
   running, verified on a real server.
 - **SC-002**: An upgraded server restarted five times in a row loads the same single release every
   time.
-- **SC-003**: Upgrading requires zero manual steps on the server beyond the restart the host asks
-  for.
+- **SC-003**: Every upgrade after the renaming release requires zero manual steps beyond the restart
+  the host asks for.
 - **SC-004**: Changing the plugin's name in one of the places that states it, and not the other,
   fails the suite.
-- **SC-005**: A server that already has two copies installed returns to one, with no operator action
-  beyond the upgrade itself, and the copy left running is the newest.
+- **SC-005**: A server carrying a copy under the old name returns to one copy after the operator
+  performs the single documented removal, and never needs another.
 
 ## Assumptions
 

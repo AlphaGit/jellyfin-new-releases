@@ -7,48 +7,38 @@
 ## Summary
 
 An upgrade left two copies of the plugin loaded in one host. The only route both spelled the same
-became an ambiguous match, and the user-facing page returned 500 — on some restarts, not others.
+became an ambiguous match and the user-facing page returned 500 — on some restarts, not others.
 
-Jellyfin already guarantees one running copy per plugin: `DiscoverPlugins()` keeps the newest **per
-name**, case-insensitively, and supersedes the rest before any assembly loads. Our copies escaped it
-because `build.yaml` says `Jellyfin New Releases` and `Plugin.cs` says `New Releases`.
+Jellyfin already keeps one copy per plugin and deletes the ones it supersedes. Both of those work
+**per name**: `DiscoverPlugins()` keeps the newest of each name and removes the older directories
+outright. Our copies escaped because `build.yaml` says `Jellyfin New Releases` and `Plugin.cs` says
+`New Releases`.
 
 **The fix is to make those agree**, with a test so they cannot drift again. That hands the problem
-back to a guarantee the host already enforces, for every future upgrade.
+back to host behaviour that already works, for every future upgrade.
 
-It does not repair servers that already carry copies under both names: the host never compares two
-names, so it will never retire either. Those copies would load forever, sharing the database and
-registering a second refresh task. So the plugin also **removes retired copies of itself at
-startup** — matched on the frozen GUID, never the running directory, and never a version at or above
-the running one.
+One copy is left stranded under the old name, which the host will never group and so never delete.
+The renaming release's notes tell the operator to remove that one directory, once. No code is added.
 
 ## Technical Context
 
 **Language/Version**: C# on `net10.0`.
 
-**Primary Dependencies**: `Jellyfin.Controller` / `Jellyfin.Model` / `Jellyfin.Data` /
-`Jellyfin.Database.Implementations` 12.0.0, `Microsoft.Data.Sqlite` 10.0.11. **No new dependency.**
-`IApplicationPaths.PluginsPath` is on `Jellyfin.Common` 12.0.0, already referenced transitively;
-`System.Text.Json` and `System.IO` cover the rest.
+**Primary Dependencies**: unchanged, and none added.
 
-**Storage**: unchanged. `FR-006` forbids any change to stored data or returned values. The feature
-touches the plugin's displayed name and what it deletes from its own install directory.
+**Storage**: unchanged. `FR-006` forbids any change to stored data or returned values.
 
-**Testing**: xunit 2.9.3 + NSubstitute 5.3.0. Directory selection is driven against a temporary
-directory tree the test creates and removes — no installed server, no network (constitution III).
+**Testing**: xunit 2.9.3. One assertion added to an existing test class that already reads
+`build.yaml`. No new test infrastructure, no network, no server (constitution III).
 
 **Target Platform**: Jellyfin 12.0.x, verified on 12.1.0.
 
 **Project Type**: Jellyfin server plugin.
 
-**Performance Goals**: none. The cleanup enumerates one directory once per server start.
+**Performance Goals / Constraints**: none engaged. Nothing runs at runtime that did not before.
 
-**Constraints**: the cleanup deletes directories on an operator's machine, so its matching rule is
-the highest-risk part of this feature and is pinned by tests before it is written. A failed removal
-must never stop startup. `TreatWarningsAsErrors` stays on.
-
-**Scale/Scope**: 1 one-line packaging change, 1 new class, 1 service registration, 3 test classes,
-1 contract document amended.
+**Scale/Scope**: one packaging line, one test assertion, two documents amended, one changelog entry.
+**No new source file.**
 
 ## Constitution Check
 
@@ -56,17 +46,12 @@ must never stop startup. `TreatWarningsAsErrors` stays on.
 
 | Principle | Verdict | Evidence |
 | --- | --- | --- |
-| **I. Spec-Driven Development** | **Pass** | `spec.md` grilled over four rounds, eight questions, no open decision. Every artifact here traces to an `FR-`. One narrowing `research.md` R5 introduces is flagged for the spec rather than assumed. |
-| **II. Test-Driven Development** | **Pass** | The `before_implement` hook drives `/speckit-tdd-run`. The removal rule is a predicate, so its accepting and rejecting cases are written as a table from the requirement before the predicate exists — the profile's standing rule. |
-| **III. Hermetic Tests** | **Pass** | Temporary directories created and removed by the test. No network, no server, no installed plugin. |
-| **IV. Jellyfin Compatibility** | **Pass** | GUID frozen and unchanged — it becomes *more* load-bearing here. No `PluginConfiguration` change, so no `XmlSerializer` risk and no migration. Plugin Pages stays optional. The displayed name changes, which is the fix; `FR-004a` freezes the assembly identity that three mechanisms derive from. |
-| **V. Respectful Sources and Privacy** | **Pass (not engaged)** | No source, budget, `User-Agent` or outgoing request is touched. |
-| **VI. Simplicity** | **Pass, with one recorded cost** | No new dependency. The packaging fix is one line and would alone prevent every future occurrence. The cleanup is the addition — see Complexity Tracking. |
-
-**Technical Constraints**: `net10.0`, xunit + NSubstitute, no assertion library added — all held.
-
-**Development Workflow**: Spec Kit order followed. CI on `main` is the final gate, plus the
-real-server pass, which for this feature must start from a deliberately broken server.
+| **I. Spec-Driven Development** | **Pass** | `spec.md` grilled over five rounds; the last reopened a decision after investigation contradicted its premise. No open decision. |
+| **II. Test-Driven Development** | **Pass** | One behaviour, one test, written first. The `before_implement` hook drives `/speckit-tdd-run`. |
+| **III. Hermetic Tests** | **Pass** | The new assertion reads a repository file through an existing helper. No network, no server. |
+| **IV. Jellyfin Compatibility** | **Pass, with one bounded exception** | GUID frozen. No configuration change, so no `XmlSerializer` risk and no migration. The displayed name changes — that is the fix — and `FR-004a` freezes the assembly identity three mechanisms derive from. The exception is the one-time manual removal; see below. |
+| **V. Respectful Sources and Privacy** | **Pass (not engaged)** | Nothing touched. |
+| **VI. Simplicity** | **Pass** | The whole feature is one line of packaging plus one assertion. An automatic cleanup was specified, then removed once the host was found to do the same job; see Complexity Tracking. |
 
 ## Project Structure
 
@@ -74,54 +59,47 @@ real-server pass, which for this feature must start from a deliberately broken s
 
 ```text
 specs/006-upgrade-replaces-old-version/
-├── plan.md                      # This file
+├── plan.md          # This file
 ├── spec.md
 ├── NOTES.md
-├── research.md                  # Phase 0 — R1..R7
-├── data-model.md                # Phase 1 — identity and on-disk states
-├── quickstart.md                # Phase 1 — suite pass + real-server pass
-├── contracts/
-│   └── installed-copy-record.md # What the plugin reads, and the exact removal rule
+├── research.md      # Phase 0 — R1..R6
+├── quickstart.md    # Phase 1 — one suite scenario, then the real-server pass
 ├── checklists/
-└── tasks.md                     # Phase 2 — NOT created by /speckit-plan
+└── tasks.md         # Phase 2 — NOT created by /speckit-plan
 ```
+
+**No `data-model.md` and no `contracts/`.** Both were written against the automatic cleanup and
+deleted with it. The feature now has no entities beyond one string stated in two places, which
+`spec.md` carries, and exposes no new interface — the condition the plan template gives for
+skipping contracts.
 
 ### Source code (repository root)
 
 ```text
-build.yaml                       # name: "Jellyfin New Releases" -> "New Releases"  (the fix)
+build.yaml                        # name: "Jellyfin New Releases" -> "New Releases"   ← the fix
+CHANGELOG.md                      # the renaming entry carries the one-time removal step
+docs/http-surface.md              # gains the naming rule, or a sibling note beside it
 
-src/Jellyfin.Plugin.NewReleases/
-├── Plugin.cs                    # unchanged — Name is the canonical value
-├── PluginServiceRegistrator.cs  # registers the cleanup beside PluginPagesRegistrationService
-└── Installation/
-    └── StaleCopyCleanup.cs      # NEW — IHostedService; selection is a static, testable method
+src/                              # UNCHANGED. Plugin.cs already states the canonical name.
 
 tests/Jellyfin.Plugin.NewReleases.Tests/
-├── Installation/
-│   └── StaleCopyCleanupTests.cs # NEW — the removal rule against a temp tree, both sides
-├── Packaging/
-│   └── BuildManifestTests.cs    # gains: build.yaml name equals Plugin.Name
-└── PluginServiceRegistratorTests.cs  # gains: the cleanup is registered as a hosted service
+└── Packaging/BuildManifestTests.cs   # gains: build.yaml name equals Plugin.Name
 
 specs/003-jellyfin-12-compat/contracts/plugin-repository-manifest.md   # amended to the new name
-docs/http-surface.md             # unchanged; the naming convention goes in its own note
 ```
 
-**Structure Decision**: the existing single-project layout stands. One new source folder,
-`Installation/`, because this is neither an `Integration/` with a third-party plugin nor `Storage/`
-— it is about this plugin's own install. The test project mirrors it, as the conventions require.
+**Structure Decision**: no new folder, no new class. The one new assertion belongs in
+`Packaging/BuildManifestTests.cs`, which already reads `build.yaml` through
+`Support/RepositoryFiles.cs`.
 
 ## Complexity Tracking
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 | --- | --- | --- |
-| The plugin deletes directories on an operator's server — new code doing something irreversible, against principle VI's "prefer not doing it" | A copy filed under a name the host no longer groups is one the host will **never** retire: grouping is by name, so the two are never compared. Left alone it loads on every start, shares the plugin database, and registers a second refresh task. Every server upgraded before this fix is in that state. | **Do nothing beyond the name fix**: correct for all future upgrades, leaves every existing install permanently double-loaded. **Tell the operator to delete it**: breaches constitution IV, "no release requires the operator to delete plugin data". **Overwrite the old directory in place**: the plugin does not choose its install location, so the directory name would contradict its contents, written by code overwriting its own loaded assembly. The risk is bounded by the rule in `contracts/installed-copy-record.md` — frozen GUID only, never the running directory, never a version at or above running — and by writing that rule's rejecting cases as tests before the predicate. |
+| The renaming release requires the operator to delete one directory, against constitution IV's "no release requires the operator to delete plugin data" | A copy under the old name is one the host never groups and so never deletes. Every server upgraded before this fix carries one. Something has to clear it. | **An automatic cleanup inside the plugin** was specified and then removed: the host already deletes superseded same-name copies at discovery, so such code would re-implement that and uniquely add only the clearing of this one orphan — permanent irreversible code for a transition that happens once, where a bug destroys a working install. **Keeping the old name** creates no orphan but implies official provenance the plugin does not have. The exception is bounded: one release, one directory, named exactly in the notes, and the rule recorded so a future rename inherits the same cost knowingly. |
 
-**One decision this plan makes that the spec does not yet carry**: `FR-007a` says the cleanup removes
-any copy carrying our GUID that is not the running one. Taken literally that also removes a copy
-*newer* than the running one — which exists exactly when an operator has deliberately rolled back
-with the newer version disabled. `research.md` R5 narrows it to copies **older than** the running
-version, so the destructive path is monotonic and no deliberate downgrade is undone. `FR-007a` needs
-that sentence; it is raised in the completion report rather than edited in silently, because
-`/speckit-plan` may not rewrite a requirement.
+**Recorded for the reviewer**: an earlier version of this plan asserted that Jellyfin never retires a
+stale copy, and specified an `IHostedService` cleanup on that basis, with a contract document and
+three test additions. Reading `PluginManager.DiscoverPlugins` and `InstallationManager` showed the
+host deletes superseded same-name copies itself. The assertion held only for the cross-name case.
+The cleanup, its contract and its tests were removed; `research.md` R2 carries the correction.
