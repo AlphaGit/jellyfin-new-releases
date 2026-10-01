@@ -53,6 +53,16 @@ of. The outcome the ask wants — an upgrade never leaves two versions running �
 making the host's own replace-the-old-copy behaviour work correctly, not by anything the publishing
 workflow does. This specification is written against the outcome, not against the mechanism.
 
+## Clarifications
+
+### Session 2026-10-01
+
+- Q: Now the mechanism is confirmed, does the "no release may serve an address a previously published release serves" requirement survive? → A: No. Drop it and the test behind it. The name fix removes the condition at its source, and the blanket rule would bind every future release — 0.1.2 shares nine routes with 0.1.1 — forcing either a rename every release or a version-stamped path. That contradicts `005`'s convention and breaks an operator scripting the API across an upgrade, which `004` establishes is a real use. Defence in depth is not worth a permanent convention against a mechanism now understood and controlled.
+- Q: Which of the two stated names becomes canonical? → A: The one the plugin itself reports, `New Releases`. The packaging manifest is aligned to it rather than the reverse, because the host writes the running plugin's name into a copy's record once that copy has run, so every path then converges on one string with no window where the two differ. Aligning the other way would leave every already-installed copy filed under the old name and recreate the condition on the very next upgrade.
+- Q: The decision adds a principle — "Jellyfin" does not belong in our naming, because this plugin is not part of the official distribution. How far does it reach? → A: The displayed name only. The assembly identity `Jellyfin.Plugin.NewReleases` stays: it is the host's own convention for every plugin assembly, it claims no official status, and it is load-bearing in the Plugin Pages entry id, the migration resource prefix and both pages' embedded resource paths, each of which fails silently on an existing install. The repository title stays too; the repository and its published catalogue URL carry that word regardless.
+- Q: Who removes the installed copy that is filed under the old name, given Jellyfin's dedup can never retire it? → A: The plugin, at startup, automatically. An operator instruction was considered and rejected: the constitution forbids a release that requires the operator to delete plugin data, and a copy under a stale name would otherwise load forever beside the live one, sharing its database and registering a second refresh task. Overwriting the old directory in place was also considered and rejected — the plugin does not choose its install location, so an overwrite would leave a directory whose name contradicts its contents, written by code overwriting its own loaded assembly.
+- Q: That conflicts with the recorded requirement that rollback stay possible. Which gives way? → A: The requirement is narrowed, not dropped. The published manifest retains every released version and the host's catalogue can reinstall any of them, so what is lost is *instant local* rollback to a copy already on disk, not the ability to return to a published release. The requirement now states the guarantee as rollback by reinstall.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Someone upgrades and the plugin keeps working (Priority: P1)
@@ -80,29 +90,7 @@ confirm every page and endpoint answers correctly after each restart.
 
 ---
 
-### User Story 2 - A stale release cannot take the page down (Priority: P1)
-
-Even where an older release is still present and running — because the host chose to, because an
-upgrade half-finished, because an operator deliberately kept it — the thing a person actually opens
-still works.
-
-**Why this priority**: equal to the first. The first story prevents the condition; this one removes
-its consequence. Without it, the fix depends entirely on behaviour the project does not control, and
-the same black page returns the first time that behaviour changes.
-
-**Independent Test**: with two releases deliberately present and running, confirm the user-facing
-page still renders.
-
-**Acceptance Scenarios**:
-
-1. **Given** two releases of the plugin running at once, **When** a person opens the New Releases
-   view, **Then** it renders rather than failing.
-2. **Given** two releases running at once, **When** any address the plugin serves is requested,
-   **Then** exactly one of them answers it.
-
----
-
-### User Story 3 - The disagreement cannot return unnoticed (Priority: P1)
+### User Story 2 - The disagreement cannot return unnoticed (Priority: P1)
 
 A developer changes what the plugin is called in one of the two places that state it, and forgets
 the other. A test fails. Nobody finds out from an operator whose page went black a week after an
@@ -119,8 +107,6 @@ what the suite can reach has to be pinned precisely.
 
 1. **Given** the suite, **When** the name in the packaging manifest and the name in the plugin stop
    agreeing, **Then** at least one test fails.
-2. **Given** the suite, **When** a release would serve an address that a previously published
-   release also serves, **Then** at least one test fails.
 
 ---
 
@@ -137,9 +123,6 @@ what the suite can reach has to be pinned precisely.
 - **A release that renames the plugin on purpose.** If the displayed name is ever changed
   deliberately, the same condition is created. Whether that is forbidden, or merely has to be done
   in both places at once, must be stated.
-- **The address a retired release still answers.** Until a stale copy stops running, it answers the
-  addresses it was built with. Whether those are harmless or must be considered live is a decision,
-  not an assumption.
 
 ## Requirements *(mandatory)*
 
@@ -151,22 +134,27 @@ what the suite can reach has to be pinned precisely.
   server MUST produce the same set of running releases every time.
 - **FR-003**: An upgrade MUST NOT require the operator to delete files, edit configuration, or run
   any command on the server beyond the restart the host already asks for.
-- **FR-004**: The plugin MUST state its name identically everywhere it is stated, so that a release
-  the host retires stays recognisable as an older copy of the live plugin.
+- **FR-004**: The plugin MUST state its displayed name identically everywhere it is stated, so that a
+  release the host retires stays recognisable as an older copy of the live plugin. The canonical
+  value is the name the plugin itself reports, `New Releases`; the packaging manifest is aligned to
+  it. The word "Jellyfin" does not belong in the displayed name, because this plugin is not part of
+  the official distribution.
+- **FR-004a**: The assembly identity `Jellyfin.Plugin.NewReleases` MUST NOT change. It is the host's
+  convention for plugin assemblies rather than a claim of provenance, and the Plugin Pages entry id,
+  the migration resource prefix and both pages' embedded resource paths are derived from it.
 - **FR-005**: A test MUST fail when the places that state the plugin's name stop agreeing.
-- **FR-006**: No release MUST serve an address that a previously published release also serves, so
-  that two releases running at once cannot both answer the same request.
-- **FR-007**: A test MUST fail when a release would serve an address that a previously published
-  release also serves.
-- **FR-008**: The user-facing view MUST remain reachable through the host's page integration after
-  its address changes, without the operator reconfiguring anything.
-- **FR-009**: This feature MUST NOT change what any endpoint returns, what data is stored, who may
+- **FR-006**: This feature MUST NOT change what any endpoint returns, what data is stored, who may
   see what, or how sources are used. It changes identity and addresses only.
-- **FR-010**: The behaviour of a server that already has two releases installed MUST be stated: what
-  installing the fixed release does, and what — if anything — the operator must do once.
-- **FR-011**: The project MUST record, where a future author will find it before publishing a
+- **FR-007**: The plugin MUST remove installed copies of itself that the host has retired, including
+  copies filed under a name it no longer uses, so that a server which already carries two copies
+  returns to one without operator action. A copy filed under a superseded name is the case the host
+  cannot resolve on its own, because its grouping never matches the live copy.
+- **FR-008**: The project MUST record, where a future author will find it before publishing a
   release, that the plugin's name is fixed and that addresses are never reused between releases.
-- **FR-012**: Rollback to an earlier published release MUST remain possible.
+- **FR-009**: An operator MUST be able to return to any previously published release by reinstalling
+  it from the catalogue. Instant rollback to a copy still on disk is explicitly **not** guaranteed,
+  because `FR-007` removes those copies; the published manifest retains every released version, which
+  is what makes the guarantee hold.
 
 ### Key Entities
 
@@ -189,16 +177,10 @@ what the suite can reach has to be pinned precisely.
   time.
 - **SC-003**: Upgrading requires zero manual steps on the server beyond the restart the host asks
   for.
-- **SC-004**: With two releases deliberately running at once, every address the plugin serves is
-  answered by exactly one of them, and the user-facing view renders.
-- **SC-005**: Changing the plugin's name in one of the places that states it, and not the other,
+- **SC-004**: Changing the plugin's name in one of the places that states it, and not the other,
   fails the suite.
-- **SC-006**: No address served by the newest release is served by any previously published release.
-- **SC-007**: The New Releases entry still reaches its view after the address change, with no
-  operator action.
-- **SC-008**: A server that already has two releases installed is working — by the operator's own
-  observation — after installing the fixed release and following whatever one-time step `FR-010`
-  states.
+- **SC-005**: A server that already has two copies installed returns to one, with no operator action
+  beyond the upgrade itself, and the copy left running is the newest.
 
 ## Assumptions
 
@@ -212,8 +194,6 @@ what the suite can reach has to be pinned precisely.
   the retired copy under the plugin's name and the live copy under the packaging's. The feature does
   not depend on resolving this, because making the two statements of the name identical removes the
   difference whichever path runs.
-- Changing the address of the user-facing view is safe, because the page registration is rewritten
-  every time the server starts. Established by `003`, not re-verified here.
 - Nothing outside the plugin calls its addresses. True as of the newest release and asserted by
   `005`.
 - A test suite cannot reproduce two releases in one host. The condition needs a second copy of the
@@ -228,6 +208,7 @@ what the suite can reach has to be pinned precisely.
   the refresh, or either page's behaviour.
 - The publishing workflow's steps. It is already correct; it publishes a package, and the defect is
   in what that package declares, not in how it is built or served.
-- Removing an installed copy from a server from inside the plugin. Considered and recorded as a
-  candidate during specification; whether it is adopted is a decision for the grilling phase, and
-  the specification states the outcome rather than that mechanism.
+- **Giving each release its own addresses** so a stale copy cannot collide. Considered and rejected:
+  it would bind every future release to renaming routes it has no other reason to change, contradict
+  `005`'s convention of naming routes as the host names its own, and break an operator scripting the
+  API across an upgrade. The name fix removes the condition instead of surviving it.
