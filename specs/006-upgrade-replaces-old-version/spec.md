@@ -62,6 +62,7 @@ workflow does. This specification is written against the outcome, not against th
 - Q: The decision adds a principle — "Jellyfin" does not belong in our naming, because this plugin is not part of the official distribution. How far does it reach? → A: The displayed name only. The assembly identity `Jellyfin.Plugin.NewReleases` stays: it is the host's own convention for every plugin assembly, it claims no official status, and it is load-bearing in the Plugin Pages entry id, the migration resource prefix and both pages' embedded resource paths, each of which fails silently on an existing install. The repository title stays too; the repository and its published catalogue URL carry that word regardless.
 - Q: Who removes the installed copy that is filed under the old name, given Jellyfin's dedup can never retire it? → A: The plugin, at startup, automatically. An operator instruction was considered and rejected: the constitution forbids a release that requires the operator to delete plugin data, and a copy under a stale name would otherwise load forever beside the live one, sharing its database and registering a second refresh task. Overwriting the old directory in place was also considered and rejected — the plugin does not choose its install location, so an overwrite would leave a directory whose name contradicts its contents, written by code overwriting its own loaded assembly.
 - Q: That conflicts with the recorded requirement that rollback stay possible. Which gives way? → A: The requirement is narrowed, not dropped. The published manifest retains every released version and the host's catalogue can reinstall any of them, so what is lost is *instant local* rollback to a copy already on disk, not the ability to return to a published release. The requirement now states the guarantee as rollback by reinstall.
+- Q: What evidence is achievable, given the suite cannot load two copies into one host? → A: Three things in the suite — the two declared names agree, the cleanup selects the right directories when driven against a stand-in directory tree including every case it must refuse to delete, and the cleanup is actually invoked at startup — and then a real upgrade on a running server as the closing step. The startup wiring is tested rather than assumed, because correct code that nothing calls is the shape of defect a green suite hides.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -142,7 +143,10 @@ what the suite can reach has to be pinned precisely.
 - **FR-004a**: The assembly identity `Jellyfin.Plugin.NewReleases` MUST NOT change. It is the host's
   convention for plugin assemblies rather than a claim of provenance, and the Plugin Pages entry id,
   the migration resource prefix and both pages' embedded resource paths are derived from it.
-- **FR-005**: A test MUST fail when the places that state the plugin's name stop agreeing.
+- **FR-005**: A test MUST fail when the places that state the plugin's displayed name stop agreeing.
+- **FR-005a**: A test MUST cover which directories the cleanup removes and which it refuses to
+  remove, driven against a stand-in directory tree rather than a real installation.
+- **FR-005b**: A test MUST fail if the cleanup stops being invoked at startup.
 - **FR-006**: This feature MUST NOT change what any endpoint returns, what data is stored, who may
   see what, or how sources are used. It changes identity and addresses only.
 - **FR-007**: The plugin MUST remove installed copies of itself that the host has retired, including
