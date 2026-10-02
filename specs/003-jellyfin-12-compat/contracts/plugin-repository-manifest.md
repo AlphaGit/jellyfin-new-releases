@@ -53,7 +53,7 @@ A JSON array of plugin objects. This project publishes exactly one.
 | `versions[].sourceUrl` | An address under the same Pages site that resolves to the package | derived by `jprm repo add` from the repository URL and the plugin slug |
 | `versions[].checksum` | MD5 of the exact bytes at `sourceUrl` | computed by JPRM |
 | `versions[].timestamp` | Build time | JPRM |
-| `versions[].changelog` | Matching the `CHANGELOG.md` entry for the version | `build.yaml` `changelog` |
+| `versions[].changelog` | Matching the `CHANGELOG.md` entry for the version | `build.yaml` `changelog`, written at release from that entry by `.github/scripts/changelog-entry.js` (`T064`) |
 
 `targetAbi` is what makes `SC-004` true. Jellyfin offers a version only to a server whose own
 version is at or above it, so a server older than Jellyfin 12 is never offered this plugin, and a

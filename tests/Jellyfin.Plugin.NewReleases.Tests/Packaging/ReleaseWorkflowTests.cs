@@ -65,6 +65,18 @@ public class ReleaseWorkflowTests
     }
 
     /// <summary>
+    /// U51 (T064): the catalogue text is generated from CHANGELOG.md for the tagged version, so it
+    /// has to be written into build.yaml before JPRM reads build.yaml to build the package.
+    /// </summary>
+    [Fact]
+    public void ReleaseWorkflow_WritesTheChangelogEntryForTheTaggedVersionBeforePackaging()
+    {
+        var write = IndexOf("node .github/scripts/changelog-entry.js \"${{ steps.ver.outputs.version }}\"");
+
+        Assert.True(write < IndexOf("jprm plugin build"), "the package is built before its changelog is written into build.yaml");
+    }
+
+    /// <summary>
     /// U33: JPRM normalises a three-part version to four parts and names the package for the
     /// normalised one, so a tag v1.0.0 produces jellyfin-new-releases_1.0.0.0.zip. A workflow
     /// that interpolates the tag's own version points at a file that does not exist.

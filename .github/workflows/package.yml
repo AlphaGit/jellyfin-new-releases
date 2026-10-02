@@ -53,6 +53,12 @@ jobs:
           echo "version=$version"   >> "$GITHUB_OUTPUT"
           echo "version4=$version4" >> "$GITHUB_OUTPUT"
 
+      # The catalogue text JPRM publishes is the tagged version's section of CHANGELOG.md (003
+      # T064), so the two cannot drift. A missing or empty section fails the run. Node comes with
+      # the runner image; the script uses only its standard library.
+      - name: Write the changelog entry into build.yaml
+        run: node .github/scripts/changelog-entry.js "${{ steps.ver.outputs.version }}"
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
