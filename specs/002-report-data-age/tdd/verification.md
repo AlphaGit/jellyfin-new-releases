@@ -2,339 +2,302 @@
 feature: 002-report-data-age
 verdict: FAIL
 standard: .specify/extensions/tdd/templates/tdd-test-quality-rubric.md
-verified_at: 99c805e
+verified_at: 43fb6b6
 behaviors: 48
 proven: 19
 likely: 14
-test_after: 6
+test_after: 6 # accepted by the maintainer on 2026-10-01 (T065); still a FAIL condition under this rubric
 no_test: 0
 not_applicable: 9
-high_smells: 6 # each a real surviving mutant inside a DONE behaviour
+high_smells: 4 # each a real surviving mutant inside a DONE behaviour; one is a weakened existing test
 criteria_total: 25 # 16 FR, 9 SC
 criteria_covered: 24 # FR-015 verified by inspection, by recorded decision
-mutation_score: null # no tool (profile `mutation: null`); 25 deliberate mutants, 18 caught
-mutants_survived: 7 # 1 equivalent, 6 real
-suite: 303 passed, 0 failed, 16 s incl. build (dotnet); 64 passed, 0 failed, 0.4 s (node)
-suite_non_english_locale: 64 passed, 0 failed (node, LANG=de_DE.UTF-8, TZ=Asia/Tokyo)
+mutation_score: null # no tool (profile `mutation: null`); 18 deliberate mutants, 14 caught
+mutants_survived: 4 # all real
+suite: 307 passed, 0 failed, 13 s incl. build (dotnet); 75 passed, 0 failed, 0.3 s (node)
+suite_non_english_locale: 75 passed, 0 failed (node, LANG=de_DE.UTF-8, TZ=Asia/Tokyo)
 independent: partly # this session wrote none of 002; smell pass delegated to a fresh-context subagent
-audits: 4
+audits: 5
 ---
 
 # TDD Verification: Report the age of the data, not the age of the run
 
-**Verdict: FAIL.** Six one-line mutants inside `DONE` behaviours pass the whole suite (303 + 64).
-The worst one is `U13`. Replace the stored-releases flag with `visible.Count > 0` and nothing
-fails. A viewer whose filter or library access hides every stored release would then see "No data
-yet. New Releases is waiting for its first refresh." `FR-008` forbids this.
+**Verdict: FAIL.** Four one-line mutants inside `DONE` behaviours pass the whole suite (307 + 75).
+Phase 11 caused one of them itself: its setup change to `U1`'s test made the test blind to a
+mutant that the old setup caught.
 
-This is the fourth audit and the first since Phase 10. Phase 10 closed every finding of the third
-audit, and this run confirms each of them independently (mutants P1, P3, P4 below). This run finds
-new defects. None of them is a regression; earlier audits did not try these mutants. Two
-patterns cause most of them:
+This is the fifth audit. Phase 11 (`T059`–`T069`) changed tests only; `git diff 99c805e..HEAD --
+src/` is empty. This run re-applied every mutant that the fourth audit found surviving, and each one
+now fails (S7, V1–V5). The checks for Findings 8–10 and 12 also hold (M1–M4). The four new
+survivors repeat the two patterns that the fourth audit named:
 
-- **Inputs that coincide.** Every staleness test uses a 24 h interval. Every same-instant test
-  has releases stored and every source enabled. Every future-instant test stays inside the
-  interval. So a mutant that ignores the varying input cannot be seen.
-- **Helpers tested, call sites not.** `esc` is pinned, but its use in `row()` is not.
-  `GetReleasesLastCheckedAtAsync` is pinned, but the administrator view's argument to it is not.
+- **Helpers tested, call sites not.** `stalenessText` and `checkedText` are pinned. The arguments
+  the two pages pass to them are not (N1, N8).
+- **Inputs that coincide.** The list's age gate and its flag see the same rows in every test (X2).
+  `U1`'s newer fetch now sits at the source that sorts first (X1).
 
-Six behaviours are also `TEST_AFTER`, so `PASS` is out of reach under the rubric even after the
-mutants are fixed. That history cannot be rewritten. See Finding 7.
+**The verdict cannot rise above `FAIL` under this rubric, even after the mutants are fixed.** The
+rubric lists "any `TEST_AFTER` behavior" as a `FAIL` condition. Six behaviours are `TEST_AFTER`, and
+the maintainer accepted them on 2026-10-01. The cycle log records the consequence of that decision
+as "cannot rise above `PASS_WITH_GAPS`". The rubric does not say that. See Finding 5.
 
-**Independence.** This session wrote no code, test or log entry of `002`. Earlier sessions wrote
-them, and those sessions ran the first three audits. A fresh-context subagent did the smell pass.
-Each `HIGH` claim it returned was run here as a real mutant before inclusion. One claim was
-refuted: it said dropping the administrator view's stored-releases gate survives, but mutant S8
-shows that `U35` catches it.
+**Independence.** This session wrote no code, test or log entry of `002`. A fresh-context subagent
+did the smell pass on a snapshot at `43fb6b6`. It could not run mutants. This session ran its two
+server claims as real mutants (X1, X2), and both survived. Each other cited line was opened and read
+before inclusion.
 
 ## Test-first evidence
 
-The rubric has no class for "passed on first run, deliberate mutant recorded". This audit applies
-one rule to every behaviour: a behaviour is `TEST_AFTER` when this feature wrote the production
-code that satisfies it before any valid red of its test. A failure that only shows a missing
-symbol is not a valid red; the loop itself rejected one at cycle 15. A behaviour satisfied by code
-that already existed, or by the smallest change another behaviour's red demanded, is `LIKELY`. Its
-test strength rests on its recorded mutant, not on ordering.
+No behaviour was added since the fourth audit. Phase 11 added tests to existing `DONE` behaviours on
+correct production code, so every new test passed on first run. Its proof is the audit's mutant
+turning from survived to caught. Those tests do not change any behaviour's class. The table is the
+fourth audit's, re-checked against the cycle log and the history at `43fb6b6`.
 
 | Behaviour | Class | Evidence |
 | --- | --- | --- |
-| A1 | PROVEN | outer-loop red (cycle log, `A20` inversion) in `0a330af`; the source that closes it lands in `81d3e63` |
-| A2 | PROVEN | cycle 15 red, `U22`'s case: `Expected "actual" to be strictly unequal to: null` |
-| A3 | LIKELY | the same case as `U21`. It passed against the `null` stub, constrains the cycle 15 implementation, and a mutant proves it (P9) |
-| A4 | NOT_APPLICABLE | `001`'s test, inherited; green before and after. A regression guard, not driven by this feature |
-| A5 | PROVEN | cycle 19, `Assert.Null() Failure … Actual: 2026-09-06T12:00:00Z`; test and fix together in `df7f7b5` |
-| A6, A7 | **TEST_AFTER** | written at cycle 21, after every unit and every line of the code they cover; no red. Cycle 21 calls this "the outer loop closing". The playbook's outer loop is an acceptance test written **first** that stays red. The units beneath are test-driven, so behaviour is protected; ordering is not |
-| A8 | NOT_APPLICABLE | the deliberate-mutant procedure by design. Three of its four boundaries re-run here (P5, P7; the third audit's N8–N11) |
-| A9 | NOT_APPLICABLE | characterization. Its row's claim is only half pinned: Finding 6 |
+| A1 | PROVEN | outer-loop red (`A20` inversion) in `0a330af`; the source that closes it lands in `81d3e63` |
+| A2 | PROVEN | cycle 15 red, `U22`'s case |
+| A3 | LIKELY | the same case as `U21`; passed against the `null` stub; mutant-proven (P9, fourth audit) |
+| A4 | NOT_APPLICABLE | `001`'s test, inherited; a regression guard |
+| A5 | PROVEN | cycle 19 red; test and fix together in `df7f7b5` |
+| A6, A7 | **TEST_AFTER** | written at cycle 21, after the code they cover; no red. Labelled and accepted in the cycle log (T065) |
+| A8 | NOT_APPLICABLE | the deliberate-mutant procedure by design |
+| A9 | NOT_APPLICABLE | characterization; now also pinned at the call site (T064; V5 and N6 caught) |
 | A10 | NOT_APPLICABLE | verified by inspection, declared as such |
-| U1, U2 | LIKELY | assertion reds recorded. Cycles 1–3 share `0a330af`, and the log records that a `git checkout --` destroyed and rewrote their implementation mid-cycle |
-| U3, U4, U5, U6 | LIKELY | passed on first run against code that predates this feature (SQLite `IN ()`, `MAX` over NULL, `COALESCE`); recorded mutants; re-run here (S2, S3) |
-| U7, U8, U9 | PROVEN | cycle 6, `Assert.True() Failure`; test and source together in `81d3e63` |
-| U10, U11 | PROVEN | cycle 7, `Expected: Tuple (True, …12:00:00Z, 24) / Actual: Tuple (True, …12:05:00Z, 24)`; `81d3e63` |
-| U12 | **TEST_AFTER** | `81d3e63` (cycle 7) rewired `GetStatusAsync` as well as the list action. No test then touched the status action. The test arrived at cycle 9 and passed on first run |
-| U13 | **TEST_AFTER** | the same commit switched the flag to `HasAnyAsync`. The cycle 7 test expected `true` after seeding a release, which the old `lastRun is not null` also gave. The test arrived at cycle 10. Its mutant does not catch S7 (Finding 1) |
-| U14, U15 | LIKELY | satisfied by the smallest change for `U10` (read `MAX` with `EnabledSourceIds()` per request); passed on first run; recorded mutants |
-| U16, U17, U18 | PROVEN | cycle 13 assertion red after a `null` stub; test and source together in `20778d0` |
-| U19, U20, U21 | LIKELY | passed against cycle 15's `null` stub; they constrain the generalization `U22` forced. `U21` is mutant-proven (P9). `U20` is not: Finding 3 |
+| U1, U2 | LIKELY | assertion reds recorded; cycles 1–3 share `0a330af` and were rewritten mid-cycle |
+| U3–U6 | LIKELY | passed on first run against code that predates this feature; recorded mutants |
+| U7–U9 | PROVEN | cycle 6 red; `81d3e63` |
+| U10, U11 | PROVEN | cycle 7 red; `81d3e63` |
+| U12, U13 | **TEST_AFTER** | `81d3e63` changed the code before any test asked for it. Labelled and accepted (T065) |
+| U14, U15 | LIKELY | satisfied by the smallest change for `U10`; recorded mutants |
+| U16–U18 | PROVEN | cycle 13 red; `20778d0` |
+| U19–U21 | LIKELY | passed against cycle 15's `null` stub; `U20` and `U21` are now mutant-proven (V2, V1) |
 | U22 | PROVEN | cycle 15 red |
-| U23 | LIKELY | passed against the hours-only implementation it triangulates against; cycle 16's red came from the other rows |
-| U24–U27 | PROVEN | cycle 16, `expected: '…2 days ago.' / actual: '…48 hours ago.'` (7 failed) |
-| U28 | PROVEN | the wording is in cycle 16's red expected strings, before the code produced it |
-| U29–U33 | NOT_APPLICABLE | characterization (`BASELINE`); mutants P3, P4, P10 caught |
-| U34 | PROVEN | cycle 14, `user-view.html exposed no NewReleasesInternals` |
+| U23 | LIKELY | passed against the hours-only implementation it triangulates against |
+| U24–U28 | PROVEN | cycle 16 red |
+| U29–U33 | NOT_APPLICABLE | characterization (`BASELINE`) |
+| U34 | PROVEN | cycle 14 red |
 | U35 | PROVEN | cycle 20 red; `df7f7b5` |
-| U36 | **TEST_AFTER** | `T029` wrote the ladder against a missing-function red only. The log (Phase 9 table) records that three of its four boundaries survived mutation until `T039` added the assertions |
-| U37 | LIKELY | its assertion existed before `checkedText`, but the only recorded red is `checkedText is not a function` |
-| U38 | **TEST_AFTER** | the clamp shipped with `T029`. The log (Phase 10) records it surviving deletion until `T051` added the test |
+| U36, U38 | **TEST_AFTER** | `T029` shipped the code before the assertions (`T039`, `T051`). Labelled and accepted (T065) |
+| U37 | LIKELY | its only recorded red is a missing function |
 
-Git history adds nothing for `U36`–`U38`. `T029`, the `T030` rename and both remediation phases are
-one commit, `36ef43b`, so history cannot order test against code for any of that work.
+### Existing tests: one weakened
 
-### Existing tests: nothing weakened
+Phase 11 changed six existing tests. Five are stronger or neutral:
 
-`git diff 36ef43b HEAD` over every test file this feature owns changes only two files, both in
-`005`:
+- `A6` (`ConfigureAndRunTests.cs:107-127`): an earlier fetch was added and the clock moves a day. The
+  expected value changed with the setup. It now catches `MAX` → `MIN` (M2).
+- `U10`/`U11` (`ReleasesControllerTests.cs:113-114`): the clock moves 1 h before the run. It now
+  catches "the latest run's start" (M1).
+- `U35` (`AdminControllerTests.cs:138`): a precondition assertion was added.
+- `load-page.js:104-108`: the catch was removed. An initialization error now fails 22 tests (M4).
+- `exposure.test.js`: two titles and one comment changed. The exact-key assertions are unchanged.
 
-- `exposure.test.js` widened the exact key sets to add `render` and `renderStatus`. That is an
-  added expectation, not a loosened one.
-- `load-page.js` switched the sandbox to the fake DOM.
+One is weaker against a mutant it used to catch:
 
-The C# test files are byte-identical since `002` closed. No `Skip`, `.skip`, `todo` or filter
-exclusion exists. The removals Phase 9 made were judged legitimate by the third audit and are not
-re-graded.
+- **`U1`, `ArtistRepositoryTests.cs:145-149`.** Before (`99c805e`): both fetches at `musicbrainz`,
+  older written first. After: the newer fetch is at `deezer` and written first. "Source order"
+  (`ORDER BY source LIMIT 1` in place of `MAX`) fails the old test (`Expected 2026-09-06T03:00:00 /
+  Actual 2026-09-01T03:00:00`). The same mutant passes the new test and all 307. The comment at
+  `:145` says "neither write order nor source order picks it". That is false: `deezer` sorts
+  before `musicbrainz`. Finding 1.
+
+No `Skip`, `.skip`, `todo` or filter exclusion exists. No threshold changed.
 
 ### tasks.md against the list
 
-Every ticked behavioural task names only `DONE` behaviours, except `T023` and `T024` (`U29`–`U33`
-are `BASELINE`). That is the extension's known vocabulary conflict, recorded in the profile, and is
-not raised again. One task is open: `T037`, the manual check against Jellyfin **10.11.11**.
-Feature `003` dropped that version, so the task cannot be run as written.
+`T059`–`T069` are ticked. Each names only `DONE` behaviours or a documentation change, and each
+proof the task states was re-run here and holds. `T023`/`T024` tick `BASELINE` behaviours; that is
+the profile's recorded extension conflict. One task is open: `T037`, the manual pass, now
+retargeted to Jellyfin 12.x and recorded as the maintainer's own pass.
 
 ## Findings
 
 | # | Sev | Finding | Evidence |
 | --- | --- | --- | --- |
-| 1 | HIGH | `HasStoredReleases` is never tested with stored releases the caller cannot see; `visible.Count > 0` passes everything | `ReleasesController.cs:95`; `ReleasesControllerTests.cs:156-169`; mutant S7 |
-| 2 | HIGH | The staleness threshold is only ever tested at 24 h; hard-coding 24 passes everything | `user-view.html:106`; `staleness.test.js:13,26-31`; mutant V1 |
-| 3 | HIGH | The user page's future-instant test stays inside the interval; `Math.abs` for the clamp passes everything | `user-view.html:105`; `staleness.test.js:22-24`; mutant V2 |
-| 4 | HIGH | FR-011's "same instant" is tested only where every path agrees trivially; the administrator view may ignore the enabled sources | `AdminController.cs:97`; `AdminControllerTests.cs:107-127`; mutant V3 |
-| 5 | HIGH | The same gap on the user status endpoint: it may drop the stored-releases gate | `ReleasesController.cs:162`; `ReleasesControllerTests.cs:139-153`; mutant V4 |
-| 6 | HIGH | `A9` claims a title with markup is escaped on the page; only the `esc` helper is tested, and `row()` may drop it | `user-view.html:143`; `esc.test.js`; mutant V5 |
-| 7 | MED | Six behaviours are `TEST_AFTER`; the cycle log does not mark them so | `U12`, `U13`, `U36`, `U38`, `A6`, `A7`; table above |
-| 8 | MED | The fetch instant equals the run's start, so "the latest run's start" passes `U10`/`U11`; only `A20` stands in the way | `ReleasesControllerTests.cs:108-117` |
-| 9 | MED | `A6` cannot tell the data age from the run time: the stub clock does not move, and the cooling-down source never had an earlier fetch | `ConfigureAndRunTests.cs:107-123` |
-| 10 | MED | `U1` writes the newer fetch last and at one source, so "the last row written" passes it | `ArtistRepositoryTests.cs:138-149` |
-| 11 | MED | `tdd/test-list.md` prints a node single-test command that runs on no match and exits 0 | `test-list.md`, "Verification commands" |
-| 12 | MED | `loadPageDom` swallows any error thrown after the helpers are exposed; with the fake DOM a page now initializes fully, so an initialization regression is hidden from every helper test | `tests/web/load-page.js:104-108` |
-| 13 | LOW | Text drift: `A7`'s row says "stops moving" (the assertion is `null`); `ConfigureAndRunTests.cs:143` still says "last refreshed"; `exposure.test.js` titles say "pure helpers" and its comment omits the render tests, though `005` added `render`/`renderStatus`; `AdminControllerTests.cs:131`'s name claims a precondition it does not assert; `test-list.md` still prints a `dotnet@9` path | as cited |
+| 1 | HIGH | `T066` weakened `U1`'s test: the newest value now sits at the source that sorts first, so `ORDER BY source LIMIT 1` passes everything | `ArtistRepositoryTests.cs:145-149`; `ArtistRepository.cs:215`; mutant X1 |
+| 2 | HIGH | The list's age gate is never tested apart from its visible rows; gating it on `visible.Count > 0` passes everything | `ReleasesController.cs:94`; `ReleasesControllerTests.cs:190-197`; mutant X2 |
+| 3 | HIGH | The user page's call site may ignore the response's refresh interval; every page fixture serves 24 h | `user-view.html:132`; `render.test.js:112-117`; `tests/fixtures/pages/*.json`; mutant N1 |
+| 4 | HIGH | The administrator page may show the last run's end as "releases last checked"; its fixture makes the two instants equal | `admin.html:153`; `render-status.test.js:31-35`; `admin-status.json:27,34`; mutant N8 |
+| 5 | MED | The recorded consequence of accepting the six `TEST_AFTER` behaviours misstates the rubric | `tdd/cycle-log.md`, "Test-after admissions"; rubric "Scoring and verdict" |
+| 6 | MED | The user page's render tests read the real clock; the staleness line in them depends on the date the suite runs | `load-page.js:70`; `render.test.js:112-117` |
+| 7 | LOW | The markup-title tests use a title with no quote, so attribute context (`data-title`, `aria-label`) is pinned only through `esc` itself | `render.test.js:143-156` |
+| 8 | LOW | `GetReleases_AfterAPurge_…` does not assert its precondition that the fetch timestamp survives the purge; its administrator twin does | `ReleasesControllerTests.cs:157-169`; compare `AdminControllerTests.cs:138` |
+| 9 | LOW | Text drift, listed below | as cited |
 
-### Finding 1 (HIGH): the empty-state flag follows the visible rows in every test
+### Finding 1 (HIGH): the setup change that separated write order introduced source order
 
-`ReleasesController.cs:95` passes `hasStored` (from `HasAnyAsync`) as the flag. Mutant S7 passes
-`visible.Count > 0` instead. Result: 303 passed, 0 failed, and the node suite is unaffected. Every
-test of the flag (`:156-169`, `:173-184`, `A5`, `A4`) uses a caller who sees all folders, with no
-filter, so the visible rows always equal the stored rows.
+`GetReleasesLastCheckedAtAsync` must return the newest `last_complete_at` (`U1`, `FR-002`). `T066`
+moved the newer fetch to `deezer` and wrote it first, so that "the last row written" fails (M3
+caught). But every multi-source test in the suite now puts the newer value at `deezer`:
+`ArtistRepositoryTests.cs:146`, `ReleasesControllerTests.cs:223`, `AdminControllerTests.cs:154`
+and `A6`. Mutant X1 picks the first row by source name and passes all 307 tests. Against the
+`99c805e` copy of the test it fails.
 
-The two differ when stored releases exist but none is visible to this request. Two ways that
-happens:
+A query that returns the instant of whichever source sorts first would report Deezer's age as
+the data's age after any MusicBrainz fetch. `FR-005` forbids an age younger or older than the
+newest completed fetch. Fix: one case where the newer fetch is at `musicbrainz`, written last, so
+neither order picks it.
 
-- a filter that matches nothing
-- a user with access to a library holding no tracked artist
+### Finding 2 (HIGH): the age follows the stored rows only by coincidence
 
-`user-view.html:173` then shows "No data yet. New Releases is waiting for its first refresh." It
-should show "Nothing missing for this selection." `FR-008`: the empty state "MUST depend on whether
-stored release data exists". `U13`'s row says the same. Fix: a test that stores a release, asks
-with a filter (or a caller) that hides it, and asserts `HasStoredReleases` is `true`.
+`ReleasesController.cs:94` gates the instant on `hasStored`. Mutant X2 gates it on
+`visible.Count > 0` and passes all 307. The new test for the flag
+(`GetReleases_StoredReleasesFlagHoldsWhenTheSelectionHidesEveryRow`) seeds no completed fetch, so
+the instant is `null` either way.
 
-### Finding 2 (HIGH): the refresh interval is never varied
+With X2, a viewer whose filter hides every stored row loses the staleness line, even when the data
+is weeks old. `FR-008` ties "both the empty state and the stated age" to whether stored release
+data exists. Fix: in that test, seed a completed fetch and assert the instant together with
+`(0, true)`.
 
-`stalenessText(checkedAt, now, intervalHours)` gates on `ageMs <= intervalHours * 3600000`. Every
-test passes `INTERVAL_HOURS = 24`, and every page fixture serves `refreshIntervalHours: 24`. So
-mutant V1 (`intervalHours` → `24`) passes all 64 node tests.
+### Finding 3 (HIGH): the interval reaches the helper untested
 
-An operator who sets a 12 h or a weekly trigger would get a threshold that ignores it. `FR-006`
-ties the line to "one refresh interval". The interval is what `001`'s `R15` reads from the
-trigger. Fix: assert both sides of the boundary at a second interval.
+`staleness(data)` at `user-view.html:132` passes `data.refreshIntervalHours` to `stalenessText`.
+Mutant N1 passes `24` instead, and all 75 node tests pass. Every page fixture serves
+`refreshIntervalHours: 24`. The fourth audit's Finding 2 pinned the helper at a second interval;
+this is the same rule one call up. The line is `002`'s code (`36ef43b`).
 
-### Finding 3 (HIGH): the user page's clamp is unobservable as tested
+An operator with a weekly trigger would see "Releases last checked 2 days ago." between refreshes.
+`FR-006` says the page stays quiet within one refresh interval. Fix: render a response whose
+interval is not 24, at an age between the two intervals, with the clock fixed (Finding 6).
 
-`staleness.test.js:22-24` uses `ahead(5 * HOUR)`. A negative age of 5 h is under the 24 h gate, so
-the result is `null` with or without the clamp. The third audit judged dropping the clamp
-equivalent here (P2 confirms). `Math.abs` is not equivalent: mutant V2 makes an instant 30 h in
-the future read as "Releases last checked 30 hours ago."
+### Finding 4 (HIGH): the administrator page cannot show that the two instants differ
 
-That age is invented, and `FR-010` and `U20`'s row ("counts as an age of zero") forbid it. Fix: a
-future instant beyond the interval, asserting `null`.
+`SC-005`: the operator must "see both the last run and the data age, and tell that they differ
+when they do". `admin.html:153` writes `checkedText(status.releasesLastCheckedAt, …)`. Mutant N8
+writes the last run's end whenever an instant exists, and all 75 node tests pass. In
+`admin-status.json` both instants are `2026-09-19T03:15:00` (`:27`, `:34`). The only assertion on
+the cell is the pattern `^Releases last checked .+\.$` (`render-status.test.js:33`).
 
-### Findings 4 and 5 (HIGH): one instant everywhere, tested only where it is trivially one
+The server half of `SC-005` is pinned (`U18`). The page half is claimed by the traceability table
+but has no test that can tell the two values apart. Fix: a status response whose two instants
+differ, asserting the exact sentence for `releasesLastCheckedAt` at a fixed clock.
 
-`FR-011` requires the list, the status endpoint and the administrator view to report the same
-instant. Its tests (`U12` at `ReleasesControllerTests.cs:139-153`, `U17` at
-`AdminControllerTests.cs:107-127`) both have releases stored, MusicBrainz rows only, and every
-source enabled. Under those conditions each path's gate and source set make no difference. Two
-mutants show it:
+### Finding 5 (MED): "cannot rise above PASS_WITH_GAPS" is not what the rubric says
 
-- **V3:** `AdminController.cs:97` passes a fixed set of both sources instead of
-  `configuration.EnabledSourceIds()`. Result: 303 passed. After an operator disables a source, the
-  administrator page would report a different instant from the user page.
-- **V4:** `GetStatusAsync` at `ReleasesController.cs:162` drops the stored-releases gate. Result:
-  303 passed. After a purge, the status endpoint would report an instant while the list reports
-  none.
+The cycle log's "Test-after admissions" entry records the maintainer's decision to accept six
+`TEST_AFTER` behaviours, and states that the verdict "cannot rise above `PASS_WITH_GAPS`". The
+rubric's `FAIL` row includes "any `TEST_AFTER` … behavior". `PASS_WITH_GAPS` allows only weak
+evidence: `LIKELY`, mutation unmeasured, or coverage unavailable. Under the standard as written,
+this feature stays `FAIL` after every mutant is closed.
 
-The administrator copy of the gate is caught (S8, by `U35`). The status copy and the administrator
-source set are not. Fix: compare all three responses after a purge and after the newest source is
-disabled.
+This audit does not change the gate (Hard Rule 5). The decision is the maintainer's. The rubric
+template stack has a project override slot, `.specify/templates/overrides/tdd-test-quality-rubric.md`.
+An override there is the recorded way to grade accepted test-after work differently. Without one,
+the cycle log's sentence should say `FAIL`.
 
-### Finding 6 (HIGH): the escaping test stops at the helper
+### Finding 6 (MED): the render tests depend on the date
 
-`A9` reads "A release title containing HTML markup is escaped rather than rendered as markup"
-(`US3-AS2`, `SC-008`). `esc.test.js` pins `esc`. Nothing asserts that `row()` uses it. Mutant V5
-removes `esc()` around `item.title` at `user-view.html:143`, and all 64 node tests pass. No fixture
-title contains markup, and no render test checks escaping.
+`load-page.js:70` gives the sandbox a `Date` subclass that inherits the real `Date.now`. `staleness`
+calls `Date.now()`. So `render.test.js:112-117` passes only while the machine's clock is past
+`2026-08-02`, and the `releases.json` renders (instant `2026-09-19T03:15`) show or hide the
+line depending on the day. This is why `:115` can only match `^Releases last checked .+ ago\.$`.
+`tests/web/fixed-clock.js` already supplies `NOW`; the render helper does not use it. Finding 3's
+test needs this first.
 
-When `002` closed, rendering was out of scope for want of a DOM. `005` has since added
-`loadPageDom` and the fake DOM, and `render.test.js` already drives `render()` with fixtures, so
-this test can now be written. Release titles come from MusicBrainz and Deezer. This is the one
-place in the feature where a regression is an injection, not a wrong number.
+### Finding 7 (LOW): attribute context
 
-### Finding 7 (MED): test-after work that the log does not label as such
+The title is written into `data-title="…"` and two `aria-label="…"` attributes. `MARKUP_TITLE`
+contains no `"`, so a call site that escaped only `<` and `>` there would pass. Today every call
+site uses `esc`, and `esc.test.js` pins its quote escaping, so the risk needs a new, weaker
+escaper. A title that also carries `"` and `'` would close it.
 
-The playbook asks that a behaviour whose code came first be "recorded as test-after in the log". The
-cycle log is honest about every fact behind the classification:
+### Finding 9 (LOW): text drift
 
-- cycle 7's note says the change "also makes `U11`–`U14` true"
-- cycle 21 says `A6`/`A7` passed on first run
-- the Phase 9 and 10 tables show `U36`'s boundaries and `U38`'s clamp surviving until their tests
-  arrived
+- `ArtistRepositoryTests.cs:145`: "neither write order nor source order picks it" is false (Finding 1).
+- `staleness.test.js:46-47`: "only counting a future instant as zero keeps this view from stating
+  an age". Without the clamp the age is negative and the gate hides it anyway; the cycle log's own
+  control (P2 equivalent) says so, and `checked.test.js:22-25` says the opposite of this comment.
+  The test is still worth keeping: it catches `Math.abs` (V2).
+- `load-page.js:12`: "any error it throws reaches the test" holds for synchronous errors only. A
+  rejection in the first `load()` goes to the page's own `.catch` (`user-view.html:195-198`).
+- `ReleasesControllerTests.cs:103`: the name says "NotTheLastRunsEnd"; the test now also separates
+  the run's start. `:106` calls `GetReleasesAsync` twice inside one tuple to assert an empty state
+  that `:173` and `001`'s `A5` already pin.
+- `tdd/test-list.md`: "Out of scope" still says `row` and `render` stay manual for want of a
+  simulated browser, but `A9` now traces to `render.test.js`. The frontmatter's `updated_at` is
+  still `0fa9999`.
 
-But it never uses the label. It describes `A6`/`A7` as the expected end of the double loop, which
-the playbook does not say. Each of these behaviours is now mutant-proven except for the gaps in
-Findings 1, 4 and 5, so the cost is evidence, not protection. It cannot be repaired by new work.
-The remedy is to label the entries and record whether the maintainer accepts them.
+### Not raised
 
-### Findings 8–10 (MED): coincident inputs, smaller cases
-
-These come from the subagent. Each was vetted by reading the cited lines; none was run as a
-mutant.
-
-- **Finding 8, `U10`/`U11`:** the fetch is written at the clock's current instant, and
-  `StartRunAsync` follows with no advance, so the run's start equals the fetch.
-- **Finding 9, `A6`:** the clock does not move during `RunAsync`, so the Deezer fetch, the run's
-  start and its end are all `SourceHarness.Start`.
-- **Finding 10, `U1`:** the newer fetch is both the last row written and at the same source as the
-  older one.
-
-### Finding 11 (MED): a printed command that passes on no match
-
-`tdd/test-list.md`'s single-test command for the page side is
-`node --test --test-name-pattern "<name>" "tests/web/*.test.js"`. Run here with a name that
-matches nothing: `# tests 9, # pass 9, # fail 0`, exit 0. The profile sets node `single: null`
-for this reason. This is the same hazard as the third audit's Finding 4, in a line that audit's
-task did not reach.
-
-### Finding 12 (MED): the harness hides initialization failures
-
-`load-page.js:104-108` rethrows only when the page fails before it exposes
-`NewReleasesInternals`. In `002` the catch absorbed the expected failures against a DOM that
-answered `null`. Since `005`, the fake DOM lets initialization run to completion, so a throw there
-is now a real regression. The helper tests absorb it silently. The render tests would surface it
-only if they read what initialization writes.
-
-### Not raised again
-
-The exact key set in `exposure.test.js` was decided and documented in `T056`, and stays decided.
-Several smaller observations are below the bar for a task:
-
-- the eager `HasAnyAsync` sequence
-- the unlabelled cases in `esc.test.js`
-- the sentence test at `staleness.test.js:60-67`, which the ladder template also pins
-- `GetReleases_RefreshIntervalFollowsTheTrigger` holding three cases in one `[Fact]`, with no
-  weekly case. That rule is `001`'s `R15`.
+- `AdminControllerTests.cs:152` stores the release with `last_seen_at = older`, the expected value.
+  No "newest release seen" query exists, so no mutant follows from it.
+- In `A6`, the clock does not move within a run. The cycle log records that ceiling, and `A1`/`U10`
+  hold "not the run's end".
 
 ## Mutation results
 
-There is no tool (`mutation: null`). Each of the 25 deliberate mutants was applied alone from a
-file copy and restored with a `cmp` byte check, never with `git checkout`. Both suites were re-run
-green after the last restore (303 / 64), and `git status` is clean.
-
-Page mutants ran the full node suite. Server mutants ran the behaviour's tests. S7, V3 and V4
-survived, and each was re-run against the full dotnet suite.
+There is no tool (`mutation: null`). Each mutant was applied alone from a file copy and restored
+with a `cmp` byte check, never with `git checkout`. Server mutants ran the full dotnet suite; page
+mutants ran the full node suite. Both suites were green after the last restore (307 / 75), and
+`git status` is clean.
 
 | # | Mutant | Behaviour | Survived | Judgment |
 | --- | --- | --- | --- | --- |
-| P1 | `admin.html` drop `Math.max(0, …)` | U38 | No | The third audit's `HIGH` is closed |
-| P2 | `user-view.html` drop `Math.max(0, …)` | U20 | Yes | **Equivalent**: the interval gate hides any negative age |
-| P3 | `healthText` `when(s.cooldownUntil)` → `when(null)` | U33 | No | Third audit's Finding 3a closed |
-| P4 | `artistLink` stops encoding the server id | U32 | No | Third audit's Finding 3b closed |
-| P5 | `user-view.html` floor → round | U26, U27 | No | 2 failed |
-| P6 | `admin.html` floor → round | U36 | No | 2 failed |
-| P7 | `user-view.html` month length 30.5 → 30 days | U27 | No | 1 failed |
-| P8 | `admin.html` drop the no-instant guard | U37 | No | 4 failed |
-| P9 | `user-view.html` gate `<=` → `<` | U21 | No | 1 failed |
-| P10 | `esc` stops escaping `'` | U29, A9 | No | 1 failed |
-| S1 | `ArtistRepository` `MAX` → `MIN` | U1 | No | 1 failed |
-| S2 | source filter bypassed (`1=1 OR …`) | U2, U3 | No | 2 failed |
-| S3 | `@completeAt` bound on every outcome | U5, U6 | No | 2 failed |
-| S4 | `HasAnyAsync` SQL → `SELECT 1` | U7–U9 | No | 1 failed |
-| S5 | list/status gate always open | A5 | No | 1 failed |
-| S6 | status reports `null` | U12 | No | 1 failed |
-| **S7** | list flag `hasStored` → `visible.Count > 0` | U13 | **Yes** | **Real.** Finding 1. 303/303 passed |
-| S8 | administrator gate always open | U35 | No | 1 failed. Refutes the subagent's claim |
-| S9 | MusicBrainz always enabled | U2, U15, A7 | No | 1 failed |
-| S10 | Deezer always enabled | U15, A7 | No | 1 failed |
-| **V1** | staleness gate uses `24` for the interval | U21, U22, A2, A3 | **Yes** | **Real.** Finding 2 |
-| **V2** | user-page clamp → `Math.abs` | U20 | **Yes** | **Real.** Finding 3 |
-| **V3** | administrator view ignores `EnabledSourceIds()` | U17 | **Yes** | **Real.** Finding 4. 303/303 passed |
-| **V4** | `GetStatusAsync` drops the stored gate | U12 | **Yes** | **Real.** Finding 5. 303/303 passed |
-| **V5** | `row()` writes the title unescaped | A9 | **Yes** | **Real.** Finding 6 |
+| S7 | list flag `hasStored` → `visible.Count > 0` | U13 | No | Fourth audit's Finding 1 closed (T059) |
+| V3 | administrator view uses a fixed set of both sources | U17 | No | Finding 4 of the fourth audit closed (T062) |
+| V4 | `GetStatusAsync` gate always open | U12 | No | Finding 5 of the fourth audit closed (T063) |
+| V1 | staleness gate uses `24` for the interval | U21, U22 | No | Finding 2 of the fourth audit closed (T060) |
+| V2 | user-page clamp → `Math.abs` | U20 | No | Finding 3 of the fourth audit closed (T061) |
+| V5 | `row()` writes `nr-title` unescaped | A9 | No | Finding 6 of the fourth audit closed (T064); 2 failed |
+| N6 | `row()` writes the Ignore `aria-label` unescaped | A9 | No | the second markup test is not redundant |
+| M1 | list reports the latest run's `StartedAt` | U10, U11 | No | T066 holds; 7 failed |
+| M2 | `MAX` → `MIN` | U1, A6 | No | T066 holds for `A6`; 3 failed |
+| M3 | "last row written" (`ORDER BY rowid DESC LIMIT 1`) | U1 | No | T066 holds for this order |
+| M4 | `throw` after `loadArtists().then(load);` | — | No | T068 holds; 22 failed |
+| N2 | list flag from `rows.Count > 0` (before the access filter) | U13 | No | caught by T059's test |
+| N4 | administrator gate on `lastRun is not null` | U35, U17 | No | caught by T062's test |
+| N7 | page empty state from `items.length` | FR-008 page side | No | 1 failed |
+| **X1** | `MAX` → first row by `ORDER BY source` | U1 | **Yes** | **Real.** Finding 1. Caught by the `99c805e` test |
+| **X2** | list's age gated on `visible.Count > 0` | A5, U13 | **Yes** | **Real.** Finding 2 |
+| **N1** | `staleness(data)` passes `24` | A2, A3 | **Yes** | **Real.** Finding 3 |
+| **N8** | `nr-last-checked` shows `lastRun.endedAt` when an instant exists | SC-005 page half | **Yes** | **Real.** Finding 4 |
 
-18 of 25 were caught. Of the 7 survivors, 1 is equivalent and 6 are real, all inside `DONE`
-behaviours. The S-series repeats the third audit's server sample with new operators. The V-series
-tests the subagent's claims.
+14 of 18 were caught. All 4 survivors are real; none is equivalent. X1 was also run against the
+`99c805e` copy of `ArtistRepositoryTests.cs`, where it fails (the evidence for Finding 1). P2 was
+not re-run; the cycle log's Phase 11 control re-checked it.
 
 ## Traceability
 
-Resolved by hand. The list's `traces` column mixes scenario ids and requirement ids. Every
-named test was confirmed to exist and run (18 C# methods by name, 6 node files).
+Resolved by hand. Every C# method and every named node test in the list's `test` column was
+confirmed to exist (21 C# methods, 2 named node tests, 6 node files). The full suites ran.
 
 | Criterion | Behaviours | Real entry point | Gap |
 | --- | --- | --- | --- |
-| FR-001, FR-002, FR-004, FR-005 | U1–U3, U10, U11, U15 + A1, A6 | Yes, `ConfigureAndRunTests` | Findings 8–10 |
+| FR-001, FR-002, FR-004, FR-005 | U1–U3, U10, U11, U15 + A1, A6 | Yes, `ConfigureAndRunTests` | **Finding 1** (source order) |
 | FR-003 | U5, U6, U11 + A1 | Yes | |
-| FR-006 | U21, U22 + A2, A3; `005`'s `render.test.js` drives the DOM line | Yes | **Finding 2**: the interval is never varied |
+| FR-006 | U21, U22 + A2, A3; `005`'s `render.test.js` drives the line | Yes | **Finding 3**: the page's interval argument; Finding 6 |
 | FR-007, SC-004 | U28 | Yes | |
-| FR-008 | U4, U7–U9, U13, U14, U19, U35 + A4, A5 | Yes | **Finding 1**: the flag is never tested against hidden rows |
-| FR-009, SC-005 | U16–U18, U36–U38; `005`'s `render-status.test.js` drives the row | Controller level (`acceptance: null`) | |
-| FR-010 | U20, U38 | Yes, both pages | **Finding 3**: the user-page clamp |
-| FR-011 | U12, U17, U35 | Yes | **Findings 4, 5** |
+| FR-008 | U4, U7–U9, U13, U14, U19, U35 + A4, A5 | Yes | **Finding 2**: the age gate against hidden rows |
+| FR-009, SC-005 | U16–U18, U36–U38; `005`'s `render-status.test.js` | Server: controller level. Page: yes | **Finding 4**: the page cannot tell the two instants apart |
+| FR-010 | U20, U38 | Yes, both pages | |
+| FR-011 | U12, U17, U35 | Yes | |
 | FR-012, SC-007 | U23–U27, U36 + A8 | Yes, both pages | |
 | FR-013 | U34 | Yes | |
-| FR-014, SC-009 | A10 | By inspection, declared | |
+| FR-014, SC-009 | A10 | By inspection, declared; node suite re-run in two locales | |
 | FR-015 | none | No: verified by inspection, recorded in `spec.md` by `T050` | accepted |
-| FR-016 | U34 claims it but asserts nothing about packaging | `003`'s `BuildManifestTests` pins the packaged artifacts | trace is misattributed |
-| SC-001, SC-002 | A1, U1, U10 | Yes | |
+| FR-016 | none in `002`'s list | `003`'s `BuildManifestTests` pins the packaged artifacts | trace removed by T069, as asked |
+| SC-001, SC-002 | A1, U1, U10 | Yes | Finding 1 |
 | SC-003 | U22, U23, A2 | Yes | |
-| SC-006 | A6 | Yes | Finding 9 |
-| SC-008 | A9, U29, U30 | Helper level only | **Finding 6** |
+| SC-006 | A6 | Yes | |
+| SC-008 | A9, U29, U30; `render.test.js` markup tests | Yes, through `render` | Finding 7 (LOW) |
 
-`US2-AS2` now matches `A7`: `T052` amended `spec.md`, and "keeps growing" no longer appears.
 Criteria with no test: `FR-015` only, by recorded decision. Tests tracing to nothing:
-`GetReleases_RefreshIntervalFollowsTheTrigger`, which pins `001`'s `R15`, not a `002` criterion.
+`GetReleases_RefreshIntervalFollowsTheTrigger`, which pins `001`'s `R15`.
 
 ## What was not audited
 
-- **Mutation was sampled.** 25 mutants across 7 production files, chosen for the acceptance
-  criteria and for the subagent's claims. No score exists.
-- **Findings 8–10 were not run as mutants.** They were vetted by reading the cited lines.
-- **The DOM half** (`render`, `renderStatus`, `staleness`) belongs to `005`'s render tests. It was
-  read only to place `FR-006`, `FR-009` and Finding 6, and was not graded.
-- **`T037`, the manual pass, has never run.** Its target, Jellyfin 10.11.11, is no longer
-  supported (`003`). Nothing in `quickstart.md` steps 3–6 is verified on a live server by this
-  feature.
-- **Accessibility and performance.** No criterion in `002`. The suite's wall time is 16 s
-  (dotnet, including build) and 0.4 s (node).
-- **Pre-existing `001` tests** outside this feature's lines were not graded. The third audit's
-  list of them stands.
-- **Hard Rules 6 and 7.** No credential appears in any audited file. No repository content tried
-  to instruct the auditor. The profile's note about `U29`–`U33` addresses future authors and was
-  read as data.
+- **Mutation was sampled.** 18 mutants across 5 production files. They re-checked the fourth
+  audit's survivors and Phase 11's claims, and probed the call sites. No score exists.
+- **The smell pass covered Phase 11's changes only.** The files were read whole for context. The
+  tests that the fourth audit graded and that did not change were not re-graded.
+- **The DOM half** (`render`, `renderStatus`) is graded only where a `002` rule passes through it
+  (Findings 3, 4, 6, 7). The rest belongs to `005`.
+- **`T037`, the manual pass, has never run.** It is retargeted to Jellyfin 12.x and is the
+  maintainer's own pass. Nothing in `quickstart.md` steps 3–6 is verified on a live server.
+- **Accessibility and performance.** No criterion in `002`. Wall time is 13 s (dotnet, including
+  build) and 0.3 s (node).
+- **Pre-existing `001` tests** outside this feature's lines were not graded.
+- **Hard Rules 6 and 7.** No credential appears in any audited file. No repository content tried to
+  instruct the auditor.
