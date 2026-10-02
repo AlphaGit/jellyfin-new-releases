@@ -98,13 +98,11 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         _tasks.ScheduledTasks.Returns([worker]);
     }
 
-    /// <summary>002 FR-001/FR-002/FR-004: the reported instant is the newest completed catalogue fetch, not a run's end.</summary>
+    /// <summary>002 FR-001/FR-002/FR-004: the reported instant is the newest completed catalogue fetch, not a run's start or end.</summary>
     [Fact]
-    public async Task GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd()
+    public async Task GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsStartOrEnd()
     {
         var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
-        Assert.Equal((false, (DateTimeOffset?)null), (Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).HasStoredReleases, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).ReleasesLastCheckedAt));
-
         await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
         var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
         var fetchedAt = _clock.GetUtcNow();
@@ -160,6 +158,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
         await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), CancellationToken.None);
         await _db.Releases.PurgeAsync(CancellationToken.None);
+        Assert.NotNull(await _db.Artists.GetReleasesLastCheckedAtAsync(_configuration.EnabledSourceIds(), CancellationToken.None));
         var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
 
         var list = Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None));
@@ -185,15 +184,19 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.False(Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).HasStoredReleases);
     }
 
-    /// <summary>002 FR-008: a selection that hides every stored row is not the "waiting for its first refresh" state.</summary>
+    /// <summary>002 FR-008: a selection that hides every stored row is not the "waiting for its first refresh" state,
+    /// and the age of the stored data is still stated.</summary>
     [Fact]
-    public async Task GetReleases_StoredReleasesFlagHoldsWhenTheSelectionHidesEveryRow()
+    public async Task GetReleases_FlagAndAgeHoldWhenTheSelectionHidesEveryRow()
     {
         await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
+        var fetchedAt = _clock.GetUtcNow();
+        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, fetchedAt, CancellationToken.None);
 
         var list = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(type: "EP", cancellationToken: CancellationToken.None));
 
-        Assert.Equal((0, true), (list.Items.Count, list.HasStoredReleases));
+        Assert.Equal((0, true, (DateTimeOffset?)fetchedAt), (list.Items.Count, list.HasStoredReleases, list.ReleasesLastCheckedAt));
     }
 
     /// <summary>002 Edge Cases: releases on screen with nothing that confirmed them — show them, state no age.</summary>

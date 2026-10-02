@@ -639,3 +639,71 @@ feature's TDD verdict cannot rise above `PASS_WITH_GAPS`.
 `T037` was retargeted the same day, by the maintainer's decision, from Jellyfin 10.11.11 (dropped by
 `003`) to Jellyfin 12.x, with `quickstart.md`'s prerequisite line to match. It stays open as JD's own
 real-server pass.
+
+## Phase 12: remediation of the fifth TDD audit
+
+Driven from `tdd/verification.md` (verdict FAIL, audited at `43fb6b6`). No production code changed.
+The production code was correct in every case, so each test passed on first run, and the proof is
+the audit's own surviving mutant now failing. Every mutant was applied alone from a file copy, ran
+the full suite of its side, and was restored with a `cmp` byte check, never `git checkout`.
+
+| Task | Behaviour | Test | Mutant | Before | After |
+| --- | --- | --- | --- | --- | --- |
+| T070 | U1 | `ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetch_EvenAtTheSourceThatSortsLast` (new; the first case keeps the newer fetch written first) | X1: `MAX` → first row by `ORDER BY source` | 307/307 passed | 1 failed |
+| T070 | U1 | the same pair | M3: "last row written" (`ORDER BY rowid DESC LIMIT 1`) | caught by the first case | still 1 failed |
+| T071 | A5, U13 | `ReleasesControllerTests.cs::GetReleases_FlagAndAgeHoldWhenTheSelectionHidesEveryRow` (renamed from `…StoredReleasesFlagHolds…`; seeds a fetch and asserts the instant) | X2: list's age gated on `visible.Count > 0` | 307/307 passed | 1 failed |
+| T072 | A2, A3 | `render.test.js`: the weekly and six-hour interval tests | N1: `staleness(data)` passes `24` | 75/75 passed | 2 failed: `expected: '' / actual: 'Releases last checked 2 days ago.'` and `expected: 'Releases last checked 12 hours ago.' / actual: ''` |
+| T073 | U18 (page half of SC-005) | `render-status.test.js::the releases-last-checked value states the data age, not the last refresh` | N8: `nr-last-checked` shows `lastRun.endedAt` | 75/75 passed | 1 failed: `expected: '…3 days ago.' / actual: '…1 hour ago.'` |
+| T076 | A9 | `render.test.js::a title containing quotes is escaped in every place the row writes it` | Q1: `data-title` escapes `<` and `>` only | not run before | 1 failed: `expected: 4 / actual: 3` |
+| T077 | U12 | `GetReleases_AfterAPurge_…` asserts its precondition | P12: `PurgeAsync` also clears `last_complete_at` | not run before | 1 failed |
+
+**T074, fixed clock.** `load-page.js` now pins the sandbox's `Date.now()` to `fixed-clock.js`'s
+`NOW`, beside the locale and timezone it already pins. `render.test.js`'s stale-instant test
+asserts the exact sentence (`Releases last checked 5 weeks ago.`) instead of a pattern. Proof: with
+the process clock faked to `2026-07-01` (`--require` a one-line `Date.now` override), the new
+harness passes 79/79. The committed harness fails 3, including the stale-instant test.
+
+**T078, text drift.**
+
+- `ArtistRepositoryTests.cs:145`: the comment now claims only write order. The new case claims
+  source order.
+- `staleness.test.js`: the far-future comment says the test catches `Math.abs`, and that dropping
+  the clamp alone is equivalent, in agreement with `checked.test.js`.
+- `load-page.js`: the header says synchronous errors only.
+- `GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd` is now `…NotTheLastRunsStartOrEnd`.
+  Its opening empty-state assertion was removed. That state is pinned by
+  `GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted` (the flag) and `001`'s
+  `A5_NoCompletedRun_ReportsNoStoredReleasesAndNoInstant` (flag and instant), and the fifth
+  audit's Finding 9 asked for its removal. The rename is carried into `001`'s `test-list.md` (`U118`).
+- `tdd/test-list.md`: "Out of scope" no longer lists `row` and `render`. `updated_at` is `43fb6b6`.
+  The `test` column names every test this phase added or renamed.
+
+- suite: 308 passed, 0 failed (dotnet); 79 passed, 0 failed (node), also under `LANG=de_DE.UTF-8`
+  and `TZ=Asia/Tokyo`. `dotnet build --configuration Release`: 0 warnings
+- open: `T075` (maintainer decision on how the accepted test-after behaviours are graded) and `T037`
+  (manual pass on Jellyfin 12.x)
+- independence: the session that ran the fifth audit wrote these tests. The next audit should run
+  in a fresh session.
+
+## T075: how the accepted test-after behaviours are graded (fifth audit Finding 5)
+
+The "Test-after admissions" entry above says the verdict "cannot rise above `PASS_WITH_GAPS`". The
+extension's rubric did not support that: it lists any `TEST_AFTER` behaviour as a `FAIL` condition.
+That entry stays as written; this one corrects it.
+
+**Decision (maintainer, 2026-10-01): override the rubric for this project.**
+`.specify/templates/overrides/tdd-test-quality-rubric.md` is the extension's rubric with one
+change. It adds the class `TEST_AFTER_ACCEPTED` for a `TEST_AFTER` behaviour where all three hold:
+
+- the cycle log labels it test-after, with its evidence
+- the cycle log records the maintainer's dated decision to accept it
+- a recorded mutant inside it is caught by its test today
+
+`PASS_WITH_GAPS` admits that class. `PASS` still requires every behaviour `PROVEN` or `LIKELY`.
+The override applies to every feature, not only `002`.
+
+For `002`, `U12`, `U13`, `U36`, `U38`, `A6` and `A7` meet the first two conditions (entry above).
+Each has a recorded mutant, caught when last run: `U12` (V4, fifth audit), `U13` (S7, fifth
+audit; X2, Phase 12), `U36` (P6, fourth audit), `U38` (P1, fourth audit), `A6` (M2, fifth audit)
+and `A7` (S9 and S10, fourth audit). The next audit grades them against the override and
+confirms the third condition itself.

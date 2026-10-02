@@ -4,6 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPageDom } = require('./load-page.js');
 const { fixture } = require('./fixtures.js');
+const { HOUR, DAY, ago } = require('./fixed-clock.js');
 
 // `render` is the one function that consumes a server response, and until now the one function with
 // no test. These capture what it already does, against a response of the shape the server really
@@ -112,7 +113,23 @@ test('with no instant on record the staleness line is empty and the list still r
 test('with an instant older than the refresh interval the staleness sentence appears', () => {
     const { staleness } = rendered(fixture('releases-stale.json'));
 
-    assert.match(staleness.textContent, /^Releases last checked .+ ago\.$/);
+    assert.equal(staleness.textContent, 'Releases last checked 5 weeks ago.');
+    assert.equal(staleness.hidden, false);
+});
+
+// 002 FR-006: the page hands the rule the interval the response carries, not a fixed day. Every
+// fixture serves 24, so these two set it on either side.
+test('a weekly interval keeps a two-day-old instant quiet', () => {
+    const { staleness } = rendered({ ...fixture('releases.json'), releasesLastCheckedAt: ago(2 * DAY), refreshIntervalHours: 168 });
+
+    assert.equal(staleness.textContent, '');
+    assert.equal(staleness.hidden, true);
+});
+
+test('a six-hour interval states a twelve-hour-old instant', () => {
+    const { staleness } = rendered({ ...fixture('releases.json'), releasesLastCheckedAt: ago(12 * HOUR), refreshIntervalHours: 6 });
+
+    assert.equal(staleness.textContent, 'Releases last checked 12 hours ago.');
     assert.equal(staleness.hidden, false);
 });
 
@@ -153,4 +170,12 @@ test('a title containing markup is written into the row as text', () => {
 
 test('a title containing markup appears nowhere in the row unescaped', () => {
     assert.equal(renderedWithTitle(MARKUP_TITLE).indexOf(MARKUP_TITLE), -1);
+});
+
+// The title is also written into three attributes (`data-title` and both buttons' `aria-label`),
+// where a quote, not markup, is what breaks out. Four places, each escaped in full.
+const QUOTED_TITLE = `"'><img src=x onerror=alert(1)>`;
+
+test('a title containing quotes is escaped in every place the row writes it', () => {
+    assert.equal(renderedWithTitle(QUOTED_TITLE).match(/&quot;&#39;&gt;&lt;img src=x onerror=alert\(1\)&gt;/g).length, 4);
 });

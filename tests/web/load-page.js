@@ -9,13 +9,15 @@
 //
 // The sandbox's `document` is the stand-in in `fake-dom.js`, which models exactly the
 // elements the page's own markup declares, so a page now runs its initialization to
-// completion here, and any error it throws reaches the test. Nothing is caught: an
-// initialization that fails after the helpers are exposed is a regression too.
+// completion here, and any error it throws synchronously reaches the test. Nothing is caught: an
+// initialization that fails after the helpers are exposed is a regression too. A rejected
+// promise is not covered: the first `load()` routes its own failure to the page's error message.
 
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { documentFor } = require('./fake-dom.js');
+const { NOW } = require('./fixed-clock.js');
 
 const WEB_DIR = path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web');
 
@@ -66,8 +68,15 @@ function sandboxGlobals(fileName, overrides) {
         // Same reason, second channel: `when()` in admin.html calls `Date.prototype.toLocaleString()`,
         // which reads the machine's locale *and* its timezone. Both are pinned here so a test can
         // assert the exact sentence; production still passes nothing and renders in the user's own
-        // format. Everything else on Date is inherited.
+        // format. Third channel: both pages read `Date.now()` for the staleness age, so the clock is
+        // pinned to fixed-clock.js's NOW and no rendered sentence depends on the day the suite runs.
+        // Everything else on Date is inherited.
         Date: class extends Date {
+            static now() {
+                return NOW;
+            }
+
+
             toLocaleString(locale, options) {
                 return super.toLocaleString(locale ?? 'en-US', { timeZone: 'UTC', ...options });
             }

@@ -4,7 +4,7 @@ loop: outside-in
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 10
 planned_at: 0fa9999
-updated_at: 0fa9999
+updated_at: 43fb6b6
 suite_baseline: green
 ---
 
@@ -37,14 +37,14 @@ entry point is the page's own exported logic, reached through the sandbox loader
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | A1 | A catalogue fetch completes at 03:00; a later refresh at 15:00 completes none → at 15:05 the list response reports the 03:00 instant, not the 15:00 run | US1-AS1 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge` |
-| A2 | Data older than one refresh interval → the page produces a staleness sentence rather than nothing | US1-AS2 | example | DONE | `tests/web/staleness.test.js` (an age past the interval yields a sentence) |
-| A3 | Data confirmed within one refresh interval → the page produces no staleness sentence | US1-AS3 | example | DONE | `tests/web/staleness.test.js` (an age at the interval yields none) |
+| A2 | Data older than one refresh interval → the page produces a staleness sentence rather than nothing | US1-AS2 | example | DONE | `tests/web/staleness.test.js` (an age past the interval yields a sentence) + `tests/web/render.test.js` (the weekly and six-hour interval tests) |
+| A3 | Data confirmed within one refresh interval → the page produces no staleness sentence | US1-AS3 | example | DONE | `tests/web/staleness.test.js` (an age at the interval yields none) + `tests/web/render.test.js` (the weekly and six-hour interval tests) |
 | A4 | No enabled source has ever completed a fetch → the list response reports no stored releases and no instant | US1-AS4 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A5_NoCompletedRun_ReportsNoStoredReleasesAndNoInstant` (`001`'s) |
 | A5 | After a purge → the list response reports no stored releases and no instant, though completed runs are still on record | US1-AS5 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A5_AfterAPurge_TheListReportsNoStoredReleasesAndNoInstant` |
 | A6 | One source cooling down while the other completes a fetch → the reported instant is that completed fetch and is within one refresh interval | US2-AS1 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A6_OneSourceCoolingDownWhileTheOtherCompletesAFetch_TheAgeCountsFromThatFetch` |
 | A7 | The administrator disables every source → refreshes keep running and no instant is reported, while the stored list is still shown | US2-AS2 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A7_WithEverySourceDisabled_NoAgeIsReportedWhileTheListStillShowsWhatIsStored` |
 | A8 | Every band and boundary of the unit ladder is asserted, and moving any boundary by one unit makes a test fail | US3-AS1, SC-007 | example | DONE | `tests/web/staleness.test.js` + the four boundary mutants in `cycle-log.md` |
-| A9 | A release title containing HTML markup is escaped rather than rendered as markup | US3-AS2, SC-008 | characterization | DONE | `tests/web/esc.test.js` + `tests/web/render.test.js` (the two title-with-markup tests) |
+| A9 | A release title containing HTML markup is escaped rather than rendered as markup | US3-AS2, SC-008 | characterization | DONE | `tests/web/esc.test.js` + `tests/web/render.test.js` (the two title-with-markup tests and the quoted-title test) |
 | A10 | The whole suite, page side included, runs with no network and no installation step | US3-AS3, SC-009, FR-014 | example | DONE | verified in `cycle-log.md`; no manifest, no install, no network module |
 
 **A8 and A10 are not conventional tests.** A8's first half is `U21`–`U28` below; its second half —
@@ -61,7 +61,7 @@ Grouped by the component from `plan.md` that owns them.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U1 | Returns the newest `last_complete_at` across all artists at the enabled sources | FR-002 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetchAcrossArtists` |
+| U1 | Returns the newest `last_complete_at` across all artists at the enabled sources | FR-002 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetchAcrossArtists` + `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetch_EvenAtTheSourceThatSortsLast` |
 | U2 | A completed fetch at a source outside the enabled set is ignored, even when it is the newest | FR-002, EC-disabled | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IgnoresASourceThatIsNotEnabled_EvenWhenItIsTheNewest` |
 | U3 | An empty enabled set returns no instant | FR-002, EC-all-disabled | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_WithNoEnabledSource_IsNothing` |
 | U4 | No artist-and-source pair has ever completed a fetch → returns no instant | FR-008, EC-no-fetch | example | DONE | `Storage/ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_WithNoFetchEverCompleted_IsNothing` |
@@ -80,10 +80,10 @@ Grouped by the component from `plan.md` that owns them.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U10 | The list response reports the newest completed fetch, not the last completed run's end | FR-001, FR-002 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd` |
-| U11 | A refresh that completed no fetch leaves the reported instant unchanged | FR-003, FR-004 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd` |
+| U10 | The list response reports the newest completed fetch, not the last completed run's end | FR-001, FR-002 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsStartOrEnd` |
+| U11 | A refresh that completed no fetch leaves the reported instant unchanged | FR-003, FR-004 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsStartOrEnd` |
 | U12 | The list response and the status response report the same instant for one caller at one moment | FR-011 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ListAndStatusReportTheSameInstant` + `Api/ReleasesControllerTests.cs::GetReleases_AfterAPurge_ListAndStatusBothReportNoInstant` |
-| U13 | The stored-releases flag follows whether release rows exist, not whether a run has completed | FR-008 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted` + `Api/ReleasesControllerTests.cs::GetReleases_StoredReleasesFlagHoldsWhenTheSelectionHidesEveryRow` |
+| U13 | The stored-releases flag follows whether release rows exist, not whether a run has completed | FR-008 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted` + `Api/ReleasesControllerTests.cs::GetReleases_FlagAndAgeHoldWhenTheSelectionHidesEveryRow` |
 | U14 | Release rows with no completed fetch anywhere → the releases are listed and no instant is reported | FR-008, EC-no-fetch | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReleasesStoredButNoFetchEverCompleted_AreListedWithNoInstant` |
 | U15 | Disabling the source whose fetch was newest makes the reported instant fall back to the newest remaining enabled source | FR-002, US2-AS2 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_DisablingTheNewestSource_FallsBackToTheNewestEnabledOne` |
 
@@ -93,7 +93,7 @@ Grouped by the component from `plan.md` that owns them.
 | --- | --- | --- | --- | --- | --- |
 | U16 | Reports the last run, including a run that reached no source | FR-009 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` |
 | U17 | Reports the same instant the user page reports | FR-009, FR-011 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` + `Api/AdminControllerTests.cs::Status_DisablingTheNewestSource_FallsBackToTheInstantTheUserPageReports` |
-| U18 | After a run that completed no fetch, the reported run end and the reported instant differ | FR-009, SC-005 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` |
+| U18 | After a run that completed no fetch, the reported run end and the reported instant differ | FR-009, SC-005 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` + `tests/web/render-status.test.js::the releases-last-checked value states the data age, not the last refresh` |
 | U35 | With nothing stored, the administrator view reports no instant either | FR-008, FR-011 | example | DONE | `Api/AdminControllerTests.cs::Status_WithNothingStored_ReportsNoInstantEitherThoughTheFetchTimestampSurvives` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` — `stalenessText`
@@ -151,9 +151,10 @@ source disabled on `U3` and `A7`, the clock correction on `U20`, data with no co
 
 ## Out of scope
 
-- **The page's rendering functions**: `row`, `render`, `refreshStatus`, `read`, `fill` and
-  `query` all read or write the page and need a simulated browser this feature does not
-  introduce (`spec.md` Assumptions, `research.md` R8). They stay manual.
+- **The page's rendering functions**: `refreshStatus`, `read`, `fill` and `query` read or write the
+  page and need what the simulated browser does not model (`spec.md` Assumptions, `research.md`
+  R8). They stay manual. `row` and `render` were out of scope here too until `005` added the
+  fake DOM; `A2`, `A3` and `A9` now reach them through `tests/web/render.test.js`.
 - **`001`'s `FR-019` and `SC-008`** — keyboard operation and screen-reader announcement. A real
   browser and assistive technology, not a runner. Explicitly *not* unblocked by US3.
 - **Where the staleness line sits on the page.** `US1-AS2` says the age must be readable "before

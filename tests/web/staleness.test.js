@@ -43,8 +43,9 @@ test('a shorter interval moves the threshold: one second past it yields a senten
     assert.equal(stalenessText(ago(SHORT_INTERVAL_HOURS * HOUR + 1000), NOW, SHORT_INTERVAL_HOURS), 'Releases last checked 12 hours ago.');
 });
 
-// Further ahead than one interval, so the gate alone cannot hide it: only counting a future
-// instant as zero keeps this view from stating an age that never happened.
+// Further ahead than one interval, so an age taken as a distance (`Math.abs`) would pass the gate
+// and state an age that never happened. Dropping the clamp alone would not: a negative age is
+// always within the interval, which is why `checked.test.js` carries the clamp's own test.
 test('an instant further ahead than one interval still yields no sentence', () => {
     assert.equal(stalenessText(ahead(INTERVAL_HOURS * HOUR + 6 * HOUR), NOW, INTERVAL_HOURS), null);
 });
