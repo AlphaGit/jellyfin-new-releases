@@ -21,10 +21,10 @@ public class RepositoryManifestTests
     /// <summary>
     /// How many versions the published repository lists right now. 0.1.0.0 was published on
     /// 2026-09-20 for the real-server review, so the per-entry checks below now run against a
-    /// genuinely published entry rather than only against synthetic ones. Raise this with each
-    /// release; the failure message says so.
+    /// genuinely published entry rather than only against synthetic ones. 0.1.1.0 followed on
+    /// 2026-09-21. Raise this with each release; the failure message says so.
     /// </summary>
-    private const int PublishedVersionsToday = 1;
+    private const int PublishedVersionsToday = 2;
 
     /// <summary>
     /// The package slug JPRM derives from the plugin's name. Read from <c>build.yaml</c> rather
