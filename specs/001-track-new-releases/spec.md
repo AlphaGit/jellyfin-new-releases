@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-06
 
-**Status**: Draft
+**Status**: Complete
 
 **Input**: User description: "Track new music releases by artists already present in the Jellyfin music library that the library does not yet contain, and surface them to users inside the Jellyfin web client: in the same hamburger-menu location as Concert Radar (via Plugin Pages) and, if feasible, as a section inside each artist's detail page."
 
