@@ -47,3 +47,8 @@ Installed extensions (`specify extension list`; hooks in `.specify/extensions.ym
 
 Needs .NET 10 SDK. `dotnet build --configuration Release && dotnet test`.
 Packaging: `jprm plugin build . --version X.Y.Z --output ./artifacts` (CI does this on `v*` tags).
+
+## Git
+
+- Do all work on `main`. Do not create branches.
+- Push only when requested.
