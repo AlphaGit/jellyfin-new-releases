@@ -358,3 +358,28 @@ or by a deliberate mutant, before any production code moves.
   characterization of "helpers this feature does not change", but `:50-79` are new-behaviour tests
   for `checkedText`, which this feature added. State both purposes in the header, or move
   `checkedText` to its own file beside `staleness.test.js` as `esc.test.js` does
+
+---
+
+## Phase 11: TDD remediation (fourth audit)
+
+From `specs/002-report-data-age/tdd/verification.md` (verdict **FAIL**, audited at `99c805e`).
+Phase 10 closed every finding of the third audit; this phase closes what the fourth found.
+
+**The feature is not done until T059–T064 are cleared.** Each is a real surviving mutant inside a
+`DONE` behaviour. Every task is a test change on correct production code, so each is proven by its
+mutant failing, applied from a file copy and restored with `cmp`, never `git checkout`. Record each
+in `tdd/cycle-log.md`. Even with all of them closed, the verdict cannot reach `PASS`: T065 records
+six `TEST_AFTER` behaviours that no new work can turn into test-first ones.
+
+- [ ] T059 Finding 1 (HIGH): add a test to `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs` that stores a release, then calls `GetReleasesAsync` with a filter (or a caller) that hides it, and asserts `HasStoredReleases` is `true` with no items. Every current test of the flag (`:156-169`) uses a caller who sees every row, so `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs:95` passing `visible.Count > 0` instead of `hasStored` passes all 303 tests. Proven done when that mutant fails `dotnet test --configuration Release` [U13]
+- [ ] T060 Finding 2 (HIGH): add both sides of the boundary at a second refresh interval (for example 12 h) to `tests/web/staleness.test.js`. Every test uses `INTERVAL_HOURS = 24`, so replacing `intervalHours` with `24` at `src/Jellyfin.Plugin.NewReleases/Web/user-view.html:106` passes. Proven done when that mutant fails `node --test "tests/web/*.test.js"` [U21] [U22]
+- [ ] T061 Finding 3 (HIGH): add a case to `tests/web/staleness.test.js` with an instant further in the future than one refresh interval (for example `ahead(30 * HOUR)`), expecting `null`. The case at `:22-24` stays inside the interval, so `Math.max(0, …)` → `Math.abs(…)` at `user-view.html:105` passes and states "checked 30 hours ago" for a future instant. Proven done when that mutant fails `node --test "tests/web/*.test.js"` [U20]
+- [ ] T062 Finding 4 (HIGH): extend `tests/Jellyfin.Plugin.NewReleases.Tests/Api/AdminControllerTests.cs` so the administrator view and the list report the same instant after the newest source is disabled. Today every `FR-011` test has every source enabled, so `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs:97` passing a fixed set of both sources instead of `configuration.EnabledSourceIds()` passes all 303 tests. Proven done when that mutant fails `dotnet test --configuration Release` [U17]
+- [ ] T063 Finding 5 (HIGH): extend `GetReleases_ListAndStatusReportTheSameInstant` (or add a sibling) in `ReleasesControllerTests.cs` so list and status are compared after a purge. Today `GetStatusAsync` at `ReleasesController.cs:162` can drop the stored-releases gate and all 303 tests pass. Proven done when that mutant fails `dotnet test --configuration Release` [U12]
+- [ ] T064 Finding 6 (HIGH): add a render test (in `tests/web/render.test.js`, through `loadPageDom`) that renders a release whose title contains markup, and asserts that the panel's HTML carries it escaped. Only `esc` itself is tested, so removing `esc()` around `item.title` at `user-view.html:143` passes all 64 node tests. Proven done when that mutant fails `node --test "tests/web/*.test.js"` [A9]
+- [ ] T065 Finding 7 (MED): append a cycle-log entry labelling `U12`, `U13`, `U36`, `U38`, `A6` and `A7` as test-after, with the evidence the audit cites, and record the maintainer's decision to accept them or not. Do not edit past entries. This cannot be fixed by new tests. Proven done when the entry exists and names all six
+- [ ] T066 [P] Findings 8–10 (MED): separate the coincident inputs. In `ReleasesControllerTests.cs:108-117`, advance the clock between the fetch and `StartRunAsync`. In `ConfigureAndRunTests.cs:107-123` (`A6`), give MusicBrainz an earlier completed fetch and advance the clock before the run. In `ArtistRepositoryTests.cs:138-149` (`U1`), write the newer fetch first and at the second source. Proven done when "the latest run's start" (`U10`), "the run's end" (`A6`) and "the last row written" (`U1`) each fail `dotnet test --configuration Release` as mutants [U1] [U10] [U11] [A6]
+- [ ] T067 [P] Finding 11 (MED): in `tdd/test-list.md` "Verification commands", replace the node `--test-name-pattern` single-test line with the profile's `file:` command (`node --test tests/web/{file}`), and the `dotnet@9` path with the profile's shell note. Proven done when every command printed there fails on a test that does not exist, or runs one file
+- [ ] T068 [P] Finding 12 (MED): in `tests/web/load-page.js:104-108`, rethrow every error from the page script now that the fake DOM lets initialization complete, or narrow the catch to a named, expected case. Proven done when a `throw` added at the end of `user-view.html`'s initialization fails `node --test "tests/web/*.test.js"`
+- [ ] T069 [P] Finding 13 (LOW): fix the text drift. `A7`'s row ("stops moving" → no instant), the summary at `ConfigureAndRunTests.cs:143` ("last refreshed"), the `exposure.test.js` titles and comment (now `render`/`renderStatus` too), the name of `AdminControllerTests.cs:131`, and `U34`'s `FR-016` trace (packaging is pinned by `003`'s `BuildManifestTests`)
