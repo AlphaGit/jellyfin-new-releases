@@ -42,7 +42,7 @@ entry point is the page's own exported logic, reached through the sandbox loader
 | A4 | No enabled source has ever completed a fetch → the list response reports no stored releases and no instant | US1-AS4 | example | DONE | `Acceptance/BrowseReleasesTests.cs::A5_NoCompletedRun_ReportsNoStoredReleasesAndNoInstant` (`001`'s) |
 | A5 | After a purge → the list response reports no stored releases and no instant, though completed runs are still on record | US1-AS5 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A5_AfterAPurge_TheListReportsNoStoredReleasesAndNoInstant` |
 | A6 | One source cooling down while the other completes a fetch → the reported instant is that completed fetch and is within one refresh interval | US2-AS1 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A6_OneSourceCoolingDownWhileTheOtherCompletesAFetch_TheAgeCountsFromThatFetch` |
-| A7 | The administrator disables every source → refreshes keep running and the reported instant stops moving | US2-AS2 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A7_WithEverySourceDisabled_NoAgeIsReportedWhileTheListStillShowsWhatIsStored` |
+| A7 | The administrator disables every source → refreshes keep running and no instant is reported, while the stored list is still shown | US2-AS2 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A7_WithEverySourceDisabled_NoAgeIsReportedWhileTheListStillShowsWhatIsStored` |
 | A8 | Every band and boundary of the unit ladder is asserted, and moving any boundary by one unit makes a test fail | US3-AS1, SC-007 | example | DONE | `tests/web/staleness.test.js` + the four boundary mutants in `cycle-log.md` |
 | A9 | A release title containing HTML markup is escaped rather than rendered as markup | US3-AS2, SC-008 | characterization | DONE | `tests/web/esc.test.js` + `tests/web/render.test.js` (the two title-with-markup tests) |
 | A10 | The whole suite, page side included, runs with no network and no installation step | US3-AS3, SC-009, FR-014 | example | DONE | verified in `cycle-log.md`; no manifest, no install, no network module |
@@ -141,7 +141,7 @@ no test at all (Finding 1 again, second instance).
 | U36 | `checkedText` renders every band of the unit ladder, and each changeover is asserted on both sides — the same ladder as `stalenessText`, plus the under-an-hour rung the user page never reaches | FR-009, FR-012, SC-005 | example | DONE | `tests/web/checked.test.js` (the `ladder` table and the over-a-year test) |
 | U37 | `checkedText` with no instant yields a dash, not a sentence | FR-008, FR-009 | example | DONE | `tests/web/checked.test.js::no instant yields a dash, not a sentence` |
 | U38 | `checkedText` with an instant later than now counts it as the present moment, so this view never states a future age | FR-010, FR-009, EC-clock | example | DONE | `tests/web/checked.test.js::an instant later than now counts as the present moment, never a future age` |
-| U34 | Both pages expose their pure helpers on one named object, so the sandbox can reach them without a browser | FR-013, FR-016 | example | DONE | `tests/web/exposure.test.js` |
+| U34 | Both pages expose their pure helpers on one named object, so the sandbox can reach them without a browser | FR-013 | example | DONE | `tests/web/exposure.test.js` |
 
 ## Invariants and edge cases still to place
 
@@ -179,8 +179,8 @@ Page side, added to the profile by `T006` and now copied verbatim from it. The p
 glob, never the bare directory: `node --test tests/web/` resolves it as a module, runs nothing and
 still exits 0 (cycle 14).
 
-- Single test: `node --test --test-name-pattern "<name>" "tests/web/*.test.js"`
+- Single file: `node --test tests/web/{file}`. The profile has no node single-test command on purpose: `--test-name-pattern` with a name that matches nothing still exits 0
 - Full suite: `node --test "tests/web/*.test.js"`
 
 `{name}` is `Class.Method` for xunit. In a shell that did not source `~/.zshenv`, prefix the
-dotnet commands with `PATH=/opt/homebrew/opt/dotnet@9/bin:$PATH DOTNET_ROOT=/opt/homebrew/opt/dotnet@9/libexec`.
+dotnet commands with `PATH=/opt/homebrew/opt/dotnet/bin:$PATH DOTNET_ROOT=/opt/homebrew/opt/dotnet/libexec` (SDK 10, per the profile).

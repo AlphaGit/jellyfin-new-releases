@@ -571,3 +571,46 @@ never `git checkout`. No production code changed.
 - suite: 306 passed, 0 failed (dotnet); 69 passed, 0 failed (node), also under `LANG=de_DE.UTF-8`
   and `TZ=America/Sao_Paulo`. `dotnet build --configuration Release`: 0 warnings
 - `T065`–`T069` remain open. `T065` needs a maintainer decision
+
+## Phase 11, second part: the MED and LOW findings
+
+No production code changed. Each test change was proven by a deliberate mutant run twice: once
+against the test files as committed at `f8a4306`, and once against the changed ones. The committed
+copies were swapped in by file copy and the current copies restored with `cmp`. Production mutants
+were restored the same way.
+
+**T066 — Findings 8–10, coincident inputs.** These are setup changes only; no assertion was
+loosened.
+
+| Test | Change | Mutant | Before | After |
+| --- | --- | --- | --- | --- |
+| `GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd` (U10, U11) | clock advanced 1 h between the fetch and `StartRunAsync` | the list reports the latest run's `StartedAt` | SURVIVED | 1 failed: `Expected: Tuple (True, …12:00:00) / Actual: Tuple (True, …13:00:00)` |
+| `A6_OneSourceCoolingDown…` (A6) | a first run where both sources complete a fetch, then 1 day later MusicBrainz cools down | `MAX` → `MIN` | SURVIVED | 1 failed: `Expected: 2026-09-07T12:00:00 / Actual: 2026-09-06T12:00:00` |
+| `GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetchAcrossArtists` (U1) | newer fetch written first, at the other source | "the last row written" (`ORDER BY rowid DESC LIMIT 1`) | SURVIVED | 1 failed: `Expected: 2026-09-06T03:00:00 / Actual: 2026-09-01T03:00:00` |
+
+Ceiling on `A6`: within one run the stub clock does not move, so a fetch can never differ from its
+own run's start or end there. "Not the run's end" is held by `A1` (`A20`) and `U10`.
+
+**T067 — Finding 11.** In `test-list.md`, the node single-test line (a name pattern that exits 0
+on no match) is now the profile's `file:` command. The `dotnet@9` path is now the profile's
+SDK 10 prefix. Checked: `node --test tests/web/nope.test.js` exits 1.
+
+**T068 — Finding 12.** `load-page.js` no longer catches errors from the page script. All 69 page
+tests pass without the catch, so every page initializes cleanly in the fake DOM. Mutant: `throw`
+added after `loadArtists().then(load);` in `user-view.html`. With the old catch: 69 passed,
+0 failed (hidden). Without it: 27 passed, 22 failed.
+
+**T069 — Finding 13, text drift.**
+
+- `A7`'s row says no instant is reported, matching the assertion.
+- `A20`'s summary says "last checked".
+- `exposure.test.js` titles say "exactly its testable helpers", and its comment names the two
+  render test files.
+- `U34` no longer traces to `FR-016`, which `003`'s `BuildManifestTests` pins.
+- `Status_WithNothingStored_…` now asserts its own precondition, that the fetch timestamp
+  survives, rather than being renamed.
+
+- suite: 306 passed, 0 failed (dotnet); 69 passed, 0 failed (node), also under `ja_JP.UTF-8` /
+  `Asia/Tokyo`. `dotnet build --configuration Release`: 0 warnings
+- open: `T065` (maintainer decision on the six test-after behaviours) and `T037` (manual pass on an
+  unsupported Jellyfin version)

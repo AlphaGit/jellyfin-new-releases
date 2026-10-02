@@ -110,7 +110,8 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         var fetchedAt = _clock.GetUtcNow();
         await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, fetchedAt, CancellationToken.None);
 
-        // A run that ends later must not become the reported instant.
+        // A run that starts and ends later must not become the reported instant.
+        _clock.Advance(TimeSpan.FromHours(1));
         var run = await _db.SourceState.StartRunAsync(CancellationToken.None);
         _clock.Advance(TimeSpan.FromMinutes(5));
         await _db.SourceState.FinishRunAsync(run, 1, 1, 0, 0, "Completed", CancellationToken.None);

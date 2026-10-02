@@ -142,8 +142,9 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
         var newer = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
         var one = await _db.Artists.UpsertAsync(Artist("name:one", "One"), CancellationToken.None);
         var two = await _db.Artists.UpsertAsync(Artist("name:two", "Two"), CancellationToken.None);
+        // The newer fetch is written first and at the other source, so neither write order nor source order picks it.
+        await CompleteFetchAsync(two, "deezer", newer);
         await CompleteFetchAsync(one, "musicbrainz", older);
-        await CompleteFetchAsync(two, "musicbrainz", newer);
 
         Assert.Equal(newer, await _db.Artists.GetReleasesLastCheckedAtAsync(BothSources, CancellationToken.None));
     }

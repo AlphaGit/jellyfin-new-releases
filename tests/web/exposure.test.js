@@ -17,15 +17,16 @@ const { loadPage } = require('./load-page.js');
 // list entry and the test are the half that matters.
 //
 // Callability needs no assertion here — every name below is called as a function by
-// `staleness.test.js`, `checked.test.js`, `esc.test.js` or `page-helpers.test.js`.
+// `staleness.test.js`, `checked.test.js`, `esc.test.js`, `page-helpers.test.js`, `render.test.js`
+// or `render-status.test.js`.
 
-test('user-view.html exposes its pure helpers', () => {
+test('user-view.html exposes exactly its testable helpers', () => {
     const internals = loadPage('user-view.html');
 
     assert.deepEqual(Object.keys(internals).sort(), ['artistLink', 'esc', 'groupOf', 'render', 'stalenessText']);
 });
 
-test('admin.html exposes its pure helpers', () => {
+test('admin.html exposes exactly its testable helpers', () => {
     const internals = loadPage('admin.html');
 
     assert.deepEqual(Object.keys(internals).sort(), ['checkedText', 'esc', 'healthText', 'renderStatus']);

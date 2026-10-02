@@ -135,6 +135,7 @@ public sealed class AdminControllerTests : IAsyncLifetime
         RefreshWorkerIs(TaskState.Idle);
 
         // No release rows were ever stored, or they were purged: the fetch timestamp outlives them.
+        Assert.NotNull(await _db.Artists.GetReleasesLastCheckedAtAsync(_configuration.EnabledSourceIds(), CancellationToken.None));
         var status = (await Controller().GetStatusAsync(CancellationToken.None)).Value!;
 
         Assert.Null(status.ReleasesLastCheckedAt);

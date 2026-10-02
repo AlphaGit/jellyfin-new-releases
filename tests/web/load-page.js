@@ -9,8 +9,8 @@
 //
 // The sandbox's `document` is the stand-in in `fake-dom.js`, which models exactly the
 // elements the page's own markup declares, so a page now runs its initialization to
-// completion here. The catch below stays for a page that fails before exposing its
-// helpers: that is a real problem and is rethrown.
+// completion here, and any error it throws reaches the test. Nothing is caught: an
+// initialization that fails after the helpers are exposed is a regression too.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -101,11 +101,7 @@ function loadPageDom(fileName, overrides = {}) {
     const html = fs.readFileSync(path.join(WEB_DIR, fileName), 'utf8');
     const sandbox = sandboxGlobals(fileName, overrides);
 
-    try {
-        vm.runInNewContext(extractScript(html, fileName), sandbox, { filename: fileName });
-    } catch (error) {
-        if (!sandbox.NewReleasesInternals) throw error; // failed before exposing: a real problem
-    }
+    vm.runInNewContext(extractScript(html, fileName), sandbox, { filename: fileName });
 
     if (!sandbox.NewReleasesInternals) {
         throw new Error(`${fileName} exposed no NewReleasesInternals; see tests/web/load-page.js`);
