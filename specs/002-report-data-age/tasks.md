@@ -407,3 +407,16 @@ see T075.
 - [X] T076 [P] Finding 7 (LOW): add a title carrying `"` and `'` as well as markup to the `tests/web/render.test.js:143-156` markup tests, asserting no raw quote from it appears in `data-title` or `aria-label`. Proven done when a call site using an escaper that skips quotes fails `node --test "tests/web/*.test.js"`
 - [X] T077 [P] Finding 8 (LOW): in `GetReleases_AfterAPurge_ListAndStatusBothReportNoInstant` (`ReleasesControllerTests.cs:157-169`), assert before acting that `GetReleasesLastCheckedAtAsync` still returns an instant after the purge, as `AdminControllerTests.cs:138` does. Proven done when the test fails if `PurgeAsync` is changed to clear `last_complete_at`
 - [X] T078 [P] Finding 9 (LOW): fix the text drift. The comment at `ArtistRepositoryTests.cs:145` (after T070); `staleness.test.js:46-47` (the gate also hides a negative age; `Math.abs` is what the test catches); `load-page.js:12` (synchronous errors only); the name of `ReleasesControllerTests.cs:103` and the duplicated empty-state call at `:106`; and `tdd/test-list.md`'s "Out of scope" `row`/`render` line and its `updated_at`
+
+---
+
+## Phase 13: TDD remediation (sixth audit)
+
+From `specs/002-report-data-age/tdd/verification.md` (verdict **PASS_WITH_GAPS**, audited at
+`76f6b05`, graded against the project rubric override). No finding blocks the feature. These tasks
+close one `MED` and three `LOW` findings. None changes production code.
+
+- [ ] T079 Finding 1 (MED): make `NOW` in `tests/web/fixed-clock.js:10` later than the page fixtures' `releasesLastCheckedAt` (`2026-09-19T03:15Z` in `tests/fixtures/pages/releases.json:61`, `releases-filtered.json:26`, `admin-status.json:34`, `status.json:3`), or move those instants before `NOW`. Then assert the exact sentence at `tests/web/render-status.test.js:34` and update `tests/web/render.test.js:116` to the new age. Today `admin-status.json` renders as "Releases last checked 0 hours ago." through the clock-correction clamp. Proven done when `node --test "tests/web/*.test.js"` passes and a scratch render of `admin-status.json` at the pinned clock states a positive age
+- [ ] T080 [P] Finding 2 (LOW): in `tests/web/render.test.js:180`, count with `(… .match(…) ?? []).length` so a missing escaped copy fails as `expected 4, actual 0`, not as a `TypeError`. Proven done when the Q1 mutant (`data-title` escaping `<` and `>` only, at `user-view.html:142`) still fails `node --test "tests/web/*.test.js"`, and a mutant that writes the title raw everywhere fails with a count
+- [ ] T081 [P] Finding 3 (LOW): fold the two `U1` facts at `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ArtistRepositoryTests.cs:139-164` into one `[Theory]` over the newer fetch's source and its write position. Update `U1`'s `test` column in `tdd/test-list.md`. Proven done when X1 (`ORDER BY source LIMIT 1`) and M3 (`ORDER BY rowid DESC LIMIT 1`) at `ArtistRepository.cs:215` each fail `dotnet test --configuration Release`
+- [ ] T082 [P] Finding 4 (LOW): fix the text drift. In `tdd/cycle-log.md`, append an entry that corrects the `T075` entry's "S9 and S10" for `A7` (only S10 fails `A7`'s test); do not edit the past entry. In `tdd/test-list.md`, give `A2` and `A3` their `render.test.js::<name>` traces. In `tests/web/load-page.js:78-79`, remove one of the two blank lines. Proven done when each named line reads as stated
