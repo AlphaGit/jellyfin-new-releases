@@ -1,5 +1,5 @@
 ---
-feature: 006-user-view-polish
+feature: 007-user-view-polish
 loop: outside-in
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 14

@@ -1,8 +1,8 @@
 # Implementation Plan: Polish the New Releases view
 
-**Branch**: `006-user-view-polish` | **Date**: 2026-10-01 | **Spec**: [spec.md](./spec.md)
+**Branch**: `007-user-view-polish` | **Date**: 2026-10-01 | **Spec**: [spec.md](./spec.md)
 
-**Input**: Feature specification from `/specs/006-user-view-polish/spec.md`
+**Input**: Feature specification from `/specs/007-user-view-polish/spec.md`
 
 ## Summary
 
@@ -76,7 +76,7 @@ warnings, then `dotnet test` and `node --test`. `CHANGELOG.md` gets an entry at 
 ### Documentation (this feature)
 
 ```text
-specs/006-user-view-polish/
+specs/007-user-view-polish/
 ├── plan.md              # This file
 ├── spec.md
 ├── research.md          # Phase 0: R1..R11 (R2 dropped)

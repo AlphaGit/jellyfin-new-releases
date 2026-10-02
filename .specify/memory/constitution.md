@@ -5,7 +5,7 @@ Sync Impact Report
   loads release cover images directly from a source's image host)
 - Modified sections: Technical Constraints (the "no external assets" rule for the Web UI gets
   the same cover-image exception)
-- Reason: feature `006-user-view-polish` (`FR-008`) chose direct cover loading over a server
+- Reason: feature `007-user-view-polish` (`FR-008`) chose direct cover loading over a server
   proxy. MINOR, not MAJOR: a scoped exception, no principle removed or redefined.
 - Templates: none need changes; they read the constitution at runtime.
 - Follow-up TODOs: none

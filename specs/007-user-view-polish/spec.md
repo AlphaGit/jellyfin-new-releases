@@ -1,6 +1,6 @@
 # Feature Specification: Polish the New Releases view
 
-**Feature Branch**: `006-user-view-polish`
+**Feature Branch**: `007-user-view-polish`
 
 **Created**: 2026-09-30
 

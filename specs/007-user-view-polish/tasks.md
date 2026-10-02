@@ -1,11 +1,11 @@
 ---
 
-description: "Task list for 006-user-view-polish"
+description: "Task list for 007-user-view-polish"
 ---
 
 # Tasks: Polish the New Releases view
 
-**Input**: Design documents from `/specs/006-user-view-polish/`
+**Input**: Design documents from `/specs/007-user-view-polish/`
 
 **Prerequisites**: [plan.md](./plan.md), [spec.md](./spec.md), [research.md](./research.md),
 [data-model.md](./data-model.md), [contracts/](./contracts/), [quickstart.md](./quickstart.md)
