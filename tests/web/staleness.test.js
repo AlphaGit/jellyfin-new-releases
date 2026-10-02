@@ -31,6 +31,24 @@ test('an age one second past the interval yields a sentence', () => {
     assert.equal(stalenessText(ago(INTERVAL_HOURS * HOUR + 1000), NOW, INTERVAL_HOURS), 'Releases last checked 24 hours ago.');
 });
 
+// The threshold is whatever interval the trigger gives, not a fixed day: every other case here
+// uses 24, so without a second interval a gate hard-coded to 24 would pass them all.
+const SHORT_INTERVAL_HOURS = 12;
+
+test('a shorter interval moves the threshold: exactly that interval yields no sentence', () => {
+    assert.equal(stalenessText(ago(SHORT_INTERVAL_HOURS * HOUR), NOW, SHORT_INTERVAL_HOURS), null);
+});
+
+test('a shorter interval moves the threshold: one second past it yields a sentence', () => {
+    assert.equal(stalenessText(ago(SHORT_INTERVAL_HOURS * HOUR + 1000), NOW, SHORT_INTERVAL_HOURS), 'Releases last checked 12 hours ago.');
+});
+
+// Further ahead than one interval, so the gate alone cannot hide it: only counting a future
+// instant as zero keeps this view from stating an age that never happened.
+test('an instant further ahead than one interval still yields no sentence', () => {
+    assert.equal(stalenessText(ahead(INTERVAL_HOURS * HOUR + 6 * HOUR), NOW, INTERVAL_HOURS), null);
+});
+
 // 002 FR-012 / SC-007: the unit ladder. Each unit gives way at two of the next, so every
 // changeover is asserted on both sides — a threshold with one test pins nothing.
 

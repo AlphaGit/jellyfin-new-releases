@@ -137,3 +137,20 @@ test('a narrowed response lists only what it carries', () => {
     assert.equal(body.items.length, 1);
     assert.doesNotMatch(panel, /Kill for Love/);
 });
+
+// 002 A9 / SC-008: a title arrives from MusicBrainz or Deezer and is concatenated into the row's
+// markup. `esc.test.js` pins the helper; these pin that the row actually uses it.
+const MARKUP_TITLE = '<img src=x onerror=alert(1)>';
+
+function renderedWithTitle(title) {
+    const body = fixture('releases.json');
+    return rendered({ ...body, items: [{ ...body.items[0], title }] }).panel;
+}
+
+test('a title containing markup is written into the row as text', () => {
+    assert.match(renderedWithTitle(MARKUP_TITLE), /<div class="nr-title">&lt;img src=x onerror=alert\(1\)&gt;<\/div>/);
+});
+
+test('a title containing markup appears nowhere in the row unescaped', () => {
+    assert.equal(renderedWithTitle(MARKUP_TITLE).indexOf(MARKUP_TITLE), -1);
+});

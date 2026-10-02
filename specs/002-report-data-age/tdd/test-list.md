@@ -44,7 +44,7 @@ entry point is the page's own exported logic, reached through the sandbox loader
 | A6 | One source cooling down while the other completes a fetch → the reported instant is that completed fetch and is within one refresh interval | US2-AS1 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A6_OneSourceCoolingDownWhileTheOtherCompletesAFetch_TheAgeCountsFromThatFetch` |
 | A7 | The administrator disables every source → refreshes keep running and the reported instant stops moving | US2-AS2 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::A7_WithEverySourceDisabled_NoAgeIsReportedWhileTheListStillShowsWhatIsStored` |
 | A8 | Every band and boundary of the unit ladder is asserted, and moving any boundary by one unit makes a test fail | US3-AS1, SC-007 | example | DONE | `tests/web/staleness.test.js` + the four boundary mutants in `cycle-log.md` |
-| A9 | A release title containing HTML markup is escaped rather than rendered as markup | US3-AS2, SC-008 | characterization | DONE | `tests/web/esc.test.js` |
+| A9 | A release title containing HTML markup is escaped rather than rendered as markup | US3-AS2, SC-008 | characterization | DONE | `tests/web/esc.test.js` + `tests/web/render.test.js` (the two title-with-markup tests) |
 | A10 | The whole suite, page side included, runs with no network and no installation step | US3-AS3, SC-009, FR-014 | example | DONE | verified in `cycle-log.md`; no manifest, no install, no network module |
 
 **A8 and A10 are not conventional tests.** A8's first half is `U21`–`U28` below; its second half —
@@ -82,8 +82,8 @@ Grouped by the component from `plan.md` that owns them.
 | --- | --- | --- | --- | --- | --- |
 | U10 | The list response reports the newest completed fetch, not the last completed run's end | FR-001, FR-002 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd` |
 | U11 | A refresh that completed no fetch leaves the reported instant unchanged | FR-003, FR-004 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd` |
-| U12 | The list response and the status response report the same instant for one caller at one moment | FR-011 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ListAndStatusReportTheSameInstant` |
-| U13 | The stored-releases flag follows whether release rows exist, not whether a run has completed | FR-008 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted` |
+| U12 | The list response and the status response report the same instant for one caller at one moment | FR-011 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ListAndStatusReportTheSameInstant` + `Api/ReleasesControllerTests.cs::GetReleases_AfterAPurge_ListAndStatusBothReportNoInstant` |
+| U13 | The stored-releases flag follows whether release rows exist, not whether a run has completed | FR-008 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted` + `Api/ReleasesControllerTests.cs::GetReleases_StoredReleasesFlagHoldsWhenTheSelectionHidesEveryRow` |
 | U14 | Release rows with no completed fetch anywhere → the releases are listed and no instant is reported | FR-008, EC-no-fetch | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ReleasesStoredButNoFetchEverCompleted_AreListedWithNoInstant` |
 | U15 | Disabling the source whose fetch was newest makes the reported instant fall back to the newest remaining enabled source | FR-002, US2-AS2 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_DisablingTheNewestSource_FallsBackToTheNewestEnabledOne` |
 
@@ -92,7 +92,7 @@ Grouped by the component from `plan.md` that owns them.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U16 | Reports the last run, including a run that reached no source | FR-009 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` |
-| U17 | Reports the same instant the user page reports | FR-009, FR-011 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` |
+| U17 | Reports the same instant the user page reports | FR-009, FR-011 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` + `Api/AdminControllerTests.cs::Status_DisablingTheNewestSource_FallsBackToTheInstantTheUserPageReports` |
 | U18 | After a run that completed no fetch, the reported run end and the reported instant differ | FR-009, SC-005 | example | DONE | `Api/AdminControllerTests.cs::Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch` |
 | U35 | With nothing stored, the administrator view reports no instant either | FR-008, FR-011 | example | DONE | `Api/AdminControllerTests.cs::Status_WithNothingStored_ReportsNoInstantEitherThoughTheFetchTimestampSurvives` |
 
@@ -104,9 +104,9 @@ boundary below is tested on both sides: a threshold with one test pins nothing.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U19 | No instant → no sentence | FR-008 | example | DONE | `tests/web/staleness.test.js` |
-| U20 | An instant later than the current time counts as an age of zero, so no sentence | FR-010, EC-clock | example | DONE | `tests/web/staleness.test.js` |
-| U21 | Age exactly one refresh interval → no sentence | FR-006 | example | DONE | `tests/web/staleness.test.js` |
-| U22 | Age one second past one refresh interval → a sentence | FR-006 | example | DONE | `tests/web/staleness.test.js` |
+| U20 | An instant later than the current time counts as an age of zero, so no sentence | FR-010, EC-clock | example | DONE | `tests/web/staleness.test.js` (+ the further-ahead-than-one-interval case) |
+| U21 | Age exactly one refresh interval → no sentence | FR-006 | example | DONE | `tests/web/staleness.test.js` (+ the shorter-interval cases) |
+| U22 | Age one second past one refresh interval → a sentence | FR-006 | example | DONE | `tests/web/staleness.test.js` (+ the shorter-interval cases) |
 | U23 | 47 hours renders in hours | FR-012 | example | DONE | `tests/web/staleness.test.js` |
 | U24 | 48 hours renders in days, not hours | FR-012, SC-007 | example | DONE | `tests/web/staleness.test.js` |
 | U25 | 13 days renders in days; 14 days renders in weeks | FR-012, SC-007 | example | DONE | `tests/web/staleness.test.js` |

@@ -546,3 +546,28 @@ builtin or a local file, and no network API is referenced anywhere under `tests/
   `TreatWarningsAsErrors`
 - every finding of the second audit is now closed. `T037`, `T038` and `T049` remain open and none
   of them is a code change
+
+## Phase 11: remediation of the fourth TDD audit's HIGH findings
+
+Driven from `tdd/verification.md` (verdict FAIL, audited at `99c805e`). The production code was
+correct in every case, so each test passed on first run and the proof is the audit's own surviving
+mutant now failing. Every mutant was applied from a file copy and restored with a `cmp` byte check,
+never `git checkout`. No production code changed.
+
+| Task | Behaviour | New test | Mutant | Before | After |
+| --- | --- | --- | --- | --- | --- |
+| T059 | U13 | `ReleasesControllerTests.cs::GetReleases_StoredReleasesFlagHoldsWhenTheSelectionHidesEveryRow` | S7: list flag `hasStored` → `visible.Count > 0` | 303/303 passed | 1 failed: `Expected: Tuple (0, True) / Actual: Tuple (0, False)` |
+| T060 | U21, U22 | `staleness.test.js`: both sides of a 12 h interval | V1: gate uses `24` for the interval | 64/64 passed | 1 failed: `a shorter interval moves the threshold: one second past it yields a sentence / expected: 'Releases last checked 12 hours ago.' / actual: ~` |
+| T061 | U20 | `staleness.test.js::an instant further ahead than one interval still yields no sentence` | V2: clamp → `Math.abs` | 64/64 passed | 1 failed: `expected: ~ / actual: 'Releases last checked 30 hours ago.'` |
+| T062 | U17 | `AdminControllerTests.cs::Status_DisablingTheNewestSource_FallsBackToTheInstantTheUserPageReports` | V3: admin view ignores `EnabledSourceIds()` | 303/303 passed | 1 failed: `Expected: 2026-09-01T03:00:00 / Actual: 2026-09-06T03:00:00` |
+| T063 | U12 | `ReleasesControllerTests.cs::GetReleases_AfterAPurge_ListAndStatusBothReportNoInstant` | V4: `GetStatusAsync` drops the stored gate | 303/303 passed | 1 failed: `Expected: Tuple (null, null) / Actual: Tuple (null, 2026-09-06T12:00:00)` |
+| T064 | A9 | `render.test.js`: two title-with-markup tests | V5: `row()` writes `item.title` unescaped | 64/64 passed | 2 failed, one with `expected: -1 / actual: 147` |
+
+- control: P2 (drop the user page's clamp) still survives, as the audit judged: the interval gate
+  hides any negative age, so that mutant is equivalent. V2 is the non-equivalent one, and it is
+  caught now.
+- `T064` uses `005`'s `loadPageDom` and `render.test.js`'s own `rendered` helper. When `002` closed,
+  rendering was out of scope because the feature had no DOM.
+- suite: 306 passed, 0 failed (dotnet); 69 passed, 0 failed (node), also under `LANG=de_DE.UTF-8`
+  and `TZ=America/Sao_Paulo`. `dotnet build --configuration Release`: 0 warnings
+- `T065`–`T069` remain open. `T065` needs a maintainer decision

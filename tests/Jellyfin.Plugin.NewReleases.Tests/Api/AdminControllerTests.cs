@@ -140,6 +140,25 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Null(status.ReleasesLastCheckedAt);
     }
 
+    /// <summary>002 FR-011/FR-002: with the newest source switched off, this view falls back to the same instant the
+    /// user page does (ReleasesControllerTests.GetReleases_DisablingTheNewestSource_FallsBackToTheNewestEnabledOne).</summary>
+    [Fact]
+    public async Task Status_DisablingTheNewestSource_FallsBackToTheInstantTheUserPageReports()
+    {
+        var older = new DateTimeOffset(2026, 9, 1, 3, 0, 0, TimeSpan.Zero);
+        var newer = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
+        var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:daft punk", Guid.NewGuid(), "Daft Punk", null, [Library], []), CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(artist, "musicbrainz", new CatalogueItem("rg-1", "Discovery", "https://musicbrainz.org/release-group/rg-1", ReleaseType.Album, [], "2001-03-12"), 1, older, CancellationToken.None);
+        await _db.Artists.SetFetchOutcomeAsync(artist, "musicbrainz", FetchOutcome.Complete, 0, null, older, CancellationToken.None);
+        await _db.Artists.SetFetchOutcomeAsync(artist, "deezer", FetchOutcome.Complete, 0, null, newer, CancellationToken.None);
+        RefreshWorkerIs(TaskState.Idle);
+        _configuration.DeezerEnabled = false;
+
+        var status = (await Controller().GetStatusAsync(CancellationToken.None)).Value!;
+
+        Assert.Equal(older, status.ReleasesLastCheckedAt);
+    }
+
     private async Task<long> SeedReleaseDataAsync()
     {
         var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:daft punk", Guid.NewGuid(), "Daft Punk", null, [Library], []), CancellationToken.None);
