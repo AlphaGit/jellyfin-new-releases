@@ -614,3 +614,28 @@ added after `loadArtists().then(load);` in `user-view.html`. With the old catch:
   `Asia/Tokyo`. `dotnet build --configuration Release`: 0 warnings
 - open: `T065` (maintainer decision on the six test-after behaviours) and `T037` (manual pass on an
   unsupported Jellyfin version)
+
+## Test-after admissions (T065, fourth audit Finding 7)
+
+The playbook asks that a behaviour whose production code came before any valid red be recorded
+as test-after. These six were, and earlier entries describe the facts but never use the label.
+Earlier entries stay as written; this one adds the label.
+
+| Behaviour | Why it is test-after | Where the evidence is |
+| --- | --- | --- |
+| U12 | cycle 7 rewired `GetStatusAsync` along with the list action. No failing test asked for it; the test came at cycle 9 and passed on first run | cycle 7, cycle 9; commit `81d3e63` |
+| U13 | the same change switched the flag to `HasAnyAsync`. The cycle 7 test passed under the old flag too; the test came at cycle 10 | cycle 7, cycle 10; `81d3e63` |
+| U36 | `T029` wrote the `checkedText` ladder against a missing-function red only. Three of its four boundaries had no assertion until `T039` | `T029` entry; Phase 9 table |
+| U38 | the clock-correction clamp shipped with `T029` and survived deletion until `T051` added its test | Phase 10 table |
+| A6, A7 | written at cycle 21, after every unit and every line they cover; no red. The playbook's outer loop is an acceptance test written first | cycle 21 |
+
+Each is mutant-proven today: cycles 9 and 10, Phase 9 and 10 tables, and Phase 11 for `U12`,
+`U13`, `U17`'s sibling and `A6`.
+
+**Decision (maintainer, 2026-10-01): accepted.** The history stays as it happened. A staged red
+after the fact would prove no more than the existing mutants. Consequence: under the rubric this
+feature's TDD verdict cannot rise above `PASS_WITH_GAPS`.
+
+`T037` was retargeted the same day, by the maintainer's decision, from Jellyfin 10.11.11 (dropped by
+`003`) to Jellyfin 12.x, with `quickstart.md`'s prerequisite line to match. It stays open as JD's own
+real-server pass.
