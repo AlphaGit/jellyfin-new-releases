@@ -635,3 +635,15 @@ change per cycle, and committed at green.
 - outer loop: US4 closes. A13 and A14 green with U62, U63 `DONE`. Tasks T021, T022 and the gates
   T038, T039 ticked
 - commit of cycle 47: `084d299`
+
+## Session close, 2026-10-03
+
+- list: every behaviour `DONE` or `DROPPED`; none `PENDING`, `RED` or `GREEN`. U64, U65 and U66
+  were appended mid-loop (cycles 11, 13, 40)
+- suite: `dotnet test --configuration Release` -> 318 passed, 0 failed (12.7 s with build);
+  `node --test "tests/web/*.test.js"` -> 119 passed, 0 failed; the same node suite under
+  `LANG=de_DE.UTF-8` -> 119 passed, 0 failed
+- commit of cycle 48: `1df58dc`
+- not driven, because no behaviour on the list states them: `decoding="async"` on the cover image
+  and the "centred note glyph" in the empty cover box (contracts/user-view.md, research R7, T016).
+  The empty box is the placeholder either way (FR-007); both are left for a decision
