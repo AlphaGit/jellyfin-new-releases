@@ -549,3 +549,16 @@ change per cycle, and committed at green.
   dotnet 318 passed
 - refactor: none needed
 - commit of cycle 40: `0d75bc8`
+
+## Cycle 42: A11 the List-tab buttons fill one shared column
+
+- test: `tests/web/styles.test.js::A11: the List-tab buttons fill one shared column: .nr-actions stretches its buttons, and each is full width` (new).
+  The acceptance level the profile reaches for layout: the declarations that produce equal width
+  and shared edges (research R8, R11). Pixel equality (SC-003) is the real-browser pass, quickstart §2.4
+- red: `node --test tests/web/styles.test.js` -> `+ [ 'flex-end', undefined ] - [ 'stretch', '100%' ]` (1 failed)
+- green: `.nr-actions` `align-items: flex-end` -> `stretch`; `.nr-actions button` gains
+  `width: 100%`. Suite -> node 111 passed, dotnet 318 passed
+- refactor: none needed
+- notes: driven directly, like A1–A5: the rule is two declarations with no unit beneath them. U59
+  (narrow screens) is its own behaviour next
+- commit of cycle 41: `629dd0e`

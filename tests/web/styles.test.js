@@ -39,3 +39,7 @@ test('U61: a cover image fills the box without stretching', () => {
 test('U66: a card lays out the 64 px cover, then the details, then the actions', () => {
     assert.equal(declarations('.nr-row')['grid-template-columns'], '64px 1fr auto');
 });
+
+test('A11: the List-tab buttons fill one shared column: .nr-actions stretches its buttons, and each is full width', () => {
+    assert.deepEqual([declarations('.nr-actions')['align-items'], declarations('.nr-actions button').width], ['stretch', '100%']);
+});
