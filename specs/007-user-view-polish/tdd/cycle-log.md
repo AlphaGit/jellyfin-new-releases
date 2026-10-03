@@ -107,3 +107,15 @@ change per cycle, and committed at green.
 - notes: test-after in the strict sense, for the same reason as `005` cycles 2 and 3; the mutants
   stand in for the red
 - commit of cycle 3: `3791558`
+
+## Cycle 5: A4 text that equals no name applies no filter
+
+- test: `tests/web/artist-filter.test.js::A4: text that equals no artist name, even one differing only in case, requests releases with no artistId` (new).
+  `asp` is chosen because the browser's suggestion list matches it to "ASP" (case-insensitive),
+  while FR-002 applies only an exact name
+- red: **passed on the first run**: cycle 3's map lookup is exact. Deliberate mutant M3, a
+  case-insensitive lookup in `query()`, on a file copy -> `+ 'GET Plugins/NewReleases/Releases?artistId=a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5'` (1 failed).
+  Restored with `cp`, verified with `cmp -s`
+- green: no production change. Suite -> node 84 passed, dotnet 310 passed
+- refactor: none needed
+- commit of cycle 4: `0730cb8`

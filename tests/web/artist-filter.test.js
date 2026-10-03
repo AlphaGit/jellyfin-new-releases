@@ -85,3 +85,11 @@ test('A3: after ASP is applied, pressing Clear requests releases with no artistI
 
     assert.equal(requests.at(-1), UNFILTERED);
 });
+
+test('A4: text that equals no artist name, even one differing only in case, requests releases with no artistId', async () => {
+    const { document, requests } = await loadView();
+
+    await type(document, 'asp');
+
+    assert.equal(requests.at(-1), UNFILTERED);
+});
