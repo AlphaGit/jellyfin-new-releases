@@ -735,3 +735,14 @@ a fresh session.
 - change: the count is taken from `(… .match(…) ?? []).length`
 - after: R1 → `expected: 4` / `actual: 0` (`AssertionError`). Q1 (`data-title` escaping `<` and `>` only) → `expected: 4` / `actual: 3`. Each restored with `cmp`; `node --test "tests/web/*.test.js"`: 79 passed, 0 failed
 - refactor: none needed
+
+### T081 (Finding 3): `U1` as a table
+
+- test: `ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetchAcrossArtists_WhateverItsSourceOrWriteOrder`, a `[Theory]` replacing `…AcrossArtists` and `…_EvenAtTheSourceThatSortsLast`. Its rows are the newer fetch's source (`deezer`, `musicbrainz`) × whether it is written first. The two old facts are rows 1 and 4; rows 2 and 3 are new
+- proof (refactor of a test, so no red; each mutant at `ArtistRepository.cs:215`, full suite):
+  X1 (`ORDER BY source LIMIT 1`) → 2 failed (`musicbrainz`, both orders).
+  M3 (`ORDER BY rowid DESC LIMIT 1`) → 2 failed (written first, both sources).
+  M2 (`MIN`) → 6 failed (all four rows, `U15`, `A6`). Each restored with `cmp`
+- suite: `dotnet test --configuration Release`: 310 passed, 0 failed (two facts became four rows)
+- `tdd/test-list.md`: `U1`'s `test` column names the theory
+- refactor: none further

@@ -135,30 +135,22 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
     private async Task CompleteFetchAsync(long artistId, string source, DateTimeOffset at)
         => await _db.Artists.SetFetchOutcomeAsync(artistId, source, FetchOutcome.Complete, 0, null, at, CancellationToken.None);
 
-    [Fact]
-    public async Task GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetchAcrossArtists()
+    // Every combination of where the newer fetch sits by source name ("deezer" sorts first) and by
+    // write order, so neither order can stand in for the newest instant.
+    [Theory]
+    [InlineData("deezer", true)]
+    [InlineData("deezer", false)]
+    [InlineData("musicbrainz", true)]
+    [InlineData("musicbrainz", false)]
+    public async Task GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetchAcrossArtists_WhateverItsSourceOrWriteOrder(string newerSource, bool newerWrittenFirst)
     {
         var older = new DateTimeOffset(2026, 9, 1, 3, 0, 0, TimeSpan.Zero);
         var newer = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
+        var olderSource = newerSource == "deezer" ? "musicbrainz" : "deezer";
         var one = await _db.Artists.UpsertAsync(Artist("name:one", "One"), CancellationToken.None);
         var two = await _db.Artists.UpsertAsync(Artist("name:two", "Two"), CancellationToken.None);
-        // The newer fetch is written first, so write order cannot pick it.
-        await CompleteFetchAsync(two, "deezer", newer);
-        await CompleteFetchAsync(one, "musicbrainz", older);
-
-        Assert.Equal(newer, await _db.Artists.GetReleasesLastCheckedAtAsync(BothSources, CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetch_EvenAtTheSourceThatSortsLast()
-    {
-        var older = new DateTimeOffset(2026, 9, 1, 3, 0, 0, TimeSpan.Zero);
-        var newer = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);
-        var one = await _db.Artists.UpsertAsync(Artist("name:one", "One"), CancellationToken.None);
-        var two = await _db.Artists.UpsertAsync(Artist("name:two", "Two"), CancellationToken.None);
-        // The newer fetch is at "musicbrainz", which sorts after "deezer", so source order cannot pick it.
-        await CompleteFetchAsync(two, "deezer", older);
-        await CompleteFetchAsync(one, "musicbrainz", newer);
+        await CompleteFetchAsync(two, newerWrittenFirst ? newerSource : olderSource, newerWrittenFirst ? newer : older);
+        await CompleteFetchAsync(one, newerWrittenFirst ? olderSource : newerSource, newerWrittenFirst ? older : newer);
 
         Assert.Equal(newer, await _db.Artists.GetReleasesLastCheckedAtAsync(BothSources, CancellationToken.None));
     }
