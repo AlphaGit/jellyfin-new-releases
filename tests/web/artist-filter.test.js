@@ -139,14 +139,18 @@ test('U44: a name with markup characters is written into its option escaped', as
     assert.equal(document.getElementById('nr-f-artist-list').innerHTML, '<option value="Guns &quot;N&quot; &lt;Roses&gt;">');
 });
 
-test('U45: when the Artists request fails, the field stays usable and releases are requested with no artistId', async () => {
-    const { document, requests } = await loadView(new Error('500'));
+// With no artist list, nothing is a name: neither a real one nor an inherited object key.
+for (const text of ['ASP', 'constructor']) {
+    test(`U45: when the Artists request fails, typing "${text}" and leaving the field request releases with no artistId`, async () => {
+        const { document, requests } = await loadView(new Error('500'));
+        const before = requests.length;
 
-    await type(document, 'ASP'); // throws if the failure left the field unusable
+        await type(document, text); // throws if the failure left the field unusable
+        await leave(document);
 
-    const releases = requests.filter(r => r.includes('/Releases'));
-    assert.deepEqual([releases.length > 0, releases.every(r => r === UNFILTERED)], [true, true]);
-});
+        assert.deepEqual(requests.slice(before), [UNFILTERED]);
+    });
+}
 
 test('U46: typing the applied name again sends no second releases request', async () => {
     const { document, requests } = await loadView();

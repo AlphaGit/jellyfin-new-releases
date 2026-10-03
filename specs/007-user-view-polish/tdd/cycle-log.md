@@ -699,3 +699,14 @@ placeholder (FR-007).
 - refactor: none needed
 - notes: the initial `artistIds = {}` still has inherited keys. It is read only when the Artists
   request fails, and U45's rewrite (T047) drives that
+
+## Cycle 50: U45 with no artist list, no text applies a filter (T040 remainder, T047)
+
+- test: `tests/web/artist-filter.test.js::U45: when the Artists request fails, typing "{text}" and leaving the field request releases with no artistId`,
+  rows `ASP` and `constructor`. It replaces the single U45 test, whose "every releases request is
+  unfiltered" check was met by the initial load alone (audit Finding 8). It now asserts the exact
+  requests sent after the page loaded, including the one sent on leaving the field
+- red: `node --test tests/web/artist-filter.test.js` -> the `constructor` row fails with
+  `+ '…/Releases?artistId=function%20Object()%20%7B%20%5Bnative%20code%5D%20%7D'` (twice) (1 failed); `ASP` passes
+- green: the initial `artistIds` is `artistIndex([])`, so it has no inherited keys either. Suite -> node 125 passed
+- refactor: none needed

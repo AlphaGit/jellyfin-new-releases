@@ -72,7 +72,7 @@
             var tabs = { list: root.querySelector('#nr-tab-list'), archive: root.querySelector('#nr-tab-archive') };
             var filters = { artist: root.querySelector('#nr-f-artist'), type: root.querySelector('#nr-f-type'), state: root.querySelector('#nr-f-state'), from: root.querySelector('#nr-f-from'), to: root.querySelector('#nr-f-to') };
             var archived = false;
-            var artistIds = {}, appliedArtistId;
+            var artistIds = artistIndex([]), appliedArtistId;
 
             function api(method, path) {
                 return ApiClient.ajax({ type: method, url: ApiClient.getUrl(API + path), dataType: method === 'GET' ? 'json' : undefined });
