@@ -297,3 +297,17 @@ change per cycle, and committed at green.
 - green: no production change. Suite -> dotnet 315 passed, 0 failed
 - refactor: none needed
 - commit of cycle 18: `40b34e5`
+
+## Cycle 20: U35 a source ID with reserved characters is escaped in its cover URL
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_ASourceIdWithReservedCharacters_IsEscapedInItsCoverUrl` (new)
+- red: first written for Deezer only:
+  `dotnet test --configuration Release --filter "FullyQualifiedName~ReleasesControllerTests.GetReleases_ASourceIdWithReservedCharacters" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> Expected `["https://api.deezer.com/album/1%2F2%3Fx%3D3/image?s"···]` Actual `["https://api.deezer.com/album/1/2?x=3/image?size=me"···]` (1 failed).
+  Before any implementation it became a `[Theory]` over both sources, because escaping only the
+  Deezer branch would have passed it; re-run -> both cases fail, the MusicBrainz one with
+  Actual `["https://coverartarchive.org/release-group/1/2?x=3/"···]` (2 failed)
+- green: both URL formats escape the ID with `Uri.EscapeDataString`, as `MusicBrainzSource` does
+  for its own request URLs. Suite -> dotnet 317 passed, 0 failed
+- refactor: none needed
+- commit of cycle 19: `b8722c2`

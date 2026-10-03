@@ -226,8 +226,8 @@ public sealed class ReleasesController : ControllerBase
     private static List<string> CoversOf(IReadOnlyList<SourceLink> sources) => sources
         .OrderBy(s => s.Source == SourceLimits.Deezer ? 0 : 1)
         .Select(s => s.Source == SourceLimits.Deezer
-            ? $"https://api.deezer.com/album/{s.SourceReleaseId}/image?size=medium"
-            : $"https://coverartarchive.org/release-group/{s.SourceReleaseId}/front-250")
+            ? $"https://api.deezer.com/album/{Uri.EscapeDataString(s.SourceReleaseId)}/image?size=medium"
+            : $"https://coverartarchive.org/release-group/{Uri.EscapeDataString(s.SourceReleaseId)}/front-250")
         .ToList();
 
     /// <summary>The requesting user's id from the `Jellyfin-UserId` claim, or null when the principal carries none (R5).</summary>

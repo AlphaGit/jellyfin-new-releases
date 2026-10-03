@@ -337,4 +337,15 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
         Assert.Equal(["https://coverartarchive.org/release-group/48117b90-a16e-34ca-a514-19c702df1158/front-250"], release.Covers);
     }
+
+    /// <summary>The IDs come from third-party responses, so one carrying a reserved character must not reshape its URL.</summary>
+    [Theory]
+    [InlineData("deezer", "https://api.deezer.com/album/1%2F2%3Fx%3D3/image?size=medium")]
+    [InlineData("musicbrainz", "https://coverartarchive.org/release-group/1%2F2%3Fx%3D3/front-250")]
+    public async Task GetReleases_ASourceIdWithReservedCharacters_IsEscapedInItsCoverUrl(string source, string expected)
+    {
+        var release = await ListedWithSourcesAsync((source, "1/2?x=3"));
+
+        Assert.Equal([expected], release.Covers);
+    }
 }
