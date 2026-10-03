@@ -459,3 +459,14 @@ change per cycle, and committed at green.
 - refactor: none needed
 - tasks: T009 (A10, U48–U54) and the gate T035 ticked
 - commit of cycle 32: `ee69fc1`
+
+## Cycle 34: U58 the view also exposes nextCover
+
+- order: before U55–U57, for the reason U47 went before U42
+- test: `tests/web/exposure.test.js::user-view.html exposes exactly its testable helpers` (changed
+  baseline: `nextCover` added to the expected set)
+- red: `node --test tests/web/exposure.test.js` -> `-   'nextCover',` (1 failed)
+- green: `user-view.html` declares an empty `function nextCover() {}` and exposes it; U55 and U56
+  drive its body. Suite -> node 102 passed, 2 failed (A8, A9, held open); dotnet 318 passed
+- refactor: none needed
+- commit of cycle 33: `319d07c`

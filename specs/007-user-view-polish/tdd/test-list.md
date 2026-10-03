@@ -154,7 +154,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | U55 | `nextCover` with two fallbacks puts the first in `src` and keeps the second | FR-006a | example | PENDING | |
 | U56 | `nextCover` with no fallback removes the image | FR-007 | example | PENDING | |
 | U57 | The panel has one `error` listener registered for the capture phase | FR-006a | example | PENDING | |
-| U58 | `NewReleasesInternals` also exposes `nextCover` | contracts/user-view.md | example | PENDING | |
+| U58 | `NewReleasesInternals` also exposes `nextCover` | contracts/user-view.md | example | DONE | `tests/web/exposure.test.js::user-view.html exposes exactly its testable helpers` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: stylesheet (`tests/web/styles.test.js`)
 
