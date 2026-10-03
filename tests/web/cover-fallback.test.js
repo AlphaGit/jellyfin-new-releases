@@ -44,7 +44,10 @@ test('U56: nextCover with no fallback left removes the image, and the cover box 
 test('U57: the panel has one error listener, registered for the capture phase', () => {
     const { document } = loadPageDom('user-view.html');
 
-    assert.deepEqual(document.getElementById('nr-panel').listenerOptions.error, [true]);
+    // `true` and `{ capture: true }` are the two spellings of the same registration.
+    const capture = options => options === true || options?.capture === true;
+
+    assert.deepEqual(document.getElementById('nr-panel').listenerOptions.error.map(capture), [true]);
 });
 
 // Acceptance, through the real `render`: the `<img>` a browser would build from the written markup,

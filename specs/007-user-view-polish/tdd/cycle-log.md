@@ -789,3 +789,13 @@ placeholder (FR-007).
 - strength kept: N2 (U50), N3 (U54), N4 (U56, A9), N5 (U57) and M12 (the capture listener does
   nothing, A8 and A9) each still fail their tests. Each was applied to a file copy, restored, and
   checked byte-equal
+
+## Refactor: U57 accepts either spelling of the capture flag (T049, audit Finding 10)
+
+- what: U57 asserted the listener options were exactly `[true]`, so the equivalent
+  `{ capture: true }` would have failed it. It now maps each option through `capture`, which
+  accepts both spellings
+- no behaviour change; green to green. Suite -> node 165 passed
+- strength: N5 (`false`) still fails U57. E1 (the page rewritten to `{ capture: true }`) passes
+  it, which is the point of the change. Both were applied to a file copy, restored, and checked
+  byte-equal
