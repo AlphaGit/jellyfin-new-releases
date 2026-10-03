@@ -150,7 +150,7 @@
             /** The card's cover box: the first URL, the rest as fallbacks (007 R7). No URL leaves the empty box as the placeholder. */
             function cover(urls) {
                 if (!urls.length) return '<div class="nr-cover"></div>';
-                return '<div class="nr-cover"><img src="' + urls[0] + '" data-fallback="' + urls.slice(1).join(' ') +
+                return '<div class="nr-cover"><img src="' + esc(urls[0]) + '" data-fallback="' + esc(urls.slice(1).join(' ')) +
                     '" loading="lazy" referrerpolicy="no-referrer" width="64" height="64"></div>';
             }
 

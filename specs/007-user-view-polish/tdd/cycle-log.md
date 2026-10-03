@@ -437,3 +437,13 @@ change per cycle, and committed at green.
 - refactor: the cover markup had grown to one long expression inside `row()`; extracted to
   `cover(urls)`. Suite re-run: same counts
 - commit of cycle 30: `77cc4ad`
+
+## Cycle 32: U54 cover URLs are written escaped
+
+- test: `tests/web/render.test.js::U54: cover URLs are written escaped, in the src and in the fallbacks` (new)
+- red: `node --test tests/web/render.test.js` -> `+ [ 'https://x.test/a', undefined ] - [ 'https://x.test/a&quot;&gt;&lt;script&gt;', 'https://x.test/b?c=1&amp;d=2' ]` (1 failed):
+  the unescaped quote closed the attribute early, which is the injection the invariant names
+- green: `cover()` writes both attributes through `esc`. Suite -> node 101 passed, 3 failed
+  (A8–A10, held open); dotnet 318 passed
+- refactor: none needed
+- commit of cycle 31: `204ed03`

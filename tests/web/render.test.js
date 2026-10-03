@@ -235,3 +235,12 @@ test('U53: a row with no cover URL writes the cover box with no image', () => {
 
     assert.equal(coverBox(rendered(body).panel, BOTH_SOURCES), '');
 });
+
+test('U54: cover URLs are written escaped, in the src and in the fallbacks', () => {
+    const body = fixture('releases.json');
+    body.items.find(i => i.id === BOTH_SOURCES).covers = ['https://x.test/a"><script>', 'https://x.test/b?c=1&d=2'];
+
+    const box = coverBox(rendered(body).panel, BOTH_SOURCES);
+
+    assert.deepEqual([imgAttribute(box, 'src'), imgAttribute(box, 'data-fallback')], ['https://x.test/a&quot;&gt;&lt;script&gt;', 'https://x.test/b?c=1&amp;d=2']);
+});
