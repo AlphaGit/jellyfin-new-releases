@@ -4,7 +4,7 @@ loop: outside-in
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 10
 planned_at: 0fa9999
-updated_at: 43fb6b6
+updated_at: dad4b97
 suite_baseline: green
 ---
 

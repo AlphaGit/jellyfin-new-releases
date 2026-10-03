@@ -420,3 +420,11 @@ close one `MED` and three `LOW` findings. None changes production code.
 - [X] T080 [P] Finding 2 (LOW): in `tests/web/render.test.js:180`, count with `(… .match(…) ?? []).length` so a missing escaped copy fails as `expected 4, actual 0`, not as a `TypeError`. Proven done when the Q1 mutant (`data-title` escaping `<` and `>` only, at `user-view.html:142`) still fails `node --test "tests/web/*.test.js"`, and a mutant that writes the title raw everywhere fails with a count
 - [X] T081 [P] Finding 3 (LOW): fold the two `U1` facts at `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ArtistRepositoryTests.cs:139-164` into one `[Theory]` over the newer fetch's source and its write position. Update `U1`'s `test` column in `tdd/test-list.md`. Proven done when X1 (`ORDER BY source LIMIT 1`) and M3 (`ORDER BY rowid DESC LIMIT 1`) at `ArtistRepository.cs:215` each fail `dotnet test --configuration Release`
 - [X] T082 [P] Finding 4 (LOW): fix the text drift. In `tdd/cycle-log.md`, append an entry that corrects the `T075` entry's "S9 and S10" for `A7` (only S10 fails `A7`'s test); do not edit the past entry. In `tdd/test-list.md`, give `A2` and `A3` their `render.test.js::<name>` traces. In `tests/web/load-page.js:78-79`, remove one of the two blank lines. Proven done when each named line reads as stated
+
+## Phase 14: TDD remediation (seventh audit)
+
+From `specs/002-report-data-age/tdd/verification.md` (verdict **PASS_WITH_GAPS**, audited at
+`dad4b97`, graded against the project rubric override). No finding blocks the feature. This task
+closes one `LOW` finding. It changes no code and no test.
+
+- [X] T083 Finding 1 (LOW): set `updated_at` in `specs/002-report-data-age/tdd/test-list.md:7` to the commit that changes the list, not `43fb6b6`. The list changed after `43fb6b6` in `76f6b05`, `0f4a61c` and `fe8fd49`. Proven done when `git log --format=%h <updated_at>..HEAD -- specs/002-report-data-age/tdd/test-list.md` lists at most one commit, the one that sets the field
