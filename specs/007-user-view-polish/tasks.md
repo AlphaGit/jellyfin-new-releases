@@ -100,13 +100,13 @@ Make every image fail. Both cards end with the placeholder box and no `<img>`.
 
 ### Tests for User Story 2 (write first, observe red)
 
-- [ ] T005 [P] [US2] Add a failing case to `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ReleaseRepositoryTests.cs`: each `ListedRelease.Sources` entry carries the `SourceReleaseId` stored in `source_entry`. [U31]
-- [ ] T006 [P] [US2] Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs` for `GET Releases`:
+- [X] T005 [P] [US2] Add a failing case to `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ReleaseRepositoryTests.cs`: each `ListedRelease.Sources` entry carries the `SourceReleaseId` stored in `source_entry`. [U31]
+- [X] T006 [P] [US2] Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs` for `GET Releases`:
   - A release with both sources gets `Covers` = `[https://api.deezer.com/album/{id}/image?size=medium, https://coverartarchive.org/release-group/{id}/front-250]`, in that order.
   - A Deezer-only release gets only its Deezer URL. A MusicBrainz-only release gets only its Cover Art Archive URL.
   - A source ID with URL-reserved characters is escaped.
   - `Sources` keeps its existing order. [U32] [U33] [U34] [U35] [U36]
-- [ ] T007 [P] [US2] Add a `covers` array to every item in `tests/fixtures/pages/releases.json`, `releases-filtered.json` and `releases-stale.json`. `ResponseNamingTests` in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ResponseNamingTests.cs` now fails on the missing field. [U37]
+- [X] T007 [P] [US2] Add a `covers` array to every item in `tests/fixtures/pages/releases.json`, `releases-filtered.json` and `releases-stale.json`. `ResponseNamingTests` in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ResponseNamingTests.cs` now fails on the missing field. [U37]
 - [ ] T008 [P] [US2] Extend `tests/web/fake-dom.js` so that `addEventListener(type, handler, options)` keeps `options` readable by a test, and an element supports `remove()` (it detaches the element from its owner). Cover both with failing cases in `tests/web/fake-dom.test.js` first. [U38] [U39]
 - [ ] T009 [US2] Add failing cases to `tests/web/render.test.js`:
   - Each row writes `<div class="nr-cover"><img …>` with `src` = `covers[0]`, `data-fallback` = the rest in order, `alt=""`, `loading="lazy"`, `decoding="async"`, `referrerpolicy="no-referrer"`, `width="64"` and `height="64"`.
@@ -118,16 +118,16 @@ Make every image fail. Both cards end with the placeholder box and no `<img>`.
   - The panel registers one `error` listener for the capture phase. [A8] [A9] [U55] [U56] [U57]
 - [ ] T011 [US2] Add `nextCover` to the exact member set in `tests/web/exposure.test.js`. The test fails. [U58]
 - [ ] T012 [P] [US2] Create failing `tests/web/styles.test.js`. It reads the `<style>` block of `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` and asserts that `.nr-cover` declares a 64 × 64 box with a background and that `.nr-cover img` declares `object-fit: cover`. [U60] [U61]
-- [ ] T013 [US2] Add a failing case to `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/BrowseReleasesTests.cs`, using `AcceptanceRig`: after a refresh that stores a release at both sources, `GET Releases` returns its two cover URLs in Deezer-first order. [A7]
+- [X] T013 [US2] Add a failing case to `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/BrowseReleasesTests.cs`, using `AcceptanceRig`: after a refresh that stores a release at both sources, `GET Releases` returns its two cover URLs in Deezer-first order. [A7]
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Add `SourceReleaseId` to `SourceLink` in `src/Jellyfin.Plugin.NewReleases/Model/StoredRecords.cs`. Select `source_release_id` in the `sources` JSON of the list query in `src/Jellyfin.Plugin.NewReleases/Storage/ReleaseRepository.cs`. T005 passes. [U31]
-- [ ] T015 [US2] Add `IReadOnlyList<string> Covers` to `ReleaseDto` in `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs`. Build it in `ToDto` in `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs`, in the order and URL formats of research R6. T006, T007 and T013 pass. [A7] [U32] [U33] [U34] [U35] [U36] [U37]
+- [X] T014 [US2] Add `SourceReleaseId` to `SourceLink` in `src/Jellyfin.Plugin.NewReleases/Model/StoredRecords.cs`. Select `source_release_id` in the `sources` JSON of the list query in `src/Jellyfin.Plugin.NewReleases/Storage/ReleaseRepository.cs`. T005 passes. [U31]
+- [X] T015 [US2] Add `IReadOnlyList<string> Covers` to `ReleaseDto` in `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs`. Build it in `ToDto` in `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs`, in the order and URL formats of research R6. T006, T007 and T013 pass. [A7] [U32] [U33] [U34] [U35] [U36] [U37]
 - [ ] T016 [US2] In `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`, change `render` to write the cover box as the first grid cell. Add `nextCover` and the panel's capture-phase `error` listener, and expose `nextCover`. Add the CSS rules `.nr-row { grid-template-columns: 64px 1fr auto }`, `.nr-cover` (64×64, neutral background, centred note glyph) and `.nr-cover img { object-fit: cover }`. T009, T010, T011 and T012 pass. [A8] [A9] [A10] [U48] [U49] [U50] [U51] [U52] [U53] [U54] [U55] [U56] [U57] [U58] [U60] [U61]
 - [ ] T017 [US2] Amend the `ReleaseDto` section of `specs/001-track-new-releases/contracts/http-api.md` with `covers` and its rules from [contracts/http-api.md](./contracts/http-api.md).
 
-- [ ] T032 [US2] Confirm that the acceptance test for US2-AS1 is green in the full suite before US2 counts as complete. [A7]
+- [X] T032 [US2] Confirm that the acceptance test for US2-AS1 is green in the full suite before US2 counts as complete. [A7]
 - [ ] T033 [US2] Confirm that the acceptance test for US2-AS2 is green in the full suite before US2 counts as complete. [A8]
 - [ ] T034 [US2] Confirm that the acceptance test for US2-AS3 is green in the full suite before US2 counts as complete. [A9]
 - [ ] T035 [US2] Confirm that the acceptance test for US2-AS4 is green in the full suite before US2 counts as complete. [A10]

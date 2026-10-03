@@ -168,4 +168,27 @@ public sealed class BrowseReleasesTests : IAsyncLifetime
         Assert.Equal(["track 9", "track 10"], w.MissingTracks);
         Assert.Equal(new Jellyfin.Plugin.NewReleases.Api.ComparedEditionDto("deezer", "W (Edition)"), w.ComparedEdition);
     }
+
+    /// <summary>
+    /// 007 US2-AS1 / FR-006, FR-006a: one release stored at both sources lists its Deezer cover, then its Cover Art Archive
+    /// cover. Read from the serialized item because the field is the wire contract the page reads.
+    /// </summary>
+    [Fact]
+    public async Task A7_AReleaseStoredAtBothSources_ListsItsDeezerCoverThenItsCoverArtArchiveCover()
+    {
+        const string mbid = "056e4f3e-d505-4dad-8ec1-d04f521cbb56";
+        const string aliveGroup = "48117b90-a16e-34ca-a514-19c702df1158";
+        _rig.Library_.Artist("Daft Punk", mbid);
+        _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.MusicBrainzCatalogue(mbid, (aliveGroup, "Alive 2007", "Album", [], "2007-11-19"));
+        _rig.DeezerArtist(27, "Daft Punk", (2, "Homework", "album", "1997-01-16"), (3, "Alive 2007", "album", "2007-11-16")).DeezerAlbum(2, "Homework", Homework);
+
+        await _rig.RunAsync();
+        var alive = Assert.Single((await _rig.ListAsync()).Items);
+        var json = System.Text.Json.JsonSerializer.SerializeToElement(alive, Jellyfin.Extensions.Json.JsonDefaults.CamelCaseOptions);
+
+        Assert.Equal(
+            ["https://api.deezer.com/album/3/image?size=medium", $"https://coverartarchive.org/release-group/{aliveGroup}/front-250"],
+            json.TryGetProperty("covers", out var covers) ? covers.EnumerateArray().Select(c => c.GetString()) : []);
+    }
 }

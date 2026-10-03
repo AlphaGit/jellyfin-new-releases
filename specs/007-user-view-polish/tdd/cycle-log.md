@@ -324,3 +324,16 @@ change per cycle, and committed at green.
   `covers` coincide today for a two-source release. The test pins the `sources` order; `covers`
   order is pinned by U32 through its own rule, not through this coincidence
 - commit of cycle 20: `2ed2f69`
+
+## Cycle 22: A7 closes — a release at both sources lists Deezer's cover, then the Cover Art Archive's
+
+- test: `Acceptance/BrowseReleasesTests.cs::A7_AReleaseStoredAtBothSources_ListsItsDeezerCoverThenItsCoverArtArchiveCover`,
+  written and observed red in cycle 14, held uncommitted since
+- units beneath it, all `DONE`: U31 (read model carries the id), U37 (wire field), U32–U36 (order,
+  formats, escaping, `sources` unchanged)
+- green: `dotnet test --configuration Release --filter "FullyQualifiedName~BrowseReleasesTests.A7_AReleaseStoredAtBothSources" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> 1 passed. It turned green in cycle 17 with no change to the test. Full suite -> dotnet 318
+  passed, 0 failed
+- refactor: none needed
+- tasks: T005, T006, T007, T013, T014 and T015 ticked; the gate T032 ticked
+- commit of cycle 21: `2bde9ee`
