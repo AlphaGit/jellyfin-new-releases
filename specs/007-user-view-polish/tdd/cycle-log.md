@@ -871,3 +871,25 @@ placeholder (FR-007).
   test, and so do N7 (U59, `grid-auto-columns: auto`) and N13 (A11, `align-items: flex-end`). E1
   (`{ capture: true }`) still passes U57. Each was applied to a file copy, restored, and checked
   byte-equal
+
+## Commits of the remediation entries (T056, second audit Finding 6)
+
+Cycles 2–48 name each commit in the next entry. The entries below did not, so this table maps
+them. Each commit was matched by its message and file list.
+
+| Entry | Commit |
+| --- | --- |
+| Maintainer decisions on the TDD audit | `b8efbcd` |
+| Cycle 49: A4 | `64ff918` |
+| Cycle 50: U45 | `6495435` |
+| Cycle 51: A15, U42 | `3e4bc76` |
+| Cycle 52: A14 underline | `352f5d8` |
+| Cycle 53: U60 background | `baff78c` |
+| Cycle 54: A16 | `6880ddd` |
+| Refactor: one cover-markup reader | `7767c12` |
+| Refactor: U57 capture spellings | `ad2b277` |
+| Cycle 55: `reachesSourceLink` | `0cbaa7d` |
+| Cycle 56: U57 `once` | `ba64eed` |
+| Cycle 57: U60 keywords | `a1e0b2f` |
+| Cycle 58: A17 | `739e6df` |
+| Refactor: one CSS rule parser | `82c8ee9` |
