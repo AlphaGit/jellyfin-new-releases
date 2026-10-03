@@ -13,17 +13,23 @@ const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.P
 const STYLE = /<style>([\s\S]*?)<\/style>/.exec(PAGE)[1];
 const SCOPE = '#nr-user-view ';
 
-/** Every `property: value` declared for `selector` by a top-level rule whose selector list names it. Later rules win, as in CSS. */
-function declarations(selector, css = STYLE.replace(/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '')) {
-    const found = {};
+/** Every rule in `css`, `@media` blocks included, once per selector in its list. */
+function rules(css = STYLE) {
+    const found = [];
     for (const [, selectors, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-        if (!selectors.split(',').map(s => s.trim()).includes(SCOPE + selector)) continue;
+        const declared = {};
         for (const declaration of body.split(';')) {
             const at = declaration.indexOf(':');
-            if (at > 0) found[declaration.slice(0, at).trim()] = declaration.slice(at + 1).trim();
+            if (at > 0) declared[declaration.slice(0, at).trim()] = declaration.slice(at + 1).trim();
         }
+        for (const selector of selectors.split(',')) found.push({ selector: selector.trim(), declared });
     }
     return found;
+}
+
+/** Every `property: value` declared for `selector` by a top-level rule whose selector list names it. Later rules win, as in CSS. */
+function declarations(selector, css = STYLE.replace(/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '')) {
+    return Object.assign({}, ...rules(css).filter(rule => rule.selector === SCOPE + selector).map(rule => rule.declared));
 }
 
 /** Whether a declared colour can be seen: not `none`, not `transparent`, not a CSS-wide keyword (which leaves a background transparent or the parent's), and not a zero alpha in any notation. */
@@ -138,20 +144,6 @@ test('A13: the declared source-link colour has a contrast of at least 4.5:1 agai
 
 // What can reach a source link, and what takes its underline off. Predicates, so each is pinned by a
 // table of accepting and rejecting cases before the A14 test relies on it.
-
-/** Every rule in `css`, `@media` blocks included, once per selector in its list. */
-function rules(css = STYLE) {
-    const found = [];
-    for (const [, selectors, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-        const declared = {};
-        for (const declaration of body.split(';')) {
-            const at = declaration.indexOf(':');
-            if (at > 0) declared[declaration.slice(0, at).trim()] = declaration.slice(at + 1).trim();
-        }
-        for (const selector of selectors.split(',')) found.push({ selector: selector.trim(), declared });
-    }
-    return found;
-}
 
 /** The ids and classes a source link sits inside, and the attributes it carries: `row()` in user-view.html. */
 const LINK_ANCESTORS = ['#nr-user-view', '#nr-panel', '.nr-list', '.nr-row', '.nr-links'];

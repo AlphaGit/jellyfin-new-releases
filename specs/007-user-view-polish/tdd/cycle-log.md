@@ -860,3 +860,14 @@ placeholder (FR-007).
 - ceiling: A17 reads rules that reach the link itself. An `opacity` on an ancestor (`.nr-links`,
   `.nr-row`) also dims the link and is not read. No such rule exists today
 - open: needs the maintainer's decision to accept it as test-after, like A16
+
+## Refactor: one CSS rule parser in `styles.test.js` (T057, second audit Finding 7)
+
+- what: `declarations()` parsed the stylesheet with its own loop. It now filters and merges the
+  output of `rules()`, which moved above it. Later rules still win. `@media` blocks are still removed
+  before `declarations()` reads the top level
+- no behaviour change; green to green. Suite -> node 200 passed before and after
+- strength kept: every deliberate mutant of the second audit (R*, N*, P*, E2, N5) still fails its
+  test, and so do N7 (U59, `grid-auto-columns: auto`) and N13 (A11, `align-items: flex-end`). E1
+  (`{ capture: true }`) still passes U57. Each was applied to a file copy, restored, and checked
+  byte-equal
