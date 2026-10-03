@@ -418,3 +418,12 @@ change per cycle, and committed at green.
   open); dotnet 318 passed
 - refactor: none needed
 - commit of cycle 28: `25c0eec`
+
+## Cycle 30: U52 a row's cover image declares a 64 × 64 box
+
+- test: `tests/web/render.test.js::U52: a row's cover image declares a 64 by 64 box` (new)
+- red: `node --test tests/web/render.test.js` -> `+ [ undefined, undefined ] - [ '64', '64' ]` (1 failed)
+- green: the `<img>` declares `width="64" height="64"`. Suite -> node 99 passed, 3 failed (A8–A10,
+  held open); dotnet 318 passed
+- refactor: none needed
+- commit of cycle 29: `9f5e1a2`

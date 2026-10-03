@@ -222,3 +222,9 @@ test('U50: a row\'s cover image loads lazily', () => {
 test('U51: a row\'s cover image sends no referrer', () => {
     assert.equal(imgAttribute(coverBox(rendered(fixture('releases.json')).panel, BOTH_SOURCES), 'referrerpolicy'), 'no-referrer');
 });
+
+test('U52: a row\'s cover image declares a 64 by 64 box', () => {
+    const box = coverBox(rendered(fixture('releases.json')).panel, BOTH_SOURCES);
+
+    assert.deepEqual([imgAttribute(box, 'width'), imgAttribute(box, 'height')], ['64', '64']);
+});
