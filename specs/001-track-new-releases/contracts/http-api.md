@@ -54,10 +54,18 @@ Response `200`:
     { "source": "musicbrainz", "url": "https://musicbrainz.org/release-group/…" },
     { "source": "deezer", "url": "https://www.deezer.com/album/…" }
   ],
-  "archived": null
+  "archived": null,
+  "covers": [
+    "https://api.deezer.com/album/…/image?size=medium",
+    "https://coverartarchive.org/release-group/…/front-250"
+  ]
 }
 ```
 
+- `covers` (added by `007-user-view-polish`): array of absolute cover image URLs, never `null`.
+  One per source the release has, Deezer first, then MusicBrainz; the source IDs are
+  URL-escaped. `sources` keeps its own order (by source ID). The page tries the covers in order
+  and shows a placeholder when all fail; the browser loads them, the server never does.
 - `datePrecision`: `Day` | `Month` | `Year` | `None`. `date` is `null` when `None`.
 - `state` is `Upcoming` when `date > serverToday`, else the ownership state.
 - `archived` is `null` in the list; in the Archive it is `{ "kind": "Ignore" | "HaveIt",
