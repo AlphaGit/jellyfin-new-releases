@@ -12,7 +12,8 @@
       "sources": [
         { "source": "musicbrainz", "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000101" },
         { "source": "deezer", "url": "https://www.deezer.com/album/101" }
-      ]
+      ],
+      "covers": ["https://api.deezer.com/album/101/image?size=medium", "https://coverartarchive.org/release-group/00000000-0000-0000-0000-000000000101/front-250"]
     },
     {
       "id": 102,
@@ -27,7 +28,8 @@
       "comparedEdition": { "source": "musicbrainz", "title": "Kill for Love (deluxe edition)" },
       "sources": [
         { "source": "musicbrainz", "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000102" }
-      ]
+      ],
+      "covers": ["https://coverartarchive.org/release-group/00000000-0000-0000-0000-000000000102/front-250"]
     },
     {
       "id": 103,
@@ -40,7 +42,8 @@
       "state": "Upcoming",
       "sources": [
         { "source": "deezer", "url": "https://www.deezer.com/album/103" }
-      ]
+      ],
+      "covers": ["https://api.deezer.com/album/103/image?size=medium"]
     },
     {
       "id": 104,
@@ -53,7 +56,8 @@
       "archived": { "kind": "HaveIt", "decidedAt": "2026-09-18T11:04:00+00:00" },
       "sources": [
         { "source": "musicbrainz", "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000104" }
-      ]
+      ],
+      "covers": ["https://coverartarchive.org/release-group/00000000-0000-0000-0000-000000000104/front-250"]
     }
   ],
   "total": 4,

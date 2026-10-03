@@ -218,7 +218,8 @@ public sealed class ReleasesController : ControllerBase
         r.State == ListState.Incomplete ? r.MissingTracks : null,
         r.State == ListState.Incomplete && r.ComparedEdition is { } edition ? new ComparedEditionDto(edition.Source, edition.Title) : null,
         r.Sources.Select(s => new SourceLinkDto(s.Source, s.Url)).ToList(),
-        r.Archived is { } decision ? new ArchivedDto(decision.Kind.ToString(), decision.DecidedAt) : null);
+        r.Archived is { } decision ? new ArchivedDto(decision.Kind.ToString(), decision.DecidedAt) : null,
+        []);
 
     /// <summary>The requesting user's id from the `Jellyfin-UserId` claim, or null when the principal carries none (R5).</summary>
     private Guid? CallerId()

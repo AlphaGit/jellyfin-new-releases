@@ -97,16 +97,17 @@ public class ResponseNamingTests
     private static ListResponse PopulatedListResponse()
     {
         var chromatics = Guid.NewGuid();
+        var covers = new[] { "https://api.deezer.com/album/101/image?size=medium" };
         var desire = Guid.NewGuid();
         var sources = new[] { new SourceLinkDto("musicbrainz", "https://musicbrainz.org/release-group/1") };
 
         return new ListResponse(
             new[]
             {
-                new ReleaseDto(101, "Chromatics", chromatics, "Closer to Grey", "Album", "2019-10-02", "Day", "Missing", null, null, sources, null),
-                new ReleaseDto(102, "Chromatics", chromatics, "Kill for Love", "Album", "2012-03-26", "Day", "Incomplete", new[] { "Into the Black" }, new ComparedEditionDto("musicbrainz", "Kill for Love (deluxe edition)"), sources, null),
-                new ReleaseDto(103, "Desire", desire, "Escape", "Single", "2027-01-15", "Day", "Upcoming", null, null, sources, null),
-                new ReleaseDto(104, "Desire", desire, "II", "Album", null, "None", "Missing", null, null, sources, new ArchivedDto("HaveIt", DateTimeOffset.UnixEpoch)),
+                new ReleaseDto(101, "Chromatics", chromatics, "Closer to Grey", "Album", "2019-10-02", "Day", "Missing", null, null, sources, null, covers),
+                new ReleaseDto(102, "Chromatics", chromatics, "Kill for Love", "Album", "2012-03-26", "Day", "Incomplete", new[] { "Into the Black" }, new ComparedEditionDto("musicbrainz", "Kill for Love (deluxe edition)"), sources, null, covers),
+                new ReleaseDto(103, "Desire", desire, "Escape", "Single", "2027-01-15", "Day", "Upcoming", null, null, sources, null, covers),
+                new ReleaseDto(104, "Desire", desire, "II", "Album", null, "None", "Missing", null, null, sources, new ArchivedDto("HaveIt", DateTimeOffset.UnixEpoch), covers),
             },
             4,
             true,

@@ -27,7 +27,8 @@ public sealed record ReleaseDto(
     IReadOnlyList<string>? MissingTracks,
     ComparedEditionDto? ComparedEdition,
     IReadOnlyList<SourceLinkDto> Sources,
-    ArchivedDto? Archived);
+    ArchivedDto? Archived,
+    IReadOnlyList<string> Covers);
 
 public sealed record ComparedEditionDto(string Source, string Title);
 

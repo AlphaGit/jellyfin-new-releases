@@ -248,3 +248,20 @@ change per cycle, and committed at green.
   passed, 1 failed (A7, held open), node 92 passed
 - refactor: the stub default `= ""` removed from `SourceLink`; every row now carries the value.
   Suite re-run: same counts
+
+## Cycle 16: U37 the list response carries `covers` under the endpoint's declared naming
+
+- order: taken before U32–U36. Declaring `ReleaseDto.Covers` for U32 would turn this naming test
+  red as a side effect, so the contract change is its own behaviour first (as U47 was for U42)
+- test: `Api/ResponseNamingTests.cs::ListResponse_AsTheReleasesEndpointDeclaresIt_CarriesTheNamesTheListPageReads`
+  (existing). Its contract input changed: every item in `tests/fixtures/pages/releases.json`,
+  `releases-filtered.json` and `releases-stale.json` gained a `covers` array built from its own
+  source ids, Deezer first (T007)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ResponseNamingTests.ListResponse_AsTheReleasesEndpointDeclaresIt" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected `["items[]"] = ["archived", "artistJellyfinId", "artistName", "comparedEdition", "covers", ···]` Actual `["items[]"] = ["archived", "artistJellyfinId", "artistName", "comparedEdition", "date", ···]` (1 failed)
+- green: `ReleaseDto` gains `IReadOnlyList<string> Covers` as its last member; `ToDto` passes `[]`,
+  a fake that U32–U35 replace. The test's `PopulatedListResponse` passes a one-URL `covers` to the
+  new constructor parameter, the change needed to compile. Suite -> dotnet 311 passed, 1 failed (A7,
+  held open), node 92 passed (the node suite reads the same fixtures and is unaffected)
+- refactor: none needed
+- commit of cycle 15: `7da7bce`

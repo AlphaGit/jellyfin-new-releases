@@ -116,7 +116,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | U34 | A MusicBrainz-only release gets exactly `https://coverartarchive.org/release-group/{id}/front-250` | FR-006, FR-006a | example | PENDING | |
 | U35 | A source ID containing URL-reserved characters is escaped in its cover URL | FR-006 | example | PENDING | |
 | U36 | `sources` keeps its existing order when `covers` is added | FR-011 | example | PENDING | |
-| U37 | `ListResponse`, serialized through the endpoint's declaration, carries the names in `tests/fixtures/pages/releases.json`, `covers` included | contracts/http-api.md | contract | PENDING | |
+| U37 | `ListResponse`, serialized through the endpoint's declaration, carries the names in `tests/fixtures/pages/releases.json`, `covers` included | contracts/http-api.md | contract | DONE | `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ResponseNamingTests.cs::ListResponse_AsTheReleasesEndpointDeclaresIt_CarriesTheNamesTheListPageReads` |
 
 ### `tests/web/fake-dom.js` (test infrastructure the US2 page tests need)
 

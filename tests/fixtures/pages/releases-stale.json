@@ -18,7 +18,8 @@
           "source": "deezer",
           "url": "https://www.deezer.com/album/101"
         }
-      ]
+      ],
+      "covers": []
     },
     {
       "id": 102,
@@ -42,7 +43,8 @@
           "source": "musicbrainz",
           "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000102"
         }
-      ]
+      ],
+      "covers": []
     },
     {
       "id": 103,
@@ -58,7 +60,8 @@
           "source": "deezer",
           "url": "https://www.deezer.com/album/103"
         }
-      ]
+      ],
+      "covers": []
     },
     {
       "id": 104,
@@ -77,7 +80,8 @@
           "source": "musicbrainz",
           "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000104"
         }
-      ]
+      ],
+      "covers": []
     }
   ],
   "total": 4,
