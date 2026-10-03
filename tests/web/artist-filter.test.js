@@ -108,3 +108,14 @@ test('A5: the page adds no key handling to the Artist control, so the browser ke
 
     assert.deepEqual(Object.keys(document.getElementById('nr-f-artist').listeners).filter(type => type.startsWith('key')), []);
 });
+
+test('U42: artistIndex maps each name to its jellyfinId', async () => {
+    const { internals } = await loadView();
+
+    // Spread into this realm: the page's object comes from the sandbox's own `Object`.
+    assert.deepEqual({ ...internals.artistIndex(ARTISTS.items) }, {
+        ASP: 'a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5',
+        Aspen: 'a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6',
+        Wasp: 'a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7',
+    });
+});

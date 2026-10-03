@@ -131,7 +131,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | --- | --- | --- | --- | --- | --- |
 | U40 | `artistLabel` of an artist with a disambiguation is `name — disambiguation` | FR-005a, FR-005c | example | DROPPED: labels with a disambiguation removed with FR-005a (2026-10-03) | |
 | U41 | `artistLabel` of an artist with `disambiguation: null` is the name alone | FR-005a | example | DROPPED: `artistLabel` removed: the label is the name (2026-10-03) | |
-| U42 | `artistIndex` maps each name to its `jellyfinId` | FR-002 | example | PENDING | |
+| U42 | `artistIndex` maps each name to its `jellyfinId` | FR-002 | example | DONE | `tests/web/artist-filter.test.js::U42: artistIndex maps each name to its jellyfinId` |
 | U43 | `artistIndex` keeps the first artist when two share a label | FR-002 | example | DROPPED: two library artists never share a name, so there is no duplicate to resolve (2026-10-03) | |
 | U44 | Loading artists writes one escaped `<option value>` per name into `#nr-f-artist-list` | FR-001, FR-005 | example | PENDING | |
 | U45 | When the Artists request fails, the field stays usable, and releases are requested with no `artistId` | spec edge case "artist list fails to load" | example | PENDING | |

@@ -148,3 +148,12 @@ change per cycle, and committed at green.
   is a fake on purpose: U42 drives the mapping. Suite -> node 86 passed, dotnet 310 passed
 - refactor: none needed
 - commit of cycle 6: `0ed6363`
+
+## Cycle 8: U42 artistIndex maps each name to its jellyfinId
+
+- test: `tests/web/artist-filter.test.js::U42: artistIndex maps each name to its jellyfinId` (new)
+- red: `node --test tests/web/artist-filter.test.js` -> `+ {} - { ASP: 'a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5', Aspen: …` (1 failed)
+- green: `artistIndex(artists)` builds the name → `jellyfinId` object. Suite -> node 87 passed, dotnet 310 passed
+- refactor: `loadArtists` built the same map inline; it now assigns `artistIndex(data.items)`, so
+  the tested helper is the one the filter uses. Suite re-run green (node 87, dotnet 310)
+- commit of cycle 7: `5dcac35`

@@ -89,8 +89,11 @@
                 return q.length ? '?' + q.join('&') : '';
             }
 
-            function artistIndex() {
-                return {};
+            /** Name → `jellyfinId` for the Artist filter. Two library artists never share a name (007 research R3). */
+            function artistIndex(artists) {
+                var index = {};
+                artists.forEach(function (a) { index[a.name] = a.jellyfinId; });
+                return index;
             }
 
             function groupOf(item) {
@@ -206,7 +209,7 @@
             function loadArtists() {
                 return api('GET', 'Artists').then(function (data) {
                     root.querySelector('#nr-f-artist-list').innerHTML = data.items.map(function (a) { return '<option value="' + a.name + '">'; }).join('');
-                    data.items.forEach(function (a) { artistIds[a.name] = a.jellyfinId; });
+                    artistIds = artistIndex(data.items);
                 }).catch(function () { /* the filter simply stays empty */ });
             }
 
