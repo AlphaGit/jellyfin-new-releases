@@ -746,3 +746,14 @@ a fresh session.
 - suite: `dotnet test --configuration Release`: 310 passed, 0 failed (two facts became four rows)
 - `tdd/test-list.md`: `U1`'s `test` column names the theory
 - refactor: none further
+
+### T082 (Finding 4): text drift
+
+- **Correction to the `T075` entry**, which stays as written: it cites "S9 and S10" as `A7`'s recorded
+  mutants. Only S10 (Deezer always enabled) fails `A7_WithEverySourceDisabled_…`; S9 (MusicBrainz always
+  enabled) is caught by `U15`'s test alone. The third override condition holds for `A7` through S10.
+- `tdd/test-list.md`: `A2` and `A3` name their two render tests as `render.test.js::<name>`.
+- `tests/web/load-page.js`: one of two blank lines inside the sandbox's `Date` class removed.
+- suite: 310 passed, 0 failed (dotnet); 79 passed, 0 failed (node), also under
+  `LANG=de_DE.UTF-8 TZ=Asia/Tokyo`
+- open: `T037` (manual pass on Jellyfin 12.x, the maintainer's own)

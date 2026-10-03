@@ -76,7 +76,6 @@ function sandboxGlobals(fileName, overrides) {
                 return NOW;
             }
 
-
             toLocaleString(locale, options) {
                 return super.toLocaleString(locale ?? 'en-US', { timeZone: 'UTC', ...options });
             }
