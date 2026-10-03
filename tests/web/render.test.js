@@ -248,3 +248,9 @@ test('U54: cover URLs are written escaped, in the src and in the fallbacks', () 
 test('A10: a rendered cover image has empty alt text, so a screen reader skips it', () => {
     assert.equal(imgAttribute(coverBox(rendered(fixture('releases.json')).panel, BOTH_SOURCES), 'alt'), '');
 });
+
+test('A12: an Archive-tab row writes Restore inside .nr-actions, under the same rule as Ignore and Have it', () => {
+    const { panel } = rendered(fixture('releases.json'), { archive: true });
+
+    assert.match(panel, /<div class="nr-actions"><button type="button" data-action="Restore"/);
+});

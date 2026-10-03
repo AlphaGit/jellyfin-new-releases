@@ -562,3 +562,13 @@ change per cycle, and committed at green.
 - notes: driven directly, like A1–A5: the rule is two declarations with no unit beneath them. U59
   (narrow screens) is its own behaviour next
 - commit of cycle 41: `629dd0e`
+
+## Cycle 43: A12 Restore sits in the same `.nr-actions` container
+
+- test: `tests/web/render.test.js::A12: an Archive-tab row writes Restore inside .nr-actions, under the same rule as Ignore and Have it` (new)
+- red: **passed on the first run**: the Archive row already wrote Restore into `.nr-actions`, so
+  A11's rules reach it unchanged. Deliberate mutant M13 on a file copy, Restore wrapped in its own
+  `<span class="nr-restore">` -> the test fails (1 failed). Restored with `cp`, verified with `cmp -s`
+- green: no production change. Suite -> node 112 passed, dotnet 318 passed
+- refactor: none needed
+- commit of cycle 42: `7df504a`
