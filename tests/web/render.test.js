@@ -179,3 +179,30 @@ const QUOTED_TITLE = `"'><img src=x onerror=alert(1)>`;
 test('a title containing quotes is escaped in every place the row writes it', () => {
     assert.equal((renderedWithTitle(QUOTED_TITLE).match(/&quot;&#39;&gt;&lt;img src=x onerror=alert\(1\)&gt;/g) ?? []).length, 4);
 });
+
+// 007 US2: the cover box each row opens with. The markup is read as a string; what a browser does
+// with a failing image is in cover-fallback.test.js.
+
+const BOTH_SOURCES = 101; // releases.json: Closer to Grey, at MusicBrainz and Deezer
+
+/** The markup inside the `nr-cover` box of the row with `id`, or null when the row has no box. */
+function coverBox(panel, id) {
+    const row = panel.split('<article').find(r => r.includes('data-id="' + id + '"')) || '';
+    const box = /<div class="nr-cover">(.*?)<\/div>/.exec(row);
+    return box ? box[1] : null;
+}
+
+/** The raw (still escaped) value of `name` on the first `<img>` in `markup`, or undefined. */
+function imgAttribute(markup, name) {
+    const img = /<img [^>]*>/.exec(markup || '');
+    const attr = img && new RegExp('\\s' + name + '="([^"]*)"').exec(img[0]);
+    return attr ? attr[1] : undefined;
+}
+
+test('U48: a row\'s cover image src is its first cover URL', () => {
+    const body = fixture('releases.json');
+
+    const box = coverBox(rendered(body).panel, BOTH_SOURCES);
+
+    assert.equal(imgAttribute(box, 'src'), body.items.find(i => i.id === BOTH_SOURCES).covers[0]);
+});

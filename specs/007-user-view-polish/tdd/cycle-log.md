@@ -377,3 +377,13 @@ change per cycle, and committed at green.
 - refactor: none needed
 - tasks: T008 ticked
 - commit of cycle 24: `8a26cf0`
+
+## Cycle 26: U48 a row's cover image src is its first cover URL
+
+- test: `tests/web/render.test.js::U48: a row's cover image src is its first cover URL` (new), with the `coverBox` and `imgAttribute` helpers
+- red: `node --test tests/web/render.test.js` -> `+ undefined - 'https://api.deezer.com/album/101/image?size=medium'` (1 failed)
+- green: `row()` opens with `<div class="nr-cover"><img src="{covers[0]}"></div>`. Not escaped, no
+  other attribute, no empty-list case: U49–U54 drive those. Suite -> node 95 passed, 3 failed
+  (A8–A10, held open); dotnet 318 passed
+- refactor: none needed
+- commit of cycle 25: `14a92eb`

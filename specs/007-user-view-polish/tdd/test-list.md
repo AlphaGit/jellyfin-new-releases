@@ -144,7 +144,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U48 | A row's image `src` is `covers[0]` | FR-007 | example | PENDING | |
+| U48 | A row's image `src` is `covers[0]` | FR-007 | example | DONE | `tests/web/render.test.js::U48: a row's cover image src is its first cover URL` |
 | U49 | A row's `data-fallback` lists `covers[1..]` in order | FR-006a | example | PENDING | |
 | U50 | A row's image declares `loading="lazy"` | FR-007a | example | PENDING | |
 | U51 | A row's image declares `referrerpolicy="no-referrer"` | FR-008, constitution V | example | PENDING | |
