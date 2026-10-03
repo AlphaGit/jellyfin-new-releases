@@ -177,3 +177,15 @@ change per cycle, and committed at green.
 - green: no production change. Suite -> node 89 passed, dotnet 310 passed
 - refactor: none needed
 - commit of cycle 9: `f146cb6`
+
+## Test correction before cycle 11: the U45 test over-specified a reload
+
+- what: cycle 10's U45 test asserted that typing "ASP" after a failed Artists request sends a new
+  unfiltered request. `contracts/user-view.md` says the page reloads only when the applied artist
+  **changes**; with no artists loaded, typing changes nothing (none to none), so U46 and U64 will
+  forbid exactly that request. The test asserted more than U45 states.
+- change: the test is renamed to the U45 line and asserts that typing does not throw and that every
+  releases request is unfiltered. Taken as its own step, before U46's implementation, per the playbook.
+- strength re-checked: mutant M6 (the `.catch` sets the map to `null`) still fails it with
+  `TypeError` (1 failed); restored with `cp`, verified with `cmp -s`. Suite -> node 89 passed
+- list: U64 appended, the none-to-none half of "when it changes, reload", which U46's line does not cover
