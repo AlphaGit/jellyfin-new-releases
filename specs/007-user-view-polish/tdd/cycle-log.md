@@ -500,3 +500,18 @@ change per cycle, and committed at green.
   here; dotnet 318 passed
 - refactor: the test's inline `require` moved to the file's import line. Suite re-run: node 107 passed
 - commit of cycle 36: `d11940b`
+
+## Cycle 38: A8 and A9 close — the fallback chain and the placeholder, through the real render
+
+- tests: moved from the untracked open file into `tests/web/cover-fallback.test.js` as
+  `A8: on a card for a release at both sources, an error on the Deezer image puts the Cover Art Archive URL in its src`
+  and `A9: on a card whose every cover URL fails, the cover box remains and holds no image`; the
+  open file is deleted. They now build their `<img>` with the file's own `coverImage`
+- red: recorded in cycle 23. They turned green in cycle 37 with no change to the tests
+- units beneath them, all `DONE`: U38, U39 (fake DOM), U48–U54 (markup), U55–U58 (`nextCover`, listener, exposure)
+- re-check of the closed tests: mutant M12 on a file copy, the capture listener does nothing ->
+  A8 and A9 both fail (2 failed). Restored with `cp`, verified with `cmp -s`
+- green: suite -> node 107 passed, 0 failed; dotnet 318 passed
+- refactor: none beyond the move
+- tasks: T010, T011 and the gates T033, T034 ticked. T016 waits for U60 and U61 (stylesheet)
+- commit of cycle 37: `98ae035`

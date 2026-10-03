@@ -112,11 +112,11 @@ Make every image fail. Both cards end with the placeholder box and no `<img>`.
   - Each row writes `<div class="nr-cover"><img …>` with `src` = `covers[0]`, `data-fallback` = the rest in order, `alt=""`, `loading="lazy"`, `decoding="async"`, `referrerpolicy="no-referrer"`, `width="64"` and `height="64"`.
   - A row with `covers: []` writes the box with no `<img>`.
   - Cover URLs are written through `esc`. [A10] [U48] [U49] [U50] [U51] [U52] [U53] [U54]
-- [ ] T010 [US2] Add failing cases to a new `tests/web/cover-fallback.test.js`:
+- [X] T010 [US2] Add failing cases to a new `tests/web/cover-fallback.test.js`:
   - `nextCover` moves the first `data-fallback` URL into `src` and keeps the rest.
   - With no fallback left, it removes the `<img>`, and the cover box stays.
   - The panel registers one `error` listener for the capture phase. [A8] [A9] [U55] [U56] [U57]
-- [ ] T011 [US2] Add `nextCover` to the exact member set in `tests/web/exposure.test.js`. The test fails. [U58]
+- [X] T011 [US2] Add `nextCover` to the exact member set in `tests/web/exposure.test.js`. The test fails. [U58]
 - [ ] T012 [P] [US2] Create failing `tests/web/styles.test.js`. It reads the `<style>` block of `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` and asserts that `.nr-cover` declares a 64 × 64 box with a background and that `.nr-cover img` declares `object-fit: cover`. [U60] [U61]
 - [X] T013 [US2] Add a failing case to `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/BrowseReleasesTests.cs`, using `AcceptanceRig`: after a refresh that stores a release at both sources, `GET Releases` returns its two cover URLs in Deezer-first order. [A7]
 
@@ -128,8 +128,8 @@ Make every image fail. Both cards end with the placeholder box and no `<img>`.
 - [ ] T017 [US2] Amend the `ReleaseDto` section of `specs/001-track-new-releases/contracts/http-api.md` with `covers` and its rules from [contracts/http-api.md](./contracts/http-api.md).
 
 - [X] T032 [US2] Confirm that the acceptance test for US2-AS1 is green in the full suite before US2 counts as complete. [A7]
-- [ ] T033 [US2] Confirm that the acceptance test for US2-AS2 is green in the full suite before US2 counts as complete. [A8]
-- [ ] T034 [US2] Confirm that the acceptance test for US2-AS3 is green in the full suite before US2 counts as complete. [A9]
+- [X] T033 [US2] Confirm that the acceptance test for US2-AS2 is green in the full suite before US2 counts as complete. [A8]
+- [X] T034 [US2] Confirm that the acceptance test for US2-AS3 is green in the full suite before US2 counts as complete. [A9]
 - [X] T035 [US2] Confirm that the acceptance test for US2-AS4 is green in the full suite before US2 counts as complete. [A10]
 
 **Checkpoint**: US1 and US2 complete. Both suites are green.
