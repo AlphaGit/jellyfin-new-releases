@@ -33,7 +33,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | A3  | After an artist is applied, emptying the field or pressing Clear requests releases with no `artistId` | US1-AS3, FR-003 | example | PENDING | |
 | A4  | Text that equals no label requests releases with no `artistId` | US1-AS4, FR-002 | example | PENDING | |
 | A5  | The Artist control is a native text input bound to the suggestion list by `list`, labelled "Artist", with no page key handling | US1-AS5, FR-004 | example | PENDING | |
-| A6  | After a refresh over two tagged artists named "Desire" and one "Chromatics", `GET Artists` returns both "Desire" with their texts and "Chromatics" with `null` | US1-AS6, FR-005a, FR-005b | example | PENDING | |
+| A6  | After a refresh over two tagged artists named "Desire" and one "Chromatics", `GET Artists` returns both "Desire" with their texts and "Chromatics" with `null` | US1-AS6, FR-005a, FR-005b | example | BLOCKED: the scanner merges same-name artists into one row, so two "Desire" never exist (cycle log, cycle 1) | |
 | A7  | After a refresh stores one release at both sources, `GET Releases` returns its Deezer cover URL, then its Cover Art Archive URL | US2-AS1, FR-006, FR-006a | example | PENDING | |
 | A8  | On a card for a release with both sources, an `error` on the Deezer image puts the Cover Art Archive URL in its `src` | US2-AS2, FR-006a | example | PENDING | |
 | A9  | On a card whose every cover URL fails, the cover box remains and holds no `<img>` | US2-AS3, FR-007 | example | PENDING | |
