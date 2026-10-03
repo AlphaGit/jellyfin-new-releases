@@ -25,6 +25,9 @@ script in a `node:vm` sandbox with the string-capturing fake DOM. The committed 
 loading cannot be observed by a fake DOM that does no layout. Their acceptance lines assert the
 declarations that produce them, and the real-browser pass in `quickstart.md` §2 checks the pixels.
 
+**Remediation, 2026-10-03.** The TDD audit (`tdd/verification.md`) and the maintainer's decisions on it
+reopen A4 and U42 (the filter now ignores case) and add A15 and A16.
+
 ## Outer loop: acceptance behaviors
 
 | id  | behavior | traces | kind | state | test |
@@ -32,7 +35,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | A1  | With artists "ASP", "Aspen" and "Wasp", the page's suggestion list offers all three names | US1-AS1, FR-001 | example | DONE | `tests/web/artist-filter.test.js::A1: with artists ASP, Aspen and Wasp the suggestion list offers all three names` |
 | A2  | When the field text becomes the name "ASP", the page requests releases with ASP's `artistId` | US1-AS2, FR-002, FR-005 | example | DONE | `tests/web/artist-filter.test.js::A2: when the field text becomes the name ASP the page requests releases with ASP's artistId` |
 | A3  | After an artist is applied, emptying the field or pressing Clear requests releases with no `artistId` | US1-AS3, FR-003 | example | DONE | `tests/web/artist-filter.test.js::A3: after ASP is applied, emptying the field … / pressing Clear requests releases with no artistId` |
-| A4  | Text that equals no artist name requests releases with no `artistId` | US1-AS4, FR-002 | example | DONE | `tests/web/artist-filter.test.js::A4: text that equals no artist name, even one differing only in case, requests releases with no artistId` |
+| A4  | Text that equals no artist name with case ignored, inherited object keys included, applies no artist filter, while typing or on leaving the field | US1-AS4, FR-002 | example | PENDING | |
 | A5  | The Artist control is a native text input bound to the suggestion list by `list`, labelled "Artist", with no page key handling | US1-AS5, FR-004 | example | DONE | `tests/web/artist-filter.test.js::A5: the Artist control is a text input labelled "Artist" … / the page adds no key handling to the Artist control` |
 | A6  | After a refresh over two tagged artists named "Desire" and one "Chromatics", `GET Artists` returns both "Desire" with their texts and "Chromatics" with `null` | US1-AS6 (removed) | example | DROPPED: US1-AS6 and FR-005a/b were removed on 2026-10-03; two library artists never share a name (cycle log, cycle 1) | |
 | A7  | After a refresh stores one release at both sources, `GET Releases` returns its Deezer cover URL, then its Cover Art Archive URL | US2-AS1, FR-006, FR-006a | example | DONE | `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/BrowseReleasesTests.cs::A7_AReleaseStoredAtBothSources_ListsItsDeezerCoverThenItsCoverArtArchiveCover` |
@@ -42,6 +45,8 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | A11 | The stylesheet makes the List-tab buttons fill one shared column: `.nr-actions` stretches, and its buttons are `width: 100%` | US3-AS1, FR-009, SC-003 | example | DONE | `tests/web/styles.test.js::A11: the List-tab buttons fill one shared column: .nr-actions stretches its buttons, and each is full width` |
 | A12 | An Archive-tab card renders "Restore" inside `.nr-actions`, under the same button rule as "Ignore" and "Have it" | US3-AS2, FR-009 | example | DONE | `tests/web/render.test.js::A12: an Archive-tab row writes Restore inside .nr-actions, under the same rule as Ignore and Have it` |
 | A13 | The declared source-link colour has a WCAG contrast of at least 4.5:1 against the card background `#1c1c1c` | US4-AS1, FR-010, SC-004 | example | DONE | `tests/web/styles.test.js::A13: the declared source-link colour has a contrast of at least 4.5:1 against the card` |
+| A15 | Text that equals an artist name with case ignored applies that artist | US1-AS2, FR-002 | example | PENDING | |
+| A16 | Every rule that reaches a source link and declares a colour keeps 4.5:1 against the card, so hover and focus keep the contrast | US4-AS2, FR-010 | example | PENDING | |
 | A14 | The source link keeps its underline, its `:visited` state has the same colour, and focus shows the outline | US4-AS2, FR-010 | example | DONE | `tests/web/styles.test.js::A14: a visited source link keeps the same colour / no rule takes the underline off a source link / a focused source link shows the focus outline` |
 
 ## Inner loop: unit behaviors
@@ -131,7 +136,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | --- | --- | --- | --- | --- | --- |
 | U40 | `artistLabel` of an artist with a disambiguation is `name — disambiguation` | FR-005a, FR-005c | example | DROPPED: labels with a disambiguation removed with FR-005a (2026-10-03) | |
 | U41 | `artistLabel` of an artist with `disambiguation: null` is the name alone | FR-005a | example | DROPPED: `artistLabel` removed: the label is the name (2026-10-03) | |
-| U42 | `artistIndex` maps each name to its `jellyfinId` | FR-002 | example | DONE | `tests/web/artist-filter.test.js::U42: artistIndex maps each name to its jellyfinId` |
+| U42 | `artistIndex` maps each name, in lower case, to its `jellyfinId` (changed by the 2026-10-03 case decision) | FR-002 | example | PENDING | |
 | U43 | `artistIndex` keeps the first artist when two share a label | FR-002 | example | DROPPED: two library artists never share a name, so there is no duplicate to resolve (2026-10-03) | |
 | U44 | Loading artists writes one escaped `<option value>` per name into `#nr-f-artist-list` | FR-001, FR-005 | example | DONE | `tests/web/artist-filter.test.js::U44: a name with markup characters is written into its option escaped` |
 | U45 | When the Artists request fails, the field stays usable, and releases are requested with no `artistId` | spec edge case "artist list fails to load" | example | DONE | `tests/web/artist-filter.test.js::U45: when the Artists request fails, the field stays usable and releases are requested with no artistId` |

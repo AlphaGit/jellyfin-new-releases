@@ -16,7 +16,7 @@ Declared markup (ids are declarations, so the fake DOM models them):
 | Event | Behaviour |
 | --- | --- |
 | Artists loaded | One `<option value="{name}">` per artist, in response order. Build the name → `jellyfinId` map. |
-| `input` | Applied artist = the `artistIndex` entry for the exact text, or none. When it changes, reload the list (FR-002, FR-005). Empty text clears the filter (FR-003). |
+| `input` | Applied artist = the `artistIndex` entry for the text with case ignored, or none. When it changes, reload the list (FR-002, FR-005). Empty text clears the filter (FR-003). |
 | Clear button | Empty the text and clear the applied artist. |
 
 ## Exposed on `NewReleasesInternals` (new members)
@@ -31,7 +31,7 @@ Declared markup (ids are declarations, so the fake DOM models them):
 ```html
 <article class="nr-row" ...>
   <div class="nr-cover"><img src="{covers[0]}" data-fallback="{covers[1..] joined by ' '}"
-       alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="64" height="64"></div>
+       alt="" loading="lazy" referrerpolicy="no-referrer" width="64" height="64"></div>
   <div> …title, artist, meta, links (unchanged)… </div>
   <div class="nr-actions"> …buttons (unchanged markup)… </div>
 </article>

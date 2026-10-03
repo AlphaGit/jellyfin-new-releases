@@ -8,8 +8,8 @@ and R5 are dropped, and R1 now maps names, not labels.
 
 **Decision**: `<input id="nr-f-artist" list="nr-f-artist-list" autocomplete="off">` and a
 declared `<datalist id="nr-f-artist-list">` with one `<option value="{name}">` per
-artist. On `input` the page looks the text up in a name → `jellyfinId` map. An exact match
-applies the filter, and anything else clears it (FR-002). The Clear button empties the field and
+artist. On `input` the page looks the text up in a name → `jellyfinId` map. A match with case
+ignored applies the filter, and anything else clears it (FR-002). The map is keyed by the name in lower case. The Clear button empties the field and
 the filter. Two library artists never share a name (R3), so the map needs no duplicate rule.
 
 **Rationale**: The native rung. The person can start typing and gets the browser's substring
@@ -64,11 +64,10 @@ URL formats in a second language.
 ## R7 — Cover markup: lazy, decorative, no referrer, placeholder by removal
 
 **Decision**: Each card starts with
-`<div class="nr-cover"><img src="{covers[0]}" data-fallback="{covers[1..] joined by space}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="64" height="64"></div>`.
+`<div class="nr-cover"><img src="{covers[0]}" data-fallback="{covers[1..] joined by space}" alt="" loading="lazy" referrerpolicy="no-referrer" width="64" height="64"></div>`.
 One `error` listener on the panel, in the capture phase (`error` does not bubble), gets
 `nextCover(img)`. That function moves the first fallback URL into `src`, or removes the `<img>`
-when no fallback is left. `.nr-cover` is a 64×64 box with a neutral background and a centred
-note glyph, so when the `<img>` is removed, the box is the placeholder. The `<img>` uses
+when no fallback is left. `.nr-cover` is a 64×64 box with a neutral background, so when the `<img>` is removed, the box is the placeholder. The `<img>` uses
 `object-fit: cover`. A release with an empty `covers` list renders the box without an `<img>`.
 
 **Rationale**:

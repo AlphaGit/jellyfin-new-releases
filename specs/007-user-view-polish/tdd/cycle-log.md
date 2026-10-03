@@ -647,3 +647,39 @@ change per cycle, and committed at green.
 - not driven, because no behaviour on the list states them: `decoding="async"` on the cover image
   and the "centred note glyph" in the empty cover box (contracts/user-view.md, research R7, T016).
   The empty box is the placeholder either way (FR-007); both are left for a decision
+
+## Maintainer decisions on the TDD audit, 2026-10-03
+
+Driven from `tdd/verification.md` (verdict FAIL, audited at `5846c02`) and its Phase 8 tasks.
+
+**T043 — test-after behaviours.** Each one below passed on its first run, because an earlier
+cycle's code (or code that predates `007`) already did the job. This entry labels each one
+test-after. Evidence: the cycle named, with no red recorded. The audit re-ran each recorded mutant
+and each one fails its test today:
+
+| Behaviour | Cycle | Code that already did it | Mutant caught at the audit |
+| --- | --- | --- | --- |
+| A3 | 4 | A2's lookup; the existing Clear handler | R1, R2 |
+| A5 | 6 | A2's markup | R4, R5 |
+| A12 | 43 | the existing Archive row | R11 |
+| A14 | 48 | the visited part had a red; the underline and outline existed | R13a, R13b |
+| U33 | 18 | U32's mapping | R9 |
+| U34 | 19 | U32's mapping | R10 |
+| U36 | 21 | U32 left `Sources` alone | R11b |
+| U45 | 10 | the existing `.catch` | R6 |
+| U62 | 46 | U63's formula | R12 |
+| U64 | 12 | U46's comparison | R7 |
+| U65 | 13 | U46 records the artist in `query()` | R8 |
+
+**Decision (maintainer, 2026-10-03): accepted**, all eleven. **A4 is not accepted as it stands.**
+The maintainer decided that the filter ignores case ("asp" applies "ASP"). FR-002 is amended
+accordingly. A4 is restated and re-driven with a table, A15 is added for the case-blind match, and
+U42 changes with it.
+
+**T045 — reading page source as text.** Decision: amend the profile, not the harness. The fake DOM
+models neither markup attributes nor CSS. `.specify/memory/tdd-profile.md` now permits text reads
+for the static attributes of a control and for the `<style>` block, and for nothing else.
+
+**T046 — `decoding="async"` and the centred note glyph.** Decision: drop both. They are removed from
+`contracts/user-view.md`, research R7 and the text of T009 and T016. The empty cover box is the
+placeholder (FR-007).

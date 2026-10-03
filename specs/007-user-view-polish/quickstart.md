@@ -14,7 +14,7 @@ Expected: all green. Coverage by area:
 | --- | --- | --- |
 | Source links | `Storage/` tests | each listed source link carries its stored `source_release_id` |
 | `GET Releases` | `Api/` tests + `pages/releases.json` | `covers` order and URL formats (FR-006, FR-006a) |
-| Artist filter | `tests/web/artist-filter.test.js` | options carry the names, exact name applies, free text does not filter, Clear (US1) |
+| Artist filter | `tests/web/artist-filter.test.js` | options carry the names, a name applies with case ignored, free text does not filter, Clear (US1) |
 | Cover card | `tests/web/render.test.js` | lazy, `alt=""`, no referrer, fallback chain, placeholder (US2) |
 | Styles | `tests/web/styles.test.js` | the declarations in `contracts/user-view.md` and the computed contrast (US3, US4) |
 

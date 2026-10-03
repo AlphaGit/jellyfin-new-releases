@@ -47,6 +47,7 @@ real library:
 ### Session 2026-10-03
 
 - Q: Jellyfin and the plugin's library scan keep one artist per name, so two different artists with the same name are never two library artists. What does 007 do with the disambiguation text? → A: Remove it from 007. A suggestion shows the artist's name only, and the plugin fetches and stores no extra artist data. This supersedes the 2026-09-30 answers on disambiguation text. Real homonym support needs its own specification.
+- Q: Must the typed text match an artist name's case? → A: No. The filter ignores case: "asp" applies "ASP". The library scan already merges names that differ only in case, so the match is unambiguous. (Maintainer decision on the TDD audit.)
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -162,7 +163,7 @@ in the dark theme.
   types, using the browser's own suggestion behaviour. The person can start typing, and the
   browser shows the suggestions whose label contains the typed text. Matching rules (case, accents) and the number of rows shown
   are the browser's.
-- **FR-002**: The filter MUST apply only when the field text equals a suggestion label, by a pick
+- **FR-002**: The filter MUST apply only when the field text equals a suggestion label, with case ignored, by a pick
   or by typing it in full. Free text that matches no artist MUST NOT filter the list and MUST NOT show as an applied filter.
 - **FR-003**: Clearing the Artist text, or pressing Clear, MUST remove the artist filter.
 - **FR-004**: The Artist filter MUST be fully operable by keyboard and MUST keep its visible

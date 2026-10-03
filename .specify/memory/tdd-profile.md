@@ -123,7 +123,10 @@ the tree is clean.
 - The embedded pages under `src/Jellyfin.Plugin.NewReleases/Web/` are not modules. Each exposes
   its pure helpers on `NewReleasesInternals` as the first statement of its IIFE; the recorded
   helper `tests/web/load-page.js` runs the page's script in a `node:vm` sandbox and returns them.
-  Never hand-roll a second loader, and never read a page's source as text to assert on it.
+  Never hand-roll a second loader. Read a page's source as text only for what the fake DOM cannot
+  model: the static attributes of a control (`artist-filter.test.js` A5) and the `<style>` block
+  (`styles.test.js`). Assert everything else through the loader. Maintainer decision, 2026-10-03
+  (`007` TDD audit Finding 6).
 - **This project now has a stand-in browser**, added by `005-page-json-casing`:
   `tests/web/fake-dom.js`, written here with no third-party library. `loadPageDom(file, overrides)`
   returns the fake `document` alongside the helpers, and a page runs its initialization to

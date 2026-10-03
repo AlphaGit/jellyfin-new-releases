@@ -106,7 +106,7 @@ tests/Jellyfin.Plugin.NewReleases.Tests/
 └── Acceptance/                  # US2 through the real refresh and controller
 
 tests/web/
-├── artist-filter.test.js        # NEW: artistIndex, exact name applies, free text, Clear
+├── artist-filter.test.js        # NEW: artistIndex, name applies with case ignored, free text, Clear
 ├── render.test.js               # + cover markup and nextCover
 ├── styles.test.js               # NEW: stylesheet declarations and computed contrast
 └── exposure.test.js             # + artistIndex, nextCover
