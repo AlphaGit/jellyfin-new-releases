@@ -1,15 +1,16 @@
 # Research: Polish the New Releases view
 
 Each entry: **Decision**, **Rationale**, **Alternatives considered**. Facts were measured in this
-repository at `a3b3579` unless stated otherwise.
+repository at `a3b3579` unless stated otherwise. Re-planned 2026-10-03 at `d88c618`: R3, R4
+and R5 are dropped, and R1 now maps names, not labels.
 
 ## R1 — The Artist filter is a native `<input list>` + `<datalist>`
 
 **Decision**: `<input id="nr-f-artist" list="nr-f-artist-list" autocomplete="off">` and a
-declared `<datalist id="nr-f-artist-list">` with one `<option value="{artistLabel(a)}">` per
-artist. On `input` the page looks the text up in a label → `jellyfinId` map. An exact match
-applies the filter, and anything else clears it (FR-002). For duplicate labels, the map keeps
-the first artist in name order. The Clear button empties the field and the filter.
+declared `<datalist id="nr-f-artist-list">` with one `<option value="{name}">` per
+artist. On `input` the page looks the text up in a name → `jellyfinId` map. An exact match
+applies the filter, and anything else clears it (FR-002). The Clear button empties the field and
+the filter. Two library artists never share a name (R3), so the map needs no duplicate rule.
 
 **Rationale**: The native rung. The person can start typing and gets the browser's substring
 match, keyboard navigation and screen-reader semantics, with no widget code (decided
@@ -21,66 +22,27 @@ native control.
 
 ## R2 — Dropped
 
-The page does no matching of its own, so it needs no text folding. The server still uses
-`TitleNormalizer.NormalizeName` for collisions (R3).
+The page does no matching of its own, so it needs no text folding.
 
-## R3 — The server decides collisions and sends the text only when it applies
+## R3 — Dropped: two library artists never share a name
 
-**Decision**: `GET Artists` groups **all** library artists (before the per-viewer access filter)
-by `TitleNormalizer.NormalizeName(name)`. An artist in a group of two or more gets
-`disambiguation` = its stored text when that text is non-empty. Every other artist gets
-`disambiguation: null`. The page shows `name + " — " + disambiguation` when the field is
-non-null, and `name` otherwise. It uses that label in the suggestion and in the field after a
-pick (FR-005a, FR-005c). The label is also the `<option value>`, so the field shows it after a pick.
+**Fact** (measured 2026-10-02, cycle 1 of `tdd/cycle-log.md`): `LibraryScanner.Scan` groups
+albums by album-artist name with `StringComparer.OrdinalIgnoreCase` before it reads any MBID, and
+Jellyfin keeps one artist item per name. A refresh over two tagged "Desire" artists stores one
+`library_artist` row. Only spelling variants that `TitleNormalizer.NormalizeName` folds ("Sigur
+Rós" / "Sigur Ros") can collide, and those are almost always one artist spelt twice.
 
-**Rationale**: The rule "server-wide for both" (Clarifications) puts the collision check where
-the server sees all artists. The page stays dumb. Text that goes stale, because the other
-homonym left the library, is suppressed at read time without any write.
+**Decision** (2026-10-03): no disambiguation text in 007. A suggestion shows the name alone
+(FR-005). Real homonym support needs its own specification, because it needs the scanner and
+the filter key to separate same-name artists first.
 
-**Alternatives considered**: The page detects collisions. Rejected: the page sees only the
-viewer's artists, and the rule is server-wide.
+## R4 — Dropped with R3
 
-## R4 — One MusicBrainz artist lookup per colliding artist, after the rotation
+There is no MusicBrainz artist lookup and no refresh step.
 
-**Decision**: `MusicBrainzSource` gains
-`FetchArtistDisambiguationAsync(string mbid, CancellationToken)`. It sends
-`GET {Base}artist/{mbid}?fmt=json` through `SourceHttpClient`, so the call shares the rate limit,
-the daily budget, the circuit breaker and the `User-Agent`. It returns the `disambiguation`
-string (empty when MusicBrainz has none). `RefreshNewReleasesTask` runs a new step after the
-artist × source rotation and before ownership:
+## R5 — Dropped with R3
 
-1. Skip the step when MusicBrainz is disabled or unavailable (`IsAvailableAsync`).
-2. Find the candidates: colliding artists (R3 grouping) whose *effective MBID* is
-   `library_artist.mbid`, or else the `musicbrainz` `artist_source.source_artist_id` when the
-   status is `Matched`, and whose `disambiguation_mbid` differs from that MBID.
-3. For each candidate, fetch the text and store `(disambiguation, disambiguation_mbid)`. Store an
-   empty text too, so it is not fetched again.
-4. On `DailyBudgetExhaustedException`, stop the step. On any other exception, count an error, log
-   a warning and continue. A candidate without a stored text is retried on the next run.
-
-**Rationale**: The step runs after the rotation, so artists matched by search in this run
-already have an MBID (FR-005b covers them too). `MatchArtistAsync` returns early for tagged
-artists, so the search response cannot supply the text for them.
-
-**Alternatives considered**: A method on `IReleaseSource`. Rejected: Deezer has no such concept,
-and a no-op implementation is an interface method with one real implementation (constitution VI).
-Reading `disambiguation` from the search response for untagged artists. Rejected: it saves one
-call for a rare case and needs a second code path.
-
-## R5 — Migration `002` adds two nullable columns to `library_artist`
-
-**Decision**: `002_artist_disambiguation.sql`:
-`ALTER TABLE library_artist ADD COLUMN disambiguation TEXT;` and
-`ALTER TABLE library_artist ADD COLUMN disambiguation_mbid TEXT;`. `ArtistRepository.UpsertAsync`
-does not touch them, so the refresh's library sync keeps them. A new
-`SetDisambiguationAsync(id, mbid, text)` writes them.
-
-**Rationale**: Constitution IV requires a forward migration from every released version. 0.1.0
-and 0.1.1 have schema `001`. Nullable columns migrate with no default and no backfill.
-`disambiguation_mbid` is the "fetch again only when the MBID changes" rule of FR-005b.
-
-**Alternatives considered**: A separate table. Rejected: one-to-one data with no lifecycle of
-its own.
+There is no migration. The schema stays at `001`.
 
 ## R6 — Cover URLs are built in `ToDto` from the stored source IDs
 

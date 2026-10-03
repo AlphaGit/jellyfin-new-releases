@@ -1,19 +1,17 @@
 # Implementation Plan: Polish the New Releases view
 
-**Branch**: `007-user-view-polish` | **Date**: 2026-10-01 | **Spec**: [spec.md](./spec.md)
+**Branch**: `007-user-view-polish` | **Date**: 2026-10-03 (re-planned after the 2026-10-03 clarification) | **Spec**: [spec.md](./spec.md)
 
 **Input**: Feature specification from `/specs/007-user-view-polish/spec.md`
 
 ## Summary
 
-Four fixes to the New Releases view, plus the server support two of them need:
+Four fixes to the New Releases view, plus the server support the covers need:
 
 1. **Artist filter**: a native `<input list>` + `<datalist>` replaces the `<select>`. The person
-   types and gets the browser's substring match. The filter applies only when the text equals a
-   suggestion label (R1). Homonyms show their MusicBrainz disambiguation text. The server decides
-   collisions across all library artists and sends the text only when one applies (R3). During
-   refresh it fetches the text with one MusicBrainz lookup per colliding artist, and stores it
-   in two new `library_artist` columns (R4, R5).
+   types and gets the browser's substring match. The filter applies only when the text equals an
+   artist name (R1). Suggestions show the name alone. The server, the stored data and the
+   Artists response do not change (2026-10-03 clarification; R3–R5 dropped).
 2. **Covers**: `ReleaseDto.covers` holds cover URLs that `ToDto` builds from the stored source
    IDs, Deezer first and then Cover Art Archive (R6). The card loads them lazily, as decorative
    images with no referrer. It falls back to the next URL, then to a placeholder (R7). Nothing
@@ -30,11 +28,12 @@ the page tests.
 **Primary Dependencies**: `Jellyfin.*` 12.0.0 (`ExcludeAssets=runtime`), `Microsoft.Data.Sqlite`
 10.0.11. **No new direct dependency.**
 
-**Storage**: SQLite. Migration `002_artist_disambiguation.sql` adds two nullable columns to
-`library_artist` ([data-model.md](./data-model.md)).
+**Storage**: SQLite. **No schema change.** The list query also selects the stored
+`source_release_id` ([data-model.md](./data-model.md)).
 
 **Testing**: xunit 2.9.3 + NSubstitute 5.3.0. `node:test` + the string-capturing fake DOM in
-`tests/web/`. One new recorded fixture: `tests/fixtures/musicbrainz/artist_lookup.json`.
+`tests/web/`. No new recorded fixture. The two artist-lookup fixtures committed in `e60275c` for the dropped
+scope are removed.
 
 **Target Platform**: Jellyfin 12.0.x server. The page runs in the Jellyfin web client under
 Plugin Pages.
@@ -45,25 +44,25 @@ Plugin Pages.
 map lookup per keystroke. One page open requests only the covers near the visible area.
 
 **Constraints**: Hermetic tests (constitution III). No external assets except cover images
-(constitution 1.4.0, V). The MusicBrainz rate limit and daily budget apply to the new lookup.
+(constitution 1.4.0, V). The refresh sends no new request.
 `TreatWarningsAsErrors` stays on.
 
-**Scale/Scope**: 1 migration, 1 new source method, 1 refresh step, 2 DTO fields, 1 page (CSS,
-native suggestion list, card markup). 2 contract fixtures updated, 1 recorded fixture added.
+**Scale/Scope**: 1 read-model field, 1 DTO field, 1 page (CSS, native suggestion list, card
+markup). The `releases*.json` contract fixtures updated. 2 unused recorded fixtures removed.
 
 ## Constitution Check
 
-*Checked against `.specify/memory/constitution.md` v1.4.0. Re-checked after Phase 1 design. The
-verdicts did not change.*
+*Checked against `.specify/memory/constitution.md` v1.4.0. Re-checked after Phase 1 design and
+again after the 2026-10-03 re-plan. The verdicts did not change; the evidence got shorter.*
 
 | Principle | Verdict | Evidence |
 | --- | --- | --- |
-| **I. Spec-Driven Development** | **Pass** | Grilled: ten clarifications on 2026-09-30, one on 2026-10-01. Every research decision traces to an `FR-`. The `001` contract is amended through [contracts/http-api.md](./contracts/http-api.md), not changed silently. |
+| **I. Spec-Driven Development** | **Pass** | Grilled: ten clarifications on 2026-09-30, one on 2026-10-01, one on 2026-10-03 that removed the disambiguation scope. Every research decision traces to an `FR-`. The `001` contract is amended through [contracts/http-api.md](./contracts/http-api.md), not changed silently. |
 | **II. Test-Driven Development** | **Pass, with one recorded limit** | `before_implement` runs `/speckit-tdd-run`. Every FR has a hermetic test ([quickstart.md](./quickstart.md) §1). Pixel equality (SC-003) and real lazy loading cannot be measured by a string-capturing DOM. Their tests assert the declarations, and the real-browser pass checks the pixels (R11). |
-| **III. Hermetic Tests** | **Pass** | The new MusicBrainz call goes through a stubbed handler and a recorded, scrubbed fixture. No cover URL is fetched in tests; the tests assert the strings. |
-| **IV. Jellyfin Compatibility** | **Pass** | GUID unchanged. No `PluginConfiguration` change. Migration `002` is additive and goes forward from `001`, the schema of 0.1.0 and 0.1.1. No operator action is needed. |
-| **V. Respectful Sources and Privacy** | **Pass** | Covers: the browser loads them directly, within the 1.4.0 exception. `referrerpolicy="no-referrer"` keeps the server address out of the request. No other data goes with it. Lookup: only the MBID leaves the server. The lookup is sent only for colliding artists, through the existing rate limit, budget, breaker and `User-Agent`. |
-| **VI. Simplicity** | **Pass** | No dependency. The Artist filter is the native suggestion list. Covers reuse the stored IDs (no column, no fetch). The disambiguation method is on the concrete `MusicBrainzSource`, not on `IReleaseSource` (no no-op Deezer member). |
+| **III. Hermetic Tests** | **Pass** | No new outgoing call. No cover URL is fetched in tests; the tests assert the strings. |
+| **IV. Jellyfin Compatibility** | **Pass** | GUID unchanged. No `PluginConfiguration` change. No migration: the schema stays at `001`, the schema of 0.1.0 and 0.1.1. No operator action is needed. |
+| **V. Respectful Sources and Privacy** | **Pass** | Covers: the browser loads them directly, within the 1.4.0 exception. `referrerpolicy="no-referrer"` keeps the server address out of the request. No other data goes with it. The server sends no new request. |
+| **VI. Simplicity** | **Pass** | No dependency. The Artist filter is the native suggestion list. Covers reuse the stored IDs (no column, no fetch). No server code for a case Jellyfin cannot produce (two library artists with one name). |
 
 **Technical Constraints**: Held. The Web UI has no build step and no framework. Its only
 external assets are the permitted cover images.
@@ -79,11 +78,11 @@ warnings, then `dotnet test` and `node --test`. `CHANGELOG.md` gets an entry at 
 specs/007-user-view-polish/
 ├── plan.md              # This file
 ├── spec.md
-├── research.md          # Phase 0: R1..R11 (R2 dropped)
-├── data-model.md        # Phase 1: migration 002 and the derived wire fields
+├── research.md          # Phase 0: R1..R11 (R2–R5 dropped)
+├── data-model.md        # Phase 1: the derived read-model and wire fields
 ├── quickstart.md        # Phase 1: suite gate + real-browser pass
 ├── contracts/
-│   ├── http-api.md      # covers, disambiguation, MusicBrainz lookup; amends 001
+│   ├── http-api.md      # covers; amends 001
 │   └── user-view.md     # suggestion list, card markup, exposed functions, stylesheet rules
 ├── checklists/
 └── tasks.md             # Phase 2: NOT created by /speckit-plan
@@ -94,33 +93,27 @@ specs/007-user-view-polish/
 ```text
 src/Jellyfin.Plugin.NewReleases/
 ├── Storage/
-│   ├── Migrations/002_artist_disambiguation.sql   # NEW (R5)
-│   ├── ArtistRepository.cs      # + SetDisambiguationAsync, + read of both columns, collision candidates
 │   └── ReleaseRepository.cs     # sources JSON also selects source_release_id (R6)
-├── Model/StoredRecords.cs       # LibraryArtist + Disambiguation, DisambiguationMbid; SourceLink + SourceReleaseId
-├── Sources/MusicBrainzSource.cs # + FetchArtistDisambiguationAsync (R4)
-├── ScheduledTasks/RefreshNewReleasesTask.cs        # + disambiguation step after the rotation (R4)
+├── Model/StoredRecords.cs       # SourceLink + SourceReleaseId
 ├── Api/
-│   ├── Dtos.cs                  # ReleaseDto + Covers; ArtistDto + Disambiguation
-│   └── ReleasesController.cs    # ToDto builds covers; GetArtists computes server-wide collisions (R3)
+│   ├── Dtos.cs                  # ReleaseDto + Covers
+│   └── ReleasesController.cs    # ToDto builds covers (R6)
 └── Web/user-view.html           # datalist filter, cover column, button and link CSS (R1, R7–R10)
 
 tests/Jellyfin.Plugin.NewReleases.Tests/
-├── Storage/                     # migration 002, repository disambiguation round-trip
-├── Sources/                     # artist lookup against the fixture
-├── ScheduledTasks/              # disambiguation step: candidates, no refetch, MBID change, budget
-├── Api/                         # covers order; disambiguation on collision; ResponseNamingTests fixtures
-└── Acceptance/                  # US1 and US2 through the real controller
+├── Storage/                     # source links carry their source_release_id
+├── Api/                         # covers order and URL formats; ResponseNamingTests fixtures
+└── Acceptance/                  # US2 through the real refresh and controller
 
 tests/web/
-├── artist-filter.test.js        # NEW: artistLabel, artistIndex, exact label applies, free text, Clear
+├── artist-filter.test.js        # NEW: artistIndex, exact name applies, free text, Clear
 ├── render.test.js               # + cover markup and nextCover
 ├── styles.test.js               # NEW: stylesheet declarations and computed contrast
-└── exposure.test.js             # + artistLabel, artistIndex, nextCover
+└── exposure.test.js             # + artistIndex, nextCover
 
 tests/fixtures/
-├── musicbrainz/artist_lookup.json   # NEW, recorded and scrubbed
-└── pages/releases*.json, artists.json   # + covers, + disambiguation
+├── musicbrainz/artist_lookup*.json   # REMOVE (committed in e60275c for the dropped scope), with their README entry
+└── pages/releases*.json             # + covers (artists.json unchanged)
 
 specs/001-track-new-releases/contracts/http-api.md   # amended with the two fields
 ```

@@ -15,16 +15,15 @@ Declared markup (ids are declarations, so the fake DOM models them):
 
 | Event | Behaviour |
 | --- | --- |
-| Artists loaded | One `<option value="{artistLabel(a)}">` per artist, in response order. Build the label → `jellyfinId` map; the first artist wins on duplicate labels. |
-| `input` | Applied artist = the `artistIndex` entry for the exact text, or none. When it changes, reload the list (FR-002, FR-005c). Empty text clears the filter (FR-003). |
+| Artists loaded | One `<option value="{name}">` per artist, in response order. Build the name → `jellyfinId` map. |
+| `input` | Applied artist = the `artistIndex` entry for the exact text, or none. When it changes, reload the list (FR-002, FR-005). Empty text clears the filter (FR-003). |
 | Clear button | Empty the text and clear the applied artist. |
 
 ## Exposed on `NewReleasesInternals` (new members)
 
 | Function | Contract |
 | --- | --- |
-| `artistLabel(a)` | `a.name + ' — ' + a.disambiguation` when `a.disambiguation` is non-null, else `a.name`. |
-| `artistIndex(artists)` | Map from label to `jellyfinId`. The first artist wins on a duplicate label. |
+| `artistIndex(artists)` | Map from `name` to `jellyfinId`. |
 | `nextCover(img)` | When `img.dataset.fallback` has a URL, move the first one into `img.src`. Otherwise remove `img` from its parent. |
 
 ## Release card

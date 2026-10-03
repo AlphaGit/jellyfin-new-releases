@@ -44,6 +44,10 @@ real library:
 
 - Q: Is the Artist filter a native suggestion list or a hand-written autocomplete? → A: The native suggestion list: the person can start typing and gets substring matches. Its matching and row count are the browser's.
 
+### Session 2026-10-03
+
+- Q: Jellyfin and the plugin's library scan keep one artist per name, so two different artists with the same name are never two library artists. What does 007 do with the disambiguation text? → A: Remove it from 007. A suggestion shows the artist's name only, and the plugin fetches and stores no extra artist data. This supersedes the 2026-09-30 answers on disambiguation text. Real homonym support needs its own specification.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Find an artist by typing (Priority: P1)
@@ -70,9 +74,6 @@ Pick the suggestion. The list shows only that artist's releases.
    **Then** no artist filter is applied and the field does not pretend a match exists.
 5. **Given** the person uses only the keyboard, **When** they type, move through suggestions and
    confirm one, **Then** the filter applies exactly as with a pointer.
-6. **Given** two library artists named "Desire" with known disambiguation texts and one artist
-   named "Chromatics", **When** the person types "desire" and then "chrom", **Then** each "Desire"
-   suggestion shows its disambiguation text and "Chromatics" shows the name alone.
 
 ---
 
@@ -142,10 +143,9 @@ in the dark theme.
 - Artist names with accents or different case ("Björk", "björk", "Bjork"): the browser's matching
   applies. Current browsers ignore case. Most do not ignore accents, so "bjork" can miss
   "Björk".
-- Two library artists with the same name: both appear as separate suggestions, each with its
-  MusicBrainz disambiguation text when known, so the person can tell them apart. Without known
-  text, both show the name alone and look identical, and a pick applies the first in name order. Two artists without an MBID
-  and with the same name share one artist key and are already one row.
+- Two different artists with the same name: Jellyfin keeps one artist per name, and the library
+  scan groups albums by artist name, so they are one library artist. The filter offers one
+  suggestion, and it lists the releases of both together.
 - The artist list fails to load: the filter is still usable as "all artists" and the view does not
   break.
 - A release with several sources: each source link meets the contrast rule.
@@ -163,24 +163,13 @@ in the dark theme.
   label contains the typed text. Matching rules (case, accents) and the number of rows shown
   are the browser's.
 - **FR-002**: The filter MUST apply only when the field text equals a suggestion label, by a pick
-  or by typing it in full. When two artists have the same label, the first one in name order
-  applies. Free text that
-  matches no artist MUST NOT filter the list and MUST NOT show as an applied filter.
+  or by typing it in full. Free text that matches no artist MUST NOT filter the list and MUST NOT show as an applied filter.
 - **FR-003**: Clearing the Artist text, or pressing Clear, MUST remove the artist filter.
 - **FR-004**: The Artist filter MUST be fully operable by keyboard and MUST keep its visible
   label "Artist".
-- **FR-005a**: When two or more library artists on the server share a name (compared ignoring
-  case and accents), each of their suggestions MUST show that artist's MusicBrainz disambiguation text
-  beside the name. A suggestion for a unique name, or a colliding artist with no known
-  disambiguation text, MUST show the name alone. The collision is judged across all library
-  artists, not only the ones the viewer can see.
-- **FR-005b**: During refresh, the plugin MUST fetch the disambiguation text only for library
-  artists that have an MBID and whose name collides with another library artist. It MUST use
-  one MusicBrainz artist lookup per such artist, inside the existing MusicBrainz rate limit and
-  daily budget. It MUST store the text and MUST NOT fetch it again unless the artist's MBID
-  changes. Artists with a unique name MUST cause no extra request.
-- **FR-005c**: After the person picks a suggestion, the Artist field MUST show the same label as
-  that suggestion, with the disambiguation text when the suggestion had one.
+- **FR-005**: Each suggestion MUST show the library artist's name alone, and after a pick the
+  Artist field MUST show that name. The plugin MUST NOT fetch or store any extra artist data for
+  the filter.
 - **FR-006**: Each listed release MUST carry a cover image URL built at read time from the source
   identifiers already stored for it: `https://coverartarchive.org/release-group/{id}/front-250`
   for a MusicBrainz entry, `https://api.deezer.com/album/{id}/image?size=medium` for a Deezer
@@ -206,9 +195,8 @@ in the dark theme.
 
 - **Release** (as listed): gains a cover image URL, derived at read time from its stored source
   identifiers. Nothing new is persisted.
-- **Library artist** (filter suggestion): name and Jellyfin identifier, as today, plus an optional
-  MusicBrainz disambiguation text. The plugin stores this new field only for artists whose
-  name collides, which needs a schema migration.
+- **Library artist** (filter suggestion): name and Jellyfin identifier, as today. Nothing new is
+  stored.
 
 ## Success Criteria *(mandatory)*
 
@@ -226,8 +214,8 @@ in the dark theme.
 ## Assumptions
 
 - The visible changes are in the user view (`user-view.html` under Plugin Pages) only. The admin
-  page is out of scope. Behind the view, the refresh, the stored artist data and the Artists and
-  Releases responses change to supply disambiguation text and cover URLs.
+  page is out of scope. Behind the view, only the Releases response changes, to supply cover URLs.
+  The refresh, the stored data and the Artists response do not change.
 - Suggestions come from the same library artist list the dropdown uses today. No new search
   endpoint is needed for libraries up to a few thousand artists.
 - Every stored Deezer entry has a cover through its album image endpoint. A MusicBrainz release

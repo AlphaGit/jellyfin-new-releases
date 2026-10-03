@@ -2,19 +2,20 @@
 feature: 007-user-view-polish
 loop: outside-in
 profile: .specify/memory/tdd-profile.md
-spec_criteria: 14
+spec_criteria: 13
 planned_at: a3b3579
-updated_at: a3b3579
-suite_baseline: red
+updated_at: d88c618
+suite_baseline: green
 ---
 
 # Test List: Polish the New Releases view
 
-The baseline is red because of two tests that predate this feature:
-`RepositoryManifestTests.Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` and
-`…EveryVersionCarriesItsDownloadChecksumTimestampAndJellyfin12`. The 0.1.1 release put a second
-version into `repo/manifest.json`, and `PublishedVersionsToday` still says 1. The loop must not
-start until that is fixed outside this feature.
+**Refreshed 2026-10-03 at `d88c618`.** The 2026-10-03 clarification removed the homonym
+disambiguation (spec FR-005; research R3–R5): two library artists never share a name, because
+the library scan and Jellyfin keep one artist per name (cycle log, cycle 1). A6, U1–U30, U40,
+U41 and U43 are `DROPPED`. A1–A5, U42 and U44–U47 now speak of names, not labels. The red
+baseline recorded at planning was fixed outside this feature by `fb956af`; the suite is green
+(dotnet 310, node 79).
 
 **Acceptance level.** The profile has no end-to-end runner. Server criteria run through
 `AcceptanceRig`: the real controllers, repositories and refresh task over a temporary database
@@ -28,12 +29,12 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| A1  | With artists "ASP", "Aspen" and "Wasp", the page's suggestion list offers all three labels | US1-AS1, FR-001 | example | PENDING | |
-| A2  | When the field text becomes the label "ASP", the page requests releases with ASP's `artistId` | US1-AS2, FR-002 | example | PENDING | |
+| A1  | With artists "ASP", "Aspen" and "Wasp", the page's suggestion list offers all three names | US1-AS1, FR-001 | example | PENDING | |
+| A2  | When the field text becomes the name "ASP", the page requests releases with ASP's `artistId` | US1-AS2, FR-002, FR-005 | example | PENDING | |
 | A3  | After an artist is applied, emptying the field or pressing Clear requests releases with no `artistId` | US1-AS3, FR-003 | example | PENDING | |
-| A4  | Text that equals no label requests releases with no `artistId` | US1-AS4, FR-002 | example | PENDING | |
+| A4  | Text that equals no artist name requests releases with no `artistId` | US1-AS4, FR-002 | example | PENDING | |
 | A5  | The Artist control is a native text input bound to the suggestion list by `list`, labelled "Artist", with no page key handling | US1-AS5, FR-004 | example | PENDING | |
-| A6  | After a refresh over two tagged artists named "Desire" and one "Chromatics", `GET Artists` returns both "Desire" with their texts and "Chromatics" with `null` | US1-AS6, FR-005a, FR-005b | example | BLOCKED: the scanner merges same-name artists into one row, so two "Desire" never exist (cycle log, cycle 1) | |
+| A6  | After a refresh over two tagged artists named "Desire" and one "Chromatics", `GET Artists` returns both "Desire" with their texts and "Chromatics" with `null` | US1-AS6 (removed) | example | DROPPED: US1-AS6 and FR-005a/b were removed on 2026-10-03; two library artists never share a name (cycle log, cycle 1) | |
 | A7  | After a refresh stores one release at both sources, `GET Releases` returns its Deezer cover URL, then its Cover Art Archive URL | US2-AS1, FR-006, FR-006a | example | PENDING | |
 | A8  | On a card for a release with both sources, an `error` on the Deezer image puts the Cover Art Archive URL in its `src` | US2-AS2, FR-006a | example | PENDING | |
 | A9  | On a card whose every cover URL fails, the cover box remains and holds no `<img>` | US2-AS3, FR-007 | example | PENDING | |
@@ -49,56 +50,56 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U1  | A database at schema `001` gains `disambiguation` and `disambiguation_mbid`, `NULL` on every existing row | FR-005b, constitution IV | example | PENDING | |
-| U2  | A fresh first open reaches schema version 2 with two `schema_version` rows. This changes the baseline asserted by `DatabaseTests::OpenAsync_FirstOpenAppliesTheInitialMigration`, `…SecondOpenFromAFreshInstanceAppliesNothing` and `…TwoConcurrentFirstOpensRunTheMigrationOnce` | FR-005b | example | PENDING | |
+| U1  | A database at schema `001` gains `disambiguation` and `disambiguation_mbid`, `NULL` on every existing row | FR-005b, constitution IV | example | DROPPED: migration 002 removed with FR-005b (2026-10-03) | |
+| U2  | A fresh first open reaches schema version 2 with two `schema_version` rows. This changes the baseline asserted by `DatabaseTests::OpenAsync_FirstOpenAppliesTheInitialMigration`, `…SecondOpenFromAFreshInstanceAppliesNothing` and `…TwoConcurrentFirstOpensRunTheMigrationOnce` | FR-005b | example | DROPPED: migration 002 removed with FR-005b (2026-10-03) | |
 
 ### `src/Jellyfin.Plugin.NewReleases/Storage/ArtistRepository.cs`
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U3  | A stored disambiguation text and its MBID read back unchanged | FR-005b | example | PENDING | |
-| U4  | A later library sync (`UpsertAsync`) of the same artist keeps the stored text and MBID | FR-005b | example | PENDING | |
-| U5  | A tagged artist whose name collides, with no text fetched yet, is a candidate under its tag MBID | FR-005b | example | PENDING | |
-| U6  | An untagged colliding artist with a `Matched` MusicBrainz source ID is a candidate under that ID | FR-005b | example | PENDING | |
-| U7  | An artist whose normalized name occurs once is not a candidate | FR-005b | example | PENDING | |
-| U8  | Two artists whose normalized name occurs exactly twice are both candidates (the other side of U7) | FR-005b | example | PENDING | |
-| U9  | Names that differ only in case or accents ("Björk", "bjork") count as a collision | FR-005a, FR-005b | example | PENDING | |
-| U10 | A colliding artist with no effective MBID is not a candidate | FR-005b | example | PENDING | |
-| U11 | A colliding artist already fetched for its current MBID is not a candidate | FR-005b | example | PENDING | |
-| U12 | A colliding artist whose effective MBID differs from the fetched one is a candidate again | FR-005b | example | PENDING | |
+| U3  | A stored disambiguation text and its MBID read back unchanged | FR-005b | example | DROPPED: disambiguation storage and candidates removed with FR-005b (2026-10-03) | |
+| U4  | A later library sync (`UpsertAsync`) of the same artist keeps the stored text and MBID | FR-005b | example | DROPPED: disambiguation storage and candidates removed with FR-005b (2026-10-03) | |
+| U5  | A tagged artist whose name collides, with no text fetched yet, is a candidate under its tag MBID | FR-005b | example | DROPPED: disambiguation storage and candidates removed with FR-005b (2026-10-03) | |
+| U6  | An untagged colliding artist with a `Matched` MusicBrainz source ID is a candidate under that ID | FR-005b | example | DROPPED: disambiguation storage and candidates removed with FR-005b (2026-10-03) | |
+| U7  | An artist whose normalized name occurs once is not a candidate | FR-005b | example | DROPPED: disambiguation storage and candidates removed with FR-005b (2026-10-03) | |
+| U8  | Two artists whose normalized name occurs exactly twice are both candidates (the other side of U7) | FR-005b | example | DROPPED: disambiguation storage and candidates removed with FR-005b (2026-10-03) | |
+| U9  | Names that differ only in case or accents ("Björk", "bjork") count as a collision | FR-005a, FR-005b | example | DROPPED: disambiguation storage and candidates removed with FR-005b (2026-10-03) | |
+| U10 | A colliding artist with no effective MBID is not a candidate | FR-005b | example | DROPPED: disambiguation storage and candidates removed with FR-005b (2026-10-03) | |
+| U11 | A colliding artist already fetched for its current MBID is not a candidate | FR-005b | example | DROPPED: disambiguation storage and candidates removed with FR-005b (2026-10-03) | |
+| U12 | A colliding artist whose effective MBID differs from the fetched one is a candidate again | FR-005b | example | DROPPED: disambiguation storage and candidates removed with FR-005b (2026-10-03) | |
 
 ### `src/Jellyfin.Plugin.NewReleases/Sources/MusicBrainzSource.cs`
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U13 | The lookup requests `artist/{mbid}?fmt=json` with the MBID URL-escaped | FR-005b, contracts/http-api.md | example | PENDING | |
-| U14 | The lookup returns the `disambiguation` of `artist_lookup.json` | FR-005b | example | PENDING | |
-| U15 | The lookup returns `""` for `artist_lookup_empty.json` | FR-005b | example | PENDING | |
-| U16 | With the MusicBrainz budget exhausted, the lookup throws `DailyBudgetExhaustedException` and sends nothing | FR-005b, constitution V | example | PENDING | |
+| U13 | The lookup requests `artist/{mbid}?fmt=json` with the MBID URL-escaped | FR-005b, contracts/http-api.md | example | DROPPED: MusicBrainz artist lookup removed with FR-005b (2026-10-03) | |
+| U14 | The lookup returns the `disambiguation` of `artist_lookup.json` | FR-005b | example | DROPPED: MusicBrainz artist lookup removed with FR-005b (2026-10-03) | |
+| U15 | The lookup returns `""` for `artist_lookup_empty.json` | FR-005b | example | DROPPED: MusicBrainz artist lookup removed with FR-005b (2026-10-03) | |
+| U16 | With the MusicBrainz budget exhausted, the lookup throws `DailyBudgetExhaustedException` and sends nothing | FR-005b, constitution V | example | DROPPED: MusicBrainz artist lookup removed with FR-005b (2026-10-03) | |
 
 ### `src/Jellyfin.Plugin.NewReleases/ScheduledTasks/RefreshNewReleasesTask.cs`
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U17 | A run over two homonyms and one unique artist sends exactly two lookups | FR-005b | example | PENDING | |
-| U18 | Each looked-up text is stored with the MBID it was fetched for | FR-005b | example | PENDING | |
-| U19 | A second run with an unchanged library sends no lookup | FR-005b | example | PENDING | |
-| U20 | An artist first matched by search in this run is looked up in the same run | FR-005b | example | PENDING | |
-| U21 | MusicBrainz disabled in configuration: the run sends no lookup | FR-005b | example | PENDING | |
-| U22 | MusicBrainz cooling down: the run sends no lookup | FR-005b, constitution V | example | PENDING | |
-| U23 | A budget exhausted mid-step stops the remaining lookups, and the run ends `Completed` | FR-005b | example | PENDING | |
-| U24 | A lookup that fails with another exception adds one error, and the next candidate is still looked up | FR-005b | example | PENDING | |
+| U17 | A run over two homonyms and one unique artist sends exactly two lookups | FR-005b | example | DROPPED: refresh disambiguation step removed with FR-005b (2026-10-03) | |
+| U18 | Each looked-up text is stored with the MBID it was fetched for | FR-005b | example | DROPPED: refresh disambiguation step removed with FR-005b (2026-10-03) | |
+| U19 | A second run with an unchanged library sends no lookup | FR-005b | example | DROPPED: refresh disambiguation step removed with FR-005b (2026-10-03) | |
+| U20 | An artist first matched by search in this run is looked up in the same run | FR-005b | example | DROPPED: refresh disambiguation step removed with FR-005b (2026-10-03) | |
+| U21 | MusicBrainz disabled in configuration: the run sends no lookup | FR-005b | example | DROPPED: refresh disambiguation step removed with FR-005b (2026-10-03) | |
+| U22 | MusicBrainz cooling down: the run sends no lookup | FR-005b, constitution V | example | DROPPED: refresh disambiguation step removed with FR-005b (2026-10-03) | |
+| U23 | A budget exhausted mid-step stops the remaining lookups, and the run ends `Completed` | FR-005b | example | DROPPED: refresh disambiguation step removed with FR-005b (2026-10-03) | |
+| U24 | A lookup that fails with another exception adds one error, and the next candidate is still looked up | FR-005b | example | DROPPED: refresh disambiguation step removed with FR-005b (2026-10-03) | |
 
 ### `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs`: `GET Artists`
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U25 | Two artists with the same normalized name and stored texts each get their own text | FR-005a | example | PENDING | |
-| U26 | A unique name gets `null`, even with a stale stored text | FR-005a | example | PENDING | |
-| U27 | A colliding artist with a stored `""` gets `null` | FR-005a | example | PENDING | |
-| U28 | A caller who sees one of two homonyms gets that artist's text | FR-005a | example | PENDING | |
-| U29 | A caller who sees one of two homonyms does not get the hidden one in `items` | FR-005a | example | PENDING | |
-| U30 | `ArtistsResponse`, serialized through the endpoint's declaration, carries the names in `tests/fixtures/pages/artists.json`, `disambiguation` included | contracts/http-api.md | contract | PENDING | |
+| U25 | Two artists with the same normalized name and stored texts each get their own text | FR-005a | example | DROPPED: `ArtistDto.disambiguation` removed with FR-005a (2026-10-03) | |
+| U26 | A unique name gets `null`, even with a stale stored text | FR-005a | example | DROPPED: `ArtistDto.disambiguation` removed with FR-005a (2026-10-03) | |
+| U27 | A colliding artist with a stored `""` gets `null` | FR-005a | example | DROPPED: `ArtistDto.disambiguation` removed with FR-005a (2026-10-03) | |
+| U28 | A caller who sees one of two homonyms gets that artist's text | FR-005a | example | DROPPED: `ArtistDto.disambiguation` removed with FR-005a (2026-10-03) | |
+| U29 | A caller who sees one of two homonyms does not get the hidden one in `items` | FR-005a | example | DROPPED: `ArtistDto.disambiguation` removed with FR-005a (2026-10-03) | |
+| U30 | `ArtistsResponse`, serialized through the endpoint's declaration, carries the names in `tests/fixtures/pages/artists.json`, `disambiguation` included | contracts/http-api.md | contract | DROPPED: `ArtistDto.disambiguation` removed with FR-005a (2026-10-03) | |
 
 ### `src/Jellyfin.Plugin.NewReleases/Storage/ReleaseRepository.cs`
 
@@ -128,14 +129,14 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U40 | `artistLabel` of an artist with a disambiguation is `name — disambiguation` | FR-005a, FR-005c | example | PENDING | |
-| U41 | `artistLabel` of an artist with `disambiguation: null` is the name alone | FR-005a | example | PENDING | |
-| U42 | `artistIndex` maps each label to its `jellyfinId` | FR-002 | example | PENDING | |
-| U43 | `artistIndex` keeps the first artist when two share a label | FR-002 | example | PENDING | |
-| U44 | Loading artists writes one escaped `<option value>` per label into `#nr-f-artist-list` | FR-001, FR-005c | example | PENDING | |
+| U40 | `artistLabel` of an artist with a disambiguation is `name — disambiguation` | FR-005a, FR-005c | example | DROPPED: labels with a disambiguation removed with FR-005a (2026-10-03) | |
+| U41 | `artistLabel` of an artist with `disambiguation: null` is the name alone | FR-005a | example | DROPPED: `artistLabel` removed: the label is the name (2026-10-03) | |
+| U42 | `artistIndex` maps each name to its `jellyfinId` | FR-002 | example | PENDING | |
+| U43 | `artistIndex` keeps the first artist when two share a label | FR-002 | example | DROPPED: two library artists never share a name, so there is no duplicate to resolve (2026-10-03) | |
+| U44 | Loading artists writes one escaped `<option value>` per name into `#nr-f-artist-list` | FR-001, FR-005 | example | PENDING | |
 | U45 | When the Artists request fails, the field stays usable, and releases are requested with no `artistId` | spec edge case "artist list fails to load" | example | PENDING | |
-| U46 | Typing the same applied label again sends no second releases request | contracts/user-view.md ("when it changes, reload") | example | PENDING | |
-| U47 | `NewReleasesInternals` exposes exactly the existing members plus `artistLabel` and `artistIndex` (changes the baseline of `exposure.test.js`) | contracts/user-view.md | example | PENDING | |
+| U46 | Typing the same applied name again sends no second releases request | contracts/user-view.md ("when it changes, reload") | example | PENDING | |
+| U47 | `NewReleasesInternals` exposes exactly the existing members plus `artistIndex` (changes the baseline of `exposure.test.js`) | contracts/user-view.md | example | PENDING | |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: release card cover
 
@@ -169,6 +170,9 @@ None. Every edge case in `spec.md` is placed above or named in "Out of scope".
 
 ## Out of scope
 
+- **Homonym disambiguation** (MusicBrainz text beside same-name artists): removed on 2026-10-03.
+  Jellyfin and the library scan keep one artist per name, so there is nothing to tell apart.
+  Needs its own specification.
 - **Matching rules and number of suggestions**: the browser's native list decides them
   (FR-001, Clarifications 2026-10-01). No test can, or should, pin a browser's matching.
 - **Typing stays responsive for more than 1,000 artists**: the browser filters natively, and
