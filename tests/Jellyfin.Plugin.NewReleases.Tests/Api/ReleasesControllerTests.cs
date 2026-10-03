@@ -321,4 +321,12 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
         Assert.Equal(["https://api.deezer.com/album/302127/image?size=medium", "https://coverartarchive.org/release-group/rg-disc/front-250"], release.Covers);
     }
+
+    [Fact]
+    public async Task GetReleases_ADeezerOnlyRelease_ListsExactlyItsDeezerCover()
+    {
+        var release = await ListedWithSourcesAsync(("deezer", "302127"));
+
+        Assert.Equal(["https://api.deezer.com/album/302127/image?size=medium"], release.Covers);
+    }
 }

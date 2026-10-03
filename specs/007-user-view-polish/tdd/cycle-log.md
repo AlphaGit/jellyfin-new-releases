@@ -276,3 +276,14 @@ change per cycle, and committed at green.
   passed, 0 failed; node 92 passed. The held-open A7 now passes too; it is closed after U33–U36
 - refactor: none needed
 - commit of cycle 16: `6d6d8fa`
+
+## Cycle 18: U33 a Deezer-only release lists exactly its Deezer cover
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_ADeezerOnlyRelease_ListsExactlyItsDeezerCover` (new)
+- red: **passed on the first run**: cycle 17's mapping already covers one source. Deliberate mutant
+  M9 on a file copy, the URL-format branch inverted (`!=`) ->
+  Expected `["https://api.deezer.com/album/302127/image?size=med"···]` Actual `["https://coverartarchive.org/release-group/302127/f"···]` (1 failed).
+  Restored with `cp`, verified with `cmp -s`
+- green: no production change. Suite -> dotnet 314 passed, 0 failed (A7 held open, passing)
+- refactor: none needed
+- commit of cycle 17: `bc52ad7`
