@@ -134,3 +134,17 @@ change per cycle, and committed at green.
 - notes: keyboard operation itself (FR-004) is the browser's; the hermetic suite can only pin that
   the page does not take it over. The real-browser pass, `quickstart.md` §2.1, checks it
 - commit of cycle 5: `369f8e6`
+
+## Cycle 7: U47 the view exposes exactly its helpers plus artistIndex
+
+- order: taken before U42 and the other US1 units, and before A7. Exposing `artistIndex` for U42
+  would turn this exact-set test red as a side effect, so the set change is its own behaviour first.
+  The US1 units are finished before US2's outer loop opens, so no story's acceptance test is left
+  open across another story's commits
+- test: `tests/web/exposure.test.js::user-view.html exposes exactly its testable helpers` (changed
+  baseline: `artistIndex` added to the expected set, as U47 states)
+- red: `node --test tests/web/exposure.test.js` -> `Expected values to be strictly deep-equal` with `-   'artistIndex',` (1 failed)
+- green: `user-view.html` declares `function artistIndex() { return {}; }` and exposes it. The body
+  is a fake on purpose: U42 drives the mapping. Suite -> node 86 passed, dotnet 310 passed
+- refactor: none needed
+- commit of cycle 6: `0ed6363`

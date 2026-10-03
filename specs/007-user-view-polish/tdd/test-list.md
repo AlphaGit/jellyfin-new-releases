@@ -136,7 +136,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | U44 | Loading artists writes one escaped `<option value>` per name into `#nr-f-artist-list` | FR-001, FR-005 | example | PENDING | |
 | U45 | When the Artists request fails, the field stays usable, and releases are requested with no `artistId` | spec edge case "artist list fails to load" | example | PENDING | |
 | U46 | Typing the same applied name again sends no second releases request | contracts/user-view.md ("when it changes, reload") | example | PENDING | |
-| U47 | `NewReleasesInternals` exposes exactly the existing members plus `artistIndex` (changes the baseline of `exposure.test.js`) | contracts/user-view.md | example | PENDING | |
+| U47 | `NewReleasesInternals` exposes exactly the existing members plus `artistIndex` (changes the baseline of `exposure.test.js`) | contracts/user-view.md | example | DONE | `tests/web/exposure.test.js::user-view.html exposes exactly its testable helpers` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: release card cover
 
