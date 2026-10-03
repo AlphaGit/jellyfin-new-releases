@@ -536,3 +536,16 @@ change per cycle, and committed at green.
 - refactor: none needed
 - tasks: T012 and T016 ticked
 - commit of cycle 39: `db3c3f4`
+
+## Cycle 41: U66 the card has a cover column (appended in this cycle)
+
+- why appended: T016 names `.nr-row { grid-template-columns: 64px 1fr auto }`, and the test list
+  had no behaviour for it. T016 was ticked in cycle 40 through its markers while that part was
+  still undone; with the cover cell added by U48, the two-column grid would have pushed the
+  actions onto a second row. This cycle makes the ticked task true
+- test: `tests/web/styles.test.js::U66: a card lays out the 64 px cover, then the details, then the actions` (new)
+- red: `node --test tests/web/styles.test.js` -> `+ '1fr auto' - '64px 1fr auto'` (1 failed)
+- green: `.nr-row` declares `grid-template-columns: 64px 1fr auto`. Suite -> node 110 passed,
+  dotnet 318 passed
+- refactor: none needed
+- commit of cycle 40: `0d75bc8`

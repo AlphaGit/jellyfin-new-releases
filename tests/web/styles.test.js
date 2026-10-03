@@ -35,3 +35,7 @@ test('U60: .nr-cover declares a 64 by 64 box with a background', () => {
 test('U61: a cover image fills the box without stretching', () => {
     assert.equal(declarations('.nr-cover img')['object-fit'], 'cover');
 });
+
+test('U66: a card lays out the 64 px cover, then the details, then the actions', () => {
+    assert.equal(declarations('.nr-row')['grid-template-columns'], '64px 1fr auto');
+});

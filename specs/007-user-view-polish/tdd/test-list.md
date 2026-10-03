@@ -165,6 +165,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | U61 | `.nr-cover img` declares `object-fit: cover` | spec edge case "not square" | example | DONE | `tests/web/styles.test.js::U61: a cover image fills the box without stretching` |
 | U62 | The test's contrast function rates `#0000ee` on `#1c1c1c` below 4.5, which pins it against the defect the spec reports | FR-010 | example | PENDING | |
 | U63 | The test's contrast function rates `#ffffff` on `#000000` at 21, the formula's upper bound | FR-010 | example | PENDING | |
+| U66 | `.nr-row` declares three columns, the 64 px cover first, then the details, then the actions | US2-AS1 ("beside the release details"), FR-007; discovered in cycle 40 (named by T016, missing from the list) | example | DONE | `tests/web/styles.test.js::U66: a card lays out the 64 px cover, then the details, then the actions` |
 
 ## Invariants and edge cases still to place
 
