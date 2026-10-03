@@ -41,13 +41,34 @@ test('U56: nextCover with no fallback left removes the image, and the cover box 
     assert.deepEqual(box.children, []);
 });
 
+/**
+ * Whether `options` registers a listener that hears every image `error`: the capture phase, in either
+ * spelling, and no option that stops it early (`once`, `signal`). `passive` changes nothing for `error`.
+ */
+function capturesEveryError(options) {
+    return options === true || (options?.capture === true && !options.once && options.signal === undefined);
+}
+
+for (const [options, expected] of [
+    [true, true],
+    [{ capture: true }, true],
+    [{ capture: true, passive: true }, true],
+    [false, false],
+    [undefined, false],
+    [{}, false],
+    [{ capture: false }, false],
+    [{ capture: true, once: true }, false],
+    [{ capture: true, signal: {} }, false],
+]) {
+    test(`U57 helper: ${JSON.stringify(options)} ${expected ? 'hears' : 'does not hear'} every image error`, () => {
+        assert.equal(capturesEveryError(options), expected);
+    });
+}
+
 test('U57: the panel has one error listener, registered for the capture phase', () => {
     const { document } = loadPageDom('user-view.html');
 
-    // `true` and `{ capture: true }` are the two spellings of the same registration.
-    const capture = options => options === true || options?.capture === true;
-
-    assert.deepEqual(document.getElementById('nr-panel').listenerOptions.error.map(capture), [true]);
+    assert.deepEqual(document.getElementById('nr-panel').listenerOptions.error.map(capturesEveryError), [true]);
 });
 
 // Acceptance, through the real `render`: the `<img>` a browser would build from the written markup,

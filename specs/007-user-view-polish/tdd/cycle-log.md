@@ -815,3 +815,17 @@ placeholder (FR-007).
   `row()` before it. Suite -> 58 passed in the file
 - strength: P1, P2, P3, N9, N10 and R13a each fail A14 or A16. Each was applied to a file copy,
   restored, and checked byte-equal
+
+## Cycle 56: U57 rejects a listener that stops early (T052, second audit Finding 2)
+
+- what: a test correction. The T049 refactor let U57 accept any object with `capture: true`, so mutant
+  E2 (`{ capture: true, once: true }`) survived. With `once`, only the first failed cover falls back.
+  The behaviour U57 is unchanged
+- helper (new, in `tests/web/cover-fallback.test.js`): `capturesEveryError(options)`, pinned by a
+  table of 9 rows. It accepts `true`, `{ capture: true }` and `{ capture: true, passive: true }`. It
+  rejects `false`, `undefined`, `{}`, `{ capture: false }`, and `capture: true` with `once` or `signal`
+- red: the helper declared as the T049 predicate. `node --test tests/web/cover-fallback.test.js` ->
+  the `once` and `signal` rows fail (2 failed)
+- green: the helper also requires no `once` and no `signal`. U57 maps the options through it. File -> 14 passed
+- strength: E2 and N5 (`false`) each fail U57. E1 (`{ capture: true }`) passes it. Each was applied
+  to a file copy, restored, and checked byte-equal
