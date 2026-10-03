@@ -606,3 +606,13 @@ change per cycle, and committed at green.
 - green: no change. Suite -> node 115 passed
 - refactor: none needed
 - commit of cycle 45: `d48a008`
+
+## Cycle 47: A13 the source link reaches 4.5:1 against the card
+
+- test: `tests/web/styles.test.js::A13: the declared source-link colour has a contrast of at least 4.5:1 against the card` (new)
+- red: `node --test tests/web/styles.test.js` -> `'.nr-links a declares undefined'` (1 failed)
+- green: `.nr-links a` declares `color: #00a4dc`, the Jellyfin accent (research R9): 5.96:1 against
+  `#1c1c1c`, computed by the formula U62 and U63 pin. `:visited` is A14's. Suite -> node 116
+  passed, dotnet 318 passed
+- refactor: none needed
+- commit of cycle 46: `4ae34cd`

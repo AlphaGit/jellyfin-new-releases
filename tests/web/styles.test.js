@@ -88,3 +88,9 @@ test('U63: the contrast formula rates white on black at 21, its upper bound', ()
 test('U62: the contrast formula rates the browser\'s default link blue on the card below 4.5, the defect the spec reports', () => {
     assert.ok(contrast('#0000ee', CARD) < 4.5, `#0000ee on ${CARD} rated ${contrast('#0000ee', CARD)}`);
 });
+
+test('A13: the declared source-link colour has a contrast of at least 4.5:1 against the card', () => {
+    const color = declarations('.nr-links a').color;
+
+    assert.ok(color !== undefined && contrast(color, CARD) >= 4.5, `.nr-links a declares ${color}`);
+});
