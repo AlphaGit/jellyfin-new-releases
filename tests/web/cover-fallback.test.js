@@ -30,3 +30,11 @@ test('U55: nextCover with two fallbacks puts the first in src and keeps the seco
 
     assert.deepEqual([img.src, img.dataset.fallback], [CAA, THIRD]);
 });
+
+test('U56: nextCover with no fallback left removes the image, and the cover box stays as the placeholder', () => {
+    const { box, img } = coverImage(CAA, []);
+
+    loadPage('user-view.html').nextCover(img);
+
+    assert.deepEqual(box.children, []);
+});

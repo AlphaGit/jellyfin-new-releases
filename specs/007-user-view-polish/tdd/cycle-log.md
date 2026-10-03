@@ -480,3 +480,13 @@ change per cycle, and committed at green.
   2 failed (A8, A9, held open); dotnet 318 passed
 - refactor: none needed
 - commit of cycle 34: `d0ef65f`
+
+## Cycle 36: U56 with no fallback left, nextCover removes the image
+
+- test: `tests/web/cover-fallback.test.js::U56: nextCover with no fallback left removes the image, and the cover box stays as the placeholder` (new)
+- red: `node --test tests/web/cover-fallback.test.js` -> `+ [ FakeElement { … } ] - []` (1 failed)
+- green: an empty `data-fallback` makes `nextCover` call `img.remove()`, so the empty `nr-cover`
+  box is the placeholder and no broken-image icon can show. Suite -> node 104 passed, 2 failed
+  (A8, A9, held open); dotnet 318 passed
+- refactor: none needed
+- commit of cycle 35: `33a7bc0`

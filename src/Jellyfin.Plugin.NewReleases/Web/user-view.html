@@ -154,8 +154,12 @@
                     '" alt="" loading="lazy" referrerpolicy="no-referrer" width="64" height="64"></div>';
             }
 
-            /** Moves a failed cover image on to its next fallback URL (007 FR-006a). */
+            /** Moves a failed cover image on to its next fallback URL (007 FR-006a), or removes it so the empty box is the placeholder (FR-007). */
             function nextCover(img) {
+                if (!img.dataset.fallback) {
+                    img.remove();
+                    return;
+                }
                 var rest = img.dataset.fallback.split(' ');
                 img.src = rest.shift();
                 img.dataset.fallback = rest.join(' ');

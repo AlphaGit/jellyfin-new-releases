@@ -152,7 +152,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | U53 | A row with `covers: []` writes the cover box with no `<img>` | FR-007 | example | DONE | `tests/web/render.test.js::U53: a row with no cover URL writes the cover box with no image` |
 | U54 | Cover URLs are written through `esc` | invariant: page markup is string-built, so an unescaped URL is an injection | example | DONE | `tests/web/render.test.js::U54: cover URLs are written escaped, in the src and in the fallbacks` |
 | U55 | `nextCover` with two fallbacks puts the first in `src` and keeps the second | FR-006a | example | DONE | `tests/web/cover-fallback.test.js::U55: nextCover with two fallbacks puts the first in src and keeps the second` |
-| U56 | `nextCover` with no fallback removes the image | FR-007 | example | PENDING | |
+| U56 | `nextCover` with no fallback removes the image | FR-007 | example | DONE | `tests/web/cover-fallback.test.js::U56: nextCover with no fallback left removes the image, and the cover box stays as the placeholder` |
 | U57 | The panel has one `error` listener registered for the capture phase | FR-006a | example | PENDING | |
 | U58 | `NewReleasesInternals` also exposes `nextCover` | contracts/user-view.md | example | DONE | `tests/web/exposure.test.js::user-view.html exposes exactly its testable helpers` |
 
