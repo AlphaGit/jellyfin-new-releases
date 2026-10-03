@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { documentFor } = require('./fake-dom.js');
+const { documentFor, FakeElement } = require('./fake-dom.js');
 
 // The stand-in specified by specs/005-page-json-casing/contracts/page-sandbox.md. Its own contract
 // is tested here because FR-017 and FR-018 make it a deliverable with stated limits, not a private
@@ -47,4 +47,13 @@ test('a page loaded through the sandbox runs its initialization to completion', 
     // The page sets this the moment it has found its root and claimed it; reaching it means every
     // element lookup above that point resolved.
     assert.equal(document.getElementById('nr-user-view').dataset.nrReady, '1');
+});
+
+test('addEventListener keeps the options it was given readable', () => {
+    const panel = documentFor('user-view.html').getElementById('nr-panel');
+    const handler = () => {};
+
+    panel.addEventListener('error', handler, true);
+
+    assert.deepEqual(panel.listenerOptions.error, [true]);
 });

@@ -337,3 +337,30 @@ change per cycle, and committed at green.
 - refactor: none needed
 - tasks: T005, T006, T007, T013, T014 and T015 ticked; the gate T032 ticked
 - commit of cycle 21: `2bde9ee`
+
+## Cycle 23: A8, A9, A10 open US2's page loop — RED, held open
+
+- tests (new, in `tests/web/open-acceptance.test.js`, **untracked** while open so no unit commit can
+  stage a red test; they move to `cover-fallback.test.js` and `render.test.js` when they close):
+  - `A8: on a card for a release at both sources, an error on the Deezer image puts the Cover Art Archive URL in its src`
+  - `A9: on a card whose every cover URL fails, the cover box remains and holds no image`
+  - `A10: a rendered cover image has empty alt text`
+  Each renders `tests/fixtures/pages/releases.json` through the real `render`, reads the row's
+  `nr-cover` markup, and for A8/A9 builds the `<img>` a browser would hold from it and delivers
+  `error` to the panel's listeners, as the browser's capture phase does
+- red: `node --test tests/web/open-acceptance.test.js`
+  - A8 -> `+ undefined - 'https://coverartarchive.org/release-group/00000000-0000-0000-0000-000000000101/front-250'`
+  - A9 -> `+ [false, 1] - [true, 0]`
+  - A10 -> `Expected values to be strictly equal` (no `<img>` is written) (3 failed)
+- state: `RED` for all three
+- commit of cycle 22: `9947c90`
+
+## Cycle 24: U38 the fake DOM keeps listener options readable
+
+- test: `tests/web/fake-dom.test.js::addEventListener keeps the options it was given readable` (new)
+- first run: `TypeError` (no `listenerOptions` to read) — not a valid red. Minimal declaration
+  `this.listenerOptions = {}` added to `FakeElement`, re-run
+- red: `node --test tests/web/fake-dom.test.js` -> `+ undefined - [ true ]` (1 failed)
+- green: `addEventListener(type, handler, options)` records `options` in `listenerOptions[type]`,
+  at the handler's index. Suite -> node 93 passed, 3 failed (A8–A10, held open); dotnet unchanged (318)
+- refactor: none needed

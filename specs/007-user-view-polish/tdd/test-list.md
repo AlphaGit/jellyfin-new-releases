@@ -36,9 +36,9 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | A5  | The Artist control is a native text input bound to the suggestion list by `list`, labelled "Artist", with no page key handling | US1-AS5, FR-004 | example | DONE | `tests/web/artist-filter.test.js::A5: the Artist control is a text input labelled "Artist" … / the page adds no key handling to the Artist control` |
 | A6  | After a refresh over two tagged artists named "Desire" and one "Chromatics", `GET Artists` returns both "Desire" with their texts and "Chromatics" with `null` | US1-AS6 (removed) | example | DROPPED: US1-AS6 and FR-005a/b were removed on 2026-10-03; two library artists never share a name (cycle log, cycle 1) | |
 | A7  | After a refresh stores one release at both sources, `GET Releases` returns its Deezer cover URL, then its Cover Art Archive URL | US2-AS1, FR-006, FR-006a | example | DONE | `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/BrowseReleasesTests.cs::A7_AReleaseStoredAtBothSources_ListsItsDeezerCoverThenItsCoverArtArchiveCover` |
-| A8  | On a card for a release with both sources, an `error` on the Deezer image puts the Cover Art Archive URL in its `src` | US2-AS2, FR-006a | example | PENDING | |
-| A9  | On a card whose every cover URL fails, the cover box remains and holds no `<img>` | US2-AS3, FR-007 | example | PENDING | |
-| A10 | A rendered cover image has empty alt text | US2-AS4 | example | PENDING | |
+| A8  | On a card for a release with both sources, an `error` on the Deezer image puts the Cover Art Archive URL in its `src` | US2-AS2, FR-006a | example | RED | |
+| A9  | On a card whose every cover URL fails, the cover box remains and holds no `<img>` | US2-AS3, FR-007 | example | RED | |
+| A10 | A rendered cover image has empty alt text | US2-AS4 | example | RED | |
 | A11 | The stylesheet makes the List-tab buttons fill one shared column: `.nr-actions` stretches, and its buttons are `width: 100%` | US3-AS1, FR-009, SC-003 | example | PENDING | |
 | A12 | An Archive-tab card renders "Restore" inside `.nr-actions`, under the same button rule as "Ignore" and "Have it" | US3-AS2, FR-009 | example | PENDING | |
 | A13 | The declared source-link colour has a WCAG contrast of at least 4.5:1 against the card background `#1c1c1c` | US4-AS1, FR-010, SC-004 | example | PENDING | |
@@ -122,7 +122,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U38 | `addEventListener(type, handler, options)` keeps `options` readable by a test | invariant: A8 and U53 need the capture flag | example | PENDING | |
+| U38 | `addEventListener(type, handler, options)` keeps `options` readable by a test | invariant: A8 and U53 need the capture flag | example | DONE | `tests/web/fake-dom.test.js::addEventListener keeps the options it was given readable` |
 | U39 | `remove()` detaches an element from its owner | invariant: A9 and U52 need removal | example | PENDING | |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: Artist filter

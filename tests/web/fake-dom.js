@@ -24,6 +24,7 @@ class FakeElement {
         this.attributes = {};
         this.children = [];
         this.listeners = {};
+        this.listenerOptions = {};
         this.owned = new Map();
         this.owner = null;
     }
@@ -41,7 +42,11 @@ class FakeElement {
         this.innerHTML += html;
     }
 
-    addEventListener(type, handler) { (this.listeners[type] ||= []).push(handler); }
+    /** `options` (a capture flag or an options object) is kept beside the handler, at the same index. */
+    addEventListener(type, handler, options) {
+        (this.listeners[type] ||= []).push(handler);
+        (this.listenerOptions[type] ||= []).push(options);
+    }
 
     appendChild(child) { this.children.push(child); return child; }
 
