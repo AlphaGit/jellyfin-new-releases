@@ -154,7 +154,11 @@
                     '" alt="" loading="lazy" referrerpolicy="no-referrer" width="64" height="64"></div>';
             }
 
-            function nextCover() {
+            /** Moves a failed cover image on to its next fallback URL (007 FR-006a). */
+            function nextCover(img) {
+                var rest = img.dataset.fallback.split(' ');
+                img.src = rest.shift();
+                img.dataset.fallback = rest.join(' ');
             }
 
             function row(item) {

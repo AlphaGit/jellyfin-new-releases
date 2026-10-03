@@ -470,3 +470,13 @@ change per cycle, and committed at green.
   drive its body. Suite -> node 102 passed, 2 failed (A8, A9, held open); dotnet 318 passed
 - refactor: none needed
 - commit of cycle 33: `319d07c`
+
+## Cycle 35: U55 nextCover moves on to the first fallback and keeps the rest
+
+- test: `tests/web/cover-fallback.test.js::U55: nextCover with two fallbacks puts the first in src and keeps the second` (new file)
+- red: `node --test tests/web/cover-fallback.test.js` -> `+ [ DEEZER, 'CAA THIRD' ] - [ CAA, THIRD ]` (the URLs in full in the run; 1 failed)
+- green: `nextCover` splits `data-fallback`, moves the first URL into `src` and writes the rest
+  back. An empty fallback list is not handled yet: U56 drives that. Suite -> node 103 passed,
+  2 failed (A8, A9, held open); dotnet 318 passed
+- refactor: none needed
+- commit of cycle 34: `d0ef65f`
