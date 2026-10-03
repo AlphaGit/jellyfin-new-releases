@@ -265,3 +265,14 @@ change per cycle, and committed at green.
   held open), node 92 passed (the node suite reads the same fixtures and is unaffected)
 - refactor: none needed
 - commit of cycle 15: `7da7bce`
+
+## Cycle 17: U32 a release at both sources lists Deezer's cover, then the Cover Art Archive's
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_AReleaseAtBothSources_ListsTheDeezerCoverThenTheCoverArtArchiveCover` (new), with the `ListedWithSourcesAsync` helper
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleasesControllerTests.GetReleases_AReleaseAtBothSources" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected `["https://api.deezer.com/album/302127/image?size=med"···, "https://coverartarchive.org/release-group/rg-disc/"···]` Actual `[]` (1 failed)
+- green: `ToDto` builds `Covers` with `CoversOf`: source links ordered Deezer first, each mapped to
+  its URL format (research R6). IDs are not escaped yet: U35 drives that. Suite -> dotnet 313
+  passed, 0 failed; node 92 passed. The held-open A7 now passes too; it is closed after U33–U36
+- refactor: none needed
+- commit of cycle 16: `6d6d8fa`

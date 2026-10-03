@@ -5,6 +5,7 @@ using Jellyfin.Extensions.Json;
 using Jellyfin.Plugin.NewReleases.Configuration;
 using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.ScheduledTasks;
+using Jellyfin.Plugin.NewReleases.Sources;
 using Jellyfin.Plugin.NewReleases.Storage;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
@@ -219,7 +220,15 @@ public sealed class ReleasesController : ControllerBase
         r.State == ListState.Incomplete && r.ComparedEdition is { } edition ? new ComparedEditionDto(edition.Source, edition.Title) : null,
         r.Sources.Select(s => new SourceLinkDto(s.Source, s.Url)).ToList(),
         r.Archived is { } decision ? new ArchivedDto(decision.Kind.ToString(), decision.DecidedAt) : null,
-        []);
+        CoversOf(r.Sources));
+
+    /// <summary>One cover URL per source link, Deezer's first (007 FR-006, FR-006a, research R6). The browser loads them; the server never does (FR-008).</summary>
+    private static List<string> CoversOf(IReadOnlyList<SourceLink> sources) => sources
+        .OrderBy(s => s.Source == SourceLimits.Deezer ? 0 : 1)
+        .Select(s => s.Source == SourceLimits.Deezer
+            ? $"https://api.deezer.com/album/{s.SourceReleaseId}/image?size=medium"
+            : $"https://coverartarchive.org/release-group/{s.SourceReleaseId}/front-250")
+        .ToList();
 
     /// <summary>The requesting user's id from the `Jellyfin-UserId` claim, or null when the principal carries none (R5).</summary>
     private Guid? CallerId()

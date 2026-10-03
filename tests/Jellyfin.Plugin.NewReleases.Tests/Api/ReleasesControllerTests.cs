@@ -300,4 +300,25 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         var archived = Assert.Single(archive.Items);
         Assert.Equal(("Discovery", "HaveIt", _clock.GetUtcNow()), (archived.Title, archived.Archived!.Kind, archived.Archived.DecidedAt));
     }
+
+    /// <summary>Stores one release for a new artist from each (source, source release id) given, and lists it as Alice.</summary>
+    private async Task<ReleaseDto> ListedWithSourcesAsync(params (string Source, string Id)[] entries)
+    {
+        var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:daft punk", Guid.NewGuid(), "Daft Punk", null, [Library], []), CancellationToken.None);
+        foreach (var (source, id) in entries)
+        {
+            await _db.Releases.UpsertFromSourceAsync(artist, source, new CatalogueItem(id, "Discovery", "https://example.org/" + id, ReleaseType.Album, [], "2001-03-12"), 1, Seeded, CancellationToken.None);
+        }
+
+        return Assert.Single(Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(cancellationToken: CancellationToken.None)).Items);
+    }
+
+    /// <summary>007 FR-006a: Deezer's cover first, then the Cover Art Archive's.</summary>
+    [Fact]
+    public async Task GetReleases_AReleaseAtBothSources_ListsTheDeezerCoverThenTheCoverArtArchiveCover()
+    {
+        var release = await ListedWithSourcesAsync(("musicbrainz", "rg-disc"), ("deezer", "302127"));
+
+        Assert.Equal(["https://api.deezer.com/album/302127/image?size=medium", "https://coverartarchive.org/release-group/rg-disc/front-250"], release.Covers);
+    }
 }

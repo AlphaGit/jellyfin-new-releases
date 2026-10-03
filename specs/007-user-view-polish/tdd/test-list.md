@@ -111,7 +111,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U32 | A release at both sources gets the Deezer URL first, then the Cover Art Archive URL | FR-006, FR-006a | example | PENDING | |
+| U32 | A release at both sources gets the Deezer URL first, then the Cover Art Archive URL | FR-006, FR-006a | example | DONE | `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs::GetReleases_AReleaseAtBothSources_ListsTheDeezerCoverThenTheCoverArtArchiveCover` |
 | U33 | A Deezer-only release gets exactly `https://api.deezer.com/album/{id}/image?size=medium` | FR-006, FR-006a | example | PENDING | |
 | U34 | A MusicBrainz-only release gets exactly `https://coverartarchive.org/release-group/{id}/front-250` | FR-006, FR-006a | example | PENDING | |
 | U35 | A source ID containing URL-reserved characters is escaped in its cover URL | FR-006 | example | PENDING | |
