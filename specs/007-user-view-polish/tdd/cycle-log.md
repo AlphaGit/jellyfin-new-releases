@@ -683,3 +683,19 @@ for the static attributes of a control and for the `<style>` block, and for noth
 **T046 — `decoding="async"` and the centred note glyph.** Decision: drop both. They are removed from
 `contracts/user-view.md`, research R7 and the text of T009 and T016. The empty cover box is the
 placeholder (FR-007).
+
+## Cycle 49: A4 text that equals no name, inherited keys included, applies no filter (T040, audit Finding 1)
+
+- test: `tests/web/artist-filter.test.js::A4: "{text}" equals no artist name, so typing it and leaving the field request releases with no artistId`,
+  one test per row of `As`, `ASP `, `constructor`, `toString`, `hasOwnProperty`, `__proto__`, with
+  the new `leave` helper (fires the field's `change` listeners). It replaces the single-example A4
+  test, whose `asp` case the case decision above reverses. It asserts on the requests sent after the
+  page loaded, not on the initial load (audit Finding 8)
+- red: `node --test tests/web/artist-filter.test.js` -> 4 failed, the inherited keys:
+  `constructor` -> `+ '…/Releases?artistId=function%20Object()%20%7B%20%5Bnative%20code%5D%20%7D'` (twice),
+  likewise `toString` and `hasOwnProperty`; `__proto__` -> `+ '…/Releases?artistId=%5Bobject%20Object%5D'` (twice).
+  `As` and `ASP ` passed
+- green: `artistIndex` builds its map on `Object.create(null)`. Suite -> node 124 passed, dotnet 318 passed
+- refactor: none needed
+- notes: the initial `artistIds = {}` still has inherited keys. It is read only when the Artists
+  request fails, and U45's rewrite (T047) drives that

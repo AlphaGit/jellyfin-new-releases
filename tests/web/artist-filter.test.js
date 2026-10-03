@@ -89,13 +89,25 @@ test('A3: after ASP is applied, pressing Clear requests releases with no artistI
     assert.equal(requests.at(-1), UNFILTERED);
 });
 
-test('A4: text that equals no artist name, even one differing only in case, requests releases with no artistId', async () => {
-    const { document, requests } = await loadView();
+/** Leaves the Artist field: fires the `change` listeners the page registered, as a browser does on blur. */
+async function leave(document) {
+    (document.getElementById('nr-f-artist').listeners.change || []).forEach(handler => handler());
+    await settled();
+}
 
-    await type(document, 'asp');
+// FR-002, with case ignored (maintainer decision, 2026-10-03). None of these is a name. The last four
+// are keys every plain JavaScript object inherits, so a lookup that reads them would invent a match.
+for (const text of ['As', 'ASP ', 'constructor', 'toString', 'hasOwnProperty', '__proto__']) {
+    test(`A4: "${text}" equals no artist name, so typing it and leaving the field request releases with no artistId`, async () => {
+        const { document, requests } = await loadView();
+        const before = requests.length;
 
-    assert.equal(requests.at(-1), UNFILTERED);
-});
+        await type(document, text);
+        await leave(document);
+
+        assert.deepEqual(requests.slice(before), [UNFILTERED]);
+    });
+}
 
 /** The page source, for the declarations the fake DOM does not model. */
 const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web', 'user-view.html'), 'utf8');

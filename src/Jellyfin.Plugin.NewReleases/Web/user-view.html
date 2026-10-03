@@ -98,7 +98,7 @@
 
             /** Name → `jellyfinId` for the Artist filter. Two library artists never share a name (007 research R3). */
             function artistIndex(artists) {
-                var index = {};
+                var index = Object.create(null); // no inherited keys: "constructor" is not a name
                 artists.forEach(function (a) { index[a.name] = a.jellyfinId; });
                 return index;
             }
