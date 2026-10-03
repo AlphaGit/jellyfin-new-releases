@@ -287,3 +287,13 @@ change per cycle, and committed at green.
 - green: no production change. Suite -> dotnet 314 passed, 0 failed (A7 held open, passing)
 - refactor: none needed
 - commit of cycle 17: `bc52ad7`
+
+## Cycle 19: U34 a MusicBrainz-only release lists exactly its Cover Art Archive cover
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_AMusicBrainzOnlyRelease_ListsExactlyItsCoverArtArchiveCover` (new)
+- red: **passed on the first run**, as U33. Deliberate mutant M10 on a file copy, `front-250` ->
+  `front-500` -> Actual `["https://coverartarchive.org/release-group/48117b90"···]` against the
+  exact expected URL (1 failed). Restored with `cp`, verified with `cmp -s`
+- green: no production change. Suite -> dotnet 315 passed, 0 failed
+- refactor: none needed
+- commit of cycle 18: `40b34e5`

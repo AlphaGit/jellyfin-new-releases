@@ -329,4 +329,12 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
         Assert.Equal(["https://api.deezer.com/album/302127/image?size=medium"], release.Covers);
     }
+
+    [Fact]
+    public async Task GetReleases_AMusicBrainzOnlyRelease_ListsExactlyItsCoverArtArchiveCover()
+    {
+        var release = await ListedWithSourcesAsync(("musicbrainz", "48117b90-a16e-34ca-a514-19c702df1158"));
+
+        Assert.Equal(["https://coverartarchive.org/release-group/48117b90-a16e-34ca-a514-19c702df1158/front-250"], release.Covers);
+    }
 }
