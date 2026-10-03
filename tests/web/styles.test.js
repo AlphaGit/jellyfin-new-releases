@@ -26,10 +26,10 @@ function declarations(selector, css = STYLE.replace(/@media[^{]*\{(?:[^{}]*\{[^{
     return found;
 }
 
-/** Whether a declared colour can be seen: not `none`, not `transparent`, and not a zero alpha in any notation. */
+/** Whether a declared colour can be seen: not `none`, not `transparent`, not a CSS-wide keyword (which leaves a background transparent or the parent's), and not a zero alpha in any notation. */
 function isVisibleColour(value) {
     const colour = (value || '').trim().toLowerCase();
-    if (['', 'none', 'transparent'].includes(colour)) return false;
+    if (['', 'none', 'transparent', 'initial', 'inherit', 'unset', 'revert', 'revert-layer'].includes(colour)) return false;
     const call = /^\w+\(([^)]*)\)$/.exec(colour);
     if (call) {
         const parts = call[1].split(/[\s,/]+/).filter(Boolean);
@@ -50,6 +50,11 @@ for (const [value, expected] of [
     ['hsla(0,0%,50%,0)', false],
     ['#7f7f7f00', false],
     ['#7770', false],
+    ['initial', false],
+    ['inherit', false],
+    ['unset', false],
+    ['revert', false],
+    ['REVERT-LAYER', false],
     ['rgba(127,127,127,.18)', true],
     ['rgb(0,0,0)', true],
     ['#3a3a3a', true],

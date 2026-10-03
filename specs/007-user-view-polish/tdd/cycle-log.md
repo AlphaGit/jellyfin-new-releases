@@ -829,3 +829,14 @@ placeholder (FR-007).
 - green: the helper also requires no `once` and no `signal`. U57 maps the options through it. File -> 14 passed
 - strength: E2 and N5 (`false`) each fail U57. E1 (`{ capture: true }`) passes it. Each was applied
   to a file copy, restored, and checked byte-equal
+
+## Cycle 57: U60's colour check rejects CSS-wide keywords (T054, second audit Finding 4)
+
+- what: a test correction. The second audit's mutant P4 (`background: initial` on `.nr-cover`)
+  survived. `initial` makes the background transparent, so no placeholder shows. The behaviour U60 is
+  unchanged
+- red: 5 rejecting rows added to the `U60 helper` table: `initial`, `inherit`, `unset`, `revert`,
+  `REVERT-LAYER`. `node --test tests/web/styles.test.js` -> 5 failed
+- green: `isVisibleColour` also rejects the five CSS-wide keywords. File -> 63 passed
+- strength: P4 and N6 (`background: none`) each fail U60. Each was applied to a file copy, restored,
+  and checked byte-equal
