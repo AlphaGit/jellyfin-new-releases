@@ -348,4 +348,13 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
         Assert.Equal([expected], release.Covers);
     }
+
+    /// <summary>007 FR-011: `covers` has its own order; `sources` keeps the one it had (by source id).</summary>
+    [Fact]
+    public async Task GetReleases_AddingCovers_KeepsTheSourcesInTheirExistingOrder()
+    {
+        var release = await ListedWithSourcesAsync(("musicbrainz", "rg-disc"), ("deezer", "302127"));
+
+        Assert.Equal(["deezer", "musicbrainz"], release.Sources.Select(s => s.Source));
+    }
 }

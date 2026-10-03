@@ -115,7 +115,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | U33 | A Deezer-only release gets exactly `https://api.deezer.com/album/{id}/image?size=medium` | FR-006, FR-006a | example | DONE | `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs::GetReleases_ADeezerOnlyRelease_ListsExactlyItsDeezerCover` |
 | U34 | A MusicBrainz-only release gets exactly `https://coverartarchive.org/release-group/{id}/front-250` | FR-006, FR-006a | example | DONE | `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs::GetReleases_AMusicBrainzOnlyRelease_ListsExactlyItsCoverArtArchiveCover` |
 | U35 | A source ID containing URL-reserved characters is escaped in its cover URL | FR-006 | example | DONE | `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs::GetReleases_ASourceIdWithReservedCharacters_IsEscapedInItsCoverUrl (deezer, musicbrainz)` |
-| U36 | `sources` keeps its existing order when `covers` is added | FR-011 | example | PENDING | |
+| U36 | `sources` keeps its existing order when `covers` is added | FR-011 | example | DONE | `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs::GetReleases_AddingCovers_KeepsTheSourcesInTheirExistingOrder` |
 | U37 | `ListResponse`, serialized through the endpoint's declaration, carries the names in `tests/fixtures/pages/releases.json`, `covers` included | contracts/http-api.md | contract | DONE | `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ResponseNamingTests.cs::ListResponse_AsTheReleasesEndpointDeclaresIt_CarriesTheNamesTheListPageReads` |
 
 ### `tests/web/fake-dom.js` (test infrastructure the US2 page tests need)

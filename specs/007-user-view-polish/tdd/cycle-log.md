@@ -311,3 +311,16 @@ change per cycle, and committed at green.
   for its own request URLs. Suite -> dotnet 317 passed, 0 failed
 - refactor: none needed
 - commit of cycle 19: `b8722c2`
+
+## Cycle 21: U36 `sources` keeps its existing order
+
+- test: `Api/ReleasesControllerTests.cs::GetReleases_AddingCovers_KeepsTheSourcesInTheirExistingOrder` (new)
+- red: **passed on the first run**: cycle 17 left `Sources` untouched. Deliberate mutant M11 on a
+  file copy, `ToDto` orders the source links descending -> Expected `["deezer", "musicbrainz"]`
+  Actual `["musicbrainz", "deezer"]` (1 failed). Restored with `cp`, verified with `cmp -s`
+- green: no production change. Suite -> dotnet 318 passed, 0 failed
+- refactor: none needed
+- notes: the stored order is by source id, which already puts `deezer` first, so `sources` and
+  `covers` coincide today for a two-source release. The test pins the `sources` order; `covers`
+  order is pinned by U32 through its own rule, not through this coincidence
+- commit of cycle 20: `2ed2f69`
