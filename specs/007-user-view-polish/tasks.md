@@ -231,3 +231,24 @@ T008 fake-dom  ·  T012 styles.test.js
 - Do not edit a test in the same commit as the behaviour change it covers when refactoring
   (constitution II).
 - Mark deliberate simplifications with a `ponytail:` comment that names the ceiling.
+
+---
+
+## Phase 8: TDD remediation
+
+From [`tdd/verification.md`](./tdd/verification.md) (verdict **FAIL**, audited at `5846c02`). **The
+feature is not done until T040–T043 are cleared.** Each test change is proven by a red observed
+before the fix, or by the named mutant, applied from a file copy and restored with a `cmp -s` check,
+never `git checkout`.
+
+- [ ] T040 [US1] Finding 1 (HIGH): in `tests/web/artist-filter.test.js:92-98`, replace A4's single example with a table of rejecting texts (`asp`, `constructor`, `toString`, `hasOwnProperty`, `__proto__`), each typed through `type()`, plus an accepting case for an artist named `constructor`. Observe red, then make the name lookup own-keys only in `src/Jellyfin.Plugin.NewReleases/Web/user-view.html:75, 101` (for example `Object.create(null)`). Done when `node --test tests/web/artist-filter.test.js` is green and the table fails against the current lookup. [A4]
+- [ ] T041 [US4] Finding 2 (HIGH): make A14's underline test in `tests/web/styles.test.js:102-106` reject `text-decoration-line: none` and a rule broader than `.nr-links a` that reaches the link. Done when mutant N9 (`text-decoration-line: none` on `.nr-links a`) fails `node --test tests/web/styles.test.js`. [A14]
+- [ ] T042 [US2] Finding 3 (HIGH): replace `Boolean(cover.background)` in `tests/web/styles.test.js:32` with an assertion that the background is a visible colour (reject `none`, `transparent`, zero alpha). Done when mutant N6 (`background: none` on `.nr-cover`) fails `node --test tests/web/styles.test.js`. [U60]
+- [ ] T043 Finding 4 (HIGH, blocking): append a cycle-log entry that labels A3, A4, A5, A12, A14, U33, U34, U36, U45, U62, U64 and U65 as test-after, with the evidence the audit cites, and records the maintainer's dated decision to accept them or not. Do not edit past entries. New tests cannot fix this. Done when the entry exists, names all twelve, and a fresh `/speckit-tdd-verify` grades them.
+- [ ] T044 [US4] Finding 5 (MED): add a behaviour to `tdd/test-list.md` for US4-AS2's "keeps the same contrast" on hover and focus, then drive its test in `tests/web/styles.test.js`. Done when mutant N10 (`.nr-links a:hover { color: #0000ee }`) fails `node --test tests/web/styles.test.js`.
+- [ ] T045 Finding 6 (MED): maintainer decision. Either amend the page-side conventions in `.specify/memory/tdd-profile.md` to permit reading markup attributes and the `<style>` block as text (with the reason), or extend `tests/web/fake-dom.js` so A5 and `styles.test.js` stop reading source text. Done when the profile and `tests/web/artist-filter.test.js:101-105` and `tests/web/styles.test.js:12-27` agree.
+- [ ] T046 Finding 7 (MED): maintainer decision on `decoding="async"` and the centred note glyph named in T009 and T016. Either add them to `tdd/test-list.md` and drive them, or remove them from `contracts/user-view.md:34` and from T009/T016's text. Done when `tasks.md`, the contract and `user-view.html` agree.
+- [ ] T047 [US1] Finding 8 (LOW): in `tests/web/artist-filter.test.js:95-97, 133-136`, assert on the requests sent after typing (`requests.slice(before)`), not on the initial load. Add a `change` (leave the field) case for US1-AS4. Done when `node --test tests/web/artist-filter.test.js` is green and R3 still fails A4.
+- [ ] T048 Finding 9 (LOW): make `tests/web/cover-fallback.test.js:54-69` share one cover-markup reader with `tests/web/render.test.js:186-200`, with one decoding rule. Done when `node --test "tests/web/*.test.js"` is green and mutants N3 and N4 still fail.
+- [ ] T049 Finding 10 (LOW): let U57 in `tests/web/cover-fallback.test.js:46` accept either `true` or `{ capture: true }`. Done when mutant N5 (`false`) still fails it.
+- [ ] T050 Finding 11 (LOW): after the maintainer's push, verify the CI run with `gh run list --branch main` and record it, or untick T026 until then.
