@@ -35,7 +35,7 @@
     </div>
 
     <form class="nr-filters" role="search" aria-label="Filter releases" id="nr-filters">
-        <div class="nr-filter"><label for="nr-f-artist">Artist</label><select id="nr-f-artist"><option value="">All artists</option></select><datalist id="nr-f-artist-list"></datalist></div>
+        <div class="nr-filter"><label for="nr-f-artist">Artist</label><input id="nr-f-artist" type="text" list="nr-f-artist-list" autocomplete="off" placeholder="All artists"><datalist id="nr-f-artist-list"></datalist></div>
         <div class="nr-filter"><label for="nr-f-type">Type</label>
             <select id="nr-f-type"><option value="">All types</option><option>Album</option><option>EP</option><option>Single</option><option>Compilation</option><option>Live</option><option>Remix</option><option>Soundtrack</option></select></div>
         <div class="nr-filter"><label for="nr-f-state">State</label>
@@ -66,6 +66,7 @@
             var tabs = { list: root.querySelector('#nr-tab-list'), archive: root.querySelector('#nr-tab-archive') };
             var filters = { artist: root.querySelector('#nr-f-artist'), type: root.querySelector('#nr-f-type'), state: root.querySelector('#nr-f-state'), from: root.querySelector('#nr-f-from'), to: root.querySelector('#nr-f-to') };
             var archived = false;
+            var artistIds = {};
 
             function api(method, path) {
                 return ApiClient.ajax({ type: method, url: ApiClient.getUrl(API + path), dataType: method === 'GET' ? 'json' : undefined });
@@ -78,8 +79,8 @@
             }
 
             function query() {
-                var q = [];
-                if (filters.artist.value) q.push('artistId=' + encodeURIComponent(filters.artist.value));
+                var q = [], artistId = artistIds[filters.artist.value];
+                if (artistId) q.push('artistId=' + encodeURIComponent(artistId));
                 if (filters.type.value) q.push('type=' + encodeURIComponent(filters.type.value));
                 if (filters.state.value) q.push('state=' + encodeURIComponent(filters.state.value));
                 if (filters.from.value) q.push('from=' + filters.from.value);
@@ -201,12 +202,7 @@
             function loadArtists() {
                 return api('GET', 'Artists').then(function (data) {
                     root.querySelector('#nr-f-artist-list').innerHTML = data.items.map(function (a) { return '<option value="' + a.name + '">'; }).join('');
-                    data.items.forEach(function (a) {
-                        var option = document.createElement('option');
-                        option.value = a.jellyfinId;
-                        option.textContent = a.name;
-                        filters.artist.appendChild(option);
-                    });
+                    data.items.forEach(function (a) { artistIds[a.name] = a.jellyfinId; });
                 }).catch(function () { /* the filter simply stays empty */ });
             }
 
@@ -221,6 +217,7 @@
             tabs.list.addEventListener('click', function () { selectTab('list'); });
             tabs.archive.addEventListener('click', function () { selectTab('archive'); });
             Object.keys(filters).forEach(function (key) { filters[key].addEventListener('change', load); });
+            filters.artist.addEventListener('input', load);
             root.querySelector('#nr-f-clear').addEventListener('click', function () {
                 Object.keys(filters).forEach(function (key) { filters[key].value = ''; });
                 load();

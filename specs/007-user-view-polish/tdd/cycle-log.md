@@ -79,3 +79,14 @@ change per cycle, and committed at green.
   `<select>`, and `loadArtists` writes one `<option value="{name}">` per artist into it. Names are
   not escaped yet: U44 drives that. Suite -> node 80 passed, dotnet 310 passed
 - refactor: none needed
+
+## Cycle 3: A2 the exact name applies that artist's filter
+
+- test: `tests/web/artist-filter.test.js::A2: when the field text becomes the name ASP the page requests releases with ASP's artistId` (new), with the `type` helper that sets the field and fires its `input` listeners
+- red: `node --test tests/web/artist-filter.test.js`
+  -> `Expected values to be strictly equal: + 'GET Plugins/NewReleases/Releases' - 'GET Plugins/NewReleases/Releases?artistId=a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5'` (1 failed)
+- green: `<select id="nr-f-artist">` replaced by `<input id="nr-f-artist" type="text" list="nr-f-artist-list" autocomplete="off" placeholder="All artists">`.
+  `loadArtists` builds a name → `jellyfinId` map instead of appending `<option>` children; `query()`
+  sends the mapped id; the field reloads on `input`. Suite -> node 81 passed, dotnet 310 passed
+- refactor: `query()` read the map twice; the lookup moved into one local. Suite re-run green (node 81, dotnet 310)
+- commit of cycle 2: `cd52744`

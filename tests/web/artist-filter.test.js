@@ -45,3 +45,19 @@ test('A1: with artists ASP, Aspen and Wasp the suggestion list offers all three 
 
     assert.deepEqual(suggestions(document), ['ASP', 'Aspen', 'Wasp']);
 });
+
+/** Types `text` into the Artist field: sets its value, then fires the `input` listeners the page registered. */
+async function type(document, text) {
+    const field = document.getElementById('nr-f-artist');
+    field.value = text;
+    (field.listeners.input || []).forEach(handler => handler());
+    await settled();
+}
+
+test('A2: when the field text becomes the name ASP the page requests releases with ASP\'s artistId', async () => {
+    const { document, requests } = await loadView();
+
+    await type(document, 'ASP');
+
+    assert.equal(requests.at(-1), 'GET Plugins/NewReleases/Releases?artistId=a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5');
+});
