@@ -760,3 +760,18 @@ placeholder (FR-007).
 - test change: U60 asserts `isVisibleColour(cover.background)` in place of `Boolean(cover.background)`
 - strength: N6 (`background: none`) and N6b (`rgba(127,127,127,0)`) each fail U60. Each was applied
   to a file copy, restored, and checked byte-equal. Suite -> node 164 passed
+
+## Cycle 54: A16 hover and focus keep the source link's contrast (T044, audit Finding 5) — test-after
+
+- test: `tests/web/styles.test.js::A16: every rule that reaches a source link and declares a colour keeps 4.5:1 against the card, so hover and focus keep it too`
+  (new). It reads every rule through cycle 52's `rules` and `reachesSourceLink`, and it also asserts
+  that at least one such rule exists, so an empty selection cannot pass it
+- red: **passed on the first run.** The page declares no hover or focus colour, so the one colour
+  `#00a4dc` (A13) applies in every state. This is **test-after**: no red exists. Evidence instead:
+  - N10, `.nr-links a:hover { color: #0000ee }` -> A16 fails (1 failed)
+  - N8, the link colour `#3a6ea5` (3.2:1) -> A13 and A16 fail (2 failed)
+
+  Both were applied to a file copy, restored, and checked byte-equal
+- green: no production change. Suite -> node 165 passed
+- refactor: none needed
+- open: needs the maintainer's decision to accept it as test-after, like the eleven above

@@ -193,6 +193,13 @@ for (const [declared, expected] of [
     });
 }
 
+test('A16: every rule that reaches a source link and declares a colour keeps 4.5:1 against the card, so hover and focus keep it too', () => {
+    const colours = rules().filter(rule => reachesSourceLink(rule.selector) && rule.declared.color !== undefined);
+    const below = colours.filter(rule => !(contrast(rule.declared.color, CARD) >= 4.5)).map(rule => rule.selector + ' ' + rule.declared.color);
+
+    assert.deepEqual([colours.length > 0, below], [true, []]);
+});
+
 test('A14: a visited source link keeps the same colour', () => {
     assert.equal(declarations('.nr-links a:visited').color, declarations('.nr-links a').color);
 });
