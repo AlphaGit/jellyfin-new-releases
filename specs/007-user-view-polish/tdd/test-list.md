@@ -137,7 +137,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | U45 | When the Artists request fails, the field stays usable, and releases are requested with no `artistId` | spec edge case "artist list fails to load" | example | DONE | `tests/web/artist-filter.test.js::U45: when the Artists request fails, the field stays usable and releases are requested with no artistId` |
 | U46 | Typing the same applied name again sends no second releases request | contracts/user-view.md ("when it changes, reload") | example | DONE | `tests/web/artist-filter.test.js::U46: typing the applied name again sends no second releases request` |
 | U47 | `NewReleasesInternals` exposes exactly the existing members plus `artistIndex` (changes the baseline of `exposure.test.js`) | contracts/user-view.md | example | DONE | `tests/web/exposure.test.js::user-view.html exposes exactly its testable helpers` |
-| U64 | Typing text that leaves the applied artist unchanged (none to none, as while typing a name) sends no releases request | contracts/user-view.md ("when it changes, reload"); discovered in cycle 11 | example | PENDING | |
+| U64 | Typing text that leaves the applied artist unchanged (none to none, as while typing a name) sends no releases request | contracts/user-view.md ("when it changes, reload"); discovered in cycle 11 | example | DONE | `tests/web/artist-filter.test.js::U64: typing part of a name while no artist is applied sends no releases request` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: release card cover
 

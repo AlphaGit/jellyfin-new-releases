@@ -200,3 +200,13 @@ change per cycle, and committed at green.
   again afterwards applies. Suite -> node 90 passed, dotnet 310 passed
 - refactor: one comment on the side effect in `query()`. Suite re-run green (node 90, dotnet 310)
 - correction commit before this cycle: `b2720ed`; commit of cycle 10: `977f1df`
+
+## Cycle 12: U64 typing that leaves no artist applied sends no request
+
+- test: `tests/web/artist-filter.test.js::U64: typing part of a name while no artist is applied sends no releases request` (new)
+- red: **passed on the first run**: cycle 11's comparison already covers none to none. Deliberate
+  mutant M7 on a file copy, the handler also reloads whenever nothing is applied ->
+  `+   'GET Plugins/NewReleases/Releases'` (1 failed). Restored with `cp`, verified with `cmp -s`
+- green: no production change. Suite -> node 91 passed, dotnet 310 passed
+- refactor: none needed
+- commit of cycle 11: `e57fa95`

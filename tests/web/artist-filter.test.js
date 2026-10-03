@@ -145,3 +145,12 @@ test('U46: typing the applied name again sends no second releases request', asyn
 
     assert.deepEqual(requests.slice(before), []);
 });
+
+test('U64: typing part of a name while no artist is applied sends no releases request', async () => {
+    const { document, requests } = await loadView();
+    const before = requests.length;
+
+    await type(document, 'As');
+
+    assert.deepEqual(requests.slice(before), []);
+});
