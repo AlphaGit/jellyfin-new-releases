@@ -387,3 +387,12 @@ change per cycle, and committed at green.
   (A8–A10, held open); dotnet 318 passed
 - refactor: none needed
 - commit of cycle 25: `14a92eb`
+
+## Cycle 27: U49 a row's image lists the remaining cover URLs as its fallbacks
+
+- test: `tests/web/render.test.js::U49: a row's cover image lists the remaining cover URLs, in order, as its fallbacks` (new)
+- red: `node --test tests/web/render.test.js` -> `+ undefined - 'https://coverartarchive.org/release-group/00000000-0000-0000-0000-000000000101/front-250'` (1 failed)
+- green: the `<img>` gains `data-fallback="{covers[1..] joined by ' '}"`. Suite -> node 96 passed,
+  3 failed (A8–A10, held open); dotnet 318 passed
+- refactor: none needed
+- commit of cycle 26: `f3efd40`

@@ -206,3 +206,11 @@ test('U48: a row\'s cover image src is its first cover URL', () => {
 
     assert.equal(imgAttribute(box, 'src'), body.items.find(i => i.id === BOTH_SOURCES).covers[0]);
 });
+
+test('U49: a row\'s cover image lists the remaining cover URLs, in order, as its fallbacks', () => {
+    const body = fixture('releases.json');
+
+    const box = coverBox(rendered(body).panel, BOTH_SOURCES);
+
+    assert.equal(imgAttribute(box, 'data-fallback'), body.items.find(i => i.id === BOTH_SOURCES).covers.slice(1).join(' '));
+});
