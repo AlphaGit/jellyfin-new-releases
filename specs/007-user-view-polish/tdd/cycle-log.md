@@ -408,3 +408,13 @@ change per cycle, and committed at green.
   open); dotnet 318 passed
 - refactor: none needed
 - commit of cycle 27: `39df9f5`
+
+## Cycle 29: U51 a row's cover image sends no referrer
+
+- test: `tests/web/render.test.js::U51: a row's cover image sends no referrer` (re-added; see cycle 28)
+- red: `node --test tests/web/render.test.js` -> `+ undefined - 'no-referrer'` (1 failed), re-run after re-adding
+- green: the `<img>` declares `referrerpolicy="no-referrer"` (constitution V: the third-party request
+  does not carry the Jellyfin server's address). Suite -> node 98 passed, 3 failed (A8–A10, held
+  open); dotnet 318 passed
+- refactor: none needed
+- commit of cycle 28: `25c0eec`

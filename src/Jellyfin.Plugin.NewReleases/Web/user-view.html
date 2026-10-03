@@ -149,7 +149,7 @@
 
             function row(item) {
                 var html = '<article class="nr-row" data-id="' + item.id + '" data-title="' + esc(item.title) + '">';
-                html += '<div class="nr-cover"><img src="' + item.covers[0] + '" data-fallback="' + item.covers.slice(1).join(' ') + '" loading="lazy"></div>';
+                html += '<div class="nr-cover"><img src="' + item.covers[0] + '" data-fallback="' + item.covers.slice(1).join(' ') + '" loading="lazy" referrerpolicy="no-referrer"></div>';
                 html += '<div><div class="nr-title">' + esc(item.title) + '</div>';
                 html += '<div class="nr-artist"><a href="' + artistLink(item) + '">' + esc(item.artistName) + '</a></div>';
                 html += '<div class="nr-meta"><span class="nr-badge">' + esc(item.type) + '</span>';

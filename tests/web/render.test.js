@@ -218,3 +218,7 @@ test('U49: a row\'s cover image lists the remaining cover URLs, in order, as its
 test('U50: a row\'s cover image loads lazily', () => {
     assert.equal(imgAttribute(coverBox(rendered(fixture('releases.json')).panel, BOTH_SOURCES), 'loading'), 'lazy');
 });
+
+test('U51: a row\'s cover image sends no referrer', () => {
+    assert.equal(imgAttribute(coverBox(rendered(fixture('releases.json')).panel, BOTH_SOURCES), 'referrerpolicy'), 'no-referrer');
+});

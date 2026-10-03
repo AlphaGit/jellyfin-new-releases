@@ -147,7 +147,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | U48 | A row's image `src` is `covers[0]` | FR-007 | example | DONE | `tests/web/render.test.js::U48: a row's cover image src is its first cover URL` |
 | U49 | A row's `data-fallback` lists `covers[1..]` in order | FR-006a | example | DONE | `tests/web/render.test.js::U49: a row's cover image lists the remaining cover URLs, in order, as its fallbacks` |
 | U50 | A row's image declares `loading="lazy"` | FR-007a | example | DONE | `tests/web/render.test.js::U50: a row's cover image loads lazily` |
-| U51 | A row's image declares `referrerpolicy="no-referrer"` | FR-008, constitution V | example | PENDING | |
+| U51 | A row's image declares `referrerpolicy="no-referrer"` | FR-008, constitution V | example | DONE | `tests/web/render.test.js::U51: a row's cover image sends no referrer` |
 | U52 | A row's image declares `width="64" height="64"` | FR-007 | example | PENDING | |
 | U53 | A row with `covers: []` writes the cover box with no `<img>` | FR-007 | example | PENDING | |
 | U54 | Cover URLs are written through `esc` | invariant: page markup is string-built, so an unescaped URL is an injection | example | PENDING | |
