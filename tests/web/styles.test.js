@@ -31,3 +31,7 @@ test('U60: .nr-cover declares a 64 by 64 box with a background', () => {
 
     assert.deepEqual([cover.width, cover.height, Boolean(cover.background)], ['64px', '64px', true]);
 });
+
+test('U61: a cover image fills the box without stretching', () => {
+    assert.equal(declarations('.nr-cover img')['object-fit'], 'cover');
+});

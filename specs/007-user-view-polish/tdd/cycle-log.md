@@ -525,3 +525,14 @@ change per cycle, and committed at green.
   the same neutral grey family as the card. Suite -> node 108 passed, dotnet 318 passed
 - refactor: none needed
 - commit of cycle 38: `41cec3b`
+
+## Cycle 40: U61 a cover image fills the box without stretching
+
+- test: `tests/web/styles.test.js::U61: a cover image fills the box without stretching` (new)
+- red: `node --test tests/web/styles.test.js` -> `+ undefined - 'cover'` (1 failed)
+- green: `#nr-user-view .nr-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }`.
+  The size declarations make the image take the box; `object-fit` keeps a non-square cover from
+  stretching (spec edge case). Suite -> node 109 passed, dotnet 318 passed
+- refactor: none needed
+- tasks: T012 and T016 ticked
+- commit of cycle 39: `db3c3f4`
