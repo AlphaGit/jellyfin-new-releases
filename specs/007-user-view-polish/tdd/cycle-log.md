@@ -583,3 +583,15 @@ change per cycle, and committed at green.
 - outer loop: US3 closes. A11 and A12 are green with U59 `DONE`. Tasks T018, T019, T020 and the
   gates T036, T037 ticked
 - commit of cycle 43: `e283069`
+
+## Cycle 45: U63 the test's contrast formula rates white on black at 21
+
+- test: `tests/web/styles.test.js::U63: the contrast formula rates white on black at 21, its upper bound` (new),
+  with `contrast()` declared as `return 0` so the call resolves
+- red: `node --test tests/web/styles.test.js` -> `0 !== 21` (1 failed)
+- green: `luminance()` (WCAG 2 relative luminance, 0.03928 linearisation threshold) and
+  `contrast()` = (lighter + 0.05) / (darker + 0.05). A first version rounded to two decimals; that
+  was removed before the commit, because rounding would let a 4.495 ratio pass a 4.5 rule. White
+  on black is exactly 21 unrounded. Suite -> node 114 passed; dotnet unchanged (318)
+- refactor: none beyond the rounding removal
+- commit of cycle 44: `2962937`

@@ -61,3 +61,23 @@ test('U59: below 600 px the actions take their own row, in equal columns', () =>
 
     assert.deepEqual([actions['grid-column'], actions.display, actions['grid-auto-flow'], actions['grid-auto-columns']], ['1 / -1', 'grid', 'column', '1fr']);
 });
+
+// US4: WCAG 2 contrast, computed here from relative luminance; no library (FR-010, SC-004).
+
+/** WCAG 2 relative luminance of a `#rrggbb` colour. */
+function luminance(hex) {
+    const [r, g, b] = [1, 3, 5]
+        .map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
+        .map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** WCAG 2 contrast ratio of two `#rrggbb` colours, lighter over darker. Not rounded: WCAG compares the exact ratio with 4.5. */
+function contrast(a, b) {
+    const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (light + 0.05) / (dark + 0.05);
+}
+
+test('U63: the contrast formula rates white on black at 21, its upper bound', () => {
+    assert.equal(contrast('#ffffff', '#000000'), 21);
+});
