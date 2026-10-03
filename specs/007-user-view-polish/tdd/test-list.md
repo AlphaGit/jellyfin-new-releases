@@ -135,7 +135,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | U43 | `artistIndex` keeps the first artist when two share a label | FR-002 | example | DROPPED: two library artists never share a name, so there is no duplicate to resolve (2026-10-03) | |
 | U44 | Loading artists writes one escaped `<option value>` per name into `#nr-f-artist-list` | FR-001, FR-005 | example | DONE | `tests/web/artist-filter.test.js::U44: a name with markup characters is written into its option escaped` |
 | U45 | When the Artists request fails, the field stays usable, and releases are requested with no `artistId` | spec edge case "artist list fails to load" | example | DONE | `tests/web/artist-filter.test.js::U45: when the Artists request fails, the field stays usable and releases are requested with no artistId` |
-| U46 | Typing the same applied name again sends no second releases request | contracts/user-view.md ("when it changes, reload") | example | PENDING | |
+| U46 | Typing the same applied name again sends no second releases request | contracts/user-view.md ("when it changes, reload") | example | DONE | `tests/web/artist-filter.test.js::U46: typing the applied name again sends no second releases request` |
 | U47 | `NewReleasesInternals` exposes exactly the existing members plus `artistIndex` (changes the baseline of `exposure.test.js`) | contracts/user-view.md | example | DONE | `tests/web/exposure.test.js::user-view.html exposes exactly its testable helpers` |
 | U64 | Typing text that leaves the applied artist unchanged (none to none, as while typing a name) sends no releases request | contracts/user-view.md ("when it changes, reload"); discovered in cycle 11 | example | PENDING | |
 

@@ -66,7 +66,7 @@
             var tabs = { list: root.querySelector('#nr-tab-list'), archive: root.querySelector('#nr-tab-archive') };
             var filters = { artist: root.querySelector('#nr-f-artist'), type: root.querySelector('#nr-f-type'), state: root.querySelector('#nr-f-state'), from: root.querySelector('#nr-f-from'), to: root.querySelector('#nr-f-to') };
             var archived = false;
-            var artistIds = {};
+            var artistIds = {}, appliedArtistId;
 
             function api(method, path) {
                 return ApiClient.ajax({ type: method, url: ApiClient.getUrl(API + path), dataType: method === 'GET' ? 'json' : undefined });
@@ -79,7 +79,8 @@
             }
 
             function query() {
-                var q = [], artistId = artistIds[filters.artist.value];
+                // Every request records the artist it applied, so `input` reloads only when that changes.
+                var q = [], artistId = appliedArtistId = artistIds[filters.artist.value];
                 if (artistId) q.push('artistId=' + encodeURIComponent(artistId));
                 if (filters.type.value) q.push('type=' + encodeURIComponent(filters.type.value));
                 if (filters.state.value) q.push('state=' + encodeURIComponent(filters.state.value));
@@ -224,7 +225,9 @@
             tabs.list.addEventListener('click', function () { selectTab('list'); });
             tabs.archive.addEventListener('click', function () { selectTab('archive'); });
             Object.keys(filters).forEach(function (key) { filters[key].addEventListener('change', load); });
-            filters.artist.addEventListener('input', load);
+            filters.artist.addEventListener('input', function () {
+                if (artistIds[filters.artist.value] !== appliedArtistId) load();
+            });
             root.querySelector('#nr-f-clear').addEventListener('click', function () {
                 Object.keys(filters).forEach(function (key) { filters[key].value = ''; });
                 load();

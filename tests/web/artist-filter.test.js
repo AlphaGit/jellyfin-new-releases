@@ -135,3 +135,13 @@ test('U45: when the Artists request fails, the field stays usable and releases a
     const releases = requests.filter(r => r.includes('/Releases'));
     assert.deepEqual([releases.length > 0, releases.every(r => r === UNFILTERED)], [true, true]);
 });
+
+test('U46: typing the applied name again sends no second releases request', async () => {
+    const { document, requests } = await loadView();
+    await type(document, 'ASP');
+    const before = requests.length;
+
+    await type(document, 'ASP');
+
+    assert.deepEqual(requests.slice(before), []);
+});

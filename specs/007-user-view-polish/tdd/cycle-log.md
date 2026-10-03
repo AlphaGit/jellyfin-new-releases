@@ -189,3 +189,14 @@ change per cycle, and committed at green.
 - strength re-checked: mutant M6 (the `.catch` sets the map to `null`) still fails it with
   `TypeError` (1 failed); restored with `cp`, verified with `cmp -s`. Suite -> node 89 passed
 - list: U64 appended, the none-to-none half of "when it changes, reload", which U46's line does not cover
+
+## Cycle 11: U46 the same applied name typed again sends no request
+
+- test: `tests/web/artist-filter.test.js::U46: typing the applied name again sends no second releases request` (new)
+- red: `node --test tests/web/artist-filter.test.js` -> `+ [ 'GET Plugins/NewReleases/Releases?artistId=a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5' ] - []` (1 failed)
+- green: `query()` records the artist each request applied (`appliedArtistId`), and the `input`
+  handler reloads only when the mapped id differs from it. Recording it in `query()` rather than in
+  the handler keeps Clear correct: Clear reloads, the reload records "none", and the name typed
+  again afterwards applies. Suite -> node 90 passed, dotnet 310 passed
+- refactor: one comment on the side effect in `query()`. Suite re-run green (node 90, dotnet 310)
+- correction commit before this cycle: `b2720ed`; commit of cycle 10: `977f1df`
