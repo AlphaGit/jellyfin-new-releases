@@ -158,9 +158,9 @@ in the dark theme.
 
 ### Functional Requirements
 
-- **FR-001**: The Artist filter MUST be a text input with the browser's native suggestion list of
-  library artists. The person can start typing, and the browser shows the suggestions whose
-  label contains the typed text. Matching rules (case, accents) and the number of rows shown
+- **FR-001**: The Artist filter MUST be a text field that suggests library artists as the person
+  types, using the browser's own suggestion behaviour. The person can start typing, and the
+  browser shows the suggestions whose label contains the typed text. Matching rules (case, accents) and the number of rows shown
   are the browser's.
 - **FR-002**: The filter MUST apply only when the field text equals a suggestion label, by a pick
   or by typing it in full. Free text that matches no artist MUST NOT filter the list and MUST NOT show as an applied filter.
@@ -170,10 +170,10 @@ in the dark theme.
 - **FR-005**: Each suggestion MUST show the library artist's name alone, and after a pick the
   Artist field MUST show that name. The plugin MUST NOT fetch or store any extra artist data for
   the filter.
-- **FR-006**: Each listed release MUST carry a cover image URL built at read time from the source
-  identifiers already stored for it: `https://coverartarchive.org/release-group/{id}/front-250`
-  for a MusicBrainz entry, `https://api.deezer.com/album/{id}/image?size=medium` for a Deezer
-  entry. No cover data is stored and no refresh is needed for a cover to appear.
+- **FR-006**: Each listed release MUST carry the address of its cover image at each source it
+  has, derived when the list is read from the source identifiers already stored for it: the
+  Cover Art Archive cover for a MusicBrainz entry, and the Deezer album cover for a Deezer entry.
+  No cover data is stored and no refresh is needed for a cover to appear.
 - **FR-006a**: When a release has entries at both sources, the card MUST try the Deezer cover
   first, then the Cover Art Archive cover if the Deezer one fails to load, then show the
   placeholder. A release with one source tries only that source's cover.
@@ -182,7 +182,7 @@ in the dark theme.
 - **FR-007a**: A card MUST request its cover only when the card comes near the visible area.
   Opening the view MUST NOT request covers for cards far below the visible area.
 - **FR-008**: The person's browser MUST load the cover directly from the image host of the source
-  (Cover Art Archive, or Deezer's album image endpoint). The plugin server MUST NOT fetch, cache or
+  (Cover Art Archive, or Deezer's album images). The plugin server MUST NOT fetch, cache or
   proxy cover images.
 - **FR-009**: "Ignore", "Have it" and "Restore" MUST share one button style. "Ignore" and
   "Have it" MUST have equal width and share their left and right edges on each card.
@@ -213,16 +213,17 @@ in the dark theme.
 
 ## Assumptions
 
-- The visible changes are in the user view (`user-view.html` under Plugin Pages) only. The admin
-  page is out of scope. Behind the view, only the Releases response changes, to supply cover URLs.
-  The refresh, the stored data and the Artists response do not change.
-- Suggestions come from the same library artist list the dropdown uses today. No new search
-  endpoint is needed for libraries up to a few thousand artists.
-- Every stored Deezer entry has a cover through its album image endpoint. A MusicBrainz release
+- The visible changes are in the New Releases view that each user opens. The administrator page
+  is out of scope. Behind the view, only the release list the view reads changes, to supply the
+  cover addresses.
+  The refresh, the stored data and the artist list do not change.
+- Suggestions come from the same library artist list the dropdown uses today. No new server-side
+  search is needed for libraries up to a few thousand artists.
+- Every stored Deezer entry has a cover image at Deezer. A MusicBrainz release
   group can have a cover in the Cover Art Archive; when it has none, the request fails and the
   placeholder shows.
 - Contrast is judged against the default dark Jellyfin theme, which the view is used with today.
-- Each viewer's browser contacts the cover endpoints directly. Constitution 1.4.0 (Principle V)
-  permits this for cover images from the reporting source; the exact endpoint is an
-  implementation detail.
+- Each viewer's browser contacts the cover image hosts directly. Constitution 1.4.0 (Principle V)
+  permits this for cover images from the reporting source; the exact address is set
+  in the plan.
 - The buttons stay neutral (no primary/secondary emphasis). Neither choice is preferred.
