@@ -707,3 +707,23 @@ Each has a recorded mutant, caught when last run: `U12` (V4, fifth audit), `U13`
 audit; X2, Phase 12), `U36` (P6, fourth audit), `U38` (P1, fourth audit), `A6` (M2, fifth audit)
 and `A7` (S9 and S10, fourth audit). The next audit grades them against the override and
 confirms the third condition itself.
+
+## Phase 13: remediation of the sixth TDD audit
+
+Driven from `tdd/verification.md` (verdict PASS_WITH_GAPS, audited at `76f6b05`). No production code
+changes. Each task is a test or harness change, proven by a red observed before the change or by a
+mutant, applied from a file copy and restored with a `cmp` byte check, never `git checkout`.
+Independence: the session that ran the sixth audit wrote these changes. The next audit should run in
+a fresh session.
+
+### T079 (Finding 1): the pinned clock runs after the fixtures
+
+- test: `render-status.test.js::after a completed refresh the releases-last-checked value is a sentence, not a dash` (pattern → exact sentence) and `render.test.js::with an instant older than the refresh interval the staleness sentence appears` (new age)
+- red: both expectations changed first, at the old `NOW` (`2026-09-09T12:00Z`).
+  `node --test tests/web/render-status.test.js` → `expected: 'Releases last checked 8 hours ago.'` / `actual: 'Releases last checked 0 hours ago.'`.
+  `node --test tests/web/render.test.js` → `expected: 'Releases last checked 7 weeks ago.'` / `actual: 'Releases last checked 5 weeks ago.'`
+- green: `NOW` in `tests/web/fixed-clock.js` moved to `2026-09-19T12:00Z`, 8 h 45 min after the fixtures'
+  instant, so a render of them takes the interval rule and not the clock-correction clamp. Its comment
+  says why. Every other node test computes from `NOW` through `ago` / `ahead` and is unchanged.
+  `node --test "tests/web/*.test.js"`: 79 passed, 0 failed; also under `LANG=de_DE.UTF-8 TZ=Asia/Tokyo`
+- refactor: none needed

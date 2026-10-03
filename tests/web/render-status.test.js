@@ -31,7 +31,7 @@ test('after a completed refresh the last refresh shows its instant and outcome, 
 test('after a completed refresh the releases-last-checked value is a sentence, not a dash', () => {
     const { text } = rendered(fixture('admin-status.json'));
 
-    assert.match(text('nr-last-checked'), /^Releases last checked .+\.$/);
+    assert.equal(text('nr-last-checked'), 'Releases last checked 8 hours ago.');
 });
 
 // 002 SC-005: the last refresh and the data age are separate values. The fixture gives them the

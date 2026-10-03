@@ -113,7 +113,7 @@ test('with no instant on record the staleness line is empty and the list still r
 test('with an instant older than the refresh interval the staleness sentence appears', () => {
     const { staleness } = rendered(fixture('releases-stale.json'));
 
-    assert.equal(staleness.textContent, 'Releases last checked 5 weeks ago.');
+    assert.equal(staleness.textContent, 'Releases last checked 7 weeks ago.');
     assert.equal(staleness.hidden, false);
 });
 
