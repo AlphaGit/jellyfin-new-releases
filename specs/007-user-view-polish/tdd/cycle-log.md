@@ -572,3 +572,14 @@ change per cycle, and committed at green.
 - green: no production change. Suite -> node 112 passed, dotnet 318 passed
 - refactor: none needed
 - commit of cycle 42: `7df504a`
+
+## Cycle 44: U59 below 600 px the actions take their own row, in equal columns
+
+- test: `tests/web/styles.test.js::U59: below 600 px the actions take their own row, in equal columns` (new, with the `narrowScreen()` reader for the media block)
+- red: `node --test tests/web/styles.test.js` -> `+ [ undefined, undefined, undefined, undefined ] - [ '1 / -1', 'grid', 'column', '1fr' ]` (1 failed)
+- green: `@media (max-width: 600px) { #nr-user-view .nr-actions { grid-column: 1 / -1; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; } }`
+  (research R10). Suite -> node 113 passed, dotnet 318 passed
+- refactor: none needed
+- outer loop: US3 closes. A11 and A12 are green with U59 `DONE`. Tasks T018, T019, T020 and the
+  gates T036, T037 ticked
+- commit of cycle 43: `e283069`

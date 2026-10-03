@@ -160,7 +160,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U59 | `@media (max-width: 600px)` puts `.nr-actions` on its own row, with equal-width columns | FR-009, spec edge case "narrow screen" | example | PENDING | |
+| U59 | `@media (max-width: 600px)` puts `.nr-actions` on its own row, with equal-width columns | FR-009, spec edge case "narrow screen" | example | DONE | `tests/web/styles.test.js::U59: below 600 px the actions take their own row, in equal columns` |
 | U60 | `.nr-cover` declares a 64 × 64 box with a background | FR-007 | example | DONE | `tests/web/styles.test.js::U60: .nr-cover declares a 64 by 64 box with a background` |
 | U61 | `.nr-cover img` declares `object-fit: cover` | spec edge case "not square" | example | DONE | `tests/web/styles.test.js::U61: a cover image fills the box without stretching` |
 | U62 | The test's contrast function rates `#0000ee` on `#1c1c1c` below 4.5, which pins it against the defect the spec reports | FR-010 | example | PENDING | |

@@ -43,3 +43,21 @@ test('U66: a card lays out the 64 px cover, then the details, then the actions',
 test('A11: the List-tab buttons fill one shared column: .nr-actions stretches its buttons, and each is full width', () => {
     assert.deepEqual([declarations('.nr-actions')['align-items'], declarations('.nr-actions button').width], ['stretch', '100%']);
 });
+
+/** The body of the `@media (max-width: 600px)` block, or an empty string when the page has none. */
+function narrowScreen() {
+    const at = STYLE.indexOf('@media (max-width: 600px)');
+    if (at < 0) return '';
+    let depth = 0;
+    for (let i = STYLE.indexOf('{', at); i < STYLE.length; i++) {
+        if (STYLE[i] === '{') depth++;
+        if (STYLE[i] === '}' && --depth === 0) return STYLE.slice(STYLE.indexOf('{', at) + 1, i);
+    }
+    return '';
+}
+
+test('U59: below 600 px the actions take their own row, in equal columns', () => {
+    const actions = declarations('.nr-actions', narrowScreen());
+
+    assert.deepEqual([actions['grid-column'], actions.display, actions['grid-auto-flow'], actions['grid-auto-columns']], ['1 / -1', 'grid', 'column', '1fr']);
+});

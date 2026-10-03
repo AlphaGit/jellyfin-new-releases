@@ -144,15 +144,15 @@ shared edges, also on narrow screens.
 **Independent Test**: The `<style>` block declares the stretch rules. In a browser, both buttons
 have equal width and both edges aligned (quickstart §2.4).
 
-- [ ] T018 [US3] Add failing cases to `tests/web/styles.test.js` (created by T012). It asserts:
+- [X] T018 [US3] Add failing cases to `tests/web/styles.test.js` (created by T012). It asserts:
   - `.nr-actions` declares `align-items: stretch`.
   - `.nr-actions button` declares `width: 100%`.
   - A `@media (max-width: 600px)` block puts `.nr-actions` on its own row with equal columns (research R10). [A11] [U59]
-- [ ] T019 [US3] Add a case to `tests/web/render.test.js`: an Archive-tab row writes its "Restore" button inside the same `.nr-actions` container as the List-tab buttons. [A12]
-- [ ] T020 [US3] Change the `.nr-actions` rules and add the `600px` media query in `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`. T018 passes. [A11] [A12] [U59]
+- [X] T019 [US3] Add a case to `tests/web/render.test.js`: an Archive-tab row writes its "Restore" button inside the same `.nr-actions` container as the List-tab buttons. [A12]
+- [X] T020 [US3] Change the `.nr-actions` rules and add the `600px` media query in `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`. T018 passes. [A11] [A12] [U59]
 
-- [ ] T036 [US3] Confirm that the acceptance test for US3-AS1 is green in the full suite before US3 counts as complete. [A11]
-- [ ] T037 [US3] Confirm that the acceptance test for US3-AS2 is green in the full suite before US3 counts as complete. [A12]
+- [X] T036 [US3] Confirm that the acceptance test for US3-AS1 is green in the full suite before US3 counts as complete. [A11]
+- [X] T037 [US3] Confirm that the acceptance test for US3-AS2 is green in the full suite before US3 counts as complete. [A12]
 
 **Checkpoint**: US3 complete.
 

@@ -26,6 +26,9 @@
         #nr-user-view .nr-empty { padding: 3em 1em; text-align: center; opacity: .8; }
         #nr-user-view .nr-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
         #nr-user-view :focus-visible { outline: 2px solid #52b54b; outline-offset: 2px; }
+        @media (max-width: 600px) {
+            #nr-user-view .nr-actions { grid-column: 1 / -1; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+        }
     </style>
 
     <h1>New Releases</h1>
