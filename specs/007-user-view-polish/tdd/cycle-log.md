@@ -167,3 +167,13 @@ change per cycle, and committed at green.
 - notes: the browser decodes the entity in `value`, so the field text after a pick is the raw name
   and the exact lookup still finds it
 - commit of cycle 8: `a0d0208`
+
+## Cycle 10: U45 a failed artist list leaves a usable, unfiltered field
+
+- test: `tests/web/artist-filter.test.js::U45: when the Artists request fails, typing in the field still requests releases with no artistId` (new); `loadView` now rejects the Artists request when handed an `Error`
+- red: **passed on the first run**: the existing `.catch` in `loadArtists` leaves the empty map in
+  place and the list still loads. Deliberate mutant M6 on a file copy: the `.catch` sets the map to
+  `null` -> `TypeError` when the field is typed into (1 failed). Restored with `cp`, verified with `cmp -s`
+- green: no production change. Suite -> node 89 passed, dotnet 310 passed
+- refactor: none needed
+- commit of cycle 9: `f146cb6`

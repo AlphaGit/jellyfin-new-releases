@@ -21,14 +21,15 @@ const ARTISTS = {
 /** Lets every pending promise callback run; the page chains its loads through `.then`. */
 const settled = () => new Promise(resolve => setImmediate(resolve));
 
-/** Loads the view with an `ApiClient` that answers Artists with `artists` and records every request. */
+/** Loads the view with an `ApiClient` that answers Artists with `artists` (an `Error` rejects it) and records every request. */
 async function loadView(artists = ARTISTS) {
     const requests = [];
     const loaded = loadPageDom('user-view.html', {
         ApiClient: {
             ajax: options => {
                 requests.push(options.type + ' ' + options.url);
-                return options.url.endsWith('/Artists') ? Promise.resolve(artists) : Promise.resolve({ items: [], hasStoredReleases: false });
+                if (!options.url.endsWith('/Artists')) return Promise.resolve({ items: [], hasStoredReleases: false });
+                return artists instanceof Error ? Promise.reject(artists) : Promise.resolve(artists);
             },
         },
     });
@@ -124,4 +125,14 @@ test('U44: a name with markup characters is written into its option escaped', as
     const { document } = await loadView({ items: [{ jellyfinId: 'a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8', name: 'Guns "N" <Roses>' }] });
 
     assert.equal(document.getElementById('nr-f-artist-list').innerHTML, '<option value="Guns &quot;N&quot; &lt;Roses&gt;">');
+});
+
+test('U45: when the Artists request fails, typing in the field still requests releases with no artistId', async () => {
+    const { document, requests } = await loadView(new Error('500'));
+    assert.equal(requests.at(-1), UNFILTERED);
+    const before = requests.length;
+
+    await type(document, 'ASP');
+
+    assert.deepEqual(requests.slice(before), [UNFILTERED]);
 });
