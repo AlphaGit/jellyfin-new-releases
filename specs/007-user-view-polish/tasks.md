@@ -252,3 +252,21 @@ never `git checkout`.
 - [X] T048 Finding 9 (LOW): make `tests/web/cover-fallback.test.js:54-69` share one cover-markup reader with `tests/web/render.test.js:186-200`, with one decoding rule. Done when `node --test "tests/web/*.test.js"` is green and mutants N3 and N4 still fail.
 - [X] T049 Finding 10 (LOW): let U57 in `tests/web/cover-fallback.test.js:46` accept either `true` or `{ capture: true }`. Done when mutant N5 (`false`) still fails it.
 - [ ] T050 Finding 11 (LOW): after the maintainer's push, verify the CI run with `gh run list --branch main` and record it, or untick T026 until then.
+
+---
+
+## Phase 9: TDD remediation
+
+From the second [`tdd/verification.md`](./tdd/verification.md) (verdict **FAIL**, audited at
+`ad2b277`). **The feature is not done until T051–T054 are cleared.** Each test change is proven by a
+red observed before the fix, or by the named mutant. Apply each mutant to a file copy, then restore
+it and check the restore with `cmp -s`. Never use `git checkout`. Add a table row before you change a
+predicate (profile: "a predicate needs a table").
+
+- [ ] T051 [US4] Finding 1 (HIGH): add accepting rows to the `reachesSourceLink` table in `tests/web/styles.test.js:163-179`: `#nr-user-view .nr-row a`, `#nr-user-view .nr-list a:hover`, `#nr-user-view .nr-row div a`, `#nr-user-view .nr-links a[href]`, `#nr-user-view .nr-links :any-link`, `#nr-user-view .nr-links *`. Keep `.nr-artist a` as a rejecting row. Observe the red, then fix the predicate at `:152-157`. Done when mutants P1, P2 and P3 each fail `node --test tests/web/styles.test.js`. [A14] [A16]
+- [ ] T052 [US2] Finding 2 (HIGH): make U57 in `tests/web/cover-fallback.test.js:44-51` reject a registration with `once`. Put `true` and `{ capture: true }` as accepting rows, and `false`, `{ capture: true, once: true }` and `{}` as rejecting rows. Done when mutant E2 (`}, { capture: true, once: true });` at `user-view.html:270`) fails `node --test tests/web/cover-fallback.test.js`, and the page rewritten to `{ capture: true }` passes it. [U57]
+- [ ] T053 Finding 3 (HIGH, blocking): append a cycle-log entry that records the maintainer's dated decision on A16 (cycle 54, test-after, N10 and N8 caught). Do not edit past entries. Done when the entry exists and a fresh `/speckit-tdd-verify` grades A16 `TEST_AFTER_ACCEPTED`, or when A16 is re-driven with a red. [A16]
+- [ ] T054 [US2] Finding 4 (HIGH): add rejecting rows `initial`, `inherit`, `unset`, `revert` and `revert-layer` to the `isVisibleColour` table in `tests/web/styles.test.js:42-62`. Observe the red, then fix the predicate at `:30-40`. Done when mutant P4 (`background: initial` on `.nr-cover`) fails `node --test tests/web/styles.test.js`. [U60]
+- [ ] T055 [US4] Finding 5 (MED): add a behaviour to `tdd/test-list.md` for US4-AS2: no rule that reaches a source link lowers its contrast through `opacity` (or `filter`). Then drive its test in `tests/web/styles.test.js`. Done when mutant P9 (`#nr-user-view .nr-links a:hover { opacity: .3 }`) fails `node --test tests/web/styles.test.js`.
+- [ ] T056 Finding 6 (LOW): append a cycle-log entry that maps cycles 49–54 and the two refactor entries to their commits (`64ff918`, `6495435`, `3e4bc76`, `352f5d8`, `baff78c`, `6880ddd`, `7767c12`, `ad2b277`). Do not edit past entries. Done when each of those cycles has a named commit in `tdd/cycle-log.md`.
+- [ ] T057 Finding 7 (LOW): make `declarations()` and `rules()` in `tests/web/styles.test.js:17-27, 138-149` share one CSS rule parser. Do not change behaviour. Done when `node --test tests/web/styles.test.js` stays green, and N9 and N10 still fail it.
