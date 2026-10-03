@@ -490,3 +490,13 @@ change per cycle, and committed at green.
   (A8, A9, held open); dotnet 318 passed
 - refactor: none needed
 - commit of cycle 35: `33a7bc0`
+
+## Cycle 37: U57 the panel has one capture-phase error listener
+
+- test: `tests/web/cover-fallback.test.js::U57: the panel has one error listener, registered for the capture phase` (new)
+- red: `node --test tests/web/cover-fallback.test.js` -> `+ undefined - [ true ]` (1 failed)
+- green: the panel registers `error` with `capture = true` and hands `IMG` targets to `nextCover`
+  (`error` does not bubble). Suite -> node 107 passed, 0 failed — the held-open A8 and A9 pass from
+  here; dotnet 318 passed
+- refactor: the test's inline `require` moved to the file's import line. Suite re-run: node 107 passed
+- commit of cycle 36: `d11940b`

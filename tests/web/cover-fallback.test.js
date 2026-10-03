@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { loadPage } = require('./load-page.js');
+const { loadPage, loadPageDom } = require('./load-page.js');
 const { FakeElement } = require('./fake-dom.js');
 
 // 007 US2: what the view does when a cover image fails to load (FR-006a, FR-007, research R7).
@@ -37,4 +37,10 @@ test('U56: nextCover with no fallback left removes the image, and the cover box 
     loadPage('user-view.html').nextCover(img);
 
     assert.deepEqual(box.children, []);
+});
+
+test('U57: the panel has one error listener, registered for the capture phase', () => {
+    const { document } = loadPageDom('user-view.html');
+
+    assert.deepEqual(document.getElementById('nr-panel').listenerOptions.error, [true]);
 });

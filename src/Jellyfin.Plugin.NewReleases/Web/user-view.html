@@ -253,6 +253,11 @@
             });
             root.querySelector('#nr-filters').addEventListener('submit', function (e) { e.preventDefault(); load(); });
 
+            // `error` does not bubble, so the panel listens in the capture phase (007 R7).
+            panel.addEventListener('error', function (e) {
+                if (e.target.tagName === 'IMG') nextCover(e.target);
+            }, true);
+
             panel.addEventListener('click', function (e) {
                 var button = e.target.closest('button[data-action]');
                 if (!button) return;
