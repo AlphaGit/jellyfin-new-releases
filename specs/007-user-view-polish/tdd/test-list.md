@@ -47,7 +47,7 @@ reopen A4 and U42 (the filter now ignores case) and add A15 and A16.
 | A13 | The declared source-link colour has a WCAG contrast of at least 4.5:1 against the card background `#1c1c1c` | US4-AS1, FR-010, SC-004 | example | DONE | `tests/web/styles.test.js::A13: the declared source-link colour has a contrast of at least 4.5:1 against the card` |
 | A15 | Text that equals an artist name with case ignored applies that artist | US1-AS2, FR-002 | example | DONE | `tests/web/artist-filter.test.js::A15: typing "{text}" applies the artist whose name it equals with case ignored` (rows `asp`, `aSP`, `WASP`, `__PROTO__`) |
 | A16 | Every rule that reaches a source link and declares a colour keeps 4.5:1 against the card, so hover and focus keep the contrast | US4-AS2, FR-010 | example | PENDING | |
-| A14 | The source link keeps its underline, its `:visited` state has the same colour, and focus shows the outline | US4-AS2, FR-010 | example | DONE | `tests/web/styles.test.js::A14: a visited source link keeps the same colour / no rule takes the underline off a source link / a focused source link shows the focus outline` |
+| A14 | The source link keeps its underline, its `:visited` state has the same colour, and focus shows the outline | US4-AS2, FR-010 | example | DONE | `tests/web/styles.test.js::A14: a visited source link keeps the same colour / no rule takes the underline off a source link / a focused source link shows the focus outline`; the underline test reads every rule through `rules`, `reachesSourceLink` and `removesUnderline`, each pinned by `A14 helper: …` table rows |
 
 ## Inner loop: unit behaviors
 

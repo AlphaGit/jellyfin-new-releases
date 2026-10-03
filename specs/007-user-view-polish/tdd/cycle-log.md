@@ -725,3 +725,23 @@ placeholder (FR-007).
   lower case, and both `query()` and the `input` handler use it. Suite -> node 129 passed, also under
   `LANG=de_DE.UTF-8`
 - refactor: the two copies of the lookup became `artistOf`, as part of the green. Nothing further
+
+## Cycle 52: A14's underline test reads every rule that can reach a source link (T041, audit Finding 2)
+
+- what: a test correction. The audit's mutant N9 (`text-decoration-line: none` on `.nr-links a`)
+  survived, because the test read only the `text-decoration` shorthand on four exact selectors.
+  The behaviour A14 is unchanged
+- helpers (new, in `tests/web/styles.test.js`): `rules(css)` lists every rule, `@media` included,
+  once per selector; `reachesSourceLink(selector)` and `removesUnderline(declared)` are predicates,
+  so each one got a table before the test relied on it (profile: "a predicate needs a table")
+- red: both predicates declared as `return false`. `node --test tests/web/styles.test.js` -> the 10
+  rows that expect `true` fail: 6 selectors (`.nr-links a`, `:visited`, `:hover`, `> a`,
+  `#nr-user-view a`, `a:focus-visible`) and 4 declarations (`none`, the longhand `none`,
+  `none !important`, `none solid red`) (10 failed)
+- green: the predicates as written. The table -> 19 rows pass. A probe confirmed that `rules()` also
+  returns the `@media` block's rule
+- test change: the A14 underline test now asserts that no rule from `rules()` both reaches a
+  source link and removes its underline
+- strength: N9 (longhand on `.nr-links a`), N9b (`#nr-user-view a { text-decoration: none }`) and the
+  audit's R13a (shorthand) each fail the test. Each was applied to a file copy, restored, and checked
+  byte-equal. Suite -> node 148 passed

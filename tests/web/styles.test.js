@@ -95,14 +95,74 @@ test('A13: the declared source-link colour has a contrast of at least 4.5:1 agai
     assert.ok(color !== undefined && contrast(color, CARD) >= 4.5, `.nr-links a declares ${color}`);
 });
 
+// What can reach a source link, and what takes its underline off. Predicates, so each is pinned by a
+// table of accepting and rejecting cases before the A14 test relies on it.
+
+/** Every rule in `css`, `@media` blocks included, once per selector in its list. */
+function rules(css = STYLE) {
+    const found = [];
+    for (const [, selectors, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        const declared = {};
+        for (const declaration of body.split(';')) {
+            const at = declaration.indexOf(':');
+            if (at > 0) declared[declaration.slice(0, at).trim()] = declaration.slice(at + 1).trim();
+        }
+        for (const selector of selectors.split(',')) found.push({ selector: selector.trim(), declared });
+    }
+    return found;
+}
+
+/** Whether `selector` can match a source link: it ends in a bare `a` (pseudo-classes allowed), and no class but `.nr-links` narrows it. */
+function reachesSourceLink(selector) {
+    const compounds = selector.trim().split(/\s*[>+~]\s*|\s+/);
+    return /^a(:[\w-]+(\([^)]*\))?)*$/.test(compounds.pop())
+        && compounds.every(compound => (compound.match(/\.[\w-]+/g) || []).every(name => name === '.nr-links'));
+}
+
+/** Whether `declared` turns the underline off, through the shorthand or the longhand. */
+function removesUnderline(declared) {
+    return ['text-decoration', 'text-decoration-line'].some(property => /(^|\s)none(\s|!|$)/.test(declared[property] || ''));
+}
+
+for (const [selector, expected] of [
+    ['#nr-user-view .nr-links a', true],
+    ['#nr-user-view .nr-links a:visited', true],
+    ['#nr-user-view .nr-links a:hover', true],
+    ['#nr-user-view .nr-links > a', true],
+    ['#nr-user-view a', true],
+    ['a:focus-visible', true],
+    ['#nr-user-view .nr-artist a', false],
+    ['#nr-user-view .nr-links', false],
+    ['#nr-user-view .nr-links span', false],
+    ['#nr-user-view .nr-links a.other', false],
+    ['#nr-user-view .nr-links abbr', false],
+]) {
+    test(`A14 helper: "${selector}" ${expected ? 'can' : 'cannot'} reach a source link`, () => {
+        assert.equal(reachesSourceLink(selector), expected);
+    });
+}
+
+for (const [declared, expected] of [
+    [{ 'text-decoration': 'none' }, true],
+    [{ 'text-decoration-line': 'none' }, true],
+    [{ 'text-decoration': 'none !important' }, true],
+    [{ 'text-decoration': 'none solid red' }, true],
+    [{}, false],
+    [{ color: '#00a4dc' }, false],
+    [{ 'text-decoration': 'underline' }, false],
+    [{ 'text-decoration': 'underline dotted' }, false],
+]) {
+    test(`A14 helper: ${JSON.stringify(declared)} ${expected ? 'removes' : 'keeps'} the underline`, () => {
+        assert.equal(removesUnderline(declared), expected);
+    });
+}
+
 test('A14: a visited source link keeps the same colour', () => {
     assert.equal(declarations('.nr-links a:visited').color, declarations('.nr-links a').color);
 });
 
 test('A14: no rule takes the underline off a source link', () => {
-    const states = ['.nr-links a', '.nr-links a:visited', '.nr-links a:hover', '.nr-links a:focus'];
-
-    assert.deepEqual(states.map(s => declarations(s)['text-decoration']).filter(d => d !== undefined && d.startsWith('none')), []);
+    assert.deepEqual(rules().filter(rule => reachesSourceLink(rule.selector) && removesUnderline(rule.declared)).map(rule => rule.selector), []);
 });
 
 test('A14: a focused source link shows the focus outline', () => {
