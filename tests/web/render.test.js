@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const { loadPageDom } = require('./load-page.js');
 const { fixture } = require('./fixtures.js');
 const { HOUR, DAY, ago } = require('./fixed-clock.js');
+const { coverBox, imgAttribute } = require('./cover-markup.js');
 
 // `render` is the one function that consumes a server response, and until now the one function with
 // no test. These capture what it already does, against a response of the shape the server really
@@ -184,20 +185,6 @@ test('a title containing quotes is escaped in every place the row writes it', ()
 // with a failing image is in cover-fallback.test.js.
 
 const BOTH_SOURCES = 101; // releases.json: Closer to Grey, at MusicBrainz and Deezer
-
-/** The markup inside the `nr-cover` box of the row with `id`, or null when the row has no box. */
-function coverBox(panel, id) {
-    const row = panel.split('<article').find(r => r.includes('data-id="' + id + '"')) || '';
-    const box = /<div class="nr-cover">(.*?)<\/div>/.exec(row);
-    return box ? box[1] : null;
-}
-
-/** The raw (still escaped) value of `name` on the first `<img>` in `markup`, or undefined. */
-function imgAttribute(markup, name) {
-    const img = /<img [^>]*>/.exec(markup || '');
-    const attr = img && new RegExp('\\s' + name + '="([^"]*)"').exec(img[0]);
-    return attr ? attr[1] : undefined;
-}
 
 test('U48: a row\'s cover image src is its first cover URL', () => {
     const body = fixture('releases.json');

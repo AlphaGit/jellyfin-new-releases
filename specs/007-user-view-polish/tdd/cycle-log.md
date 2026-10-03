@@ -775,3 +775,17 @@ placeholder (FR-007).
 - green: no production change. Suite -> node 165 passed
 - refactor: none needed
 - open: needs the maintainer's decision to accept it as test-after, like the eleven above
+
+## Refactor: one cover-markup reader for both page test files (T047 closed, T048, audit Findings 8 and 9)
+
+- T047: closed by cycles 49 and 50. A4 and U45 now assert the exact requests sent after the page
+  loaded, and both leave the field (`change`), which US1-AS4 names. Its done-check "R3 still fails
+  A4" no longer applies: R3 (a case-blind lookup) is now the specified behaviour, which A15 pins
+- T048: `tests/web/cover-markup.js` (new helper, added to the profile's `helpers`) holds `coverBox`,
+  `imgAttribute` (raw) and `decoded` (the entities `esc` writes, turned back). `render.test.js`
+  dropped its own copies. `cover-fallback.test.js` dropped its copies, whose `imgAttribute` decoded
+  `&amp;` only, and builds its image through `browserImage`, which decodes every entity `esc` writes
+- no behaviour change; green to green. Suite -> node 165 passed before and after
+- strength kept: N2 (U50), N3 (U54), N4 (U56, A9), N5 (U57) and M12 (the capture listener does
+  nothing, A8 and A9) each still fail their tests. Each was applied to a file copy, restored, and
+  checked byte-equal

@@ -65,6 +65,7 @@ stacks:
       - tests/web/fake-dom.js
       - tests/web/fixtures.js
       - tests/web/fixed-clock.js
+      - tests/web/cover-markup.js
 verified: [single, file, suite]  # single: dotnet only; node's is null, see the note
 suite_baseline: green
 suite_seconds: 13  # dotnet; the node suite is under a second
