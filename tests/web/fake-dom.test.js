@@ -57,3 +57,12 @@ test('addEventListener keeps the options it was given readable', () => {
 
     assert.deepEqual(panel.listenerOptions.error, [true]);
 });
+
+test('remove detaches an element from the element it was appended to', () => {
+    const box = new FakeElement('nr-cover');
+    const img = box.appendChild(new FakeElement('img'));
+
+    img.remove();
+
+    assert.deepEqual(box.children, []);
+});

@@ -364,3 +364,16 @@ change per cycle, and committed at green.
 - green: `addEventListener(type, handler, options)` records `options` in `listenerOptions[type]`,
   at the handler's index. Suite -> node 93 passed, 3 failed (A8–A10, held open); dotnet unchanged (318)
 - refactor: none needed
+
+## Cycle 25: U39 the fake DOM's remove() detaches an element from its parent
+
+- test: `tests/web/fake-dom.test.js::remove detaches an element from the element it was appended to` (new),
+  with `remove() {}` declared on `FakeElement` so the call resolves
+- red: `node --test tests/web/fake-dom.test.js` -> `+ [ FakeElement { … } ] - []` (1 failed)
+- green: `appendChild` records the child's `parentNode`; `remove()` splices the element out of its
+  parent's `children` and clears `parentNode`. The name is the DOM's own, so a page calling
+  `img.remove()` or reading `parentNode` needs no test-only spelling. Suite -> node 94 passed,
+  3 failed (A8–A10, held open)
+- refactor: none needed
+- tasks: T008 ticked
+- commit of cycle 24: `8a26cf0`

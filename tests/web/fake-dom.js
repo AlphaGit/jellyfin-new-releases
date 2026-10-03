@@ -27,6 +27,7 @@ class FakeElement {
         this.listenerOptions = {};
         this.owned = new Map();
         this.owner = null;
+        this.parentNode = null;
     }
 
     setAttribute(name, value) { this.attributes[name] = String(value); }
@@ -48,7 +49,13 @@ class FakeElement {
         (this.listenerOptions[type] ||= []).push(options);
     }
 
-    appendChild(child) { this.children.push(child); return child; }
+    appendChild(child) { this.children.push(child); child.parentNode = this; return child; }
+
+    /** Detaches this element from the element it was appended to; a no-op when it has none. */
+    remove() {
+        if (this.parentNode) { this.parentNode.children.splice(this.parentNode.children.indexOf(this), 1); }
+        this.parentNode = null;
+    }
 
     /**
      * `#id` resolves through the document that owns this element; anything else is treated as a

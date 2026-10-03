@@ -123,7 +123,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U38 | `addEventListener(type, handler, options)` keeps `options` readable by a test | invariant: A8 and U53 need the capture flag | example | DONE | `tests/web/fake-dom.test.js::addEventListener keeps the options it was given readable` |
-| U39 | `remove()` detaches an element from its owner | invariant: A9 and U52 need removal | example | PENDING | |
+| U39 | `remove()` detaches an element from its owner | invariant: A9 and U52 need removal | example | DONE | `tests/web/fake-dom.test.js::remove detaches an element from the element it was appended to` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: Artist filter
 
