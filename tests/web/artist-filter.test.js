@@ -154,3 +154,14 @@ test('U64: typing part of a name while no artist is applied sends no releases re
 
     assert.deepEqual(requests.slice(before), []);
 });
+
+test('U65: after Clear removes ASP, typing ASP again applies it again', async () => {
+    const { document, requests } = await loadView();
+    await type(document, 'ASP');
+    document.getElementById('nr-f-clear').listeners.click[0]();
+    await settled();
+
+    await type(document, 'ASP');
+
+    assert.equal(requests.at(-1), ASP_FILTER);
+});

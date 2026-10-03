@@ -66,7 +66,7 @@ The list shows only that artist's releases. Free text, an empty field and Clear 
 
 ### Tests for User Story 1 (write first, observe red)
 
-- [ ] T002 [P] [US1] Write failing `tests/web/artist-filter.test.js`, loading `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` through `tests/web/load-page.js`:
+- [X] T002 [P] [US1] Write failing `tests/web/artist-filter.test.js`, loading `src/Jellyfin.Plugin.NewReleases/Web/user-view.html` through `tests/web/load-page.js`:
   - `artistIndex` maps each `name` to its `jellyfinId`.
   - After the artists load from `tests/fixtures/pages/artists.json`, the `#nr-f-artist-list` datalist holds one escaped `<option value>` per name.
   - An `input` event whose text equals a name requests `Releases?artistId={id}` through the recording `ApiClient`.
@@ -74,17 +74,17 @@ The list shows only that artist's releases. Free text, an empty field and Clear 
   - Typing the same applied name again sends no second request.
   - When the Artists request fails, the field stays usable and releases are requested with no `artistId`.
   - The control is `<input id="nr-f-artist" list="nr-f-artist-list">` labelled "Artist", and the page adds no key handler to it. [A1] [A2] [A3] [A4] [A5] [U42] [U44] [U45] [U46]
-- [ ] T003 [US1] Add `artistIndex` to the exact member set asserted in `tests/web/exposure.test.js`. The test fails. [U47]
+- [X] T003 [US1] Add `artistIndex` to the exact member set asserted in `tests/web/exposure.test.js`. The test fails. [U47]
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] In `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`, replace `<select id="nr-f-artist">` with the `<input list>` + `<datalist id="nr-f-artist-list">` of [contracts/user-view.md](./contracts/user-view.md). Rewrite `loadArtists` to fill the datalist and build the `artistIndex` map. Make the `input` handler and the Clear button set or clear `artistId`. Expose `artistIndex` on `NewReleasesInternals`. T002 and T003 pass. [A1] [A2] [A3] [A4] [A5] [U42] [U44] [U45] [U46] [U47]
+- [X] T004 [US1] In `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`, replace `<select id="nr-f-artist">` with the `<input list>` + `<datalist id="nr-f-artist-list">` of [contracts/user-view.md](./contracts/user-view.md). Rewrite `loadArtists` to fill the datalist and build the `artistIndex` map. Make the `input` handler and the Clear button set or clear `artistId`. Expose `artistIndex` on `NewReleasesInternals`. T002 and T003 pass. [A1] [A2] [A3] [A4] [A5] [U42] [U44] [U45] [U46] [U47]
 
-- [ ] T027 [US1] Confirm that the acceptance test for US1-AS1 is green in the full suite before US1 counts as complete. [A1]
-- [ ] T028 [US1] Confirm that the acceptance test for US1-AS2 is green in the full suite before US1 counts as complete. [A2]
-- [ ] T029 [US1] Confirm that the acceptance test for US1-AS3 is green in the full suite before US1 counts as complete. [A3]
-- [ ] T030 [US1] Confirm that the acceptance test for US1-AS4 is green in the full suite before US1 counts as complete. [A4]
-- [ ] T031 [US1] Confirm that the acceptance test for US1-AS5 is green in the full suite before US1 counts as complete. [A5]
+- [X] T027 [US1] Confirm that the acceptance test for US1-AS1 is green in the full suite before US1 counts as complete. [A1]
+- [X] T028 [US1] Confirm that the acceptance test for US1-AS2 is green in the full suite before US1 counts as complete. [A2]
+- [X] T029 [US1] Confirm that the acceptance test for US1-AS3 is green in the full suite before US1 counts as complete. [A3]
+- [X] T030 [US1] Confirm that the acceptance test for US1-AS4 is green in the full suite before US1 counts as complete. [A4]
+- [X] T031 [US1] Confirm that the acceptance test for US1-AS5 is green in the full suite before US1 counts as complete. [A5]
 
 **Checkpoint**: US1 complete. `node --test` is green, and `dotnet test` is unchanged.
 

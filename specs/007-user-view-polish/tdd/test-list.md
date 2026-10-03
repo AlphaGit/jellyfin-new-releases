@@ -138,6 +138,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | U46 | Typing the same applied name again sends no second releases request | contracts/user-view.md ("when it changes, reload") | example | DONE | `tests/web/artist-filter.test.js::U46: typing the applied name again sends no second releases request` |
 | U47 | `NewReleasesInternals` exposes exactly the existing members plus `artistIndex` (changes the baseline of `exposure.test.js`) | contracts/user-view.md | example | DONE | `tests/web/exposure.test.js::user-view.html exposes exactly its testable helpers` |
 | U64 | Typing text that leaves the applied artist unchanged (none to none, as while typing a name) sends no releases request | contracts/user-view.md ("when it changes, reload"); discovered in cycle 11 | example | DONE | `tests/web/artist-filter.test.js::U64: typing part of a name while no artist is applied sends no releases request` |
+| U65 | After Clear removes an applied artist, typing that name again applies it again | FR-002, FR-003; discovered in cycle 11 (where the applied artist is recorded decides this) | example | DONE | `tests/web/artist-filter.test.js::U65: after Clear removes ASP, typing ASP again applies it again` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: release card cover
 

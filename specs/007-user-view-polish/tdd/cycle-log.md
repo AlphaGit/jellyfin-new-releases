@@ -210,3 +210,15 @@ change per cycle, and committed at green.
 - green: no production change. Suite -> node 91 passed, dotnet 310 passed
 - refactor: none needed
 - commit of cycle 11: `e57fa95`
+
+## Cycle 13: U65 after Clear, the same name applies again
+
+- test: `tests/web/artist-filter.test.js::U65: after Clear removes ASP, typing ASP again applies it again` (new; U65 appended to the list in this cycle)
+- red: **passed on the first run**: cycle 11 records the applied artist in `query()`, which Clear's
+  reload also runs. Deliberate mutant M8 on a file copy, the applied artist recorded in the `input`
+  handler instead -> `+ 'GET Plugins/NewReleases/Releases'` (1 failed). Restored with `cp`, verified with `cmp -s`
+- green: no production change. Suite -> node 92 passed, dotnet 310 passed
+- refactor: none needed
+- outer loop: US1 closes here. A1–A5 are green in the full suite with every US1 unit `DONE`
+  (U42, U44–U47, U64, U65). Tasks T002–T004 and the gates T027–T031 ticked
+- commit of cycle 12: `4dd7bb4`
