@@ -208,7 +208,7 @@
 
             function loadArtists() {
                 return api('GET', 'Artists').then(function (data) {
-                    root.querySelector('#nr-f-artist-list').innerHTML = data.items.map(function (a) { return '<option value="' + a.name + '">'; }).join('');
+                    root.querySelector('#nr-f-artist-list').innerHTML = data.items.map(function (a) { return '<option value="' + esc(a.name) + '">'; }).join('');
                     artistIds = artistIndex(data.items);
                 }).catch(function () { /* the filter simply stays empty */ });
             }

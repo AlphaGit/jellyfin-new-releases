@@ -157,3 +157,13 @@ change per cycle, and committed at green.
 - refactor: `loadArtists` built the same map inline; it now assigns `artistIndex(data.items)`, so
   the tested helper is the one the filter uses. Suite re-run green (node 87, dotnet 310)
 - commit of cycle 7: `5dcac35`
+
+## Cycle 9: U44 each option value is written escaped
+
+- test: `tests/web/artist-filter.test.js::U44: a name with markup characters is written into its option escaped` (new)
+- red: `node --test tests/web/artist-filter.test.js` -> `+ '<option value="Guns "N" <Roses>">' - '<option value="Guns &quot;N&quot; &lt;Roses&gt;">'` (1 failed)
+- green: the option value goes through the page's existing `esc`. Suite -> node 88 passed, dotnet 310 passed
+- refactor: none needed
+- notes: the browser decodes the entity in `value`, so the field text after a pick is the raw name
+  and the exact lookup still finds it
+- commit of cycle 8: `a0d0208`

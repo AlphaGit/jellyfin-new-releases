@@ -119,3 +119,9 @@ test('U42: artistIndex maps each name to its jellyfinId', async () => {
         Wasp: 'a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7',
     });
 });
+
+test('U44: a name with markup characters is written into its option escaped', async () => {
+    const { document } = await loadView({ items: [{ jellyfinId: 'a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8', name: 'Guns "N" <Roses>' }] });
+
+    assert.equal(document.getElementById('nr-f-artist-list').innerHTML, '<option value="Guns &quot;N&quot; &lt;Roses&gt;">');
+});
