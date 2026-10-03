@@ -226,6 +226,32 @@ test('A16: every rule that reaches a source link and declares a colour keeps 4.5
     assert.deepEqual([colours.length > 0, below], [true, []]);
 });
 
+/** Whether `declared` dims what it reaches: an `opacity` below 1, or any `filter` but `none`. */
+function dimsText(declared) {
+    const opacity = (declared.opacity || '').trim();
+    return parseFloat(opacity) / (opacity.endsWith('%') ? 100 : 1) < 1 || !['', 'none'].includes((declared.filter || '').trim());
+}
+
+for (const [declared, expected] of [
+    [{}, false],
+    [{ color: '#00a4dc' }, false],
+    [{ opacity: '1' }, false],
+    [{ opacity: '100%' }, false],
+    [{ filter: 'none' }, false],
+    [{ opacity: '.3' }, true],
+    [{ opacity: '0' }, true],
+    [{ opacity: '30%' }, true],
+    [{ filter: 'brightness(.5)' }, true],
+]) {
+    test(`A17 helper: ${JSON.stringify(declared)} ${expected ? 'dims' : 'does not dim'} the text`, () => {
+        assert.equal(dimsText(declared), expected);
+    });
+}
+
+test('A17: no rule that reaches a source link dims it, so hover and focus keep the contrast A16 measures', () => {
+    assert.deepEqual(rules().filter(rule => reachesSourceLink(rule.selector) && dimsText(rule.declared)).map(rule => rule.selector), []);
+});
+
 test('A14: a visited source link keeps the same colour', () => {
     assert.equal(declarations('.nr-links a:visited').color, declarations('.nr-links a').color);
 });

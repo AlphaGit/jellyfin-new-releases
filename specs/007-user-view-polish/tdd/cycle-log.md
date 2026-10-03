@@ -840,3 +840,23 @@ placeholder (FR-007).
 - green: `isVisibleColour` also rejects the five CSS-wide keywords. File -> 63 passed
 - strength: P4 and N6 (`background: none`) each fail U60. Each was applied to a file copy, restored,
   and checked byte-equal
+
+## Cycle 58: A17 no rule that reaches a source link dims it (T055, second audit Finding 5) — test-after
+
+- list: A17 appended. US4-AS2 says the link "keeps the same contrast" on hover and focus. A16 reads
+  `color` only, so the second audit's mutant P9 (`.nr-links a:hover { opacity: .3 }`) survived
+- helper (new, in `tests/web/styles.test.js`): `dimsText(declared)`, pinned by a table of 9 rows. It
+  accepts an `opacity` below 1 (number or percent) and any `filter` but `none`
+- red (helper): `dimsText` declared as `return false`. `node --test tests/web/styles.test.js` -> the
+  4 dimming rows fail (4 failed). Green: the predicate as written
+- test: `tests/web/styles.test.js::A17: no rule that reaches a source link dims it, so hover and focus keep the contrast A16 measures` (new)
+- red (behaviour): **passed on the first run.** The page declares no opacity or filter on a source
+  link. This is **test-after**: no red exists. Evidence instead:
+  - P9, `#nr-user-view .nr-links a:hover { opacity: .3 }` -> A17 fails (1 failed)
+  - P10, `#nr-user-view .nr-row a:focus { filter: brightness(.4) }` -> A17 fails (1 failed)
+
+  Both were applied to a file copy, restored, and checked byte-equal
+- green: no production change. Suite -> node 200 passed
+- ceiling: A17 reads rules that reach the link itself. An `opacity` on an ancestor (`.nr-links`,
+  `.nr-row`) also dims the link and is not read. No such rule exists today
+- open: needs the maintainer's decision to accept it as test-after, like A16
