@@ -181,9 +181,9 @@ least 4.5.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T023 Run `PATH=/opt/homebrew/opt/dotnet/bin:$PATH dotnet build --configuration Release`. The build has zero warnings (`TreatWarningsAsErrors`).
-- [ ] T024 Run the full `dotnet test --configuration Release` and `node --test "tests/web/*.test.js"`, and the node suite again with `LANG=de_DE.UTF-8`. All are green.
-- [ ] T025 [P] Confirm that `HttpSurfaceTests.NoContractDocument_NamesARouteThePluginDoesNotServe` in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/HttpSurfaceTests.cs` still passes with the amended `001` contract and this feature's `contracts/http-api.md`.
+- [X] T023 Run `PATH=/opt/homebrew/opt/dotnet/bin:$PATH dotnet build --configuration Release`. The build has zero warnings (`TreatWarningsAsErrors`).
+- [X] T024 Run the full `dotnet test --configuration Release` and `node --test "tests/web/*.test.js"`, and the node suite again with `LANG=de_DE.UTF-8`. All are green.
+- [X] T025 [P] Confirm that `HttpSurfaceTests.NoContractDocument_NamesARouteThePluginDoesNotServe` in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/HttpSurfaceTests.cs` still passes with the amended `001` contract and this feature's `contracts/http-api.md`.
 - [ ] T026 Commit to `main`. Push only when the maintainer asks, then verify that the CI run for the push is green (`gh run list --branch main`).
 
 The real-browser pass in [quickstart.md](./quickstart.md) §2 is the maintainer's own pass after
