@@ -90,3 +90,20 @@ change per cycle, and committed at green.
   sends the mapped id; the field reloads on `input`. Suite -> node 81 passed, dotnet 310 passed
 - refactor: `query()` read the map twice; the lookup moved into one local. Suite re-run green (node 81, dotnet 310)
 - commit of cycle 2: `cd52744`
+
+## Cycle 4: A3 emptying the field or pressing Clear removes the artist filter
+
+- test: `tests/web/artist-filter.test.js::A3: after ASP is applied, emptying the field requests releases with no artistId`
+  and `…::A3: after ASP is applied, pressing Clear requests releases with no artistId` (new; the
+  behaviour names two ways, so it has one test for each)
+- red: **both passed on the first run.** Cycle 3's map lookup already yields no id for `""`, and
+  the existing Clear handler already empties every filter. Deliberate mutants per the playbook,
+  each applied to a file copy of `user-view.html` and restored with `cp`, verified with `cmp -s`:
+  - M1, `query()` keeps the last applied id when the text maps to nothing -> both tests fail,
+    `+ 'GET Plugins/NewReleases/Releases?artistId=a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5'` (2 failed)
+  - M2, Clear skips the Artist field -> the Clear test fails with the same line (1 failed)
+- green: no production change. Suite -> node 83 passed, dotnet 310 passed
+- refactor: none needed
+- notes: test-after in the strict sense, for the same reason as `005` cycles 2 and 3; the mutants
+  stand in for the red
+- commit of cycle 3: `3791558`

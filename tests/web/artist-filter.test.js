@@ -61,3 +61,27 @@ test('A2: when the field text becomes the name ASP the page requests releases wi
 
     assert.equal(requests.at(-1), 'GET Plugins/NewReleases/Releases?artistId=a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5');
 });
+
+const ASP_FILTER = 'GET Plugins/NewReleases/Releases?artistId=a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5';
+const UNFILTERED = 'GET Plugins/NewReleases/Releases';
+
+test('A3: after ASP is applied, emptying the field requests releases with no artistId', async () => {
+    const { document, requests } = await loadView();
+    await type(document, 'ASP');
+    assert.equal(requests.at(-1), ASP_FILTER);
+
+    await type(document, '');
+
+    assert.equal(requests.at(-1), UNFILTERED);
+});
+
+test('A3: after ASP is applied, pressing Clear requests releases with no artistId', async () => {
+    const { document, requests } = await loadView();
+    await type(document, 'ASP');
+    assert.equal(requests.at(-1), ASP_FILTER);
+
+    document.getElementById('nr-f-clear').listeners.click[0]();
+    await settled();
+
+    assert.equal(requests.at(-1), UNFILTERED);
+});
