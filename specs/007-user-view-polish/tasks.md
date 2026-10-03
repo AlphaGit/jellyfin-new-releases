@@ -166,14 +166,14 @@ a link.
 **Independent Test**: The computed contrast of the declared link colour against `#1c1c1c` is at
 least 4.5.
 
-- [ ] T021 [US4] Add failing cases to `tests/web/styles.test.js`:
+- [X] T021 [US4] Add failing cases to `tests/web/styles.test.js`:
   - A rule for both `.nr-links a` and `.nr-links a:visited` declares a `color`.
   - That colour's WCAG contrast ratio against `#1c1c1c` is ≥ 4.5. Compute it in the test with the relative-luminance formula; no library. Pin the formula with `#0000ee` on `#1c1c1c` (below 4.5) and `#ffffff` on `#000000` (21).
   - No rule removes the link underline, and focus keeps its outline. [A13] [A14] [U62] [U63]
-- [ ] T022 [US4] Add `.nr-links a, .nr-links a:visited { color: #00a4dc; }` to `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`. T021 passes. [A13] [A14]
+- [X] T022 [US4] Add `.nr-links a, .nr-links a:visited { color: #00a4dc; }` to `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`. T021 passes. [A13] [A14]
 
-- [ ] T038 [US4] Confirm that the acceptance test for US4-AS1 is green in the full suite before US4 counts as complete. [A13]
-- [ ] T039 [US4] Confirm that the acceptance test for US4-AS2 is green in the full suite before US4 counts as complete. [A14]
+- [X] T038 [US4] Confirm that the acceptance test for US4-AS1 is green in the full suite before US4 counts as complete. [A13]
+- [X] T039 [US4] Confirm that the acceptance test for US4-AS2 is green in the full suite before US4 counts as complete. [A14]
 
 **Checkpoint**: All four stories complete.
 

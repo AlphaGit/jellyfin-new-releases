@@ -42,7 +42,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | A11 | The stylesheet makes the List-tab buttons fill one shared column: `.nr-actions` stretches, and its buttons are `width: 100%` | US3-AS1, FR-009, SC-003 | example | DONE | `tests/web/styles.test.js::A11: the List-tab buttons fill one shared column: .nr-actions stretches its buttons, and each is full width` |
 | A12 | An Archive-tab card renders "Restore" inside `.nr-actions`, under the same button rule as "Ignore" and "Have it" | US3-AS2, FR-009 | example | DONE | `tests/web/render.test.js::A12: an Archive-tab row writes Restore inside .nr-actions, under the same rule as Ignore and Have it` |
 | A13 | The declared source-link colour has a WCAG contrast of at least 4.5:1 against the card background `#1c1c1c` | US4-AS1, FR-010, SC-004 | example | DONE | `tests/web/styles.test.js::A13: the declared source-link colour has a contrast of at least 4.5:1 against the card` |
-| A14 | The source link keeps its underline, its `:visited` state has the same colour, and focus shows the outline | US4-AS2, FR-010 | example | PENDING | |
+| A14 | The source link keeps its underline, its `:visited` state has the same colour, and focus shows the outline | US4-AS2, FR-010 | example | DONE | `tests/web/styles.test.js::A14: a visited source link keeps the same colour / no rule takes the underline off a source link / a focused source link shows the focus outline` |
 
 ## Inner loop: unit behaviors
 

@@ -94,3 +94,17 @@ test('A13: the declared source-link colour has a contrast of at least 4.5:1 agai
 
     assert.ok(color !== undefined && contrast(color, CARD) >= 4.5, `.nr-links a declares ${color}`);
 });
+
+test('A14: a visited source link keeps the same colour', () => {
+    assert.equal(declarations('.nr-links a:visited').color, declarations('.nr-links a').color);
+});
+
+test('A14: no rule takes the underline off a source link', () => {
+    const states = ['.nr-links a', '.nr-links a:visited', '.nr-links a:hover', '.nr-links a:focus'];
+
+    assert.deepEqual(states.map(s => declarations(s)['text-decoration']).filter(d => d !== undefined && d.startsWith('none')), []);
+});
+
+test('A14: a focused source link shows the focus outline', () => {
+    assert.match(declarations(':focus-visible').outline || '', /solid/);
+});

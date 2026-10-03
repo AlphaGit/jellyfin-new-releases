@@ -616,3 +616,22 @@ change per cycle, and committed at green.
   passed, dotnet 318 passed
 - refactor: none needed
 - commit of cycle 46: `4ae34cd`
+
+## Cycle 48: A14 the source link stays a link: underline, same visited colour, focus outline
+
+- tests: `tests/web/styles.test.js::A14: a visited source link keeps the same colour`,
+  `…::A14: no rule takes the underline off a source link`, `…::A14: a focused source link shows the focus outline`
+  (new; the criterion names three things, so one test each)
+- red: `node --test tests/web/styles.test.js` -> the visited test fails, `+ undefined - '#00a4dc'`
+  (1 failed). The underline and focus tests **passed on the first run**: nothing removes the
+  underline, and the page already declares a `:focus-visible` outline. Deliberate mutants on a file
+  copy, restored with `cp` and verified with `cmp -s`:
+  - M15, `.nr-links a` declares `text-decoration: none` -> the underline test fails (1 failed)
+  - M16, `:focus-visible` declares `outline: none` -> the focus test fails (1 failed)
+- green: the colour moved to one rule for `.nr-links a, .nr-links a:visited` (contracts/user-view.md),
+  so a visited link cannot fall back to the browser's low-contrast purple. Suite -> node 119
+  passed, dotnet 318 passed
+- refactor: none needed
+- outer loop: US4 closes. A13 and A14 green with U62, U63 `DONE`. Tasks T021, T022 and the gates
+  T038, T039 ticked
+- commit of cycle 47: `084d299`
