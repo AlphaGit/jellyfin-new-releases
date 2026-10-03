@@ -149,7 +149,7 @@ Constitution II: refactoring happens only on a green suite and never in the same
 
 - [X] T035 [P] Add a `CHANGELOG.md` entry under `Unreleased` describing the fix in user terms: the page now reports when the releases were last checked rather than when a refresh last ran
 - [X] T036 Update `specs/002-report-data-age/quickstart.md`: the unit ladder is now covered by `tests/web/`, so remove it from the "does not cover" list and add a step running `node --test "tests/web/*.test.js"`
-- [ ] T037 Run the manual checks in `specs/002-report-data-age/quickstart.md` steps 3–6 against Jellyfin 12.x with Plugin Pages installed (retargeted 2026-10-01: `003` dropped 10.11.x; JD's own pass), and record the outcome in that file's "Results" section; open a spec amendment for any deviation before touching code (constitution I)
+- [X] T037 Run the manual checks in `specs/002-report-data-age/quickstart.md` steps 3–6 against Jellyfin 12.x with Plugin Pages installed (retargeted 2026-10-01: `003` dropped 10.11.x; JD's own pass), and record the outcome in that file's "Results" section; open a spec amendment for any deviation before touching code (constitution I)
 - [X] T038 Final gate: `dotnet build --configuration Release` with zero warnings, `dotnet test --configuration Release` green, and `node --test "tests/web/*.test.js"` green; commit to `main` with Conventional Commits, push, and verify CI green with `gh run list --branch main` / `gh run watch`
 
 ---
