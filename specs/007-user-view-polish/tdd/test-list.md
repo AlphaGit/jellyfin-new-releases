@@ -38,7 +38,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | A7  | After a refresh stores one release at both sources, `GET Releases` returns its Deezer cover URL, then its Cover Art Archive URL | US2-AS1, FR-006, FR-006a | example | DONE | `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/BrowseReleasesTests.cs::A7_AReleaseStoredAtBothSources_ListsItsDeezerCoverThenItsCoverArtArchiveCover` |
 | A8  | On a card for a release with both sources, an `error` on the Deezer image puts the Cover Art Archive URL in its `src` | US2-AS2, FR-006a | example | RED | |
 | A9  | On a card whose every cover URL fails, the cover box remains and holds no `<img>` | US2-AS3, FR-007 | example | RED | |
-| A10 | A rendered cover image has empty alt text | US2-AS4 | example | RED | |
+| A10 | A rendered cover image has empty alt text | US2-AS4 | example | DONE | `tests/web/render.test.js::A10: a rendered cover image has empty alt text, so a screen reader skips it` |
 | A11 | The stylesheet makes the List-tab buttons fill one shared column: `.nr-actions` stretches, and its buttons are `width: 100%` | US3-AS1, FR-009, SC-003 | example | PENDING | |
 | A12 | An Archive-tab card renders "Restore" inside `.nr-actions`, under the same button rule as "Ignore" and "Have it" | US3-AS2, FR-009 | example | PENDING | |
 | A13 | The declared source-link colour has a WCAG contrast of at least 4.5:1 against the card background `#1c1c1c` | US4-AS1, FR-010, SC-004 | example | PENDING | |

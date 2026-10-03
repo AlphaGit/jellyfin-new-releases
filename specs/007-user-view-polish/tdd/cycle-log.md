@@ -447,3 +447,15 @@ change per cycle, and committed at green.
   (A8–A10, held open); dotnet 318 passed
 - refactor: none needed
 - commit of cycle 31: `204ed03`
+
+## Cycle 33: A10 closes — a rendered cover image has empty alt text
+
+- test: moved from the open file into `tests/web/render.test.js::A10: a rendered cover image has empty alt text, so a screen reader skips it`,
+  now reading the box through `render.test.js`'s own `coverBox` and `imgAttribute`
+- red: recorded in cycle 23, and re-observed at the new location before the change:
+  `node --test tests/web/render.test.js` -> `not ok 27 - A10: …` (1 failed; no `alt` attribute)
+- green: `cover()` writes `alt=""`. A10 has no unit beneath it: the attribute is the whole
+  behaviour. Suite -> node 102 passed, 2 failed (A8, A9, held open); dotnet 318 passed
+- refactor: none needed
+- tasks: T009 (A10, U48–U54) and the gate T035 ticked
+- commit of cycle 32: `ee69fc1`

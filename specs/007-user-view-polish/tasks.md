@@ -108,7 +108,7 @@ Make every image fail. Both cards end with the placeholder box and no `<img>`.
   - `Sources` keeps its existing order. [U32] [U33] [U34] [U35] [U36]
 - [X] T007 [P] [US2] Add a `covers` array to every item in `tests/fixtures/pages/releases.json`, `releases-filtered.json` and `releases-stale.json`. `ResponseNamingTests` in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ResponseNamingTests.cs` now fails on the missing field. [U37]
 - [X] T008 [P] [US2] Extend `tests/web/fake-dom.js` so that `addEventListener(type, handler, options)` keeps `options` readable by a test, and an element supports `remove()` (it detaches the element from its owner). Cover both with failing cases in `tests/web/fake-dom.test.js` first. [U38] [U39]
-- [ ] T009 [US2] Add failing cases to `tests/web/render.test.js`:
+- [X] T009 [US2] Add failing cases to `tests/web/render.test.js`:
   - Each row writes `<div class="nr-cover"><img …>` with `src` = `covers[0]`, `data-fallback` = the rest in order, `alt=""`, `loading="lazy"`, `decoding="async"`, `referrerpolicy="no-referrer"`, `width="64"` and `height="64"`.
   - A row with `covers: []` writes the box with no `<img>`.
   - Cover URLs are written through `esc`. [A10] [U48] [U49] [U50] [U51] [U52] [U53] [U54]
@@ -130,7 +130,7 @@ Make every image fail. Both cards end with the placeholder box and no `<img>`.
 - [X] T032 [US2] Confirm that the acceptance test for US2-AS1 is green in the full suite before US2 counts as complete. [A7]
 - [ ] T033 [US2] Confirm that the acceptance test for US2-AS2 is green in the full suite before US2 counts as complete. [A8]
 - [ ] T034 [US2] Confirm that the acceptance test for US2-AS3 is green in the full suite before US2 counts as complete. [A9]
-- [ ] T035 [US2] Confirm that the acceptance test for US2-AS4 is green in the full suite before US2 counts as complete. [A10]
+- [X] T035 [US2] Confirm that the acceptance test for US2-AS4 is green in the full suite before US2 counts as complete. [A10]
 
 **Checkpoint**: US1 and US2 complete. Both suites are green.
 

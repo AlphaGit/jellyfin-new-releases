@@ -151,7 +151,7 @@
             function cover(urls) {
                 if (!urls.length) return '<div class="nr-cover"></div>';
                 return '<div class="nr-cover"><img src="' + esc(urls[0]) + '" data-fallback="' + esc(urls.slice(1).join(' ')) +
-                    '" loading="lazy" referrerpolicy="no-referrer" width="64" height="64"></div>';
+                    '" alt="" loading="lazy" referrerpolicy="no-referrer" width="64" height="64"></div>';
             }
 
             function row(item) {

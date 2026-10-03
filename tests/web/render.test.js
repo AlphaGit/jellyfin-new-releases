@@ -244,3 +244,7 @@ test('U54: cover URLs are written escaped, in the src and in the fallbacks', () 
 
     assert.deepEqual([imgAttribute(box, 'src'), imgAttribute(box, 'data-fallback')], ['https://x.test/a&quot;&gt;&lt;script&gt;', 'https://x.test/b?c=1&amp;d=2']);
 });
+
+test('A10: a rendered cover image has empty alt text, so a screen reader skips it', () => {
+    assert.equal(imgAttribute(coverBox(rendered(fixture('releases.json')).panel, BOTH_SOURCES), 'alt'), '');
+});
