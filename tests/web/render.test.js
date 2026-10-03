@@ -214,3 +214,7 @@ test('U49: a row\'s cover image lists the remaining cover URLs, in order, as its
 
     assert.equal(imgAttribute(box, 'data-fallback'), body.items.find(i => i.id === BOTH_SOURCES).covers.slice(1).join(' '));
 });
+
+test('U50: a row\'s cover image loads lazily', () => {
+    assert.equal(imgAttribute(coverBox(rendered(fixture('releases.json')).panel, BOTH_SOURCES), 'loading'), 'lazy');
+});

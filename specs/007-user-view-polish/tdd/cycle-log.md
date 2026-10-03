@@ -396,3 +396,15 @@ change per cycle, and committed at green.
   3 failed (A8–A10, held open); dotnet 318 passed
 - refactor: none needed
 - commit of cycle 26: `f3efd40`
+
+## Cycle 28: U50 a row's cover image loads lazily
+
+- test: `tests/web/render.test.js::U50: a row's cover image loads lazily` (new)
+- red: `node --test tests/web/render.test.js` -> `+ undefined - 'lazy'` (1 failed)
+- deviation: the U51 test was written in the same step and run with it (red: `+ undefined - 'no-referrer'`).
+  Two tests in one step breaks "one behaviour per cycle", so the U51 test was taken out of the
+  file before any implementation and is re-added as cycle 29
+- green: the `<img>` declares `loading="lazy"`. Suite -> node 97 passed, 3 failed (A8–A10, held
+  open); dotnet 318 passed
+- refactor: none needed
+- commit of cycle 27: `39df9f5`
