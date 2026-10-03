@@ -59,3 +59,23 @@ existed and failed before the implementation.
   red test cannot be committed and the tree must build. Suite back at
   310 passed, 0 failed; node 79 passed.
 - commit: none
+
+## Re-plan, 2026-10-03
+
+The 2026-10-03 clarification removed the homonym disambiguation. `tdd/test-list.md` was refreshed
+at `d88c618`: A6, U1–U30, U40, U41 and U43 are `DROPPED`, and `tasks.md` was regenerated with new
+task ids (`5a26d24`). Baseline at `5a26d24`: dotnet 310 passed, node 79 passed.
+
+Commit convention for the page cycles below: the acceptance behaviours A1–A5 have no unit layer
+beneath them that is not the page itself, so each is driven directly, one test and one smallest
+change per cycle, and committed at green.
+
+## Cycle 2: A1 the suggestion list offers every artist name
+
+- test: `tests/web/artist-filter.test.js::A1: with artists ASP, Aspen and Wasp the suggestion list offers all three names` (new file)
+- red: `node --test tests/web/artist-filter.test.js` (the profile has no node single-test command; the file holds this one test)
+  -> `Expected values to be strictly deep-equal: + [] - ['ASP', 'Aspen', 'Wasp']` (1 failed)
+- green: `user-view.html` declares `<datalist id="nr-f-artist-list">` beside the existing
+  `<select>`, and `loadArtists` writes one `<option value="{name}">` per artist into it. Names are
+  not escaped yet: U44 drives that. Suite -> node 80 passed, dotnet 310 passed
+- refactor: none needed

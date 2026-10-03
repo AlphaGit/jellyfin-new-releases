@@ -35,7 +35,7 @@
     </div>
 
     <form class="nr-filters" role="search" aria-label="Filter releases" id="nr-filters">
-        <div class="nr-filter"><label for="nr-f-artist">Artist</label><select id="nr-f-artist"><option value="">All artists</option></select></div>
+        <div class="nr-filter"><label for="nr-f-artist">Artist</label><select id="nr-f-artist"><option value="">All artists</option></select><datalist id="nr-f-artist-list"></datalist></div>
         <div class="nr-filter"><label for="nr-f-type">Type</label>
             <select id="nr-f-type"><option value="">All types</option><option>Album</option><option>EP</option><option>Single</option><option>Compilation</option><option>Live</option><option>Remix</option><option>Soundtrack</option></select></div>
         <div class="nr-filter"><label for="nr-f-state">State</label>
@@ -200,6 +200,7 @@
 
             function loadArtists() {
                 return api('GET', 'Artists').then(function (data) {
+                    root.querySelector('#nr-f-artist-list').innerHTML = data.items.map(function (a) { return '<option value="' + a.name + '">'; }).join('');
                     data.items.forEach(function (a) {
                         var option = document.createElement('option');
                         option.value = a.jellyfinId;

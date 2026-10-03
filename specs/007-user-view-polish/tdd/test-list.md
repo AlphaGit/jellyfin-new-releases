@@ -29,7 +29,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| A1  | With artists "ASP", "Aspen" and "Wasp", the page's suggestion list offers all three names | US1-AS1, FR-001 | example | PENDING | |
+| A1  | With artists "ASP", "Aspen" and "Wasp", the page's suggestion list offers all three names | US1-AS1, FR-001 | example | DONE | `tests/web/artist-filter.test.js::A1: with artists ASP, Aspen and Wasp the suggestion list offers all three names` |
 | A2  | When the field text becomes the name "ASP", the page requests releases with ASP's `artistId` | US1-AS2, FR-002, FR-005 | example | PENDING | |
 | A3  | After an artist is applied, emptying the field or pressing Clear requests releases with no `artistId` | US1-AS3, FR-003 | example | PENDING | |
 | A4  | Text that equals no artist name requests releases with no `artistId` | US1-AS4, FR-002 | example | PENDING | |
