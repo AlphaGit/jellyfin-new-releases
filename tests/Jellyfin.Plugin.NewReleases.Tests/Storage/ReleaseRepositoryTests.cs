@@ -47,6 +47,18 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         Assert.Equal(2L, await _db.ScalarAsync<long>($"SELECT COUNT(*) FROM source_entry WHERE release_id = {fromMusicBrainz}"));
     }
 
+    /// <summary>007 FR-006: the cover URLs are built from the stored source IDs, so each listed link carries its own.</summary>
+    [Fact]
+    public async Task ListAsync_EachSourceLinkCarriesTheSourceReleaseIdStoredForIt()
+    {
+        await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("Discovery", "rg-disc"), Run1, Now, CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(_artist, "deezer", DeezerItem("Discovery", "dz-disc"), Run1, Now, CancellationToken.None);
+
+        var listed = Assert.Single(await _db.Releases.ListAsync(DefaultFilter, CancellationToken.None));
+
+        Assert.Equal([("deezer", "dz-disc"), ("musicbrainz", "rg-disc")], listed.Sources.Select(s => (s.Source, s.SourceReleaseId)));
+    }
+
     [Fact]
     public async Task UpsertFromSourceAsync_MusicBrainzEntryIsCanonicalForSourceIdTypesAndDate()
     {

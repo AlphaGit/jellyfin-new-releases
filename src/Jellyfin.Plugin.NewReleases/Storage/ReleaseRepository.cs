@@ -185,8 +185,8 @@ public sealed class ReleaseRepository
             SELECT r.id, a.name, a.jellyfin_id, a.library_ids, r.title, r.primary_type, r.secondary_types, r.release_date, r.date_sort,
                    r.ownership_state, r.missing_tracks, e.source, e.title,
                    a.artist_key, r.normalized_title, d.kind, d.user_id, d.decided_at,
-                   (SELECT json_group_array(json_object('source', s.source, 'url', s.url))
-                      FROM (SELECT source, url FROM source_entry WHERE release_id = r.id ORDER BY source) AS s) AS sources
+                   (SELECT json_group_array(json_object('source', s.source, 'url', s.url, 'sourceReleaseId', s.source_release_id))
+                      FROM (SELECT source, url, source_release_id FROM source_entry WHERE release_id = r.id ORDER BY source) AS s) AS sources
             FROM release r
             JOIN library_artist a ON a.id = r.library_artist_id
             LEFT JOIN edition e ON e.id = r.compared_edition_id

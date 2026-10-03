@@ -222,3 +222,29 @@ change per cycle, and committed at green.
 - outer loop: US1 closes here. A1–A5 are green in the full suite with every US1 unit `DONE`
   (U42, U44–U47, U64, U65). Tasks T002–T004 and the gates T027–T031 ticked
 - commit of cycle 12: `4dd7bb4`
+
+## Cycle 14: A7 opens US2's outer loop — RED, held open
+
+- test: `Acceptance/BrowseReleasesTests.cs::A7_AReleaseStoredAtBothSources_ListsItsDeezerCoverThenItsCoverArtArchiveCover` (new).
+  Daft Punk tagged; MusicBrainz lists "Alive 2007" as release group `48117b90-…`, Deezer as album 3;
+  the release is read from its **serialized** form under `JsonDefaults.CamelCaseOptions`, because
+  `covers` is the wire field the page reads, so no `ReleaseDto.Covers` declaration is needed to compile
+- first run: `Assert.Single() Failure: The collection was empty` — **not a valid red**: the test's
+  MusicBrainz group carried the `Live` secondary type, which the default type set hides. Fixed the
+  test (no secondary type), re-ran
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~BrowseReleasesTests.A7_AReleaseStoredAtBothSources" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected `["https://api.deezer.com/album/3/image?size=medium", "https://coverartarchive.org/release-group/48117b90"···]` Actual `[]` (1 failed)
+- state: `RED`. The test stays **uncommitted** while U31–U37 run, so every unit commit is green;
+  each unit cycle's full suite reports this one test failing and nothing else
+- commit of cycle 13: `670aadc`
+
+## Cycle 15: U31 each listed source link carries its source_release_id
+
+- test: `Storage/ReleaseRepositoryTests.cs::ListAsync_EachSourceLinkCarriesTheSourceReleaseIdStoredForIt` (new),
+  with `SourceLink.SourceReleaseId` declared as `= ""` so the test compiles
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseRepositoryTests.ListAsync_EachSourceLinkCarriesTheSourceReleaseIdStoredForIt" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected `[("deezer", "dz-disc"), ("musicbrainz", "rg-disc")]` Actual `[("deezer", ""), ("musicbrainz", "")]` (1 failed)
+- green: the list query's `sources` JSON also selects `source_release_id`. Suite -> dotnet 311
+  passed, 1 failed (A7, held open), node 92 passed
+- refactor: the stub default `= ""` removed from `SourceLink`; every row now carries the value.
+  Suite re-run: same counts

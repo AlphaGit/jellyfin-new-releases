@@ -83,7 +83,7 @@ public sealed record ListedRelease(
     IReadOnlyList<SourceLink> Sources,
     Decision? Archived);
 
-public sealed record SourceLink(string Source, string Url);
+public sealed record SourceLink(string Source, string Url, string SourceReleaseId);
 
 public sealed record ComparedEdition(string Source, string Title);
 
