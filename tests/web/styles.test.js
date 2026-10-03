@@ -64,6 +64,9 @@ test('U59: below 600 px the actions take their own row, in equal columns', () =>
 
 // US4: WCAG 2 contrast, computed here from relative luminance; no library (FR-010, SC-004).
 
+/** The card background the spec measures against (FR-010, contracts/user-view.md). */
+const CARD = '#1c1c1c';
+
 /** WCAG 2 relative luminance of a `#rrggbb` colour. */
 function luminance(hex) {
     const [r, g, b] = [1, 3, 5]
@@ -80,4 +83,8 @@ function contrast(a, b) {
 
 test('U63: the contrast formula rates white on black at 21, its upper bound', () => {
     assert.equal(contrast('#ffffff', '#000000'), 21);
+});
+
+test('U62: the contrast formula rates the browser\'s default link blue on the card below 4.5, the defect the spec reports', () => {
+    assert.ok(contrast('#0000ee', CARD) < 4.5, `#0000ee on ${CARD} rated ${contrast('#0000ee', CARD)}`);
 });

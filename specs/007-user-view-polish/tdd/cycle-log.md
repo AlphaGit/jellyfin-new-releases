@@ -595,3 +595,14 @@ change per cycle, and committed at green.
   on black is exactly 21 unrounded. Suite -> node 114 passed; dotnet unchanged (318)
 - refactor: none beyond the rounding removal
 - commit of cycle 44: `2962937`
+
+## Cycle 46: U62 the formula rates the default link blue on the card below 4.5
+
+- test: `tests/web/styles.test.js::U62: the contrast formula rates the browser's default link blue on the card below 4.5, the defect the spec reports` (new), with the `CARD = '#1c1c1c'` constant
+- red: **passed on the first run**: it pins cycle 45's formula against the measured defect
+  (research R9: 1.81:1). Deliberate mutant M14 on a file copy of the test file, the `+ 0.05` flare
+  terms dropped -> U62 fails with the blue rated above 4.5, and U63 fails too (2 failed). Restored
+  with `cp`, verified with `cmp -s`
+- green: no change. Suite -> node 115 passed
+- refactor: none needed
+- commit of cycle 45: `d48a008`
