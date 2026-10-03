@@ -119,3 +119,18 @@ change per cycle, and committed at green.
 - green: no production change. Suite -> node 84 passed, dotnet 310 passed
 - refactor: none needed
 - commit of cycle 4: `0730cb8`
+
+## Cycle 6: A5 the Artist control is the native, labelled suggestion input
+
+- test: `tests/web/artist-filter.test.js::A5: the Artist control is a text input labelled "Artist" and bound to the suggestion list`
+  (reads the page source: the fake DOM does not model markup attributes) and
+  `…::A5: the page adds no key handling to the Artist control, so the browser keeps its own` (new)
+- red: **both passed on the first run**: cycle 3 already wrote the markup. Deliberate mutants on a
+  file copy, restored with `cp` and verified with `cmp -s`:
+  - M4, the `list` attribute removed -> the markup test fails (1 failed)
+  - M5, a `keydown` listener added to the field -> `+ 'keydown'` (1 failed)
+- green: no production change. Suite -> node 86 passed, dotnet 310 passed
+- refactor: none needed
+- notes: keyboard operation itself (FR-004) is the browser's; the hermetic suite can only pin that
+  the page does not take it over. The real-browser pass, `quickstart.md` §2.1, checks it
+- commit of cycle 5: `369f8e6`

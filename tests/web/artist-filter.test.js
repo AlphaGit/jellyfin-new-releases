@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('node:fs');
+const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPageDom } = require('./load-page.js');
@@ -92,4 +94,17 @@ test('A4: text that equals no artist name, even one differing only in case, requ
     await type(document, 'asp');
 
     assert.equal(requests.at(-1), UNFILTERED);
+});
+
+/** The page source, for the declarations the fake DOM does not model. */
+const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web', 'user-view.html'), 'utf8');
+
+test('A5: the Artist control is a text input labelled "Artist" and bound to the suggestion list', () => {
+    assert.match(PAGE, /<label for="nr-f-artist">Artist<\/label><input id="nr-f-artist" type="text" list="nr-f-artist-list"[^>]*><datalist id="nr-f-artist-list"><\/datalist>/);
+});
+
+test('A5: the page adds no key handling to the Artist control, so the browser keeps its own', async () => {
+    const { document } = await loadView();
+
+    assert.deepEqual(Object.keys(document.getElementById('nr-f-artist').listeners).filter(type => type.startsWith('key')), []);
 });
