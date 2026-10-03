@@ -515,3 +515,13 @@ change per cycle, and committed at green.
 - refactor: none beyond the move
 - tasks: T010, T011 and the gates T033, T034 ticked. T016 waits for U60 and U61 (stylesheet)
 - commit of cycle 37: `98ae035`
+
+## Cycle 39: U60 the cover box is a 64 × 64 box with a background
+
+- test: `tests/web/styles.test.js::U60: .nr-cover declares a 64 by 64 box with a background` (new
+  file; `declarations(selector)` reads the top-level rules of the page's `<style>` block)
+- red: `node --test tests/web/styles.test.js` -> `+ [ undefined, undefined, false ] - [ '64px', '64px', true ]` (1 failed)
+- green: `#nr-user-view .nr-cover { width: 64px; height: 64px; background: rgba(127,127,127,.18); }`,
+  the same neutral grey family as the card. Suite -> node 108 passed, dotnet 318 passed
+- refactor: none needed
+- commit of cycle 38: `41cec3b`
