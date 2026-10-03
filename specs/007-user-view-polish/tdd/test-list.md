@@ -45,7 +45,7 @@ reopen A4 and U42 (the filter now ignores case) and add A15 and A16.
 | A11 | The stylesheet makes the List-tab buttons fill one shared column: `.nr-actions` stretches, and its buttons are `width: 100%` | US3-AS1, FR-009, SC-003 | example | DONE | `tests/web/styles.test.js::A11: the List-tab buttons fill one shared column: .nr-actions stretches its buttons, and each is full width` |
 | A12 | An Archive-tab card renders "Restore" inside `.nr-actions`, under the same button rule as "Ignore" and "Have it" | US3-AS2, FR-009 | example | DONE | `tests/web/render.test.js::A12: an Archive-tab row writes Restore inside .nr-actions, under the same rule as Ignore and Have it` |
 | A13 | The declared source-link colour has a WCAG contrast of at least 4.5:1 against the card background `#1c1c1c` | US4-AS1, FR-010, SC-004 | example | DONE | `tests/web/styles.test.js::A13: the declared source-link colour has a contrast of at least 4.5:1 against the card` |
-| A15 | Text that equals an artist name with case ignored applies that artist | US1-AS2, FR-002 | example | PENDING | |
+| A15 | Text that equals an artist name with case ignored applies that artist | US1-AS2, FR-002 | example | DONE | `tests/web/artist-filter.test.js::A15: typing "{text}" applies the artist whose name it equals with case ignored` (rows `asp`, `aSP`, `WASP`, `__PROTO__`) |
 | A16 | Every rule that reaches a source link and declares a colour keeps 4.5:1 against the card, so hover and focus keep the contrast | US4-AS2, FR-010 | example | PENDING | |
 | A14 | The source link keeps its underline, its `:visited` state has the same colour, and focus shows the outline | US4-AS2, FR-010 | example | DONE | `tests/web/styles.test.js::A14: a visited source link keeps the same colour / no rule takes the underline off a source link / a focused source link shows the focus outline` |
 
@@ -136,7 +136,7 @@ reopen A4 and U42 (the filter now ignores case) and add A15 and A16.
 | --- | --- | --- | --- | --- | --- |
 | U40 | `artistLabel` of an artist with a disambiguation is `name — disambiguation` | FR-005a, FR-005c | example | DROPPED: labels with a disambiguation removed with FR-005a (2026-10-03) | |
 | U41 | `artistLabel` of an artist with `disambiguation: null` is the name alone | FR-005a | example | DROPPED: `artistLabel` removed: the label is the name (2026-10-03) | |
-| U42 | `artistIndex` maps each name, in lower case, to its `jellyfinId` (changed by the 2026-10-03 case decision) | FR-002 | example | PENDING | |
+| U42 | `artistIndex` maps each name, in lower case, to its `jellyfinId` (changed by the 2026-10-03 case decision) | FR-002 | example | DONE | `tests/web/artist-filter.test.js::U42: artistIndex maps each name, in lower case, to its jellyfinId` |
 | U43 | `artistIndex` keeps the first artist when two share a label | FR-002 | example | DROPPED: two library artists never share a name, so there is no duplicate to resolve (2026-10-03) | |
 | U44 | Loading artists writes one escaped `<option value>` per name into `#nr-f-artist-list` | FR-001, FR-005 | example | DONE | `tests/web/artist-filter.test.js::U44: a name with markup characters is written into its option escaped` |
 | U45 | When the Artists request fails, the field stays usable, and releases are requested with no `artistId` | spec edge case "artist list fails to load" | example | DONE | `tests/web/artist-filter.test.js::U45: when the Artists request fails, typing "{text}" and leaving the field request releases with no artistId` (rows `ASP`, `constructor`) |

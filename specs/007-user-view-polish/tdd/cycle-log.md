@@ -710,3 +710,18 @@ placeholder (FR-007).
   `+ '…/Releases?artistId=function%20Object()%20%7B%20%5Bnative%20code%5D%20%7D'` (twice) (1 failed); `ASP` passes
 - green: the initial `artistIds` is `artistIndex([])`, so it has no inherited keys either. Suite -> node 125 passed
 - refactor: none needed
+
+## Cycle 51: A15 a name typed in any case applies that artist; U42 changes with it (T040)
+
+- order: A15 first, as the outer test. U42 changes its baseline in the same cycle, because the
+  lower-case index it asks for cannot land without the lower-case lookup. Without that lookup, A2
+  would go red
+- test: `tests/web/artist-filter.test.js::A15: typing "{text}" applies the artist whose name it equals with case ignored`
+  (new), rows `asp`, `aSP`, `WASP`, and `__PROTO__` against an artist named `__proto__`
+- red: `node --test tests/web/artist-filter.test.js` -> all 4 rows fail with `+ [] - [ 'GET Plugins/NewReleases/Releases?artistId=…' ]` (4 failed)
+- test: `…::U42: artistIndex maps each name, in lower case, to its jellyfinId` (changed baseline)
+- red: same command -> U42 fails, `Expected values to be strictly deep-equal` on the keys (5 failed in all)
+- green: `artistIndex` keys each name in lower case. The new `artistOf(text)` looks the text up in
+  lower case, and both `query()` and the `input` handler use it. Suite -> node 129 passed, also under
+  `LANG=de_DE.UTF-8`
+- refactor: the two copies of the lookup became `artistOf`, as part of the green. Nothing further

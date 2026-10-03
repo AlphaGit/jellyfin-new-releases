@@ -109,6 +109,27 @@ for (const text of ['As', 'ASP ', 'constructor', 'toString', 'hasOwnProperty', '
     });
 }
 
+// FR-002, with case ignored (maintainer decision, 2026-10-03). The library scan merges names that
+// differ only in case, so at most one artist can match. The last row is a name that is also an
+// inherited object key, which only an own-key lookup can hold.
+const PROTO_ARTIST = { items: [{ jellyfinId: 'a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9', name: '__proto__' }] };
+
+for (const [text, artists, id] of [
+    ['asp', ARTISTS, 'a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5'],
+    ['aSP', ARTISTS, 'a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5'],
+    ['WASP', ARTISTS, 'a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7'],
+    ['__PROTO__', PROTO_ARTIST, 'a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9'],
+]) {
+    test(`A15: typing "${text}" applies the artist whose name it equals with case ignored`, async () => {
+        const { document, requests } = await loadView(artists);
+        const before = requests.length;
+
+        await type(document, text);
+
+        assert.deepEqual(requests.slice(before), ['GET Plugins/NewReleases/Releases?artistId=' + id]);
+    });
+}
+
 /** The page source, for the declarations the fake DOM does not model. */
 const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web', 'user-view.html'), 'utf8');
 
@@ -122,14 +143,14 @@ test('A5: the page adds no key handling to the Artist control, so the browser ke
     assert.deepEqual(Object.keys(document.getElementById('nr-f-artist').listeners).filter(type => type.startsWith('key')), []);
 });
 
-test('U42: artistIndex maps each name to its jellyfinId', async () => {
+test('U42: artistIndex maps each name, in lower case, to its jellyfinId', async () => {
     const { internals } = await loadView();
 
     // Spread into this realm: the page's object comes from the sandbox's own `Object`.
     assert.deepEqual({ ...internals.artistIndex(ARTISTS.items) }, {
-        ASP: 'a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5',
-        Aspen: 'a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6',
-        Wasp: 'a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7',
+        asp: 'a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5',
+        aspen: 'a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6',
+        wasp: 'a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7',
     });
 });
 

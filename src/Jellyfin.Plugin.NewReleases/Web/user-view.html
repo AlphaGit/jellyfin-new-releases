@@ -86,7 +86,7 @@
 
             function query() {
                 // Every request records the artist it applied, so `input` reloads only when that changes.
-                var q = [], artistId = appliedArtistId = artistIds[filters.artist.value];
+                var q = [], artistId = appliedArtistId = artistOf(filters.artist.value);
                 if (artistId) q.push('artistId=' + encodeURIComponent(artistId));
                 if (filters.type.value) q.push('type=' + encodeURIComponent(filters.type.value));
                 if (filters.state.value) q.push('state=' + encodeURIComponent(filters.state.value));
@@ -96,10 +96,15 @@
                 return q.length ? '?' + q.join('&') : '';
             }
 
-            /** Name → `jellyfinId` for the Artist filter. Two library artists never share a name (007 research R3). */
+            /** The `jellyfinId` of the artist whose name equals `text` with case ignored (FR-002), or undefined. */
+            function artistOf(text) {
+                return artistIds[text.toLowerCase()];
+            }
+
+            /** Name in lower case → `jellyfinId` for the Artist filter. The library scan merges names that differ only in case (007 research R3). */
             function artistIndex(artists) {
                 var index = Object.create(null); // no inherited keys: "constructor" is not a name
-                artists.forEach(function (a) { index[a.name] = a.jellyfinId; });
+                artists.forEach(function (a) { index[a.name.toLowerCase()] = a.jellyfinId; });
                 return index;
             }
 
@@ -251,7 +256,7 @@
             tabs.archive.addEventListener('click', function () { selectTab('archive'); });
             Object.keys(filters).forEach(function (key) { filters[key].addEventListener('change', load); });
             filters.artist.addEventListener('input', function () {
-                if (artistIds[filters.artist.value] !== appliedArtistId) load();
+                if (artistOf(filters.artist.value) !== appliedArtistId) load();
             });
             root.querySelector('#nr-f-clear').addEventListener('click', function () {
                 Object.keys(filters).forEach(function (key) { filters[key].value = ''; });
