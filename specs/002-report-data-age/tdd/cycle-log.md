@@ -727,3 +727,11 @@ a fresh session.
   says why. Every other node test computes from `NOW` through `ago` / `ahead` and is unchanged.
   `node --test "tests/web/*.test.js"`: 79 passed, 0 failed; also under `LANG=de_DE.UTF-8 TZ=Asia/Tokyo`
 - refactor: none needed
+
+### T080 (Finding 2): the quoted-title test names its count
+
+- test: `render.test.js::a title containing quotes is escaped in every place the row writes it`
+- before: mutant R1 (every `esc(item.title)` in `user-view.html` → `item.title`, 5 sites) failed the test with `name: 'TypeError'`, because `match` returned `null`
+- change: the count is taken from `(… .match(…) ?? []).length`
+- after: R1 → `expected: 4` / `actual: 0` (`AssertionError`). Q1 (`data-title` escaping `<` and `>` only) → `expected: 4` / `actual: 3`. Each restored with `cmp`; `node --test "tests/web/*.test.js"`: 79 passed, 0 failed
+- refactor: none needed

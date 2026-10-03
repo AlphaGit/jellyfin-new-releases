@@ -177,5 +177,5 @@ test('a title containing markup appears nowhere in the row unescaped', () => {
 const QUOTED_TITLE = `"'><img src=x onerror=alert(1)>`;
 
 test('a title containing quotes is escaped in every place the row writes it', () => {
-    assert.equal(renderedWithTitle(QUOTED_TITLE).match(/&quot;&#39;&gt;&lt;img src=x onerror=alert\(1\)&gt;/g).length, 4);
+    assert.equal((renderedWithTitle(QUOTED_TITLE).match(/&quot;&#39;&gt;&lt;img src=x onerror=alert\(1\)&gt;/g) ?? []).length, 4);
 });
