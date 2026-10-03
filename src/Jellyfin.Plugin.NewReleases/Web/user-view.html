@@ -147,9 +147,16 @@
                 return '#/details?id=' + encodeURIComponent(item.artistJellyfinId) + '&serverId=' + encodeURIComponent(ApiClient.serverId());
             }
 
+            /** The card's cover box: the first URL, the rest as fallbacks (007 R7). No URL leaves the empty box as the placeholder. */
+            function cover(urls) {
+                if (!urls.length) return '<div class="nr-cover"></div>';
+                return '<div class="nr-cover"><img src="' + urls[0] + '" data-fallback="' + urls.slice(1).join(' ') +
+                    '" loading="lazy" referrerpolicy="no-referrer" width="64" height="64"></div>';
+            }
+
             function row(item) {
                 var html = '<article class="nr-row" data-id="' + item.id + '" data-title="' + esc(item.title) + '">';
-                html += '<div class="nr-cover"><img src="' + item.covers[0] + '" data-fallback="' + item.covers.slice(1).join(' ') + '" loading="lazy" referrerpolicy="no-referrer" width="64" height="64"></div>';
+                html += cover(item.covers);
                 html += '<div><div class="nr-title">' + esc(item.title) + '</div>';
                 html += '<div class="nr-artist"><a href="' + artistLink(item) + '">' + esc(item.artistName) + '</a></div>';
                 html += '<div class="nr-meta"><span class="nr-badge">' + esc(item.type) + '</span>';

@@ -427,3 +427,13 @@ change per cycle, and committed at green.
   held open); dotnet 318 passed
 - refactor: none needed
 - commit of cycle 29: `9f5e1a2`
+
+## Cycle 31: U53 a row with no cover URL writes the box with no image
+
+- test: `tests/web/render.test.js::U53: a row with no cover URL writes the cover box with no image` (new)
+- red: `node --test tests/web/render.test.js` -> `+ '<img src="undefined" data-fallback="" loading="lazy" referrerpolicy="no-referrer" width="64" height="64">' - ''` (1 failed)
+- green: the `<img>` is written only when `covers` is non-empty. Suite -> node 100 passed,
+  3 failed (A8–A10, held open); dotnet 318 passed
+- refactor: the cover markup had grown to one long expression inside `row()`; extracted to
+  `cover(urls)`. Suite re-run: same counts
+- commit of cycle 30: `77cc4ad`

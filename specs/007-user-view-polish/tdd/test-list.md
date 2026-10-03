@@ -149,7 +149,7 @@ declarations that produce them, and the real-browser pass in `quickstart.md` §2
 | U50 | A row's image declares `loading="lazy"` | FR-007a | example | DONE | `tests/web/render.test.js::U50: a row's cover image loads lazily` |
 | U51 | A row's image declares `referrerpolicy="no-referrer"` | FR-008, constitution V | example | DONE | `tests/web/render.test.js::U51: a row's cover image sends no referrer` |
 | U52 | A row's image declares `width="64" height="64"` | FR-007 | example | DONE | `tests/web/render.test.js::U52: a row's cover image declares a 64 by 64 box` |
-| U53 | A row with `covers: []` writes the cover box with no `<img>` | FR-007 | example | PENDING | |
+| U53 | A row with `covers: []` writes the cover box with no `<img>` | FR-007 | example | DONE | `tests/web/render.test.js::U53: a row with no cover URL writes the cover box with no image` |
 | U54 | Cover URLs are written through `esc` | invariant: page markup is string-built, so an unescaped URL is an injection | example | PENDING | |
 | U55 | `nextCover` with two fallbacks puts the first in `src` and keeps the second | FR-006a | example | PENDING | |
 | U56 | `nextCover` with no fallback removes the image | FR-007 | example | PENDING | |

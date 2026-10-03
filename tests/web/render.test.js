@@ -228,3 +228,10 @@ test('U52: a row\'s cover image declares a 64 by 64 box', () => {
 
     assert.deepEqual([imgAttribute(box, 'width'), imgAttribute(box, 'height')], ['64', '64']);
 });
+
+test('U53: a row with no cover URL writes the cover box with no image', () => {
+    const body = fixture('releases.json');
+    body.items.find(i => i.id === BOTH_SOURCES).covers = [];
+
+    assert.equal(coverBox(rendered(body).panel, BOTH_SOURCES), '');
+});
