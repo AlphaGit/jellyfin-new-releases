@@ -32,3 +32,8 @@ Hand-edited values (the live API did not produce the scenario on the recording d
 - `musicbrainz/editions_two_official.json`: a bonus track appended to the second edition (the "extra track" scenario).
 - `musicbrainz/error_503_retry_after.txt`, `deezer/error_quota.json`: written by hand from the documented error bodies.
 - `deezer/artist_albums_unknown_date.json`: first row's `release_date` set to `0000-00-00`.
+- `musicbrainz/artist_lookup.json`: recorded 2026-10-02 from
+  `GET https://musicbrainz.org/ws/2/artist/9dae8dff-0c54-4019-a6f2-667890ad9878?fmt=json` (the artist
+  lookup of `specs/007-user-view-polish/`). Scrubbed by dropping `isnis` and `ipis`; key order rearranged.
+- `musicbrainz/artist_lookup_empty.json`: the same body with `disambiguation` set to `""`, for an
+  artist MusicBrainz has no disambiguation text for.
