@@ -166,7 +166,7 @@ reopen A4 and U42 (the filter now ignores case) and add A15 and A16.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U59 | `@media (max-width: 600px)` puts `.nr-actions` on its own row, with equal-width columns | FR-009, spec edge case "narrow screen" | example | DONE | `tests/web/styles.test.js::U59: below 600 px the actions take their own row, in equal columns` |
-| U60 | `.nr-cover` declares a 64 × 64 box with a background | FR-007 | example | DONE | `tests/web/styles.test.js::U60: .nr-cover declares a 64 by 64 box with a background` |
+| U60 | `.nr-cover` declares a 64 × 64 box with a background | FR-007 | example | DONE | `tests/web/styles.test.js::U60: .nr-cover declares a 64 by 64 box with a background`; the background is checked by `isVisibleColour`, pinned by `U60 helper: …` table rows |
 | U61 | `.nr-cover img` declares `object-fit: cover` | spec edge case "not square" | example | DONE | `tests/web/styles.test.js::U61: a cover image fills the box without stretching` |
 | U62 | The test's contrast function rates `#0000ee` on `#1c1c1c` below 4.5, which pins it against the defect the spec reports | FR-010 | example | DONE | `tests/web/styles.test.js::U62: the contrast formula rates the browser's default link blue on the card below 4.5, the defect the spec reports` |
 | U63 | The test's contrast function rates `#ffffff` on `#000000` at 21, the formula's upper bound | FR-010 | example | DONE | `tests/web/styles.test.js::U63: the contrast formula rates white on black at 21, its upper bound` |

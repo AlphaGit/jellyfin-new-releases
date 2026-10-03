@@ -26,10 +26,46 @@ function declarations(selector, css = STYLE.replace(/@media[^{]*\{(?:[^{}]*\{[^{
     return found;
 }
 
+/** Whether a declared colour can be seen: not `none`, not `transparent`, and not a zero alpha in any notation. */
+function isVisibleColour(value) {
+    const colour = (value || '').trim().toLowerCase();
+    if (['', 'none', 'transparent'].includes(colour)) return false;
+    const call = /^\w+\(([^)]*)\)$/.exec(colour);
+    if (call) {
+        const parts = call[1].split(/[\s,/]+/).filter(Boolean);
+        return parts.length < 4 || parseFloat(parts[3]) > 0;
+    }
+    const hex = /^#([0-9a-f]{4}|[0-9a-f]{8})$/.exec(colour);
+    return !hex || !/^0+$/.test(hex[1].slice(hex[1].length / 4 * 3));
+}
+
+for (const [value, expected] of [
+    [undefined, false],
+    ['', false],
+    ['none', false],
+    ['TRANSPARENT', false],
+    ['rgba(127,127,127,0)', false],
+    ['rgba(127, 127, 127, 0.0)', false],
+    ['rgb(127 127 127 / 0%)', false],
+    ['hsla(0,0%,50%,0)', false],
+    ['#7f7f7f00', false],
+    ['#7770', false],
+    ['rgba(127,127,127,.18)', true],
+    ['rgb(0,0,0)', true],
+    ['#3a3a3a', true],
+    ['#333', true],
+    ['#7f7f7f80', true],
+    ['grey', true],
+]) {
+    test(`U60 helper: ${JSON.stringify(value)} ${expected ? 'is' : 'is not'} a visible colour`, () => {
+        assert.equal(isVisibleColour(value), expected);
+    });
+}
+
 test('U60: .nr-cover declares a 64 by 64 box with a background', () => {
     const cover = declarations('.nr-cover');
 
-    assert.deepEqual([cover.width, cover.height, Boolean(cover.background)], ['64px', '64px', true]);
+    assert.deepEqual([cover.width, cover.height, isVisibleColour(cover.background)], ['64px', '64px', true]);
 });
 
 test('U61: a cover image fills the box without stretching', () => {

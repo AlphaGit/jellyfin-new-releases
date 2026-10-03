@@ -745,3 +745,18 @@ placeholder (FR-007).
 - strength: N9 (longhand on `.nr-links a`), N9b (`#nr-user-view a { text-decoration: none }`) and the
   audit's R13a (shorthand) each fail the test. Each was applied to a file copy, restored, and checked
   byte-equal. Suite -> node 148 passed
+
+## Cycle 53: U60's background must be a visible colour (T042, audit Finding 3)
+
+- what: a test correction. The audit's mutant N6 (`background: none` on `.nr-cover`) survived,
+  because `Boolean(cover.background)` accepts any declared value. The behaviour U60 is unchanged
+- helper (new, in `tests/web/styles.test.js`): `isVisibleColour(value)`, pinned by a table of
+  16 rows. It rejects an empty value, `none`, `transparent`, and a zero alpha in `rgba`, `rgb … / 0%`,
+  `hsla`, 8-digit and 4-digit hex. It accepts `rgba(…, .18)`, `rgb(0,0,0)`, 6-digit and 3-digit hex,
+  half-alpha hex and a named colour
+- red: the predicate declared as `return true`. `node --test tests/web/styles.test.js` -> the 10
+  rejecting rows fail (10 failed)
+- green: the predicate as written. The table passes
+- test change: U60 asserts `isVisibleColour(cover.background)` in place of `Boolean(cover.background)`
+- strength: N6 (`background: none`) and N6b (`rgba(127,127,127,0)`) each fail U60. Each was applied
+  to a file copy, restored, and checked byte-equal. Suite -> node 164 passed
