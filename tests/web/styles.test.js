@@ -148,11 +148,21 @@ function rules(css = STYLE) {
     return found;
 }
 
-/** Whether `selector` can match a source link: it ends in a bare `a` (pseudo-classes allowed), and no class but `.nr-links` narrows it. */
+/** The ids and classes a source link sits inside, and the attributes it carries: `row()` in user-view.html. */
+const LINK_ANCESTORS = ['#nr-user-view', '#nr-panel', '.nr-list', '.nr-row', '.nr-links'];
+const LINK_ATTRIBUTES = ['href', 'target', 'rel'];
+
+/**
+ * Whether `selector` can match a source link: its last compound is `a`, `*` or bare pseudo-classes, with
+ * no class or id and only the link's own attributes, and every id or class before it is one of the link's
+ * ancestors. ponytail: splits on whitespace and commas, so `:is(…)` lists and quoted spaces are not read.
+ */
 function reachesSourceLink(selector) {
     const compounds = selector.trim().split(/\s*[>+~]\s*|\s+/);
-    return /^a(:[\w-]+(\([^)]*\))?)*$/.test(compounds.pop())
-        && compounds.every(compound => (compound.match(/\.[\w-]+/g) || []).every(name => name === '.nr-links'));
+    const subject = compounds.pop();
+    return /^(a|\*)?(\[[\w-]+[^\]]*\]|:[\w-]+(\([^)]*\))?)*$/.test(subject) && subject !== ''
+        && [...subject.matchAll(/\[([\w-]+)/g)].every(([, name]) => LINK_ATTRIBUTES.includes(name))
+        && compounds.every(compound => (compound.match(/[.#][\w-]+/g) || []).every(name => LINK_ANCESTORS.includes(name)));
 }
 
 /** Whether `declared` turns the underline off, through the shorthand or the longhand. */
@@ -167,7 +177,18 @@ for (const [selector, expected] of [
     ['#nr-user-view .nr-links > a', true],
     ['#nr-user-view a', true],
     ['a:focus-visible', true],
+    ['#nr-user-view .nr-row a', true],
+    ['#nr-user-view .nr-list a:hover', true],
+    ['#nr-user-view .nr-row:hover a', true],
+    ['#nr-user-view #nr-panel a', true],
+    ['#nr-user-view .nr-row div a', true],
+    ['#nr-user-view .nr-links a[href]', true],
+    ['#nr-user-view .nr-links :any-link', true],
+    ['#nr-user-view .nr-links *', true],
     ['#nr-user-view .nr-artist a', false],
+    ['#nr-user-view .nr-filter a', false],
+    ['#nr-user-view [role="tab"]', false],
+    ['#nr-user-view .nr-links a[download]', false],
     ['#nr-user-view .nr-links', false],
     ['#nr-user-view .nr-links span', false],
     ['#nr-user-view .nr-links a.other', false],

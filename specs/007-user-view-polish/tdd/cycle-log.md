@@ -799,3 +799,19 @@ placeholder (FR-007).
 - strength: N5 (`false`) still fails U57. E1 (the page rewritten to `{ capture: true }`) passes
   it, which is the point of the change. Both were applied to a file copy, restored, and checked
   byte-equal
+
+## Cycle 55: `reachesSourceLink` reads ancestor classes and the link's attributes (T051, second audit Finding 1)
+
+- what: a test correction. The second audit's mutants P1 (`.nr-row a { text-decoration-line: none }`),
+  P2 (`.nr-row a:hover { color: #0000ee }`) and P3 (`.nr-links a[href] { text-decoration: none }`)
+  survived, because the predicate rejected every class but `.nr-links` and every attribute selector.
+  The behaviours A14 and A16 are unchanged
+- red: 12 rows added to the `A14 helper` selector table. Accepting: `.nr-row a`, `.nr-list a:hover`,
+  `.nr-row:hover a`, `#nr-panel a`, `.nr-row div a`, `.nr-links a[href]`, `.nr-links :any-link`,
+  `.nr-links *`. Rejecting: `.nr-filter a`, `[role="tab"]`, `.nr-links a[download]`.
+  `node --test tests/web/styles.test.js` -> 7 failed, the accepting rows other than `#nr-panel a`
+- green: the predicate accepts `a`, `*` or bare pseudo-classes as the last compound, with only the
+  link's own attributes (`href`, `target`, `rel`), and any id or class of the link's ancestors in
+  `row()` before it. Suite -> 58 passed in the file
+- strength: P1, P2, P3, N9, N10 and R13a each fail A14 or A16. Each was applied to a file copy,
+  restored, and checked byte-equal
