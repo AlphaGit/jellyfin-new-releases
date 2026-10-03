@@ -826,3 +826,36 @@ the instruction rather than requiring the next author to read the class.
 
 - suite: 255 passed, 0 failed; page side 33 passed.
 - commit: `b8d2de9`
+
+## Cycles 39–45: the catalogue text comes from CHANGELOG.md (T062–T064, T066)
+
+`T064` was decided by the maintainer on 2026-10-01: generate `build.yaml`'s `changelog` at release
+from `CHANGELOG.md`. `T066` implements it as `U45`–`U51`. The script lives in
+`.github/scripts/changelog-entry.js` (Node, standard library only); its tests are in
+`tests/web/changelog-entry.test.js`, so the existing suite command and CI step run them.
+
+| Cycle | Behaviour | Red (command, decisive line) | Green |
+| --- | --- | --- | --- |
+| 39 | U45 | `node --test tests/web/changelog-entry.test.js` → `not ok 1 - the entry is the body of the version's own section, up to the next one / actual: ''` (stub returning `''`) | section slice. The first attempt still failed: `startsWith('## 0.1.1')` matched `## 0.1.10`, which the fixture puts first on purpose. Fixed with an exact heading match |
+| 40 | U46 | `not ok 2 - a version with no section is an error, not an empty entry / error: 'Missing expected exception.'` | throw when no heading matches |
+| 41 | U47 | `not ok 3 - a version whose section is empty is an error … / 'Missing expected exception.'` | throw on an empty body |
+| 42 | U48 | passed on first run: `CHANGELOG.md` already has `0.1.1`. Deliberate mutant: `build.yaml` version → `0.1.2` gives `not ok 4 … / CHANGELOG.md has no section for 0.1.2`. Restored, `cmp` identical | no production change |
+| 43 | U49 | `not ok 5 - the entry replaces build.yaml's changelog as one quoted scalar … / + 'changelog: "Initial scaffold."' - 'changelog: "### Fixed\\n\\n- \\"One\\": done."'` (stub returning its input) | `replace` with a callback, so a `$` in the entry is not read as a replacement pattern |
+| 44 | U50 | `not ok 6 - a build.yaml with no changelog line is an error … / 'Missing expected exception.'` | throw when no `changelog:` line exists |
+| 45 | U51 | `dotnet test … --filter "FullyQualifiedName~ReleaseWorkflowTests.ReleaseWorkflow_WritesTheChangelogEntryForTheTaggedVersionBeforePackaging"` → `the release workflow has no step containing: node .github/scripts/changelog-entry.js "${{ steps.ver.outputs.version }}"` | step added to `package.yml` after "Derive version from tag" |
+
+- dry run, from the repository root: `node .github/scripts/changelog-entry.js 0.1.1` rewrote
+  `build.yaml`. PyYAML `safe_load` read back the full multi-line section unchanged. `9.9.9` exits 1.
+  `build.yaml` was restored from a copy and checked with `cmp`.
+- no new dependency: Node comes with the `ubuntu-latest` runner image, and no `setup-node` action
+  was added.
+- `T062`: `repo/manifest.json`'s `0.1.1.0` entry carries the real text. `0.1.0.0` shipped with
+  "Initial scaffold." and stays as published.
+- `T063` is `U48`. After `T064` the committed `build.yaml` text is replaced at release, so the
+  guard checks `CHANGELOG.md`, the source the release reads.
+- contract amended: `contracts/plugin-repository-manifest.md` names the script as the source of
+  `versions[].changelog`. `build.yaml` gained a comment saying the line is replaced at release.
+- not covered: the ordering test checks the workflow's shape, as every `ReleaseWorkflowTests` case
+  does; a real tag run is the end-to-end proof. No mutant was run for the `$`-pattern callback,
+  because no test entry contains a `$`.
+- suite: 307 passed, 0 failed (dotnet); 75 passed, 0 failed (node). `dotnet build`: 0 warnings

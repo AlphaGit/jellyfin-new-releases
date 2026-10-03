@@ -149,7 +149,7 @@ Constitution II: refactoring happens only on a green suite and never in the same
 
 - [X] T035 [P] Add a `CHANGELOG.md` entry under `Unreleased` describing the fix in user terms: the page now reports when the releases were last checked rather than when a refresh last ran
 - [X] T036 Update `specs/002-report-data-age/quickstart.md`: the unit ladder is now covered by `tests/web/`, so remove it from the "does not cover" list and add a step running `node --test "tests/web/*.test.js"`
-- [ ] T037 Run the manual checks in `specs/002-report-data-age/quickstart.md` steps 3–6 against Jellyfin 10.11.11 with Plugin Pages installed, and record the outcome in that file's "Results" section; open a spec amendment for any deviation before touching code (constitution I)
+- [ ] T037 Run the manual checks in `specs/002-report-data-age/quickstart.md` steps 3–6 against Jellyfin 12.x with Plugin Pages installed (retargeted 2026-10-01: `003` dropped 10.11.x; JD's own pass), and record the outcome in that file's "Results" section; open a spec amendment for any deviation before touching code (constitution I)
 - [X] T038 Final gate: `dotnet build --configuration Release` with zero warnings, `dotnet test --configuration Release` green, and `node --test "tests/web/*.test.js"` green; commit to `main` with Conventional Commits, push, and verify CI green with `gh run list --branch main` / `gh run watch`
 
 ---
@@ -358,3 +358,65 @@ or by a deliberate mutant, before any production code moves.
   characterization of "helpers this feature does not change", but `:50-79` are new-behaviour tests
   for `checkedText`, which this feature added. State both purposes in the header, or move
   `checkedText` to its own file beside `staleness.test.js` as `esc.test.js` does
+
+---
+
+## Phase 11: TDD remediation (fourth audit)
+
+From `specs/002-report-data-age/tdd/verification.md` (verdict **FAIL**, audited at `99c805e`).
+Phase 10 closed every finding of the third audit; this phase closes what the fourth found.
+
+**The feature is not done until T059–T064 are cleared.** Each is a real surviving mutant inside a
+`DONE` behaviour. Every task is a test change on correct production code, so each is proven by its
+mutant failing, applied from a file copy and restored with `cmp`, never `git checkout`. Record each
+in `tdd/cycle-log.md`. Even with all of them closed, the verdict cannot reach `PASS`: T065 records
+six `TEST_AFTER` behaviours that no new work can turn into test-first ones.
+
+- [X] T059 Finding 1 (HIGH): add a test to `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs` that stores a release, then calls `GetReleasesAsync` with a filter (or a caller) that hides it, and asserts `HasStoredReleases` is `true` with no items. Every current test of the flag (`:156-169`) uses a caller who sees every row, so `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs:95` passing `visible.Count > 0` instead of `hasStored` passes all 303 tests. Proven done when that mutant fails `dotnet test --configuration Release` [U13]
+- [X] T060 Finding 2 (HIGH): add both sides of the boundary at a second refresh interval (for example 12 h) to `tests/web/staleness.test.js`. Every test uses `INTERVAL_HOURS = 24`, so replacing `intervalHours` with `24` at `src/Jellyfin.Plugin.NewReleases/Web/user-view.html:106` passes. Proven done when that mutant fails `node --test "tests/web/*.test.js"` [U21] [U22]
+- [X] T061 Finding 3 (HIGH): add a case to `tests/web/staleness.test.js` with an instant further in the future than one refresh interval (for example `ahead(30 * HOUR)`), expecting `null`. The case at `:22-24` stays inside the interval, so `Math.max(0, …)` → `Math.abs(…)` at `user-view.html:105` passes and states "checked 30 hours ago" for a future instant. Proven done when that mutant fails `node --test "tests/web/*.test.js"` [U20]
+- [X] T062 Finding 4 (HIGH): extend `tests/Jellyfin.Plugin.NewReleases.Tests/Api/AdminControllerTests.cs` so the administrator view and the list report the same instant after the newest source is disabled. Today every `FR-011` test has every source enabled, so `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs:97` passing a fixed set of both sources instead of `configuration.EnabledSourceIds()` passes all 303 tests. Proven done when that mutant fails `dotnet test --configuration Release` [U17]
+- [X] T063 Finding 5 (HIGH): extend `GetReleases_ListAndStatusReportTheSameInstant` (or add a sibling) in `ReleasesControllerTests.cs` so list and status are compared after a purge. Today `GetStatusAsync` at `ReleasesController.cs:162` can drop the stored-releases gate and all 303 tests pass. Proven done when that mutant fails `dotnet test --configuration Release` [U12]
+- [X] T064 Finding 6 (HIGH): add a render test (in `tests/web/render.test.js`, through `loadPageDom`) that renders a release whose title contains markup, and asserts that the panel's HTML carries it escaped. Only `esc` itself is tested, so removing `esc()` around `item.title` at `user-view.html:143` passes all 64 node tests. Proven done when that mutant fails `node --test "tests/web/*.test.js"` [A9]
+- [X] T065 Finding 7 (MED): append a cycle-log entry labelling `U12`, `U13`, `U36`, `U38`, `A6` and `A7` as test-after, with the evidence the audit cites, and record the maintainer's decision to accept them or not. Do not edit past entries. This cannot be fixed by new tests. Proven done when the entry exists and names all six
+- [X] T066 [P] Findings 8–10 (MED): separate the coincident inputs. In `ReleasesControllerTests.cs:108-117`, advance the clock between the fetch and `StartRunAsync`. In `ConfigureAndRunTests.cs:107-123` (`A6`), give MusicBrainz an earlier completed fetch and advance the clock before the run. In `ArtistRepositoryTests.cs:138-149` (`U1`), write the newer fetch first and at the second source. Proven done when "the latest run's start" (`U10`), "the run's end" (`A6`) and "the last row written" (`U1`) each fail `dotnet test --configuration Release` as mutants [U1] [U10] [U11] [A6]
+- [X] T067 [P] Finding 11 (MED): in `tdd/test-list.md` "Verification commands", replace the node `--test-name-pattern` single-test line with the profile's `file:` command (`node --test tests/web/{file}`), and the `dotnet@9` path with the profile's shell note. Proven done when every command printed there fails on a test that does not exist, or runs one file
+- [X] T068 [P] Finding 12 (MED): in `tests/web/load-page.js:104-108`, rethrow every error from the page script now that the fake DOM lets initialization complete, or narrow the catch to a named, expected case. Proven done when a `throw` added at the end of `user-view.html`'s initialization fails `node --test "tests/web/*.test.js"`
+- [X] T069 [P] Finding 13 (LOW): fix the text drift. `A7`'s row ("stops moving" → no instant), the summary at `ConfigureAndRunTests.cs:143` ("last refreshed"), the `exposure.test.js` titles and comment (now `render`/`renderStatus` too), the name of `AdminControllerTests.cs:131`, and `U34`'s `FR-016` trace (packaging is pinned by `003`'s `BuildManifestTests`)
+
+---
+
+## Phase 12: TDD remediation (fifth audit)
+
+From `specs/002-report-data-age/tdd/verification.md` (verdict **FAIL**, audited at `43fb6b6`).
+Phase 11 closed every mutant the fourth audit found; this phase closes what the fifth found.
+
+**The feature is not done until T070–T073 are cleared.** Each is a real surviving mutant inside a
+`DONE` behaviour, and `T070` repairs a test that Phase 11 weakened. Every task is a test change on
+correct production code, so each is proven by its mutant failing, applied from a file copy and
+restored with `cmp`, never `git checkout`. Record each in `tdd/cycle-log.md`. Even with all of them
+closed, the verdict stays `FAIL` under the current rubric while six `TEST_AFTER` behaviours stand:
+see T075.
+
+- [X] T070 Finding 1 (HIGH): in `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ArtistRepositoryTests.cs:145-149`, add a case where the newer fetch is at `musicbrainz` and written last, with the older one at `deezer`, so neither write order nor source order picks it. `T066` put the newer value at `deezer` (which sorts first), so `ORDER BY source LIMIT 1` in place of `MAX` at `src/Jellyfin.Plugin.NewReleases/Storage/ArtistRepository.cs:215` passes all 307 tests; the `99c805e` copy of the test caught it. Proven done when that mutant and "last row written" (`ORDER BY rowid DESC LIMIT 1`) both fail `dotnet test --configuration Release` [U1]
+- [X] T071 Finding 2 (HIGH): in `GetReleases_StoredReleasesFlagHoldsWhenTheSelectionHidesEveryRow` (`tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs:190-197`), seed a completed fetch and assert the reported instant together with `(0, true)`. Today no fetch is seeded, so gating the age on `visible.Count > 0` at `src/Jellyfin.Plugin.NewReleases/Api/ReleasesController.cs:94` passes all 307 tests. Proven done when that mutant fails `dotnet test --configuration Release` [A5] [U13]
+- [X] T072 Finding 3 (HIGH), after T074: add a render test to `tests/web/render.test.js` with a response whose `refreshIntervalHours` is not 24 (for example 168), at an age between 24 h and that interval, at a fixed clock, asserting no staleness sentence; and its mirror with a shorter interval asserting the exact sentence. Every page fixture serves 24, so `staleness(data)` passing `24` at `src/Jellyfin.Plugin.NewReleases/Web/user-view.html:132` passes all 75 node tests. Proven done when that mutant fails `node --test "tests/web/*.test.js"` [A2] [A3]
+- [X] T073 Finding 4 (HIGH): add a test to `tests/web/render-status.test.js` with a status response whose `releasesLastCheckedAt` differs from `lastRun.endedAt`, asserting the exact `nr-last-checked` sentence for `releasesLastCheckedAt` at a fixed clock. In `tests/fixtures/pages/admin-status.json:27,34` the two instants are equal and `:33` matches only a pattern, so writing `lastRun.endedAt` there at `src/Jellyfin.Plugin.NewReleases/Web/admin.html:153` passes all 75 node tests. Proven done when that mutant fails `node --test "tests/web/*.test.js"` [U16] [U18] [U36]
+- [X] T074 Finding 6 (MED): make the user page's render tests use the fixed clock from `tests/web/fixed-clock.js` (through `loadPageDom` overrides, or `load-page.js:70`'s `Date`), and assert the exact sentence at `tests/web/render.test.js:112-117` instead of `/^Releases last checked .+ ago\.$/`. Proven done when the node suite passes with the machine clock set before `2026-08-02` (for example via a `Date.now` override in a scratch run) and the exact sentence is asserted
+- [X] T075 Finding 5 (MED): maintainer decision. Either add `.specify/templates/overrides/tdd-test-quality-rubric.md` stating how accepted `TEST_AFTER` behaviours are graded, or correct the "Test-after admissions" consequence in `tdd/cycle-log.md` with a new entry saying the verdict stays `FAIL` under the current rubric. Do not edit the past entry. Proven done when one of the two exists
+- [X] T076 [P] Finding 7 (LOW): add a title carrying `"` and `'` as well as markup to the `tests/web/render.test.js:143-156` markup tests, asserting no raw quote from it appears in `data-title` or `aria-label`. Proven done when a call site using an escaper that skips quotes fails `node --test "tests/web/*.test.js"`
+- [X] T077 [P] Finding 8 (LOW): in `GetReleases_AfterAPurge_ListAndStatusBothReportNoInstant` (`ReleasesControllerTests.cs:157-169`), assert before acting that `GetReleasesLastCheckedAtAsync` still returns an instant after the purge, as `AdminControllerTests.cs:138` does. Proven done when the test fails if `PurgeAsync` is changed to clear `last_complete_at`
+- [X] T078 [P] Finding 9 (LOW): fix the text drift. The comment at `ArtistRepositoryTests.cs:145` (after T070); `staleness.test.js:46-47` (the gate also hides a negative age; `Math.abs` is what the test catches); `load-page.js:12` (synchronous errors only); the name of `ReleasesControllerTests.cs:103` and the duplicated empty-state call at `:106`; and `tdd/test-list.md`'s "Out of scope" `row`/`render` line and its `updated_at`
+
+---
+
+## Phase 13: TDD remediation (sixth audit)
+
+From `specs/002-report-data-age/tdd/verification.md` (verdict **PASS_WITH_GAPS**, audited at
+`76f6b05`, graded against the project rubric override). No finding blocks the feature. These tasks
+close one `MED` and three `LOW` findings. None changes production code.
+
+- [X] T079 Finding 1 (MED): make `NOW` in `tests/web/fixed-clock.js:10` later than the page fixtures' `releasesLastCheckedAt` (`2026-09-19T03:15Z` in `tests/fixtures/pages/releases.json:61`, `releases-filtered.json:26`, `admin-status.json:34`, `status.json:3`), or move those instants before `NOW`. Then assert the exact sentence at `tests/web/render-status.test.js:34` and update `tests/web/render.test.js:116` to the new age. Today `admin-status.json` renders as "Releases last checked 0 hours ago." through the clock-correction clamp. Proven done when `node --test "tests/web/*.test.js"` passes and a scratch render of `admin-status.json` at the pinned clock states a positive age
+- [X] T080 [P] Finding 2 (LOW): in `tests/web/render.test.js:180`, count with `(… .match(…) ?? []).length` so a missing escaped copy fails as `expected 4, actual 0`, not as a `TypeError`. Proven done when the Q1 mutant (`data-title` escaping `<` and `>` only, at `user-view.html:142`) still fails `node --test "tests/web/*.test.js"`, and a mutant that writes the title raw everywhere fails with a count
+- [X] T081 [P] Finding 3 (LOW): fold the two `U1` facts at `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ArtistRepositoryTests.cs:139-164` into one `[Theory]` over the newer fetch's source and its write position. Update `U1`'s `test` column in `tdd/test-list.md`. Proven done when X1 (`ORDER BY source LIMIT 1`) and M3 (`ORDER BY rowid DESC LIMIT 1`) at `ArtistRepository.cs:215` each fail `dotnet test --configuration Release`
+- [X] T082 [P] Finding 4 (LOW): fix the text drift. In `tdd/cycle-log.md`, append an entry that corrects the `T075` entry's "S9 and S10" for `A7` (only S10 fails `A7`'s test); do not edit the past entry. In `tdd/test-list.md`, give `A2` and `A3` their `render.test.js::<name>` traces. In `tests/web/load-page.js:78-79`, remove one of the two blank lines. Proven done when each named line reads as stated

@@ -4,6 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPageDom } = require('./load-page.js');
 const { fixture } = require('./fixtures.js');
+const { HOUR, DAY, ago } = require('./fixed-clock.js');
 
 // `render` is the one function that consumes a server response, and until now the one function with
 // no test. These capture what it already does, against a response of the shape the server really
@@ -112,7 +113,23 @@ test('with no instant on record the staleness line is empty and the list still r
 test('with an instant older than the refresh interval the staleness sentence appears', () => {
     const { staleness } = rendered(fixture('releases-stale.json'));
 
-    assert.match(staleness.textContent, /^Releases last checked .+ ago\.$/);
+    assert.equal(staleness.textContent, 'Releases last checked 7 weeks ago.');
+    assert.equal(staleness.hidden, false);
+});
+
+// 002 FR-006: the page hands the rule the interval the response carries, not a fixed day. Every
+// fixture serves 24, so these two set it on either side.
+test('a weekly interval keeps a two-day-old instant quiet', () => {
+    const { staleness } = rendered({ ...fixture('releases.json'), releasesLastCheckedAt: ago(2 * DAY), refreshIntervalHours: 168 });
+
+    assert.equal(staleness.textContent, '');
+    assert.equal(staleness.hidden, true);
+});
+
+test('a six-hour interval states a twelve-hour-old instant', () => {
+    const { staleness } = rendered({ ...fixture('releases.json'), releasesLastCheckedAt: ago(12 * HOUR), refreshIntervalHours: 6 });
+
+    assert.equal(staleness.textContent, 'Releases last checked 12 hours ago.');
     assert.equal(staleness.hidden, false);
 });
 
@@ -136,4 +153,29 @@ test('a narrowed response lists only what it carries', () => {
     assert.equal(panel.match(/class="nr-row"/g).length, 1);
     assert.equal(body.items.length, 1);
     assert.doesNotMatch(panel, /Kill for Love/);
+});
+
+// 002 A9 / SC-008: a title arrives from MusicBrainz or Deezer and is concatenated into the row's
+// markup. `esc.test.js` pins the helper; these pin that the row actually uses it.
+const MARKUP_TITLE = '<img src=x onerror=alert(1)>';
+
+function renderedWithTitle(title) {
+    const body = fixture('releases.json');
+    return rendered({ ...body, items: [{ ...body.items[0], title }] }).panel;
+}
+
+test('a title containing markup is written into the row as text', () => {
+    assert.match(renderedWithTitle(MARKUP_TITLE), /<div class="nr-title">&lt;img src=x onerror=alert\(1\)&gt;<\/div>/);
+});
+
+test('a title containing markup appears nowhere in the row unescaped', () => {
+    assert.equal(renderedWithTitle(MARKUP_TITLE).indexOf(MARKUP_TITLE), -1);
+});
+
+// The title is also written into three attributes (`data-title` and both buttons' `aria-label`),
+// where a quote, not markup, is what breaks out. Four places, each escaped in full.
+const QUOTED_TITLE = `"'><img src=x onerror=alert(1)>`;
+
+test('a title containing quotes is escaped in every place the row writes it', () => {
+    assert.equal((renderedWithTitle(QUOTED_TITLE).match(/&quot;&#39;&gt;&lt;img src=x onerror=alert\(1\)&gt;/g) ?? []).length, 4);
 });

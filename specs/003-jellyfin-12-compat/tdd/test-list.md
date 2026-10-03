@@ -197,6 +197,22 @@ first tag.
 | U31 | States the minimum Plugin Pages version the new registration needs | FR-006, FR-015 | example | DONE | `Packaging/DocumentationTests.cs::Readme_StatesTheMinimumPluginPagesVersion` |
 | U38 | The README check accepts every way of saying support for 10.11 ended and rejects every way of claiming it | FR-006, SC-006 | example | DONE | `Packaging/DocumentationTests.cs::AClaimOfSupportFor1011_IsCaught`, `::SayingSupportFor1011Ended_IsAllowed` |
 
+### `.github/scripts/changelog-entry.js` (added by `T066`, after the `T064` decision)
+
+The catalogue text JPRM publishes is generated at release from `CHANGELOG.md`. Page-side runner,
+because the script is Node with the standard library only; the tests live in `tests/web/` so the
+existing suite command and CI step run them.
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U45 | The entry for a version is the body of its own `## <version>` section, up to the next one, and `0.1.1` does not match `0.1.10` | contract `versions[].changelog`, T063, T064 | example | DONE | `changelog-entry.test.js::the entry is the body of the version's own section, up to the next one` |
+| U46 | A version with no section is an error, not an empty entry | contract `versions[].changelog`, T063, T064 | example | DONE | `changelog-entry.test.js::a version with no section is an error, not an empty entry` |
+| U47 | A version whose section is empty is an error | contract `versions[].changelog`, T063, T064 | example | DONE | `changelog-entry.test.js::a version whose section is empty is an error, not an empty entry` |
+| U48 | `CHANGELOG.md` has an entry for the version `build.yaml` declares (T063: the next release cannot ship a placeholder) | contract `versions[].changelog`, T063, T064 | example | DONE | `changelog-entry.test.js::CHANGELOG.md has an entry for the version build.yaml declares` |
+| U49 | The entry replaces `build.yaml`'s `changelog` line as one JSON-quoted (YAML double-quoted) scalar, and no other line changes | contract `versions[].changelog`, T063, T064 | example | DONE | `changelog-entry.test.js::the entry replaces build.yaml's changelog as one quoted scalar, and nothing else changes` |
+| U50 | A `build.yaml` with no `changelog` line is an error | contract `versions[].changelog`, T063, T064 | example | DONE | `changelog-entry.test.js::a build.yaml with no changelog line is an error, …` |
+| U51 | The release workflow writes the tagged version's entry into `build.yaml` before `jprm plugin build` | contract `versions[].changelog`, T063, T064 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_WritesTheChangelogEntryForTheTaggedVersionBeforePackaging` |
+
 ## Invariants and edge cases still to place
 
 None. Every edge case in `spec.md` is placed or explicitly out of scope: `EC-1` on `A7`, `U11`,

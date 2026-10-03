@@ -546,3 +546,214 @@ builtin or a local file, and no network API is referenced anywhere under `tests/
   `TreatWarningsAsErrors`
 - every finding of the second audit is now closed. `T037`, `T038` and `T049` remain open and none
   of them is a code change
+
+## Phase 11: remediation of the fourth TDD audit's HIGH findings
+
+Driven from `tdd/verification.md` (verdict FAIL, audited at `99c805e`). The production code was
+correct in every case, so each test passed on first run and the proof is the audit's own surviving
+mutant now failing. Every mutant was applied from a file copy and restored with a `cmp` byte check,
+never `git checkout`. No production code changed.
+
+| Task | Behaviour | New test | Mutant | Before | After |
+| --- | --- | --- | --- | --- | --- |
+| T059 | U13 | `ReleasesControllerTests.cs::GetReleases_StoredReleasesFlagHoldsWhenTheSelectionHidesEveryRow` | S7: list flag `hasStored` → `visible.Count > 0` | 303/303 passed | 1 failed: `Expected: Tuple (0, True) / Actual: Tuple (0, False)` |
+| T060 | U21, U22 | `staleness.test.js`: both sides of a 12 h interval | V1: gate uses `24` for the interval | 64/64 passed | 1 failed: `a shorter interval moves the threshold: one second past it yields a sentence / expected: 'Releases last checked 12 hours ago.' / actual: ~` |
+| T061 | U20 | `staleness.test.js::an instant further ahead than one interval still yields no sentence` | V2: clamp → `Math.abs` | 64/64 passed | 1 failed: `expected: ~ / actual: 'Releases last checked 30 hours ago.'` |
+| T062 | U17 | `AdminControllerTests.cs::Status_DisablingTheNewestSource_FallsBackToTheInstantTheUserPageReports` | V3: admin view ignores `EnabledSourceIds()` | 303/303 passed | 1 failed: `Expected: 2026-09-01T03:00:00 / Actual: 2026-09-06T03:00:00` |
+| T063 | U12 | `ReleasesControllerTests.cs::GetReleases_AfterAPurge_ListAndStatusBothReportNoInstant` | V4: `GetStatusAsync` drops the stored gate | 303/303 passed | 1 failed: `Expected: Tuple (null, null) / Actual: Tuple (null, 2026-09-06T12:00:00)` |
+| T064 | A9 | `render.test.js`: two title-with-markup tests | V5: `row()` writes `item.title` unescaped | 64/64 passed | 2 failed, one with `expected: -1 / actual: 147` |
+
+- control: P2 (drop the user page's clamp) still survives, as the audit judged: the interval gate
+  hides any negative age, so that mutant is equivalent. V2 is the non-equivalent one, and it is
+  caught now.
+- `T064` uses `005`'s `loadPageDom` and `render.test.js`'s own `rendered` helper. When `002` closed,
+  rendering was out of scope because the feature had no DOM.
+- suite: 306 passed, 0 failed (dotnet); 69 passed, 0 failed (node), also under `LANG=de_DE.UTF-8`
+  and `TZ=America/Sao_Paulo`. `dotnet build --configuration Release`: 0 warnings
+- `T065`–`T069` remain open. `T065` needs a maintainer decision
+
+## Phase 11, second part: the MED and LOW findings
+
+No production code changed. Each test change was proven by a deliberate mutant run twice: once
+against the test files as committed at `f8a4306`, and once against the changed ones. The committed
+copies were swapped in by file copy and the current copies restored with `cmp`. Production mutants
+were restored the same way.
+
+**T066 — Findings 8–10, coincident inputs.** These are setup changes only; no assertion was
+loosened.
+
+| Test | Change | Mutant | Before | After |
+| --- | --- | --- | --- | --- |
+| `GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd` (U10, U11) | clock advanced 1 h between the fetch and `StartRunAsync` | the list reports the latest run's `StartedAt` | SURVIVED | 1 failed: `Expected: Tuple (True, …12:00:00) / Actual: Tuple (True, …13:00:00)` |
+| `A6_OneSourceCoolingDown…` (A6) | a first run where both sources complete a fetch, then 1 day later MusicBrainz cools down | `MAX` → `MIN` | SURVIVED | 1 failed: `Expected: 2026-09-07T12:00:00 / Actual: 2026-09-06T12:00:00` |
+| `GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetchAcrossArtists` (U1) | newer fetch written first, at the other source | "the last row written" (`ORDER BY rowid DESC LIMIT 1`) | SURVIVED | 1 failed: `Expected: 2026-09-06T03:00:00 / Actual: 2026-09-01T03:00:00` |
+
+Ceiling on `A6`: within one run the stub clock does not move, so a fetch can never differ from its
+own run's start or end there. "Not the run's end" is held by `A1` (`A20`) and `U10`.
+
+**T067 — Finding 11.** In `test-list.md`, the node single-test line (a name pattern that exits 0
+on no match) is now the profile's `file:` command. The `dotnet@9` path is now the profile's
+SDK 10 prefix. Checked: `node --test tests/web/nope.test.js` exits 1.
+
+**T068 — Finding 12.** `load-page.js` no longer catches errors from the page script. All 69 page
+tests pass without the catch, so every page initializes cleanly in the fake DOM. Mutant: `throw`
+added after `loadArtists().then(load);` in `user-view.html`. With the old catch: 69 passed,
+0 failed (hidden). Without it: 27 passed, 22 failed.
+
+**T069 — Finding 13, text drift.**
+
+- `A7`'s row says no instant is reported, matching the assertion.
+- `A20`'s summary says "last checked".
+- `exposure.test.js` titles say "exactly its testable helpers", and its comment names the two
+  render test files.
+- `U34` no longer traces to `FR-016`, which `003`'s `BuildManifestTests` pins.
+- `Status_WithNothingStored_…` now asserts its own precondition, that the fetch timestamp
+  survives, rather than being renamed.
+
+- suite: 306 passed, 0 failed (dotnet); 69 passed, 0 failed (node), also under `ja_JP.UTF-8` /
+  `Asia/Tokyo`. `dotnet build --configuration Release`: 0 warnings
+- open: `T065` (maintainer decision on the six test-after behaviours) and `T037` (manual pass on an
+  unsupported Jellyfin version)
+
+## Test-after admissions (T065, fourth audit Finding 7)
+
+The playbook asks that a behaviour whose production code came before any valid red be recorded
+as test-after. These six were, and earlier entries describe the facts but never use the label.
+Earlier entries stay as written; this one adds the label.
+
+| Behaviour | Why it is test-after | Where the evidence is |
+| --- | --- | --- |
+| U12 | cycle 7 rewired `GetStatusAsync` along with the list action. No failing test asked for it; the test came at cycle 9 and passed on first run | cycle 7, cycle 9; commit `81d3e63` |
+| U13 | the same change switched the flag to `HasAnyAsync`. The cycle 7 test passed under the old flag too; the test came at cycle 10 | cycle 7, cycle 10; `81d3e63` |
+| U36 | `T029` wrote the `checkedText` ladder against a missing-function red only. Three of its four boundaries had no assertion until `T039` | `T029` entry; Phase 9 table |
+| U38 | the clock-correction clamp shipped with `T029` and survived deletion until `T051` added its test | Phase 10 table |
+| A6, A7 | written at cycle 21, after every unit and every line they cover; no red. The playbook's outer loop is an acceptance test written first | cycle 21 |
+
+Each is mutant-proven today: cycles 9 and 10, Phase 9 and 10 tables, and Phase 11 for `U12`,
+`U13`, `U17`'s sibling and `A6`.
+
+**Decision (maintainer, 2026-10-01): accepted.** The history stays as it happened. A staged red
+after the fact would prove no more than the existing mutants. Consequence: under the rubric this
+feature's TDD verdict cannot rise above `PASS_WITH_GAPS`.
+
+`T037` was retargeted the same day, by the maintainer's decision, from Jellyfin 10.11.11 (dropped by
+`003`) to Jellyfin 12.x, with `quickstart.md`'s prerequisite line to match. It stays open as JD's own
+real-server pass.
+
+## Phase 12: remediation of the fifth TDD audit
+
+Driven from `tdd/verification.md` (verdict FAIL, audited at `43fb6b6`). No production code changed.
+The production code was correct in every case, so each test passed on first run, and the proof is
+the audit's own surviving mutant now failing. Every mutant was applied alone from a file copy, ran
+the full suite of its side, and was restored with a `cmp` byte check, never `git checkout`.
+
+| Task | Behaviour | Test | Mutant | Before | After |
+| --- | --- | --- | --- | --- | --- |
+| T070 | U1 | `ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetch_EvenAtTheSourceThatSortsLast` (new; the first case keeps the newer fetch written first) | X1: `MAX` → first row by `ORDER BY source` | 307/307 passed | 1 failed |
+| T070 | U1 | the same pair | M3: "last row written" (`ORDER BY rowid DESC LIMIT 1`) | caught by the first case | still 1 failed |
+| T071 | A5, U13 | `ReleasesControllerTests.cs::GetReleases_FlagAndAgeHoldWhenTheSelectionHidesEveryRow` (renamed from `…StoredReleasesFlagHolds…`; seeds a fetch and asserts the instant) | X2: list's age gated on `visible.Count > 0` | 307/307 passed | 1 failed |
+| T072 | A2, A3 | `render.test.js`: the weekly and six-hour interval tests | N1: `staleness(data)` passes `24` | 75/75 passed | 2 failed: `expected: '' / actual: 'Releases last checked 2 days ago.'` and `expected: 'Releases last checked 12 hours ago.' / actual: ''` |
+| T073 | U18 (page half of SC-005) | `render-status.test.js::the releases-last-checked value states the data age, not the last refresh` | N8: `nr-last-checked` shows `lastRun.endedAt` | 75/75 passed | 1 failed: `expected: '…3 days ago.' / actual: '…1 hour ago.'` |
+| T076 | A9 | `render.test.js::a title containing quotes is escaped in every place the row writes it` | Q1: `data-title` escapes `<` and `>` only | not run before | 1 failed: `expected: 4 / actual: 3` |
+| T077 | U12 | `GetReleases_AfterAPurge_…` asserts its precondition | P12: `PurgeAsync` also clears `last_complete_at` | not run before | 1 failed |
+
+**T074, fixed clock.** `load-page.js` now pins the sandbox's `Date.now()` to `fixed-clock.js`'s
+`NOW`, beside the locale and timezone it already pins. `render.test.js`'s stale-instant test
+asserts the exact sentence (`Releases last checked 5 weeks ago.`) instead of a pattern. Proof: with
+the process clock faked to `2026-07-01` (`--require` a one-line `Date.now` override), the new
+harness passes 79/79. The committed harness fails 3, including the stale-instant test.
+
+**T078, text drift.**
+
+- `ArtistRepositoryTests.cs:145`: the comment now claims only write order. The new case claims
+  source order.
+- `staleness.test.js`: the far-future comment says the test catches `Math.abs`, and that dropping
+  the clamp alone is equivalent, in agreement with `checked.test.js`.
+- `load-page.js`: the header says synchronous errors only.
+- `GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd` is now `…NotTheLastRunsStartOrEnd`.
+  Its opening empty-state assertion was removed. That state is pinned by
+  `GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted` (the flag) and `001`'s
+  `A5_NoCompletedRun_ReportsNoStoredReleasesAndNoInstant` (flag and instant), and the fifth
+  audit's Finding 9 asked for its removal. The rename is carried into `001`'s `test-list.md` (`U118`).
+- `tdd/test-list.md`: "Out of scope" no longer lists `row` and `render`. `updated_at` is `43fb6b6`.
+  The `test` column names every test this phase added or renamed.
+
+- suite: 308 passed, 0 failed (dotnet); 79 passed, 0 failed (node), also under `LANG=de_DE.UTF-8`
+  and `TZ=Asia/Tokyo`. `dotnet build --configuration Release`: 0 warnings
+- open: `T075` (maintainer decision on how the accepted test-after behaviours are graded) and `T037`
+  (manual pass on Jellyfin 12.x)
+- independence: the session that ran the fifth audit wrote these tests. The next audit should run
+  in a fresh session.
+
+## T075: how the accepted test-after behaviours are graded (fifth audit Finding 5)
+
+The "Test-after admissions" entry above says the verdict "cannot rise above `PASS_WITH_GAPS`". The
+extension's rubric did not support that: it lists any `TEST_AFTER` behaviour as a `FAIL` condition.
+That entry stays as written; this one corrects it.
+
+**Decision (maintainer, 2026-10-01): override the rubric for this project.**
+`.specify/templates/overrides/tdd-test-quality-rubric.md` is the extension's rubric with one
+change. It adds the class `TEST_AFTER_ACCEPTED` for a `TEST_AFTER` behaviour where all three hold:
+
+- the cycle log labels it test-after, with its evidence
+- the cycle log records the maintainer's dated decision to accept it
+- a recorded mutant inside it is caught by its test today
+
+`PASS_WITH_GAPS` admits that class. `PASS` still requires every behaviour `PROVEN` or `LIKELY`.
+The override applies to every feature, not only `002`.
+
+For `002`, `U12`, `U13`, `U36`, `U38`, `A6` and `A7` meet the first two conditions (entry above).
+Each has a recorded mutant, caught when last run: `U12` (V4, fifth audit), `U13` (S7, fifth
+audit; X2, Phase 12), `U36` (P6, fourth audit), `U38` (P1, fourth audit), `A6` (M2, fifth audit)
+and `A7` (S9 and S10, fourth audit). The next audit grades them against the override and
+confirms the third condition itself.
+
+## Phase 13: remediation of the sixth TDD audit
+
+Driven from `tdd/verification.md` (verdict PASS_WITH_GAPS, audited at `76f6b05`). No production code
+changes. Each task is a test or harness change, proven by a red observed before the change or by a
+mutant, applied from a file copy and restored with a `cmp` byte check, never `git checkout`.
+Independence: the session that ran the sixth audit wrote these changes. The next audit should run in
+a fresh session.
+
+### T079 (Finding 1): the pinned clock runs after the fixtures
+
+- test: `render-status.test.js::after a completed refresh the releases-last-checked value is a sentence, not a dash` (pattern → exact sentence) and `render.test.js::with an instant older than the refresh interval the staleness sentence appears` (new age)
+- red: both expectations changed first, at the old `NOW` (`2026-09-09T12:00Z`).
+  `node --test tests/web/render-status.test.js` → `expected: 'Releases last checked 8 hours ago.'` / `actual: 'Releases last checked 0 hours ago.'`.
+  `node --test tests/web/render.test.js` → `expected: 'Releases last checked 7 weeks ago.'` / `actual: 'Releases last checked 5 weeks ago.'`
+- green: `NOW` in `tests/web/fixed-clock.js` moved to `2026-09-19T12:00Z`, 8 h 45 min after the fixtures'
+  instant, so a render of them takes the interval rule and not the clock-correction clamp. Its comment
+  says why. Every other node test computes from `NOW` through `ago` / `ahead` and is unchanged.
+  `node --test "tests/web/*.test.js"`: 79 passed, 0 failed; also under `LANG=de_DE.UTF-8 TZ=Asia/Tokyo`
+- refactor: none needed
+
+### T080 (Finding 2): the quoted-title test names its count
+
+- test: `render.test.js::a title containing quotes is escaped in every place the row writes it`
+- before: mutant R1 (every `esc(item.title)` in `user-view.html` → `item.title`, 5 sites) failed the test with `name: 'TypeError'`, because `match` returned `null`
+- change: the count is taken from `(… .match(…) ?? []).length`
+- after: R1 → `expected: 4` / `actual: 0` (`AssertionError`). Q1 (`data-title` escaping `<` and `>` only) → `expected: 4` / `actual: 3`. Each restored with `cmp`; `node --test "tests/web/*.test.js"`: 79 passed, 0 failed
+- refactor: none needed
+
+### T081 (Finding 3): `U1` as a table
+
+- test: `ArtistRepositoryTests.cs::GetReleasesLastCheckedAtAsync_IsTheNewestCompletedFetchAcrossArtists_WhateverItsSourceOrWriteOrder`, a `[Theory]` replacing `…AcrossArtists` and `…_EvenAtTheSourceThatSortsLast`. Its rows are the newer fetch's source (`deezer`, `musicbrainz`) × whether it is written first. The two old facts are rows 1 and 4; rows 2 and 3 are new
+- proof (refactor of a test, so no red; each mutant at `ArtistRepository.cs:215`, full suite):
+  X1 (`ORDER BY source LIMIT 1`) → 2 failed (`musicbrainz`, both orders).
+  M3 (`ORDER BY rowid DESC LIMIT 1`) → 2 failed (written first, both sources).
+  M2 (`MIN`) → 6 failed (all four rows, `U15`, `A6`). Each restored with `cmp`
+- suite: `dotnet test --configuration Release`: 310 passed, 0 failed (two facts became four rows)
+- `tdd/test-list.md`: `U1`'s `test` column names the theory
+- refactor: none further
+
+### T082 (Finding 4): text drift
+
+- **Correction to the `T075` entry**, which stays as written: it cites "S9 and S10" as `A7`'s recorded
+  mutants. Only S10 (Deezer always enabled) fails `A7_WithEverySourceDisabled_…`; S9 (MusicBrainz always
+  enabled) is caught by `U15`'s test alone. The third override condition holds for `A7` through S10.
+- `tdd/test-list.md`: `A2` and `A3` name their two render tests as `render.test.js::<name>`.
+- `tests/web/load-page.js`: one of two blank lines inside the sandbox's `Date` class removed.
+- suite: 310 passed, 0 failed (dotnet); 79 passed, 0 failed (node), also under
+  `LANG=de_DE.UTF-8 TZ=Asia/Tokyo`
+- open: `T037` (manual pass on Jellyfin 12.x, the maintainer's own)

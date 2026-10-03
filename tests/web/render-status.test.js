@@ -4,6 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPageDom } = require('./load-page.js');
 const { fixture } = require('./fixtures.js');
+const { HOUR, DAY, ago } = require('./fixed-clock.js');
 
 // The administrator page showed a dash for every value on Jellyfin 12. These capture what
 // `renderStatus` already does against a response of the shape the server really produces, so the
@@ -30,7 +31,17 @@ test('after a completed refresh the last refresh shows its instant and outcome, 
 test('after a completed refresh the releases-last-checked value is a sentence, not a dash', () => {
     const { text } = rendered(fixture('admin-status.json'));
 
-    assert.match(text('nr-last-checked'), /^Releases last checked .+\.$/);
+    assert.equal(text('nr-last-checked'), 'Releases last checked 8 hours ago.');
+});
+
+// 002 SC-005: the last refresh and the data age are separate values. The fixture gives them the
+// same instant, so this response separates them: one cannot be shown for the other.
+test('the releases-last-checked value states the data age, not the last refresh', () => {
+    const base = fixture('admin-status.json');
+
+    const { text } = rendered({ ...base, lastRun: { ...base.lastRun, endedAt: ago(HOUR) }, releasesLastCheckedAt: ago(3 * DAY) });
+
+    assert.equal(text('nr-last-checked'), 'Releases last checked 3 days ago.');
 });
 
 test('the next refresh shows its instant when no refresh is running', () => {

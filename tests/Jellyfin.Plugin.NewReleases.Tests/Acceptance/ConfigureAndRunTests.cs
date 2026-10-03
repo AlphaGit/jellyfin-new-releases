@@ -109,7 +109,11 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         const string mbid = "056e4f3e-d505-4dad-8ec1-d04f521cbb56";
         _rig.Library_.Artist("Daft Punk", mbid);
         _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.MusicBrainzCatalogue(mbid, ("rg-home", "Homework", "Album", [], "1997-01-20")).MusicBrainzEditions("rg-home", ("rel-home", "Homework", Homework));
         _rig.DeezerArtist(27, "Daft Punk", (2, "Homework", "album", "1997-01-16"), (3, "Alive 2007", "album", "2007-11-16")).DeezerAlbum(2, "Homework", Homework);
+        await _rig.RunAsync(); // both sources complete a fetch at Start, so the cooling-down one has an older instant on record
+
+        _rig.Harness.Clock.Advance(TimeSpan.FromDays(1));
         for (var i = 0; i < Jellyfin.Plugin.NewReleases.Sources.SourceLimits.FailureThreshold; i++)
         {
             await _rig.Harness.Db.SourceState.RecordFailureAsync("musicbrainz", "503", Jellyfin.Plugin.NewReleases.Sources.SourceLimits.FailureThreshold, Jellyfin.Plugin.NewReleases.Sources.SourceLimits.Cooldown, CancellationToken.None);
@@ -119,7 +123,7 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         var list = await _rig.ListAsync();
 
         Assert.Equal(["Alive 2007"], list.Items.Select(i => i.Title));
-        Assert.Equal(SourceHarness.Start, list.ReleasesLastCheckedAt); // the Deezer fetch, not the cooling-down source
+        Assert.Equal(SourceHarness.Start + TimeSpan.FromDays(1), list.ReleasesLastCheckedAt); // the Deezer fetch, not the cooling-down source's older one
     }
 
     /// <summary>002 A7 / FR-002: with every source switched off nothing can confirm the data, so no age is reported.</summary>
@@ -140,7 +144,7 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         Assert.Null(list.ReleasesLastCheckedAt); // no enabled source can confirm them any more
     }
 
-    /// <summary>SC-007: with no source reachable the list still shows the last stored data and reports when it was last refreshed.</summary>
+    /// <summary>SC-007: with no source reachable the list still shows the last stored data and when the releases were last checked.</summary>
     [Fact]
     public async Task A20_WithEverySourceInCooldown_TheListStillShowsTheStoredDataAndItsAge()
     {

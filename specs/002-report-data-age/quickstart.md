@@ -9,7 +9,7 @@ Jellyfin server and cover what the suite cannot reach: the page copy.
 
 - .NET 9 SDK. On this Mac the default `dotnet` is SDK 8, so prefix commands with
   `PATH=/opt/homebrew/opt/dotnet@9/bin:$PATH DOTNET_ROOT=/opt/homebrew/opt/dotnet@9/libexec`.
-- For steps 3–6: Jellyfin 10.11.11 with the Plugin Pages plugin, a music library with at least
+- For steps 3–6: Jellyfin 12.x with the Plugin Pages plugin, a music library with at least
   two artists, and the built plugin installed.
 
 ## 1. Build and run the suite

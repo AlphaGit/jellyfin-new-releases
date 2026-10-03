@@ -98,19 +98,18 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         _tasks.ScheduledTasks.Returns([worker]);
     }
 
-    /// <summary>002 FR-001/FR-002/FR-004: the reported instant is the newest completed catalogue fetch, not a run's end.</summary>
+    /// <summary>002 FR-001/FR-002/FR-004: the reported instant is the newest completed catalogue fetch, not a run's start or end.</summary>
     [Fact]
-    public async Task GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsEnd()
+    public async Task GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsStartOrEnd()
     {
         var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
-        Assert.Equal((false, (DateTimeOffset?)null), (Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).HasStoredReleases, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).ReleasesLastCheckedAt));
-
         await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
         var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
         var fetchedAt = _clock.GetUtcNow();
         await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, fetchedAt, CancellationToken.None);
 
-        // A run that ends later must not become the reported instant.
+        // A run that starts and ends later must not become the reported instant.
+        _clock.Advance(TimeSpan.FromHours(1));
         var run = await _db.SourceState.StartRunAsync(CancellationToken.None);
         _clock.Advance(TimeSpan.FromMinutes(5));
         await _db.SourceState.FinishRunAsync(run, 1, 1, 0, 0, "Completed", CancellationToken.None);
@@ -151,6 +150,23 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.Equal((list.HasStoredReleases, list.ReleasesLastCheckedAt), (status.HasStoredReleases, status.ReleasesLastCheckedAt));
     }
 
+    /// <summary>002 FR-011/FR-008: after a purge the fetch timestamp survives, and neither response may report it.</summary>
+    [Fact]
+    public async Task GetReleases_AfterAPurge_ListAndStatusBothReportNoInstant()
+    {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
+        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), CancellationToken.None);
+        await _db.Releases.PurgeAsync(CancellationToken.None);
+        Assert.NotNull(await _db.Artists.GetReleasesLastCheckedAtAsync(_configuration.EnabledSourceIds(), CancellationToken.None));
+        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+
+        var list = Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None));
+        var status = (await controller.GetStatusAsync(CancellationToken.None)).Value!;
+
+        Assert.Equal(((DateTimeOffset?)null, (DateTimeOffset?)null), (list.ReleasesLastCheckedAt, status.ReleasesLastCheckedAt));
+    }
+
     /// <summary>002 FR-008: the empty state follows stored releases, not run history — so a purge returns to it.</summary>
     [Fact]
     public async Task GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted()
@@ -166,6 +182,21 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
         await _db.Releases.PurgeAsync(CancellationToken.None);
         Assert.False(Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).HasStoredReleases);
+    }
+
+    /// <summary>002 FR-008: a selection that hides every stored row is not the "waiting for its first refresh" state,
+    /// and the age of the stored data is still stated.</summary>
+    [Fact]
+    public async Task GetReleases_FlagAndAgeHoldWhenTheSelectionHidesEveryRow()
+    {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
+        var fetchedAt = _clock.GetUtcNow();
+        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, fetchedAt, CancellationToken.None);
+
+        var list = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(type: "EP", cancellationToken: CancellationToken.None));
+
+        Assert.Equal((0, true, (DateTimeOffset?)fetchedAt), (list.Items.Count, list.HasStoredReleases, list.ReleasesLastCheckedAt));
     }
 
     /// <summary>002 Edge Cases: releases on screen with nothing that confirmed them — show them, state no age.</summary>
