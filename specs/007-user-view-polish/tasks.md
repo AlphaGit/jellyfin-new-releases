@@ -46,7 +46,7 @@ node --test "tests/web/*.test.js"
 
 **Purpose**: Remove what the dropped scope left in the tree.
 
-- [ ] T001 Delete `tests/fixtures/musicbrainz/artist_lookup.json` and `tests/fixtures/musicbrainz/artist_lookup_empty.json`, and remove their entry from `tests/fixtures/README.md`. No test reads them (plan, Technical Context). Run the full `dotnet test --configuration Release` and confirm 0 failed.
+- [X] T001 Delete `tests/fixtures/musicbrainz/artist_lookup.json` and `tests/fixtures/musicbrainz/artist_lookup_empty.json`, and remove their entry from `tests/fixtures/README.md`. No test reads them (plan, Technical Context). Run the full `dotnet test --configuration Release` and confirm 0 failed.
 
 ---
 
