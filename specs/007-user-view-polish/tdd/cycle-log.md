@@ -1642,3 +1642,14 @@ as it should. H5 and J3 now lie outside A15 and U68 as narrowed (T099).
 - the action tests: the U72 rows set up the page through `loadedView`, as the rest of
   `requests.test.js` does
 - no behaviour change; green to green. Suite -> node 358 passed, also under `LANG=de_DE.UTF-8`
+
+## Commits of the eighth remediation's polish
+
+| Entry | Commit |
+| --- | --- |
+| T101: one check per test for U81 and U87 | `42face1` |
+| T102: U84 and the `keepsListening` table move | `5467ee8` |
+| T104: shared page source, link reader and setup | `dd43c21` |
+
+All 123 recorded breaks, run at `dd43c21`, fail the tests except E1 (the control, which passes as it
+should) and H5 and J3 (outside A15 and U68 as narrowed by T099). K1 fails U67 only.
