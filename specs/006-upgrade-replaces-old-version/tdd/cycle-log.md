@@ -524,3 +524,18 @@ recorded mutant its test catches:
 | U25 | 25 | the `mv` line dates from cycle 13 | audit M5 |
 | U26 | 26 | the `mv` target dates from cycle 13 | audit M14 |
 | U27 | 27 | the asset check dates from cycle 8 | audit M12 |
+
+## Cycle 28: U28 the package is moved between building and releasing it
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_MovesThePackageBetweenBuildingAndReleasingIt` (new;
+  second audit finding 19, task T048)
+- red: none on the first run; the order dates from cycle 13. **Test-after**, stated as such: the
+  code existed when the second audit found the order unpinned.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests.ReleaseWorkflow_MovesThePackageBetweenBuildingAndReleasingIt" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     1`
+- mutant: survivor S1, the `mv` and `gh release create` lines swapped. Same command ->
+  `the release uploads the package before it is moved` (1 failed). Restored from a file copy,
+  verified with `cmp -s`
+- green: no workflow change. Suite -> 341 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry

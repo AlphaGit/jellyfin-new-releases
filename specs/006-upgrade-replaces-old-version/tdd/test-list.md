@@ -115,6 +115,8 @@ ordering and presence check, as `ReleaseWorkflowTests.Steps` already does.
 | U19 | The release notes are written before `gh release create` runs | FR-011 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_WritesTheReleaseNotesBeforeCreatingTheRelease` |
 | U25 | The workflow moves the file JPRM writes, `{Slug}_${{ steps.ver.outputs.version4 }}.zip`, and no other | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_MovesTheFileJprmWrites` |
 | U26 | The file the workflow moves the package to is the file `gh release create` uploads | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo` |
+| U28 | The workflow moves the package after `jprm plugin build` and before `gh release create` | FR-010 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_MovesThePackageBetweenBuildingAndReleasingIt` |
+| U29 | The folder the workflow moves the package from is the folder `jprm plugin build --output` names | FR-010 | example | PENDING | |
 
 `U13` must anchor the file name at a path or quote boundary. Cycle 3 found `003`'s U39 is a bare
 substring check: after the rename, `new-releases_<v>.zip` is found inside the stale
@@ -122,6 +124,7 @@ substring check: after the rename, `new-releases_<v>.zip` is found inside the st
 
 `U15` restates `003`'s U27, which ends at `actions/deploy-pages` today.
 
+`U28`–`U29` were added after the audit of `c210cd1` (findings 19–20, survivors S1, S2).
 `U25`–`U27` were added after the audit of `74313fc` (`tdd/verification.md` findings 1–2, mutants
 M5, M14, M12 survived). `U25` restores the half of `003`'s U39 that tied the slug to the file JPRM
 writes; `U26` ties the moved file to the uploaded one; `U27` pins the asset-name check in

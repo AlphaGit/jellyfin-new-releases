@@ -45,6 +45,20 @@ public class ReleaseWorkflowTests
     }
 
     /// <summary>
+    /// 006 U28: the package can be moved only once JPRM has written it, and the release can
+    /// upload it only once it has been moved. Out of order, the release step fails on a missing
+    /// file, and only when a tag is pushed (006 second audit, survivor S1).
+    /// </summary>
+    [Fact]
+    public void ReleaseWorkflow_MovesThePackageBetweenBuildingAndReleasingIt()
+    {
+        var move = IndexOf("mv \"./artifacts/");
+
+        Assert.True(IndexOf("jprm plugin build") < move, "the package is moved before JPRM has written it");
+        Assert.True(move < IndexOf("gh release create"), "the release uploads the package before it is moved");
+    }
+
+    /// <summary>
     /// 006 U16: packages are release assets and the catalogue is read from the branch, so no
     /// release depends on GitHub Pages (006 FR-012). A Pages step left behind would keep a second,
     /// stale copy of the catalogue answering at the old address.
