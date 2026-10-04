@@ -50,3 +50,19 @@ failed before the implementation.
   With no red demanding it, the workflow was left alone; it is wrong until T013 and is covered by
   `U13`, now noted to anchor the name. T005 is ticked for its behaviour, `U1`; its workflow half
   moves to T013. Do not tag a release between this commit and T013.
+
+## Cycle 4: U2 the plugin's displayed name does not contain "Jellyfin" in any letter case
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs::Plugin_DisplayName_DoesNotClaimToBeJellyfin` (new)
+- red: none on the first run, as planned — `Plugin.Name` is already `New Releases`:
+  `dotnet test --configuration Release --filter "FullyQualifiedName~PluginSanityTests.Plugin_DisplayName_DoesNotClaimToBeJellyfin" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     1`
+- mutant: `src/Jellyfin.Plugin.NewReleases/Plugin.cs:31` `Name` set to `"JELLYFIN New Releases"`
+  (upper case, so the "any letter case" half is what fails). Same command ->
+  `Assert.DoesNotContain() Failure: Sub-string found` / `Found:  "jellyfin"` (1 failed). Restored
+  from a file copy, verified with `cmp -s`; `git status` clean for the file
+- green: no production change. Suite `dotnet test --configuration Release` -> 321 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry
+- note: the first attempt at the mutant run printed nothing because of a shell quoting mistake in
+  the command, not a test result; it was re-run as recorded above

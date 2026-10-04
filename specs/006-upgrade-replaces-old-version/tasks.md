@@ -81,7 +81,7 @@ confirm one copy loads every time (`quickstart.md` pass 2).
 > `New Releases`. Record the failure in `specs/006-upgrade-replaces-old-version/tdd/cycle-log.md`.
 
 - [X] T004 [U1] [US1] [US2] Write failing `tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs::Plugin_DisplayName_MatchesTheNameThePackageDeclares` — assert `new Plugin(…).Name` equals `RepositoryFiles.Scalar(buildYaml, "name")`. It goes in `PluginSanityTests` rather than `Packaging/BuildManifestTests.cs`: constructing `Plugin` sets the static `Plugin.Instance`, so the test must sit in the `ProcessGlobalStateCollection` that `PluginSanityTests` already declares, and the plugin's name is now an identity invariant exactly like its GUID
-- [ ] T028 [U2] [US1] Write `PluginSanityTests.cs::Plugin_DisplayName_DoesNotClaimToBeJellyfin` — `Plugin.Name` does not contain `Jellyfin`, ignoring case (`FR-004`). It passes on its first run, so apply the deliberate-mutant check: set `Name` to `Jellyfin New Releases` in `src/Jellyfin.Plugin.NewReleases/Plugin.cs`, observe red, restore from a file copy verified with `cmp -s`
+- [X] T028 [U2] [US1] Write `PluginSanityTests.cs::Plugin_DisplayName_DoesNotClaimToBeJellyfin` — `Plugin.Name` does not contain `Jellyfin`, ignoring case (`FR-004`). It passes on its first run, so apply the deliberate-mutant check: set `Name` to `Jellyfin New Releases` in `src/Jellyfin.Plugin.NewReleases/Plugin.cs`, observe red, restore from a file copy verified with `cmp -s`
 
 ### Implementation for User Story 1 — the name
 

@@ -53,7 +53,7 @@ the static `Plugin.Instance`, so these sit in its `ProcessGlobalStateCollection`
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U1 | The name `build.yaml` declares equals, ordinally, the name the constructed plugin reports | FR-004, FR-005 | example | DONE | `PluginSanityTests.cs::Plugin_DisplayName_MatchesTheNameThePackageDeclares` |
-| U2 | The plugin's displayed name does not contain "Jellyfin" in any letter case | FR-004 | example | PENDING | |
+| U2 | The plugin's displayed name does not contain "Jellyfin" in any letter case | FR-004 | example | DONE | `PluginSanityTests.cs::Plugin_DisplayName_DoesNotClaimToBeJellyfin` |
 | U3 | The assembly identity `Jellyfin.Plugin.NewReleases` still names the Plugin Pages entry id, the admin page's embedded resource, the shipped assembly and the migration resources | FR-004a | example | DONE | `Integration/PluginPagesRegistrationTests.cs::StartAsync_SendsThePageEntryFromTheDataModel_AndNoIsEnabledFields`, `PluginSanityTests.cs::GetPages_OffersExactlyOnePage_TheEmbeddedAdminPage`, `Packaging/BuildManifestTests.cs::BuildManifest_ShipsThePluginItsSqliteAssembliesAndTheNativeLibrary`; migrations by every `Storage/` test, which runs them through `PluginDatabase.MigrationPrefix` |
 
 `U1` is ordinal although the host groups case-insensitively: `FR-004` says "identically", and the

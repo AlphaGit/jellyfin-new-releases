@@ -38,6 +38,19 @@ public class PluginSanityTests
     }
 
     /// <summary>
+    /// 006 U2: this plugin is not part of Jellyfin's official distribution, so the name an operator
+    /// reads in the dashboard must not suggest it is. The assembly identity keeps the host's
+    /// <c>Jellyfin.Plugin.*</c> convention; only the displayed name is bound by this.
+    /// </summary>
+    [Fact]
+    public void Plugin_DisplayName_DoesNotClaimToBeJellyfin()
+    {
+        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+
+        Assert.DoesNotContain("jellyfin", plugin.Name, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
     /// 006 U5: the catalogue states the plugin's name too, and an operator's server files a copy
     /// under the name it was installed with. A catalogue entry under another name is the condition
     /// that let two copies load side by side.
