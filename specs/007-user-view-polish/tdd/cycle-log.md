@@ -1390,3 +1390,18 @@ maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
 
 All 90 mutants of the sixth audit, run at `531493b`, fail their tests except the control E1, which
 passes as it should. K1 fails U67 only.
+
+## Maintainer decisions on the seventh TDD audit, 2026-10-04 (T086, T091, stopping rule)
+
+Driven from `tdd/verification.md` (verdict FAIL, audited at `3f9061f`). The maintainer's reply:
+"1. Done, continue. 2. Let's fix it here. Do a grill-me version with explanations of what's going on.
+I suspect you might be overcomplicating this. Always explain to me what is happening in terms of
+functionality. 3. Yes"
+
+- **T086 — review of `TEMPLATES` and `RUNTIME`: done (maintainer, 2026-10-04)**, as committed in
+  `0d6e599` and `6118df4`, unchanged up to `52f2c48`
+- **T091 — the view's untested pre-007 behaviour: fixed in 007**, scoped through a grilling session
+  with the maintainer before any test is written
+- **Stopping rule (maintainer, 2026-10-04)**: the next audit re-runs every recorded mutant and allows
+  one probe round, limited to 007's acceptance criteria. If that round finds no survivor inside 007,
+  the test-strength evidence is complete
