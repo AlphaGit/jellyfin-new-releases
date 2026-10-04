@@ -3,144 +3,127 @@ feature: 006-upgrade-replaces-old-version
 verdict: FAIL
 standard: .specify/templates/overrides/tdd-test-quality-rubric.md # project override of the extension rubric (TEST_AFTER_ACCEPTED row)
 profile: .specify/memory/tdd-profile.md
-verified_at: c210cd1
-previous_audit: 74313fc (FAIL)
-behaviors: 33
+verified_at: 2b97421
+previous_audit: c210cd1 (FAIL)
+behaviors: 35
 proven: 14
-likely: 0
+likely: 4 # A1–A4: red recorded in NOTES.md before the fix, green in docs/real-server-upgrade-0.2.0.md; manual, outside the cycle log
 test_after: 0
-test_after_accepted: 13
-no_test: 4 # A1–A4: manual by the maintainer's decision, T026 not yet run
-not_applicable: 2 # U3, U6: tests that predate 006, credited and re-read
+test_after_accepted: 15
+no_test: 0
+not_applicable: 2 # U3, U6: tests that predate 006
 high_smells: 0
-criteria_total: 11 # 5 acceptance scenarios + 6 success criteria
-criteria_covered: 3 # US2-AS1 and SC-004 (A5), SC-006 (A6); the 8 others wait on the real-server pass
+criteria_total: 11
+criteria_covered: 11 # 8 of them by the manual real-server pass only
 mutation_score: unmeasured # profile records mutation: null; deliberate mutants only
-deliberate_mutants: 25 run, 23 caught, 2 survived (S1, S2), both inside behaviours marked DONE
-suite: 340 passed, 0 failed, 10 s (dotnet); node not re-run, no page or node test changed since 74313fc
+deliberate_mutants: 38 run, 36 caught, 2 survived (F1 inside U26; F2 equivalent for the shipped workflow)
+suite: 350 passed, 0 failed (dotnet) + 361 passed, 0 failed (node); 18 s with the build
 independent: no # this session wrote the tests; the smell pass came from a fresh-context subagent reading through git, and every cited line was re-read here
 ---
 
 # TDD Verification: An upgrade leaves exactly one version of the plugin running
 
-**Verdict: FAIL.** The decisive reason: two deliberate mutants survive inside `U25` and `U26`, the
-behaviours the first audit's remediation added. The tests pin how the `mv` line is spelt and what
-it moves the file to. They do not pin that the move comes before the upload (S1), or that the move
-reads the folder JPRM writes to (S2). Either mutant gives a release that fails only on a real tag.
+**Verdict: FAIL.** The decisive reason: an existing test was loosened, and a mutant survives inside
+`DONE` behaviour `U26`. T050 changed U26 to accept any `mv` line that ends in the uploaded file. A
+workflow can now move JPRM's package to `staged.zip`, move some other file to `new-releases.zip`,
+and stay green (F1). Only a real tag would show the failure. The cycle log entry for T050 says
+"No test was loosened". The history and the files contradict it.
 
-The criteria gate is also still closed: the four host-level scenarios wait on the maintainer's
-manual pass.
+The rest holds:
 
-What changed since `74313fc`:
-
-- **Finding 1 is cleared.** The workflow-shape mutants M5 and M14 are now caught by `U25` and `U26`.
-- **Finding 2 is cleared.** M12 is caught by `U27`.
-- **Finding 3 is cleared.** The branch is gone, and with one simulated entry the rule now rejects
-  a Pages address and accepts the `0.2.0` address.
-- **Finding 4 is cleared.** The 13 test-after behaviours meet all three conditions of
-  `TEST_AFTER_ACCEPTED`:
-  - each is labelled in the cycle log with its evidence;
-  - the maintainer's decision is dated 2026-10-04;
-  - each one's recorded mutant was re-run today and caught.
+- All second-audit blockers are cleared. S1 and S2 are caught.
+- 15 test-after behaviours meet all three acceptance conditions, mutants re-run today.
+- Every criterion has a recorded test. A1–A4 come from the maintainer's real-server pass, with a
+  red recorded before the fix.
+- 36 of 38 deliberate mutants are caught.
 
 ## Test-first evidence
 
-History source: 38 commits `857440d..c210cd1` on `AlphaGit/tdd-run-red-green`. None is squashed or
-amended.
+History source: 72 commits `857440d..2b97421`, not squashed or amended. `v0.2.0` was released from
+`c32c2f6`.
 
 | Behavior | Class | Evidence |
 | --- | --- | --- |
-| U1, U4, U5, U7, U8, U13, U14, U16, U17, U18, U20, U22, U23, U24 | PROVEN | Unchanged from the previous audit. Each red is in the cycle log, and the commit carries the test with its subject |
-| U2, U9, U10, U11, U12, U15, U19, U21, A5, A6 | TEST_AFTER_ACCEPTED | Labelled with evidence in cycles 4, 5, 9–12, 15, 19, 20 and 22, and in the acceptance table. Accepted 2026-10-04 (`c210cd1`). Mutants caught today, see below |
-| U25, U26, U27 | TEST_AFTER_ACCEPTED | Cycles 25–27 state "test-after" with the reason. Accepted 2026-10-04. M5, M14 and M12 caught today |
+| U1, U4, U5, U7, U8, U13, U14, U16, U17, U18, U20, U22, U23, U24 | PROVEN | Red in the cycle log, and the test committed with its subject. Unchanged from the previous audits. U18, U22 and U23 were later restated (T039, T040) with a fresh red for U18 |
+| U2, U9–U12, U15, U19, U21, U25, U26, U27, A5, A6 | TEST_AFTER_ACCEPTED | Accepted 2026-10-04 (`c210cd1`). Each mutant caught today |
+| U28, U29 | TEST_AFTER_ACCEPTED | Labelled test-after in cycles 28–29. Accepted 2026-10-04 (`c32c2f6`). S1 and S2 caught today |
+| A1, A2, A3, A4 | LIKELY | Red: `NOTES.md` (`4e5c269`, 2026-09-30, before the fix `8ecf180`) records both copies loaded, the 500 on `UserView` with `AmbiguousMatchException`, the outcome changing by restart, and the manual delete. Green: `docs/real-server-upgrade-0.2.0.md` (`2b97421`). The red is outside the cycle log, and A2/A3's green rests on the maintainer's unlogged checks |
 | U3, U6 | NOT_APPLICABLE | Tests that predate 006 |
-| A1, A2, A3, A4 | NO_TEST | Host-level; manual by the maintainer's decision (T026), not run |
 
-### Existing tests changed since `74313fc`
+### Existing tests changed since `c210cd1`
 
-`Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` lost its `if (versions.Count > 0)`.
-
-- **Before:** the per-entry rule ran only inside the branch.
-- **After:** `Assert.All` reads the root inside its lambda.
-
-The rule is the same for every catalogue, and it is now reachable. No assertion was removed or
-loosened in `8a73458..c210cd1`; the smell pass confirmed this from the diff.
+| Test | Before | After | Judgment |
+| --- | --- | --- | --- |
+| U26 `RepositoryManifestTests.cs:158-166` | took the destination of the `mv` whose source is JPRM's package, and required it to equal the uploaded file | requires only that **some** `mv` line ends in the uploaded file | **Loosened** (T050). The link from JPRM's output to the upload is now pinned by no test (F1) |
+| `Changelog_020_*` (C#) | `Assert.Contains` on a C# copy of `entryFor` | node tests through the real `entryFor`, with backticked `<version>` and more terms | Moved and strengthened (T040) |
+| `ReleaseWorkflow_GrantsNoPagesPermission` | two-row theory, one regex | fact over a predicate with a seven-row table | Strengthened (T038) |
+| U18, U19 | `entryFor(` on an inline `node -e` line | the script call; argument order tested in node | Restated with a red (T039) |
+| `003`'s rejecting rows | seven literals | eight rows from `Slug`, one reason each | Restated (T037, T044, T045) |
+| `PublishedVersionsToday` | 0 | 1 | Raised after the `0.2.0` release, per the test's own rule |
 
 ### `tasks.md` against the list
 
-- No task is ticked against a behaviour that is not `DONE`.
-- T034 and T035 meet their own "done when", but they have no behaviour marker, so they are
-  unticked and wait for `/speckit-implement`. The auditor does not tick them.
+Every task is ticked, and every ticked marker names a `DONE` behaviour. No unticked task has a
+`DONE` behaviour.
 
 ## Findings
 
-Open from the previous audit, unchanged: findings 5 to 18 of `74313fc`. They are carried here
-under their task ids T036–T047. New findings come first.
+Carried findings 6–26 are fixed or waived in writing (cycle log, T037–T051). New findings:
 
 | # | Severity | Finding | Evidence |
 | --- | --- | --- | --- |
-| 19 | HIGH | **Surviving mutant inside U26 (S1).** With `gh release create` moved above `mv`, the suite stays at 340 passed. Nothing orders the move before the upload, although U26's own comment names this failure. It should also assert that the `mv` index is above the `jprm plugin build` index and below the `gh release create` index, as `ReleaseWorkflowTests.IndexOf` does for the other steps | `package.yml:82-83`; `RepositoryManifestTests.cs:134-147` |
-| 20 | HIGH | **Surviving mutant inside U25 (S2).** With `jprm plugin build … --output ./out`, the suite stays green, and the `mv` then reads a folder JPRM never wrote. U25 pins the literal `./artifacts`, not the folder JPRM writes to. It should assert that the `mv` source folder equals the `--output` argument of `jprm plugin build` | `package.yml:63,82`; `RepositoryManifestTests.cs:47-48,126-131` |
-| 5 | HIGH (gate) | **Eight criteria without an executed test:** US1-AS1–AS4, SC-001, SC-002, SC-003, SC-005. Manual, the maintainer's own pass (T026, T036) | `tdd/test-list.md` A1–A4 |
-| 21 | MED | **Redundant test.** U26 matches the same `MovesJprmsPackage` pattern that U25 asserts, so one bug fails both. It should find the `mv` by its destination | `RepositoryManifestTests.cs:130,141` |
-| 22 | MED | **Spelling, not meaning.** `MovesJprmsPackage` needs the literal `${{ steps.ver.outputs.version4 }}` with inner spaces, plain `mv`, and `./artifacts`. Equivalent workflow lines (`${{steps.ver.outputs.version4}}`, `mv -f`, `cp`) fail it, and the padding loop (`-lt 3`) is not tied to it | `RepositoryManifestTests.cs:47-48`; `package.yml:48` |
-| 23 | LOW | The upload regex takes the token after the tag as the file. A flag before the file, a `\` continuation, or `artifacts/x.zip` against `./artifacts/x.zip` would give a false red | `RepositoryManifestTests.cs:142` |
-| 24 | LOW | The two `"?` in `MovesJprmsPackage` are independent, so an unterminated quote — a shell error — still matches | `RepositoryManifestTests.cs:48` |
-| 25 | LOW | The comment "binds the first published version the moment it appears" overstates. The count check fails first, and the rule binds only once `PublishedVersionsToday` is raised. A bad `versions[0]` is also now reported against every entry | `RepositoryManifestTests.cs:259-263` |
-| 26 | LOW | Magic value: the row `new_releases` is literal while the class derives `Slug` for forks. It could be derived, e.g. `Slug.Replace('-', '_')`, with a guard that the two differ | `RepositoryManifestTests.cs:277` |
+| 27 | HIGH | **Loosened existing test, with a survivor inside U26 (F1).** U25, U26 and U29 can now each match a different `mv`, so none ties JPRM's output to the uploaded file. The mutant — JPRM's file moved to `staged.zip`, and a second `mv ./artifacts/old.zip ./artifacts/new-releases.zip` — stays at 350 passed. The cycle log's "No test was loosened" (T050) is wrong. Fix: keep the lookup by destination, and also require that the same line's source matches `MovesJprmsPackage` | `RepositoryManifestTests.cs:158-166`; `package.yml:82`; `tdd/cycle-log.md`, T050 entry |
+| 28 | MED | **Permissions table: the flow form has no `false` row.** Treating any `{…}` mapping as a grant passes all seven rows (mutant F2, survived). That only makes the predicate stricter, so no granting workflow passes, but the key check is unpinned. A quoted `permissions: "write-all"` is not detected and has no row | `ReleaseWorkflowTests.cs:91-107` |
+| 29 | MED | **The 0.2.0 notes tests are not tied to the instruction.** `/\bonce\b/` is met by the heading "Upgrading from 0.1.x — once" alone; the removal sentence has no "once". `/\bnothing else\b/` and `/\breplace\b/i` match anywhere in the section. It should match the instruction sentences themselves | `tests/web/changelog-entry.test.js:102-103,110`; `CHANGELOG.md` 0.2.0 lines 3, 9, 11-12 |
+| 30 | MED | **Redundant test.** Any name that fails `Plugin_DisplayName_DoesNotClaimToBeJellyfin` (U2) also fails `Plugin_DisplayName_IsStable`, so U2 can never fail alone | `PluginSanityTests.cs:35-39,63-68` |
+| 31 | LOW | **The comment over `RejectedSourceUrls` overstates.** A fork whose slug starts with `v` breaks it: the no-tag row then throws `ArgumentOutOfRangeException`, a false red under `ThrowsAny<XunitException>`. The row data also uses a ternary | `RepositoryManifestTests.cs:325,330-359` |
+| 32 | LOW | **`Slug` and `MovesJprmsPackage` read `build.yaml` in the type initializer.** A missing `build.yaml` fails every test in the class (the same class of problem as finding 12) | `RepositoryManifestTests.cs:41-51` |
+| 33 | LOW | **The spawn test does not prove what its name says.** It never asserts that no `build.yaml` appeared in the temp folder. It also uses inline `require`s, unlike the exemplar, and `spawnSync` has no timeout | `tests/web/changelog-entry.test.js:73-88` |
+| 34 | LOW | **The raw catalogue address is written in both suites** | `tests/web/changelog-entry.test.js:93`; `DocumentationTests.cs:17-18` |
+| 35 | LOW | **Stale comments and a self-comparison.** Several comments still say the list is empty until the first tag. The "one root" half compares the single entry with its own root, so it proves nothing until a second version exists | `RepositoryManifestTests.cs:13-14,55-57,216,274,307` |
 
 ## Mutation results
 
-No mutation tool (`mutation: null`). There were 25 deliberate mutants, one at a time. Each was
-restored by a byte copy with a fresh timestamp (so MSBuild recompiles), confirmed with `filecmp`
-and a clean `git diff`, and followed by a full suite run (340) before the next one. After the run,
-the tree was clean and had no backup left.
+No mutation tool. 38 deliberate mutants, one at a time, each restored by a byte copy with a fresh
+timestamp, checked with `filecmp` and `git diff`, then followed by both suites. The tree was clean
+afterwards.
 
-| Mutant | File | Behavior | Survived | Judgment |
-| --- | --- | --- | --- | --- |
-| `Name` = `"JELLYFIN New Releases"` | `Plugin.cs` | U2 | No | condition 3 for U2 |
-| `name` = `"New Releases Tracker"` | `build.yaml` | A5 | No | condition 3 for A5 |
-| tag-to-version line deleted | test helper | U9 | No | condition 3 for U9 |
-| Pages-era rule restored | test helper | U10 | No | condition 3 for U10 |
-| asset `"/{Slug}_{number}.zip"` | test helper | U11 | No | condition 3 for U11 |
-| root from the entry itself | test helper | U12 | No | condition 3 for U12 |
-| release step after `repo add` | `package.yml` | U15 | No | condition 3 for U15 |
-| notes line below `gh release create` | `package.yml` | U19 | No | condition 3 for U19 |
-| uploaded file `plugin.zip` | `package.yml` | A6 | No | condition 3 for A6 |
-| Pages address added to Install | `README.md` | U21 | No | condition 3 for U21 |
-| M5 `mv` source `jellyfin-new-releases_…` | `package.yml:82` | U25 | No | cleared finding 1 |
-| M14 `mv` target `new-release.zip` | `package.yml:82` | U26 | No | cleared finding 1 |
-| M12 `EndsWith(asset)` deleted | test helper | U27 | No | cleared finding 2 |
-| M1–M4, M6–M11 (as in `74313fc`) | various | U1, U5, U8, U14, U17, U18, U20, U22, U23 | No | all still caught |
-| **S1** `gh release create` above `mv` | `package.yml:82-83` | U26 | **Yes** | real: the upload runs before the file exists (finding 19) |
-| **S2** `--output ./out` | `package.yml:63` | U25 | **Yes** | real: `mv` reads a folder JPRM never wrote (finding 20) |
-
-S1 and S2 were proposed by the fresh-context smell pass and confirmed here. The pass also proposed
-`-lt 3` → `-lt 2` in the padding loop. That mutant was not run here; it is recorded under
-finding 22.
+| Mutants | Behaviors | Survived | Judgment |
+| --- | --- | --- | --- |
+| U2, A5, U9–U12, U15, U19, A6, U21, U25 (M5), U26 (M14), U27 (M12) | the 13 accepted on `c210cd1` | No | acceptance condition 3 still holds |
+| M1–M4, M6–M11 | U1, U5, U8, U14, U17, U18, U20, U22, U23 | No | M10 and M11 are caught by node now |
+| S1, S2 | U28, U29 | No | acceptance condition 3 for U28 and U29 |
+| `write-all`; flow `pages` in the workflow | U17 | No | T038 |
+| arguments swapped; `--notes` ignored | U18 (node) | No | T039 |
+| all three names renamed together | `Plugin_DisplayName_IsStable` | No | T041 |
+| "nothing else" removed | U22 (node) | No | T042 |
+| `ReleaseRootOf` tag check removed; padding once; truncation to four parts; root check removed | T045, T037 rows | No | caught |
+| a phantom 0.2.0-shaped version added to the catalogue | U4 | No | caught by the count and the root check |
+| **F1** JPRM file → `staged.zip`, second `mv` → `new-releases.zip` | U26 | **Yes** | real: the release would upload a file the build never made (finding 27) |
+| **F2** any flow mapping treated as a grant | U17 table | **Yes** | equivalent for the shipped workflow (stricter only); precision gap (finding 28) |
 
 ## Traceability
 
 | Criterion | Tests | End to end |
 | --- | --- | --- |
-| US1-AS1, SC-001 | A1 — manual, T026 | No; suite proxy `U1` |
-| US1-AS2, SC-002 | A2 — manual, T026 | No |
-| US1-AS3 | A3 — manual, T026 | No |
-| US1-AS4, SC-003 | A4 — manual, T026 | No |
-| US2-AS1, SC-004 | A5 ← U1, U2, U5 | Yes, at suite level |
-| SC-005 | none in the suite; T026 steps 4–5 | No |
-| SC-006 | A6 ← U7–U19, U24–U27 | Yes at suite level, with the gaps of findings 19–20 |
+| US1-AS1, SC-001 | A1 ← U1, U5 | Yes, manual on the real server |
+| US1-AS2, SC-002 | A2 | Yes, manual (the maintainer's restarts) |
+| US1-AS3 | A3 | Yes, manual (the maintainer's check) |
+| US1-AS4, SC-003 | A4 | Yes, manual. The one manual step was the repository address, which `FR-007` documents |
+| US2-AS1, SC-004 | A5 ← U1, U2, U5, `IsStable` | Yes, suite level |
+| SC-005 | the host removed the old copy itself (`docs/real-server-upgrade-0.2.0.md`) | Yes, manual |
+| SC-006 | A6 ← U7–U19, U24–U29 | Yes at suite level, with the gap of finding 27, and the real `v0.2.0` run |
 
-Tests tracing to nothing: none. Every claimed test exists and ran in the 340.
+Untested criteria: none. Tests tracing to nothing: none.
 
 ## What was not audited
 
-- Mutation by a tool: none is installed. The 25 hand mutants are a sample, not a score.
-- The padding-loop mutant (`-lt 2`) and the equivalent-spelling cases of finding 22: not run.
+- Mutation by a tool: none is installed. 38 hand mutants are a sample, not a score.
 - Coverage: `coverlet.collector` is not referenced.
-- The real release workflow: no tag pushed (T025).
-- The host-level criteria (A1–A4, SC-005): manual, not run.
-- The node suite: not re-run; nothing it covers changed since `74313fc`, when it passed 358.
-- MED and LOW findings 6–18 from `74313fc`: carried forward unchanged, not re-examined.
+- The manual pass: the maintainer's checks of A2 and A3 were taken as reported. Only the deploy
+  and start-up facts were observed here.
+- A second published version: the "one root" check binds only one entry so far (finding 35).
+- Node tests other than `changelog-entry.test.js`: they ran (361 passed) and nothing they cover
+  changed.
 - Independence: tests and audit come from one session. The smell pass on the delta came from a
-  fresh-context subagent and every line it cited was re-read here.
+  fresh-context subagent, and every cited line was re-read here.

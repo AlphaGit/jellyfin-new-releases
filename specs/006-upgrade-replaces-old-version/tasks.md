@@ -224,3 +224,15 @@ survivor first.
 - [X] T049 [U29] Finding 20 (HIGH): pin that the `mv` source folder is the folder `jprm plugin build --output` names, in `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs`. Done when survivor S2 (`--output ./out` at `.github/workflows/package.yml:63`) fails the suite
 - [X] T050 Findings 21–22 (MED): give U26 its own reason to fail (find the `mv` by its destination), and decide whether `MovesJprmsPackage` may pin the exact spelling or should accept equivalent forms; record the decision in `tdd/cycle-log.md`. Done when a mutant that breaks only U25's claim fails U25 alone
 - [X] T051 Findings 23–26 (LOW): fix or waive in writing the upload-token regex (`RepositoryManifestTests.cs:142`), the independent quotes (`:48`), the overstated comment (`:259-263`) and the literal `new_releases` row (`:277`). Done when the suite is green and each is fixed or waived in `tdd/cycle-log.md`
+
+## Phase 8: TDD remediation (third audit)
+
+From the audit at `2b97421`, verdict **FAIL**. **The feature is not done until T052 is cleared.**
+T052 goes through `/speckit-tdd-run`. A loosened assertion is restored by observing the surviving
+mutant fail first.
+
+- [ ] T052 Finding 27 (HIGH): in `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs:158-166`, make U26 require that the `mv` line ending in the uploaded file also has JPRM's package (`MovesJprmsPackage`) as its source. Correct the T050 entry's "No test was loosened" with a new cycle-log entry; the log is append only. Done when mutant F1 (JPRM's file moved to `staged.zip`, a second `mv ./artifacts/old.zip ./artifacts/new-releases.zip` added at `.github/workflows/package.yml:82`) fails the suite
+- [ ] T053 Finding 28 (MED): add `("permissions: { contents: write }\n", false)` and a quoted `permissions: "write-all"` row expecting `true` to `GrantsPagesOrIdToken_ReadsEveryWayOfGrantingThem` (`ReleaseWorkflowTests.cs:91-107`). Done when mutant F2 (any `{` counted as a grant) fails the table, and the quoted row is observed red before the predicate handles it
+- [ ] T054 Finding 29 (MED): tie the `0.2.0` notes assertions in `tests/web/changelog-entry.test.js:102-110` to the instruction sentences (the removal and the replacement), not to words anywhere in the section. Done when changing the heading alone, or the instruction alone, fails a test each
+- [ ] T055 Finding 30 (MED): decide whether `Plugin_DisplayName_DoesNotClaimToBeJellyfin` stays as U2's record beside `Plugin_DisplayName_IsStable` or is retired; record the decision in `tdd/cycle-log.md`. Done when the decision is recorded
+- [ ] T056 Findings 31–35 (LOW): fix or waive in writing the `RejectedSourceUrls` comment and ternary (`RepositoryManifestTests.cs:325-359`), the `Slug` static read (`:41-51`), the spawn test's missing `build.yaml` assertion, inline requires and timeout (`changelog-entry.test.js:73-88`), the duplicated catalogue address, and the stale comments (`RepositoryManifestTests.cs:13-14,55-57,216,274,307`). Done when both suites are green and each item is fixed or waived in `tdd/cycle-log.md`
