@@ -34,3 +34,19 @@ failed before the implementation.
 - refactor: none. Every test in the class builds its own `Plugin` from two substitutes; the new one
   follows the file rather than extracting a helper the other tests would then need to adopt
 - commit: see the commit that carries this entry
+
+## Cycle 3: U1 the name `build.yaml` declares equals the name the plugin reports
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs::Plugin_DisplayName_MatchesTheNameThePackageDeclares` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~PluginSanityTests.Plugin_DisplayName_MatchesTheNameThePackageDeclares" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: "New Releases"` / `Actual: "Jellyfin New Releases"` (1 failed)
+- green: `build.yaml` `name` set to `New Releases`. Suite `dotnet test --configuration Release`
+  -> 320 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry
+- deviation: `tasks.md` T005 also asked for `package.yml:86` to change in this step, expecting
+  `003`'s U39 to go red. It did not: U39 is `Assert.Contains($"{Slug}_${{ … }}.zip", workflow)`,
+  and `new-releases_${{ … }}.zip` is a substring of the stale `jellyfin-new-releases_${{ … }}.zip`.
+  With no red demanding it, the workflow was left alone; it is wrong until T013 and is covered by
+  `U13`, now noted to anchor the name. T005 is ticked for its behaviour, `U1`; its workflow half
+  moves to T013. Do not tag a release between this commit and T013.

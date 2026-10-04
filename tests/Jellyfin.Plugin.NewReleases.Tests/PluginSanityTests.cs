@@ -22,6 +22,22 @@ public class PluginSanityTests
     }
 
     /// <summary>
+    /// 006 U1: Jellyfin groups installed copies by name and retires all but the newest. A package
+    /// declaring one name and a plugin reporting another files copies under two names, so the host
+    /// loads both — the defect 006 fixes. Ordinal, although the host compares ignoring case: the
+    /// requirement is that the two statements are identical.
+    /// </summary>
+    [Fact]
+    public void Plugin_DisplayName_MatchesTheNameThePackageDeclares()
+    {
+        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+
+        var declared = RepositoryFiles.Scalar(RepositoryFiles.ReadAllText("build.yaml"), "name");
+
+        Assert.Equal(plugin.Name, declared);
+    }
+
+    /// <summary>
     /// 006 U5: the catalogue states the plugin's name too, and an operator's server files a copy
     /// under the name it was installed with. A catalogue entry under another name is the condition
     /// that let two copies load side by side.

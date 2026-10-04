@@ -80,12 +80,12 @@ confirm one copy loads every time (`quickstart.md` pass 2).
 > Write this FIRST and observe it failing, for the right reason — `Jellyfin New Releases` against
 > `New Releases`. Record the failure in `specs/006-upgrade-replaces-old-version/tdd/cycle-log.md`.
 
-- [ ] T004 [U1] [US1] [US2] Write failing `tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs::Plugin_DisplayName_MatchesTheNameThePackageDeclares` — assert `new Plugin(…).Name` equals `RepositoryFiles.Scalar(buildYaml, "name")`. It goes in `PluginSanityTests` rather than `Packaging/BuildManifestTests.cs`: constructing `Plugin` sets the static `Plugin.Instance`, so the test must sit in the `ProcessGlobalStateCollection` that `PluginSanityTests` already declares, and the plugin's name is now an identity invariant exactly like its GUID
+- [X] T004 [U1] [US1] [US2] Write failing `tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs::Plugin_DisplayName_MatchesTheNameThePackageDeclares` — assert `new Plugin(…).Name` equals `RepositoryFiles.Scalar(buildYaml, "name")`. It goes in `PluginSanityTests` rather than `Packaging/BuildManifestTests.cs`: constructing `Plugin` sets the static `Plugin.Instance`, so the test must sit in the `ProcessGlobalStateCollection` that `PluginSanityTests` already declares, and the plugin's name is now an identity invariant exactly like its GUID
 - [ ] T028 [U2] [US1] Write `PluginSanityTests.cs::Plugin_DisplayName_DoesNotClaimToBeJellyfin` — `Plugin.Name` does not contain `Jellyfin`, ignoring case (`FR-004`). It passes on its first run, so apply the deliberate-mutant check: set `Name` to `Jellyfin New Releases` in `src/Jellyfin.Plugin.NewReleases/Plugin.cs`, observe red, restore from a file copy verified with `cmp -s`
 
 ### Implementation for User Story 1 — the name
 
-- [ ] T005 [U1] [US1] Change `name` in `build.yaml` from `"Jellyfin New Releases"` to `"New Releases"` until T004 is green. In the same step, change `jellyfin-new-releases_` to `new-releases_` at `.github/workflows/package.yml:86` and in the comment at line 45, because `003`'s U39 derives the slug from `build.yaml` and goes red otherwise. Nothing else in the workflow changes here; T007–T012 rework it
+- [X] T005 [U1] [US1] Change `name` in `build.yaml` from `"Jellyfin New Releases"` to `"New Releases"` until T004 is green. In the same step, change `jellyfin-new-releases_` to `new-releases_` at `.github/workflows/package.yml:86` and in the comment at line 45, because `003`'s U39 derives the slug from `build.yaml` and goes red otherwise. Nothing else in the workflow changes here; T007–T012 rework it
 - [ ] T006 [US1] Update the `overview`/`description` wording in `build.yaml` only if it reads as the old name in prose. Do not touch `guid`, `targetAbi`, `framework` or `artifacts`
 
 **Checkpoint**: the names agree and the suite proves it. The workflow still publishes to Pages under the new slug.

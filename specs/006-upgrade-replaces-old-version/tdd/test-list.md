@@ -52,7 +52,7 @@ the static `Plugin.Instance`, so these sit in its `ProcessGlobalStateCollection`
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U1 | The name `build.yaml` declares equals, ordinally, the name the constructed plugin reports | FR-004, FR-005 | example | PENDING | |
+| U1 | The name `build.yaml` declares equals, ordinally, the name the constructed plugin reports | FR-004, FR-005 | example | DONE | `PluginSanityTests.cs::Plugin_DisplayName_MatchesTheNameThePackageDeclares` |
 | U2 | The plugin's displayed name does not contain "Jellyfin" in any letter case | FR-004 | example | PENDING | |
 | U3 | The assembly identity `Jellyfin.Plugin.NewReleases` still names the Plugin Pages entry id, the admin page's embedded resource, the shipped assembly and the migration resources | FR-004a | example | DONE | `Integration/PluginPagesRegistrationTests.cs::StartAsync_SendsThePageEntryFromTheDataModel_AndNoIsEnabledFields`, `PluginSanityTests.cs::GetPages_OffersExactlyOnePage_TheEmbeddedAdminPage`, `Packaging/BuildManifestTests.cs::BuildManifest_ShipsThePluginItsSqliteAssembliesAndTheNativeLibrary`; migrations by every `Storage/` test, which runs them through `PluginDatabase.MigrationPrefix` |
 
@@ -108,6 +108,10 @@ ordering and presence check, as `ReleaseWorkflowTests.Steps` already does.
 | U17 | The workflow's permissions grant neither `pages` nor `id-token` | FR-012 | example | PENDING | |
 | U18 | `gh release create` takes `--notes-file` written by `entryFor` for `${{ steps.ver.outputs.version }}` | FR-011 | example | PENDING | |
 | U19 | The release notes are written before `gh release create` runs | FR-011 | example | PENDING | |
+
+`U13` must anchor the file name at a path or quote boundary. Cycle 3 found `003`'s U39 is a bare
+substring check: after the rename, `new-releases_<v>.zip` is found inside the stale
+`jellyfin-new-releases_<v>.zip`, so the wrong workflow path passes it.
 
 `U15` restates `003`'s U27, which ends at `actions/deploy-pages` today. `003`'s U28, U33, U51 and the
 tag-trigger test are untouched by this feature and must stay green; they trace to `003`, not here.
