@@ -111,12 +111,16 @@ for (const text of ['As', 'ASP ', 'constructor', 'toString', 'hasOwnProperty', '
 // differ only in case, so at most one artist can match. The last row is a name that is also an
 // inherited object key, which only an own-key lookup can hold.
 const PROTO_ARTIST = { items: [{ jellyfinId: 'a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9', name: '__proto__' }] };
+// Accented names, as a browser hands them over from the suggestion list (precomposed, NFC).
+const ACCENTED = { items: [{ jellyfinId: 'b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1', name: 'Björk' }, { jellyfinId: 'b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2', name: 'Sigur Rós' }] };
 
 for (const [text, artists, id] of [
     ['asp', ARTISTS, 'a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5'],
     ['aSP', ARTISTS, 'a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5'],
     ['WASP', ARTISTS, 'a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7'],
     ['__PROTO__', PROTO_ARTIST, 'a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9'],
+    ['Björk', ACCENTED, 'b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1'],
+    ['sigur rós', ACCENTED, 'b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2'],
 ]) {
     test(`A15: typing "${text}" applies the artist whose name it equals with case ignored`, async () => {
         const { document, requests } = await loadView(artists);
@@ -127,6 +131,19 @@ for (const [text, artists, id] of [
         assert.deepEqual(requests.slice(before), ['GET Plugins/NewReleases/Releases?artistId=' + id]);
     });
 }
+
+// SC-001 names a library of 1,000 artists. Every one is offered, and the last one applies like the first.
+const LIBRARY = { items: Array.from({ length: 1000 }, (_, i) => ({ jellyfinId: 'c' + String(i + 1).padStart(31, '0'), name: 'Artist ' + (i + 1) })) };
+
+test('A1, A2: in a library of 1,000 artists every name is suggested, and the last one applies', async () => {
+    const { document, requests } = await loadView(LIBRARY);
+    const before = requests.length;
+
+    await type(document, 'Artist 1000');
+
+    assert.deepEqual([suggestions(document).length, suggestions(document).at(-1), requests.slice(before)],
+        [1000, 'Artist 1000', ['GET Plugins/NewReleases/Releases?artistId=c' + '1000'.padStart(31, '0')]]);
+});
 
 /** The page source, for the declarations the fake DOM does not model. */
 const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web', 'user-view.html'), 'utf8');

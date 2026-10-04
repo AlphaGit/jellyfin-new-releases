@@ -1426,3 +1426,14 @@ warned against overcomplicating it and against mutant whack-a-moling. One questi
 
 Method: a test that cannot fail against the existing code (a characterization test, or a new example
 of an existing behaviour) is shown to catch its defect by one hand-made break, restored at once.
+
+## Cycle 76: accented names and a library of 1,000 artists (T087, seventh audit Finding 2)
+
+- what the page does: someone types or picks "Björk" or "Sigur Rós" and the list filters to that
+  artist; in a library of 1,000 artists every name is offered, and the last one filters like the first
+- tests: two A15 rows, `Björk` and `sigur rós` (new), and
+  `tests/web/artist-filter.test.js::A1, A2: in a library of 1,000 artists every name is suggested, and the last one applies` (new)
+- red: none against the page, which already does this; these are new examples of A1, A2 and A15.
+  Evidence instead, each break made by hand on a file copy and restored at once: H1 (the lookup
+  normalized to NFD, so accented names never apply) fails both new A15 rows; H2 (only the first 100
+  artists suggested) and H3 (only the first 100 indexed) fail the 1,000-artist test. File -> 26 passed
