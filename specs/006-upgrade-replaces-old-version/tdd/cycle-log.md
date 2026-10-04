@@ -462,3 +462,21 @@ failed before the implementation.
   `TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo [FAIL]` (2 failed); M14 ->
   `TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo [FAIL]` (1 failed). Both restored, `cmp -s`
 - commit: see the commit that carries this entry
+
+## Cycle 27: U27 a release address with the right tag and a wrong asset name is rejected
+
+- test: `ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected`, new case
+  `("1.0.0.0", ExampleReleaseRoot + "v1.0.0.0/new_releases.zip")` — the same length as the real
+  asset, so the slice and the tag comparison cannot reject it; only the asset-name check can
+  (finding 2, task T033)
+- red: none on the first run; the check exists since cycle 8. **Test-after**, stated as such.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     7`
+- mutant: the audit's M12, `Assert.EndsWith(asset, …)` deleted from `AssertSourceUrlNamesItsOwnVersion`.
+  Same command -> `…IsRejected(number: "1.0.0.0", sourceUrl: "https://example.invalid/owner/repo/releases/downlo"···) [FAIL]`
+  (1 failed, 6 passed). The audit ran M12 against the six other rows and all passed, so the
+  failing row is this one. M12 survived the audit; it is caught now. Restored from a file copy,
+  verified with `cmp -s`
+- green: no rule change. Suite -> 340 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry

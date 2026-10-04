@@ -90,7 +90,7 @@ Hosted by `RepositoryManifestTests.cs`'s `AssertSourceUrlNamesItsOwnVersion` and
 | U11 | An asset carrying the version in its file name, `new-releases_<version>.zip`, is rejected under the right tag | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected("1.0.0.0", …v1.0.0.0/new-releases_1.0.0.0.zip)` |
 | U12 | Two entries under two different release roots are rejected | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::EntriesFromTwoDifferentSites_AreRejected` |
 | U24 | The release root of an entry is its address above the tag directory | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::ReleaseRootOf_ReturnsTheAddressAboveTheEntrysTagDirectory` |
-| U27 | A release address with the right tag and a wrong asset name is rejected | FR-010 | example | PENDING | |
+| U27 | A release address with the right tag and a wrong asset name is rejected | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected("1.0.0.0", …v1.0.0.0/new_releases.zip)` |
 
 `U8` and `U9` are the two sides of the tag-to-version boundary: `v1.2.3` against `1.2.3.0` passes,
 against `1.2.3.1` fails. `U12` restates `003`'s U40 to release roots. `U24` was added in the loop, before `U7`: with `003`'s U41 the root

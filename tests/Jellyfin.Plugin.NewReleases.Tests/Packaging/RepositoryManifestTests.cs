@@ -276,6 +276,7 @@ public class RepositoryManifestTests
     [InlineData("1.2.3.1", ExampleReleaseRoot + "v1.2.3/new-releases.zip")]
     [InlineData("1.0.0.0", ExampleReleaseRoot + "new-releases/new-releases_1.0.0.0.zip")]
     [InlineData("1.0.0.0", ExampleReleaseRoot + "v1.0.0.0/new-releases_1.0.0.0.zip")]
+    [InlineData("1.0.0.0", ExampleReleaseRoot + "v1.0.0.0/new_releases.zip")]
     public void ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected(string number, string sourceUrl)
     {
         using var entry = JsonDocument.Parse(
