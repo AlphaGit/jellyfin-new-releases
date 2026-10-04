@@ -111,7 +111,7 @@ ordering and presence check, as `ReleaseWorkflowTests.Steps` already does.
 | U16 | No step uses `actions/configure-pages`, `actions/upload-pages-artifact` or `actions/deploy-pages` | FR-012 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_DeploysNoPagesSite` (3 cases) |
 | U17 | The workflow's permissions grant neither `pages` nor `id-token` | FR-012 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_GrantsNoPagesPermission` (2 cases) |
 | U18 | `gh release create` takes `--notes-file` written by `entryFor` for `${{ steps.ver.outputs.version }}` | FR-011 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_GivesTheReleaseTheTaggedVersionsChangelogSection` |
-| U19 | The release notes are written before `gh release create` runs | FR-011 | example | PENDING | |
+| U19 | The release notes are written before `gh release create` runs | FR-011 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_WritesTheReleaseNotesBeforeCreatingTheRelease` |
 
 `U13` must anchor the file name at a path or quote boundary. Cycle 3 found `003`'s U39 is a bare
 substring check: after the rename, `new-releases_<v>.zip` is found inside the stale

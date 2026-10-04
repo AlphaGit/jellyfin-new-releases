@@ -308,3 +308,16 @@ failed before the implementation.
 - refactor: none. The `node -e` line is long, but moving it into `changelog-entry.js` would add a
   second entry point to a script no task here changes
 - commit: see the commit that carries this entry
+
+## Cycle 19: U19 the release notes are written before `gh release create` runs
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_WritesTheReleaseNotesBeforeCreatingTheRelease` (new)
+- red: none on the first run; cycle 18 wrote the notes line first.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests.ReleaseWorkflow_WritesTheReleaseNotesBeforeCreatingTheRelease" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     1`
+- mutant: the `entryFor(` line moved below the `gh release create` line. Same command ->
+  `the release is created before its notes are written` (1 failed). Restored from a file copy,
+  verified with `cmp -s`
+- green: no workflow change. Suite -> 333 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry

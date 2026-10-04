@@ -88,6 +88,18 @@ public class ReleaseWorkflowTests
     }
 
     /// <summary>
+    /// 006 U19: `gh release create` reads its notes file when it runs. Written afterwards, the
+    /// file does not exist yet and the release fails, or a stale one from an earlier step is read.
+    /// </summary>
+    [Fact]
+    public void ReleaseWorkflow_WritesTheReleaseNotesBeforeCreatingTheRelease()
+    {
+        Assert.True(
+            IndexOf("entryFor(") < IndexOf("gh release create"),
+            "the release is created before its notes are written");
+    }
+
+    /// <summary>
     /// U28: JPRM rewrites TargetFramework in the project file while packaging and is expected to
     /// put it back. Contract statement 6 is about that element specifically, and a local dry run
     /// confirmed JPRM restores it — while leaving the rewritten &lt;Version&gt; behind. A whole-file
