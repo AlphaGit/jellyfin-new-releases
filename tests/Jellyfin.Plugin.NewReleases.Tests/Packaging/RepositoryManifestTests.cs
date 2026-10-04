@@ -51,7 +51,7 @@ public class RepositoryManifestTests
             ["version"] = version,
             ["changelog"] = "anything",
             ["targetAbi"] = targetAbi,
-            ["sourceUrl"] = sourceUrl ?? $"{ExampleSiteRoot}v{version}/{Slug}.zip",
+            ["sourceUrl"] = sourceUrl ?? $"{ExampleReleaseRoot}v{version}/{Slug}.zip",
             ["checksum"] = "0123456789abcdef0123456789abcdef",
             ["timestamp"] = "2026-09-20T00:00:00Z",
         }));
@@ -105,7 +105,7 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
-    /// U40: the site-root rule must reject a second entry published somewhere else. Built from
+    /// U40: the release-root rule must reject a second entry published somewhere else. Built from
     /// two different literal roots, so neither side of the comparison is derived from the other.
     /// </summary>
     [Fact]
@@ -114,27 +114,27 @@ public class RepositoryManifestTests
         using var here = WellFormedEntry("1.0.0.0", sourceUrl: $"https://one.invalid/o/r/releases/download/v1.0.0.0/{Slug}.zip");
         using var elsewhere = WellFormedEntry("2.0.0.0", sourceUrl: $"https://two.invalid/o/r/releases/download/v2.0.0.0/{Slug}.zip");
 
-        var siteRoot = SiteRootOf(here.RootElement);
+        var releaseRoot = ReleaseRootOf(here.RootElement);
 
-        AssertSourceUrlNamesItsOwnVersion(here.RootElement, siteRoot);
+        AssertSourceUrlNamesItsOwnVersion(here.RootElement, releaseRoot);
         Assert.ThrowsAny<Xunit.Sdk.XunitException>(
-            () => AssertSourceUrlNamesItsOwnVersion(elsewhere.RootElement, siteRoot));
+            () => AssertSourceUrlNamesItsOwnVersion(elsewhere.RootElement, releaseRoot));
     }
 
     /// <summary>
-    /// U41, restated by 006 U24: `SiteRootOf` must return the address above the entry's tag
+    /// U41, restated by 006 U24: `ReleaseRootOf` must return the address above the entry's tag
     /// directory, read from the entry, not something it constructed. Every version is published
     /// under its own tag, so the directory holding the file differs per version and cannot be what
     /// all entries share. Fed a literal this class did not build.
     /// </summary>
     [Fact]
-    public void SiteRootOf_ReturnsTheAddressAboveTheEntrysTagDirectory()
+    public void ReleaseRootOf_ReturnsTheAddressAboveTheEntrysTagDirectory()
     {
         using var entry = WellFormedEntry(
             "3.0.0.0",
             sourceUrl: "https://host.invalid/owner/repo/releases/download/v3.0.0/pkg.zip");
 
-        Assert.Equal("https://host.invalid/owner/repo/releases/download/", SiteRootOf(entry.RootElement));
+        Assert.Equal("https://host.invalid/owner/repo/releases/download/", ReleaseRootOf(entry.RootElement));
     }
 
     /// <summary>
@@ -157,7 +157,7 @@ public class RepositoryManifestTests
     {
         using var entry = WellFormedEntry();
 
-        AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleSiteRoot);
+        AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleReleaseRoot);
     }
 
     /// <summary>
@@ -167,9 +167,9 @@ public class RepositoryManifestTests
     [Fact]
     public void AReleaseTaggedInThreeParts_IsAcceptedForItsFourPartVersion()
     {
-        using var entry = WellFormedEntry("1.2.3.0", sourceUrl: $"{ExampleSiteRoot}v1.2.3/{Slug}.zip");
+        using var entry = WellFormedEntry("1.2.3.0", sourceUrl: $"{ExampleReleaseRoot}v1.2.3/{Slug}.zip");
 
-        AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleSiteRoot);
+        AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleReleaseRoot);
     }
 
     /// <summary>
@@ -191,10 +191,10 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
-    /// U25: the package must come from the same site as the document, under the name the version
-    /// says, or the entry points at bytes that are not that version. The site root is taken from
-    /// the document itself, never written down here: this repository and every fork of it publish
-    /// to their own Pages site, and the invariant is that all entries share one.
+    /// U25: every package must be the asset of its own version's release, under one release root,
+    /// or the entry points at bytes that are not that version. The release root is taken from the
+    /// document itself, never written down here: this repository and every fork of it publish to
+    /// their own releases, and the invariant is that all entries share one (006 FR-010).
     /// </summary>
     [Fact]
     public void Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion()
@@ -205,22 +205,22 @@ public class RepositoryManifestTests
 
         if (versions.Count > 0)
         {
-            var siteRoot = SiteRootOf(versions[0]);
-            Assert.All(versions, entry => AssertSourceUrlNamesItsOwnVersion(entry, siteRoot));
+            var releaseRoot = ReleaseRootOf(versions[0]);
+            Assert.All(versions, entry => AssertSourceUrlNamesItsOwnVersion(entry, releaseRoot));
         }
     }
 
     /// <summary>
-    /// U26: the other side of U25. A source location under a different site, or naming a
+    /// U26: the other side of U25. A source location under a different release root, or naming a
     /// different version, points a server at bytes that are not the version it asked for.
     /// </summary>
     [Theory]
     [InlineData("1.0.0.0", "https://elsewhere.invalid/x/jellyfin-new-releases_1.0.0.0.zip")]
-    [InlineData("1.0.0.0", ExampleSiteRoot + "jellyfin-new-releases_2.0.0.0.zip")]
-    [InlineData("1.0.0.0", ExampleSiteRoot + "jellyfin-new-releases.zip")]
-    [InlineData("1.2.3.1", ExampleSiteRoot + "v1.2.3/new-releases.zip")]
-    [InlineData("1.0.0.0", ExampleSiteRoot + "new-releases/new-releases_1.0.0.0.zip")]
-    [InlineData("1.0.0.0", ExampleSiteRoot + "v1.0.0.0/new-releases_1.0.0.0.zip")]
+    [InlineData("1.0.0.0", ExampleReleaseRoot + "jellyfin-new-releases_2.0.0.0.zip")]
+    [InlineData("1.0.0.0", ExampleReleaseRoot + "jellyfin-new-releases.zip")]
+    [InlineData("1.2.3.1", ExampleReleaseRoot + "v1.2.3/new-releases.zip")]
+    [InlineData("1.0.0.0", ExampleReleaseRoot + "new-releases/new-releases_1.0.0.0.zip")]
+    [InlineData("1.0.0.0", ExampleReleaseRoot + "v1.0.0.0/new-releases_1.0.0.0.zip")]
     public void ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected(string number, string sourceUrl)
     {
         using var entry = JsonDocument.Parse(
@@ -231,7 +231,7 @@ public class RepositoryManifestTests
             }));
 
         Assert.ThrowsAny<Xunit.Sdk.XunitException>(
-            () => AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleSiteRoot));
+            () => AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleReleaseRoot));
     }
 
     private static void AssertInstallable(JsonElement version)
@@ -248,8 +248,8 @@ public class RepositoryManifestTests
     private static string? Field(JsonElement version, string name)
         => version.TryGetProperty(name, out var value) ? value.GetString() : null;
 
-    /// <summary>A stand-in site root for the rejecting cases. Test data, not this project's URL.</summary>
-    private const string ExampleSiteRoot = "https://example.invalid/owner/repo/releases/download/";
+    /// <summary>A stand-in release root for the rejecting cases. Test data, not this project's URL.</summary>
+    private const string ExampleReleaseRoot = "https://example.invalid/owner/repo/releases/download/";
 
     /// <summary>
     /// Fails when the published repository gains or loses a version, so neither per-entry check
@@ -262,7 +262,7 @@ public class RepositoryManifestTests
             + "If the release chain has published one, raise PublishedVersionsToday — the per-entry "
             + "checks in this class only start binding once it is above zero.");
 
-    private static string SiteRootOf(JsonElement version)
+    private static string ReleaseRootOf(JsonElement version)
     {
         var sourceUrl = version.GetProperty("sourceUrl").GetString()!;
         Assert.StartsWith("https://", sourceUrl, StringComparison.Ordinal);
@@ -270,12 +270,12 @@ public class RepositoryManifestTests
         return tagDirectory[..(tagDirectory.LastIndexOf('/') + 1)];
     }
 
-    private static void AssertSourceUrlNamesItsOwnVersion(JsonElement version, string siteRoot)
+    private static void AssertSourceUrlNamesItsOwnVersion(JsonElement version, string releaseRoot)
     {
         var number = version.GetProperty("version").GetString();
         var sourceUrl = version.GetProperty("sourceUrl").GetString()!;
 
-        var tagStart = $"{siteRoot}v";
+        var tagStart = $"{releaseRoot}v";
         var asset = $"/{Slug}.zip";
 
         Assert.StartsWith(tagStart, sourceUrl, StringComparison.Ordinal);

@@ -185,3 +185,14 @@ failed before the implementation.
 - green: no rule change. Suite -> 325 passed, 0 failed
 - refactor: done as its own structural commit after this one, over the finished rule
 - commit: see the commit that carries this entry
+
+## Refactor after cycle 12: the source-address rule speaks of release roots
+
+- structural only, suite unchanged in count: in `RepositoryManifestTests.cs`, `SiteRootOf` ->
+  `ReleaseRootOf`, `ExampleSiteRoot` -> `ExampleReleaseRoot`, `siteRoot` -> `releaseRoot`, and
+  the doc comments of `003`'s U25, U26 and U40 no longer describe a Pages site. Cycle 6's test is
+  renamed with its subject: `SiteRootOf_ReturnsTheAddressAboveTheEntrysTagDirectory` ->
+  `ReleaseRootOf_ReturnsTheAddressAboveTheEntrysTagDirectory`; the test list follows. The three
+  `003` test method names that say "Site" are kept: other features' documents cite them
+- suite: build 0 warnings; `dotnet test --configuration Release` -> 325 passed, 0 failed
+- commit: see the commit that carries this entry
