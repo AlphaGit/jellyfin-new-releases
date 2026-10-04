@@ -283,13 +283,7 @@ public class RepositoryManifestTests
     /// different version, points a server at bytes that are not the version it asked for.
     /// </summary>
     [Theory]
-    [InlineData("1.0.0.0", "https://elsewhere.invalid/x/jellyfin-new-releases_1.0.0.0.zip")]
-    [InlineData("1.0.0.0", ExampleReleaseRoot + "jellyfin-new-releases_2.0.0.0.zip")]
-    [InlineData("1.0.0.0", ExampleReleaseRoot + "jellyfin-new-releases.zip")]
-    [InlineData("1.2.3.1", ExampleReleaseRoot + "v1.2.3/new-releases.zip")]
-    [InlineData("1.0.0.0", ExampleReleaseRoot + "new-releases/new-releases_1.0.0.0.zip")]
-    [InlineData("1.0.0.0", ExampleReleaseRoot + "v1.0.0.0/new-releases_1.0.0.0.zip")]
-    [InlineData("1.0.0.0", ExampleReleaseRoot + "v1.0.0.0/new_releases.zip")]
+    [MemberData(nameof(RejectedSourceUrls))]
     public void ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected(string number, string sourceUrl)
     {
         using var entry = JsonDocument.Parse(
@@ -302,6 +296,36 @@ public class RepositoryManifestTests
         Assert.ThrowsAny<Xunit.Sdk.XunitException>(
             () => AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleReleaseRoot));
     }
+
+    /// <summary>
+    /// The rejecting rows, built from <see cref="Slug"/> so a fork that renames the plugin keeps
+    /// rejecting each row for its stated reason (006 audit, findings 6, 13 and 26). Each row
+    /// differs from a valid address in its stated reason only, so each is the row that fails when
+    /// the check for that reason is removed.
+    /// </summary>
+    public static TheoryData<string, string> RejectedSourceUrls => new()
+    {
+        // Another release root, of the same length, so only the root check can reject it.
+        { "1.0.0.0", $"{AnotherReleaseRoot}v1.0.0.0/{Slug}.zip" },
+
+        // Another version's release.
+        { "1.0.0.0", $"{ExampleReleaseRoot}v2.0.0.0/{Slug}.zip" },
+
+        // No tag directory, so no version at all.
+        { "1.0.0.0", $"{ExampleReleaseRoot}{Slug}.zip" },
+
+        // The other side of the three-part boundary U8 accepts.
+        { "1.2.3.1", $"{ExampleReleaseRoot}v1.2.3/{Slug}.zip" },
+
+        // The Pages layout: a slug folder, and the version in the file name.
+        { "1.0.0.0", $"{ExampleReleaseRoot}{Slug}/{Slug}_1.0.0.0.zip" },
+
+        // JPRM's own file name, carrying the version, under the right tag.
+        { "1.0.0.0", $"{ExampleReleaseRoot}v1.0.0.0/{Slug}_1.0.0.0.zip" },
+
+        // Another asset of the same length, so only the asset-name check can reject it.
+        { "1.0.0.0", $"{ExampleReleaseRoot}v1.0.0.0/{(Slug[0] == 'x' ? 'y' : 'x')}{Slug[1..]}.zip" },
+    };
 
     private static void AssertInstallable(JsonElement version)
     {
@@ -319,6 +343,9 @@ public class RepositoryManifestTests
 
     /// <summary>A stand-in release root for the rejecting cases. Test data, not this project's URL.</summary>
     private const string ExampleReleaseRoot = "https://example.invalid/owner/repo/releases/download/";
+
+    /// <summary>A second stand-in release root, the same length as <see cref="ExampleReleaseRoot"/>.</summary>
+    private const string AnotherReleaseRoot = "https://another.invalid/owner/repo/releases/download/";
 
     /// <summary>
     /// Fails when the published repository gains or loses a version, so neither per-entry check

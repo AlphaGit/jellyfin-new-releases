@@ -553,3 +553,19 @@ recorded mutant its test catches:
 - green: no workflow change. Suite -> 342 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## `/speckit-implement`, after the second audit: T037 and T044 (and finding 26)
+
+- `ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected` reads its rows from
+  `RejectedSourceUrls`, built from `Slug`. `003`'s rows move to the release shape, so each differs
+  from a valid address in its stated reason only. The off-site row uses `AnotherReleaseRoot`, the
+  same length as `ExampleReleaseRoot`. The same-length asset row is derived from `Slug`, not the
+  literal `new_releases`. Seven rows before, seven after; suite 342 passed
+- evidence, each check deleted in turn (row names read from TRX, which truncates them as the
+  console does, so the rows are named by count and by construction):
+  - `StartsWith(tagStart…)` deleted -> 2 rows fail: `https://another.invalid/…` (the other root)
+    and the row with no tag directory
+  - `EndsWith(asset…)` deleted -> 1 row fails: the same-length asset
+  - `Equal(number, InFourParts(…))` deleted -> 2 rows fail: another version, and `1.2.3.1` against `v1.2.3`
+  - the Pages-layout and versioned-asset rows are rejected by two checks each, as their comments say
+  - each restored from a file copy, `cmp -s`; suite back to 342 passed
