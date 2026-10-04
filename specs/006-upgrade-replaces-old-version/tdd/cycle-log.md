@@ -501,3 +501,26 @@ failed before the implementation.
     -> `Passed!`, so the rule accepts the first real entry
 - T034 carries no behaviour marker, so this loop leaves its checkbox for `/speckit-implement`
 - commit: see the commit that carries this entry
+
+## Maintainer decision, 2026-10-04: test-after behaviours accepted
+
+The maintainer accepted, on 2026-10-04, the following behaviours as **test-after** (task T035,
+`tdd/verification.md` finding 4). Each had no red before its code: its test passed on the first run
+against code an earlier cycle had written. Each is labelled here with that evidence and the
+recorded mutant its test catches:
+
+| Behaviour | Cycle | Why no red was possible | Recorded mutant caught |
+| --- | --- | --- | --- |
+| U2 | 4 | `Plugin.Name` was already `New Releases` | `Name` = `"JELLYFIN New Releases"` |
+| A5 | 5 | closed after `U1` made the names agree | `build.yaml` `name` = `"New Releases Tracker"` |
+| U9 | 9 | cycle 8's tag rule already rejected it | tag-to-version line deleted |
+| U10 | 10 | cycle 7's exact rule already rejected it | Pages-era rule put back |
+| U11 | 11 | cycle 7's exact rule already rejected it | asset `"/{Slug}_{number}.zip"` |
+| U12 | 12 | cycle 7 moved its literals to release roots | root taken from the entry itself |
+| U15 | 15 | cycles 13–14 already ordered the steps | release step moved after `repo add` |
+| U19 | 19 | cycle 18 wrote the notes line first | notes line moved below `gh release create` |
+| A6 | 20 | closed after `U7`–`U19` | uploaded file renamed; release after `repo add` |
+| U21 | 22 | cycle 21 removed the Pages sentence | Pages address added beside the raw one |
+| U25 | 25 | the `mv` line dates from cycle 13 | audit M5 |
+| U26 | 26 | the `mv` target dates from cycle 13 | audit M14 |
+| U27 | 27 | the asset check dates from cycle 8 | audit M12 |
