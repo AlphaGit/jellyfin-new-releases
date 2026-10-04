@@ -1580,3 +1580,17 @@ only.
   eighth audit's P1 (the typing handler reloads only for an artist or an empty field) fails both
   rows, and R1 still fails them too. Each break was made by hand on a file copy and restored at once.
   File -> 28 passed
+
+## Maintainer decision on the eighth TDD audit, 2026-10-04 (T099)
+
+The maintainer's reply: "(a), fix the other missing tests". Option (a): the list now states the scope
+the grilling session set, so it no longer claims what the maintainer chose not to test:
+
+- A15: case is ignored "in the suite's English locale"; other system languages are out of scope (Q2).
+  This is why H5 (locale-aware lower-casing) is not a survivor inside A15
+- U68: the runtime-writes check covers load, both tabs, a filter change, Clear and a render; writes
+  after an action click are out of scope (Q3, T089). This is why J3 is not a survivor inside U68
+
+"The other missing tests" is read as T098 and the two polish items that are missing checks: T100
+(U85 reads the opened tab state from the loaded page) and T103 (the 1,000-artist test compares every
+name). T101, T102 and T104 only reorganize tests and stay open.
