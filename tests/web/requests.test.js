@@ -94,13 +94,27 @@ test('U71: every listener the New Releases view registers keeps listening', () =
 
 // U72, characterization (maintainer decision T083): the action handler predates 007. A row is built as a
 // browser builds it from the markup the view writes, and the click is handed to the panel's listener.
-test('U72: an action posts to the release of the row its button sits in', async () => {
+for (const action of ['Ignore', 'HaveIt', 'Restore']) {
+    test(`U72: the ${action} button posts ${action} for the release of its row`, async () => {
+        const { requests, document } = recordRequests('user-view.html', { items: [], hasStoredReleases: false });
+        await settled();
+        const { button } = actionRow({ id: '102', title: 'Kill for Love', action });
+
+        document.getElementById('nr-panel').listeners.click[0]({ target: button });
+        await settled();
+
+        assert.deepEqual(requests.filter(request => request.startsWith('POST')), ['POST Plugins/NewReleases/Releases/102/' + action]);
+    });
+}
+
+test('U72: a click inside a row but not on a button posts nothing', async () => {
     const { requests, document } = recordRequests('user-view.html', { items: [], hasStoredReleases: false });
     await settled();
-    const { button } = actionRow({ id: '101', title: 'Closer to Grey', action: 'Ignore' });
+    const { actions } = actionRow();
 
-    document.getElementById('nr-panel').listeners.click[0]({ target: button });
+    document.getElementById('nr-panel').listeners.click[0]({ target: actions });
     await settled();
 
-    assert.deepEqual(requests.filter(request => request.startsWith('POST')), ['POST Plugins/NewReleases/Releases/101/Ignore']);
+    assert.deepEqual(requests.filter(request => request.startsWith('POST')), []);
 });
+

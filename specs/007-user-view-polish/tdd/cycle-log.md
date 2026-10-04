@@ -1449,3 +1449,18 @@ of an existing behaviour) is shown to catch its defect by one hand-made break, r
   character. Stronger: everything the pattern required is still required
 - red: none against the page, which matches the contract. Evidence: H4 (`autocomplete="on"`) and R4
   (no `list`) each fail it, made by hand on a file copy and restored at once. File -> 26 passed
+
+## Cycle 78: each action button does its own job (T090, seventh audit Finding 5)
+
+- what the page does: "Ignore", "Have it" and "Restore" each tell the server their own action for the
+  release of the row they sit in; a click elsewhere in a row tells the server nothing
+- tests: U72 becomes one test per action (`U72: the {action} button posts {action} for the release of its row`)
+  plus `U72: a click inside a row but not on a button posts nothing`. The stand-in's `closest` test
+  becomes one table row per selector, with the case it lacked: `div[data-action]` from the button finds
+  nothing, because no `div` on the way up carries the attribute. Per the grilling session, no further
+  `closest` cases (digits in a tag, `*`, the empty selector) are added. The comment in `render.test.js`
+  now says U72 has one test per action
+- red: none against the page or the stand-in, which already do this. Evidence, each break made by
+  hand on a file copy and restored at once: J4 (the handler always posts `/Ignore`) fails the HaveIt and
+  Restore tests; J5 (`closest` ignores the attribute) fails the `div[data-action]` row; Y8 still fails
+  all three action tests. Files -> 28 passed

@@ -67,14 +67,21 @@ test('remove detaches an element from the element it was appended to', () => {
     assert.deepEqual(box.children, []);
 });
 
-test('closest finds the nearest element, itself included, that a tag, class or attribute selector names', () => {
-    const { article, actions, button } = actionRow();
+for (const [selector, expected] of [
+    ['button[data-action]', 'button'],
+    ['.nr-actions', 'actions'],
+    ['.nr-row', 'article'],
+    ['article', 'article'],
+    ['div[data-action]', null],
+    ['.nr-missing', null],
+]) {
+    test(`closest("${selector}") from a row's button finds ${expected ?? 'nothing'}, itself included, walking up`, () => {
+        const row = actionRow();
 
-    assert.deepEqual(
-        ['button[data-action]', '.nr-actions', '.nr-row', 'article', '.nr-missing'].map(selector => button.closest(selector)),
-        [button, actions, article, article, null],
-    );
-});
+        assert.equal(row.button.closest(selector), expected && row[expected]);
+    });
+}
+
 
 test('closest refuses a selector it does not model, rather than answering it wrongly', () => {
     assert.throws(() => actionRow().button.closest('.nr-row .nr-actions'), /not modelled/);

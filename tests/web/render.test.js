@@ -118,7 +118,7 @@ test('a six-hour interval states a twelve-hour-old instant', () => {
 
 // The click handler reads a row's `data-action` and joins it into the path it posts. This pins the
 // half in the markup: the values are the action segments the plugin registers. The join itself is
-// pinned by U72 in requests.test.js, since the stand-in models `closest` (007 cycle 72).
+// pinned by U72 in requests.test.js, one test per action, since the stand-in models `closest` (007 cycle 72).
 test('a rendered row offers the actions under the names the decision routes are served under', () => {
     const { panel } = rendered(fixture('releases.json'));
     const archived = rendered(fixture('releases.json'), { archive: true }).panel;

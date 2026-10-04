@@ -136,7 +136,7 @@ reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second 
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U69 | `closest(selector)` returns the nearest of the element and its ancestors that one compound selector names, `null` when none does, and throws on a selector it does not model | invariant: U72 needs it | example | DONE | `tests/web/fake-dom.test.js::closest finds the nearest element, itself included, that a tag, class or attribute selector names / closest refuses a selector it does not model, rather than answering it wrongly` |
+| U69 | `closest(selector)` returns the nearest of the element and its ancestors that one compound selector names, `null` when none does, and throws on a selector it does not model | invariant: U72 needs it | example | DONE | `tests/web/fake-dom.test.js::closest("{selector}") from a row's button finds {element}, itself included, walking up` (6 rows) `/ closest refuses a selector it does not model, rather than answering it wrongly` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: Artist filter
 
@@ -191,7 +191,7 @@ the sixth audit's mutant that each one catches.
 | --- | --- | --- | --- | --- | --- |
 | U70 | Each source link of a row points at its source's URL, in order | FR-011 (existing behaviour unchanged); sixth audit Y9 | example | BASELINE | `tests/web/render.test.js::U70: each source link of a row points at its source URL, in order` |
 | U71 | Every listener the view registers keeps listening: none is registered with `once` or a `signal` | FR-011; sixth audit Y4 | example | BASELINE | `tests/web/requests.test.js::U71: every listener the New Releases view registers keeps listening`; `keepsListening` is pinned by `U71 helper: …` table rows |
-| U72 | An action posts to the release of the row its button sits in | FR-011; sixth audit Y8 | example | BASELINE | `tests/web/requests.test.js::U72: an action posts to the release of the row its button sits in` |
+| U72 | Each action button posts its own action for the release of its row, and a click elsewhere in a row posts nothing | FR-011; sixth audit Y8 | example | BASELINE | `tests/web/requests.test.js::U72: the {action} button posts {action} for the release of its row` (Ignore, HaveIt, Restore) `/ a click inside a row but not on a button posts nothing` |
 
 ## Invariants and edge cases still to place
 
