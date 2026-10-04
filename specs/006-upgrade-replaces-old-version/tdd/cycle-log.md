@@ -667,3 +667,25 @@ recorded mutant its test catches:
   project's own file and changes rarely and on purpose; a test that turns red on a deliberate
   rewrite names the line to update, while one widened to accept every equivalent spelling also
   accepts more wrong ones. No test was loosened
+
+## `/speckit-implement`: T047 and T051, the LOW findings
+
+Structural only; the suite is 350 passed before and after, and no assertion changed.
+
+- **Fixed, finding 16:** `Install_NamesTheRawCatalogueAddress` became
+  `Readme_InstallNamesTheRawCatalogueAddress`, and `Install_NamesNoPagesAddress` became
+  `Readme_InstallNamesNoPagesAddress`. That is the file's `Readme_` style, and the test list
+  follows. The `Changelog_020_*` tests left C# in T040.
+- **Waived, finding 16:** `003`'s U30 is a subset of `U20`. It stays as `003`'s own record.
+- **Fixed, finding 17:** `PluginSanityTests.NewPlugin()` replaces seven copies of the
+  substituted construction.
+- **Waived, finding 17:** sharing the manifest read with `RepositoryManifestTests.TheOnlyPlugin`
+  would couple two classes in different test collections for one line.
+- **Waived, finding 18:** T005's ticked text is left as written. Cycle 3 already records that its
+  workflow half moved to T013.
+- **Fixed, finding 25:** the comment over the catalogue-wide check now says the count check fails
+  first, and the rule binds once a release raises `PublishedVersionsToday`.
+- **Waived, findings 23 and 24:** the upload regex takes the token after the tag, and the two
+  `"?` are independent. Both follow the spelling decision recorded under T050: the tests pin the
+  workflow as written, and a deliberate rewrite updates the test.
+- **Fixed, finding 26:** done in T044.

@@ -10,13 +10,17 @@ namespace Jellyfin.Plugin.NewReleases.Tests;
 [Collection(ProcessGlobalStateCollection.Name)]
 public class PluginSanityTests
 {
+    /// <summary>A plugin built from substituted host services; constructing it sets <c>Plugin.Instance</c>.</summary>
+    private static Plugin NewPlugin()
+        => new(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+
     /// <summary>
     /// The GUID is the plugin's identity key in Jellyfin. Changing it orphans existing installs.
     /// </summary>
     [Fact]
     public void Plugin_Guid_IsStable()
     {
-        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+        var plugin = NewPlugin();
 
         Assert.Equal(new Guid("b8a15db8-e368-42c4-9048-390faf0094db"), plugin.Id);
     }
@@ -29,7 +33,7 @@ public class PluginSanityTests
     [Fact]
     public void Plugin_DisplayName_IsStable()
     {
-        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+        var plugin = NewPlugin();
 
         Assert.Equal("New Releases", plugin.Name);
     }
@@ -43,7 +47,7 @@ public class PluginSanityTests
     [Fact]
     public void Plugin_DisplayName_MatchesTheNameThePackageDeclares()
     {
-        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+        var plugin = NewPlugin();
 
         var declared = RepositoryFiles.Scalar(RepositoryFiles.ReadAllText("build.yaml"), "name");
 
@@ -58,7 +62,7 @@ public class PluginSanityTests
     [Fact]
     public void Plugin_DisplayName_DoesNotClaimToBeJellyfin()
     {
-        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+        var plugin = NewPlugin();
 
         Assert.DoesNotContain("jellyfin", plugin.Name, StringComparison.OrdinalIgnoreCase);
     }
@@ -71,7 +75,7 @@ public class PluginSanityTests
     [Fact]
     public void Plugin_DisplayName_MatchesTheNameTheCatalogueLists()
     {
-        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+        var plugin = NewPlugin();
         using var catalogue = JsonDocument.Parse(RepositoryFiles.ReadAllText("repo/manifest.json"));
 
         var entry = Assert.Single(catalogue.RootElement.EnumerateArray().ToList());
@@ -86,7 +90,7 @@ public class PluginSanityTests
     [Fact]
     public void Plugin_ConstructedWithHostServices_ReportsItsIdentityAndOffersAConfigurationPage()
     {
-        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+        var plugin = NewPlugin();
 
         // The composite the units beneath cannot see: the host reaches the plugin's configuration
         // through the static Instance, and it must be the object just constructed. The identity
@@ -101,7 +105,7 @@ public class PluginSanityTests
     [Fact]
     public void GetPages_OffersExactlyOnePage_TheEmbeddedAdminPage()
     {
-        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+        var plugin = NewPlugin();
 
         var page = Assert.Single(plugin.GetPages());
 

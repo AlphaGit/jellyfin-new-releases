@@ -76,7 +76,7 @@ public class DocumentationTests
     /// (006 FR-012). The address an operator copies must be that one, written out in full.
     /// </summary>
     [Fact]
-    public void Install_NamesTheRawCatalogueAddress()
+    public void Readme_InstallNamesTheRawCatalogueAddress()
     {
         Assert.Contains(
             CatalogueAddress,
@@ -90,7 +90,7 @@ public class DocumentationTests
     /// operators to a catalogue that is gone.
     /// </summary>
     [Fact]
-    public void Install_NamesNoPagesAddress()
+    public void Readme_InstallNamesNoPagesAddress()
     {
         Assert.DoesNotContain("github.io", SectionOf("## Install"), StringComparison.OrdinalIgnoreCase);
     }

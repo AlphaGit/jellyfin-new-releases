@@ -301,8 +301,9 @@ public class RepositoryManifestTests
 
         AssertPublishedVersionCount(versions);
 
-        // No branch: the root is read only when an entry exists, so the rule binds the first
-        // published version the moment it appears (006 audit, finding 3).
+        // No branch: the root is read only when an entry exists, so an empty catalogue asserts the
+        // count alone. The rule binds once a release raises PublishedVersionsToday with its entry;
+        // until then the count above fails first (006 audit, findings 3 and 25).
         Assert.All(versions, entry => AssertSourceUrlNamesItsOwnVersion(entry, ReleaseRootOf(versions[0])));
     }
 
