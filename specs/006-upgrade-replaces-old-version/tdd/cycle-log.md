@@ -753,3 +753,18 @@ own test, so `U26` keeps its single reason to fail.
 - green: no workflow change. Suite -> 351 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 31: U31 a flow-form mapping naming neither key grants neither
+
+- test: `GrantsPagesOrIdToken_ReadsEveryWayOfGrantingThem`, new row
+  `("permissions: { contents: write }\n", false)` (finding 28, task T053)
+- red: none on the first run, because the predicate's flow check already requires the key.
+  **Test-after**, stated as such.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests.GrantsPagesOrIdToken_ReadsEveryWayOfGrantingThem" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     8`
+- mutant F2: the flow check reduced to "any `{`". Same command ->
+  `…(permissions: "permissions: { contents: write }\n", grants: False) [FAIL]` (1 failed, 7 passed).
+  F2 survived the third audit; it is caught now. Restored, checked with `cmp -s`
+- green: no predicate change. Suite -> 352 passed
+- refactor: none
+- commit: see the commit that carries this entry

@@ -118,7 +118,7 @@ ordering and presence check, as `ReleaseWorkflowTests.Steps` already does.
 | U28 | The workflow moves the package after `jprm plugin build` and before `gh release create` | FR-010 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_MovesThePackageBetweenBuildingAndReleasingIt` |
 | U29 | The folder the workflow moves the package from is the folder `jprm plugin build --output` names | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_MovesThePackageFromTheFolderJprmWritesTo` |
 | U30 | The `mv` that produces the uploaded file is the one that moves JPRM's package | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_UploadsJprmsPackageItself` |
-| U31 | A flow-form `permissions` mapping that names neither `pages` nor `id-token` grants neither | FR-012 | example | PENDING | |
+| U31 | A flow-form `permissions` mapping that names neither `pages` nor `id-token` grants neither | FR-012 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::GrantsPagesOrIdToken_ReadsEveryWayOfGrantingThem("permissions: { contents: write }\n", false)` |
 | U32 | A quoted `permissions: "write-all"` grants `pages` and `id-token` | FR-012 | example | PENDING | |
 
 `U13` must anchor the file name at a path or quote boundary. Cycle 3 found `003`'s U39 is a bare

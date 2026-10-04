@@ -91,6 +91,7 @@ public class ReleaseWorkflowTests
     [Theory]
     [InlineData("permissions:\n  contents: write\n", false)]
     [InlineData("permissions: read-all\n", false)]
+    [InlineData("permissions: { contents: write }\n", false)]
     [InlineData("permissions:\n  contents: write\n  pages: write\n", true)]
     [InlineData("permissions:\n  id-token: write\n", true)]
     [InlineData("permissions: write-all\n", true)]
