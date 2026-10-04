@@ -1265,3 +1265,24 @@ maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
   was applied to a file copy, restored, and checked against `HEAD`
 - review: the 9 lists replace `WRITTEN`, which the maintainer reviewed (T079). They need their own
   review
+
+## Cycle 70: U68 reads every runtime write on the declared elements (T081, sixth audit Finding 3)
+
+- what: a test correction. The style-attribute test read only `style`, once, after the first load.
+  The sixth audit's Y3 (`setAttribute('list', '')` on the Artist field), Y6 (Clear hidden), Y7 (a
+  class set on the panel) and Y10 (the panel hidden after render) survived. The behaviour U68 is
+  restated on the list to name what it now covers
+- helper (new): `writesOn(element)` lists what the view wrote beyond the content the stand-in models:
+  attribute names, `hidden`, and any own property a fresh `FakeElement` lacks (such as `className`).
+  6 table rows
+- red: `writesOn` declared as `return []`. `node --test tests/web/markup.test.js` -> the 4 rows that
+  expect a write fail, e.g. `not ok 25 - U68 helper: writing a class name on an element reads back as ["className"]` (4 failed)
+- green: the helper as written. File -> 27 passed
+- test: `U68: through load, both tabs, a filter change, Clear and a render, the view writes on its elements only what is reviewed`
+  replaces `U68: no element of the view carries a style attribute once it has loaded`. A `style` write
+  is one of the writes it rejects, so nothing the old test caught is lost: V4 still fails it. The
+  reviewed writes, `RUNTIME`, come from the page's code: `aria-selected` on both tabs and
+  `aria-labelledby` on the panel (`selectTab`), and `hidden` on `#nr-staleness` (`staleness`). The test
+  passed on its first run, because the page writes nothing else. Evidence: Y3, Y6, Y7, Y10, V4 and
+  Y11 (`panel.className = 'nr-status'`) each fail it
+- strength: each mutant was applied to a file copy, restored, and checked against `HEAD`

@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { loadPageDom } = require('./load-page.js');
-const { declaredIds } = require('./fake-dom.js');
+const { declaredIds, FakeElement } = require('./fake-dom.js');
 const { fixture } = require('./fixtures.js');
 const { imgAttribute } = require('./cover-markup.js');
 
@@ -144,11 +144,58 @@ for (const [name, markup, expected] of TEMPLATES) {
     });
 }
 
-test('U68: no element of the view carries a style attribute once it has loaded', async () => {
-    const { document } = loadPageDom('user-view.html', {
+/** What the view has written on `element` beyond the content the stand-in models: attribute names, `hidden`, and any property the stand-in does not have. */
+function writesOn(element) {
+    return [...Object.keys(element.attributes), ...(element.hidden ? ['hidden'] : []), ...Object.keys(element).filter(key => !MODELLED.has(key))];
+}
+
+/** The properties a fresh stand-in element has; a write to any other one is a property the stand-in does not model. */
+const MODELLED = new Set(Object.keys(new FakeElement('x')));
+
+for (const [label, write, expected] of [
+    ['nothing', () => {}, []],
+    ['an attribute', element => element.setAttribute('aria-selected', 'true'), ['aria-selected']],
+    ['a style attribute', element => element.setAttribute('style', 'opacity:.3'), ['style']],
+    ['hidden', element => { element.hidden = true; }, ['hidden']],
+    ['a class name', element => { element.className = 'nr-status'; }, ['className']],
+    ['content and value', element => { element.innerHTML = '<p>'; element.textContent = 'x'; element.value = 'x'; }, []],
+]) {
+    test(`U68 helper: writing ${label} on an element reads back as ${JSON.stringify(expected)}`, () => {
+        const element = new FakeElement('x');
+        write(element);
+        assert.deepEqual(writesOn(element), expected);
+    });
+}
+
+/** The reviewed runtime writes: the tabs' selection and the panel's label. `#nr-staleness` toggles `hidden`. */
+const RUNTIME = {
+    'nr-staleness': ['hidden'],
+    'nr-tab-list': ['aria-selected'],
+    'nr-tab-archive': ['aria-selected'],
+    'nr-panel': ['aria-labelledby'],
+};
+
+test('U68: through load, both tabs, a filter change, Clear and a render, the view writes on its elements only what is reviewed', async () => {
+    const { internals, document } = loadPageDom('user-view.html', {
         ApiClient: { ajax: options => Promise.resolve(fixture(options.url.includes('Artists') ? 'artists.json' : 'releases.json')) },
     });
-    await settled();
+    const unreviewed = () => [...declaredIds('user-view.html')]
+        .flatMap(id => writesOn(document.getElementById(id)).filter(write => !(RUNTIME[id] || []).includes(write)).map(write => id + ' ' + write));
+    const steps = {
+        load: () => {},
+        'the Archive tab': () => document.getElementById('nr-tab-archive').listeners.click[0](),
+        'the List tab': () => document.getElementById('nr-tab-list').listeners.click[0](),
+        'a filter change': () => document.getElementById('nr-f-type').listeners.change[0](),
+        Clear: () => document.getElementById('nr-f-clear').listeners.click[0](),
+        'a render': () => internals.render(RELEASES),
+    };
+    const found = {};
+    for (const [step, act] of Object.entries(steps)) {
+        act();
+        await settled();
+        found[step] = unreviewed();
+    }
 
-    assert.deepEqual([...declaredIds('user-view.html')].filter(id => document.getElementById(id).getAttribute('style') !== null), []);
+    assert.deepEqual(found, Object.fromEntries(Object.keys(steps).map(step => [step, []])));
 });
+
