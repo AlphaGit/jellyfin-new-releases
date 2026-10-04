@@ -13,41 +13,45 @@ const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.P
 const STYLE = /<style>([\s\S]*?)<\/style>/.exec(PAGE)[1];
 const SCOPE = '#nr-user-view ';
 
-/** Every rule in `css`, `@media` blocks included, once per selector in its list. */
-function rules(css = STYLE) {
+/** What the stylesheet readers match: an `@media` opening, a rule with its declarations, or a closing brace. */
+const CSS_BLOCKS = /(@media[^{]*)\{|([^{}]+)\{([^{}]*)\}|\}/g;
+
+/** Every rule block in `css`, in source order, as `{ media, selectors, body }`: `media` is the enclosing `@media` condition, or `''`. */
+function blocks(css = STYLE) {
     const found = [];
-    for (const [, selectors, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    let media = '';
+    for (const [, open, selectors, body] of css.matchAll(CSS_BLOCKS)) {
+        if (open) media = open.trim();
+        else if (selectors) found.push({ media, selectors: selectors.trim().replace(/\s+/g, ' '), body });
+        else media = '';
+    }
+    return found;
+}
+
+/** Every rule in `css`, `@media` blocks included, once per selector in its list, with its `@media` condition. */
+function rules(css = STYLE) {
+    return blocks(css).flatMap(({ media, selectors, body }) => {
         const declared = {};
         for (const declaration of body.split(';')) {
             const at = declaration.indexOf(':');
             if (at > 0) declared[declaration.slice(0, at).trim()] = declaration.slice(at + 1).trim();
         }
-        for (const selector of selectors.split(',')) found.push({ selector: selector.trim(), declared });
-    }
-    return found;
+        return selectors.split(',').map(selector => ({ selector: selector.trim(), media, declared }));
+    });
 }
 
-/** Every `property: value` declared for `selector` by a top-level rule whose selector list names it. Later rules win, as in CSS. */
-function declarations(selector, css = STYLE.replace(/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '')) {
-    return Object.assign({}, ...rules(css).filter(rule => rule.selector === SCOPE + selector).map(rule => rule.declared));
+/** Every `property: value` declared for `selector` by a rule under `media` (`''` for the top level) whose selector list names it. Later rules win, as in CSS. */
+function declarations(selector, media = '') {
+    return Object.assign({}, ...rules().filter(rule => rule.media === media && rule.selector === SCOPE + selector).map(rule => rule.declared));
 }
-
-/** What `stylesheet()` reads: an `@media` opening, a rule with its declarations, or a closing brace. */
-const CSS_BLOCKS = /(@media[^{]*)\{|([^{}]+)\{([^{}]*)\}|\}/g;
 
 /**
  * Every rule block in `css`, in source order, as `[selectors, declarations]`: the selector list with its
  * `@media` condition in front when it has one, and the declarations joined by `; `, whitespace collapsed.
  */
 function stylesheet(css = STYLE) {
-    const found = [];
-    let media = '';
-    for (const [, open, selectors, body] of css.matchAll(CSS_BLOCKS)) {
-        if (open) media = open.trim() + ' ';
-        else if (selectors) found.push([media + selectors.trim().replace(/\s+/g, ' '), body.split(';').map(d => d.trim().replace(/\s+/g, ' ')).filter(Boolean).join('; ')]);
-        else media = '';
-    }
-    return found;
+    return blocks(css).map(({ media, selectors, body }) =>
+        [(media ? media + ' ' : '') + selectors, body.split(';').map(d => d.trim().replace(/\s+/g, ' ')).filter(Boolean).join('; ')]);
 }
 
 // U67, the closed world (T069): the reviewed list of every rule the page declares. A rule added, removed or
@@ -233,20 +237,8 @@ test('A11: the List-tab buttons fill one shared column: .nr-actions stretches it
     assert.deepEqual([declarations('.nr-actions')['align-items'], declarations('.nr-actions button').width], ['stretch', '100%']);
 });
 
-/** The body of the `@media (max-width: 600px)` block, or an empty string when the page has none. */
-function narrowScreen() {
-    const at = STYLE.indexOf('@media (max-width: 600px)');
-    if (at < 0) return '';
-    let depth = 0;
-    for (let i = STYLE.indexOf('{', at); i < STYLE.length; i++) {
-        if (STYLE[i] === '{') depth++;
-        if (STYLE[i] === '}' && --depth === 0) return STYLE.slice(STYLE.indexOf('{', at) + 1, i);
-    }
-    return '';
-}
-
 test('U59: below 600 px the actions take their own row, in equal columns', () => {
-    const actions = declarations('.nr-actions', narrowScreen());
+    const actions = declarations('.nr-actions', '@media (max-width: 600px)');
 
     assert.deepEqual([actions['grid-column'], actions.display, actions['grid-auto-flow'], actions['grid-auto-columns']], ['1 / -1', 'grid', 'column', '1fr']);
 });
@@ -399,7 +391,8 @@ test('A16: every rule that reaches a source link and declares a colour keeps 4.5
 
 /**
  * Whether `declared` dims what it reaches: an `opacity` below 1, or any `filter` but `none`, `!important` or not.
- * ponytail: reads `opacity` and `filter` only, so a dimming `color-mix()` or `mix-blend-mode` is not read.
+ * ponytail: reads `opacity` and `filter` only, so a dimming `color-mix()` or `mix-blend-mode` is not read, and an
+ * `opacity` written with `calc()` or `var()` reads as not dimming.
  */
 function dimsText(declared) {
     const [opacity, filter] = [declared.opacity, declared.filter].map(value => (value || '').replace(/!\s*important/i, '').trim());
