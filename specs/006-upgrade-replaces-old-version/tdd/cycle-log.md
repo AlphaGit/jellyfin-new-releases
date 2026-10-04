@@ -636,3 +636,16 @@ recorded mutant its test catches:
   `--filter "FullyQualifiedName~RepositoryManifestTests"` -> exactly the 5 workflow tests fail and
   the other 21, the predicate units `U7`–`U12`, `U24`, `U27` among them, pass. Before, a missing
   workflow failed the whole class through `TypeInitializationException`. File moved back, `git diff` clean
+
+## `/speckit-implement`: T045, the missing sides of the copied predicates
+
+- `ReleaseRootOf_RejectsAnAddressWithNoTagDirectory` (new). Red:
+  `--filter "FullyQualifiedName~RepositoryManifestTests"` -> `ReleaseRootOf_RejectsAnAddressWithNoTagDirectory [FAIL]` /
+  `Assert.ThrowsAny() Failure: No exception was thrown`. Green: `ReleaseRootOf` asserts its tag
+  directory matches `/v[^/]+$`. Suite -> 350 passed
+- `AReleaseTaggedInTwoParts_IsAcceptedForItsFourPartVersion` (new, `v1.2` for `1.2.0.0`) and the
+  rejecting row `("1.2.3.4", …v1.2.3.4.0/{Slug}.zip)` pass on their first run, the padding loop
+  already handling both. Mutants:
+  - `InFourParts` with `if` instead of `while` (pads once) -> `AReleaseTaggedInTwoParts_… [FAIL]`
+  - `InFourParts` truncating to four parts -> `…IsRejected(number: "1.2.3.4", …) [FAIL]`
+  - each restored, `cmp -s`; suite -> 350 passed

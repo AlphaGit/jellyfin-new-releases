@@ -246,6 +246,30 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
+    /// 006 T045: the other short form, `v1.2`, names the release JPRM writes as `1.2.0.0`.
+    /// </summary>
+    [Fact]
+    public void AReleaseTaggedInTwoParts_IsAcceptedForItsFourPartVersion()
+    {
+        using var entry = WellFormedEntry("1.2.0.0", sourceUrl: $"{ExampleReleaseRoot}v1.2/{Slug}.zip");
+
+        AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleReleaseRoot);
+    }
+
+    /// <summary>
+    /// 006 T045: an address with no tag directory names no release, so it has no root to share.
+    /// Reading one from it would let a malformed first entry set the root every other entry is
+    /// judged against.
+    /// </summary>
+    [Fact]
+    public void ReleaseRootOf_RejectsAnAddressWithNoTagDirectory()
+    {
+        using var entry = WellFormedEntry("3.0.0.0", sourceUrl: "https://host.invalid/owner/repo/releases/download/pkg.zip");
+
+        Assert.ThrowsAny<Xunit.Sdk.XunitException>(() => ReleaseRootOf(entry.RootElement));
+    }
+
+    /// <summary>
     /// U24: the check above runs over an empty list until the first tag, so on its own it proves
     /// nothing. This is its other side: the same check, applied to entries that must fail.
     /// </summary>
@@ -320,6 +344,9 @@ public class RepositoryManifestTests
         // The other side of the three-part boundary U8 accepts.
         { "1.2.3.1", $"{ExampleReleaseRoot}v1.2.3/{Slug}.zip" },
 
+        // A five-part tag, which no four-part version can name.
+        { "1.2.3.4", $"{ExampleReleaseRoot}v1.2.3.4.0/{Slug}.zip" },
+
         // The Pages layout: a slug folder, and the version in the file name.
         { "1.0.0.0", $"{ExampleReleaseRoot}{Slug}/{Slug}_1.0.0.0.zip" },
 
@@ -366,6 +393,7 @@ public class RepositoryManifestTests
         var sourceUrl = version.GetProperty("sourceUrl").GetString()!;
         Assert.StartsWith("https://", sourceUrl, StringComparison.Ordinal);
         var tagDirectory = sourceUrl[..sourceUrl.LastIndexOf('/')];
+        Assert.Matches("/v[^/]+$", tagDirectory);
         return tagDirectory[..(tagDirectory.LastIndexOf('/') + 1)];
     }
 
