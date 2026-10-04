@@ -1405,3 +1405,24 @@ functionality. 3. Yes"
 - **Stopping rule (maintainer, 2026-10-04)**: the next audit re-runs every recorded mutant and allows
   one probe round, limited to 007's acceptance criteria. If that round finds no survivor inside 007,
   the test-strength evidence is complete
+
+## Grilling session with the maintainer, 2026-10-04 (T087–T094, T091)
+
+The maintainer asked for a grill-me pass on the remaining work, in terms of what the page does, and
+warned against overcomplicating it and against mutant whack-a-moling. One question at a time:
+
+1. **Q1, T091 scope: A, B and C.** A: the list shows the right releases. B: the page shows the right
+   words. C: a screen reader and keyboard get it right. One plain test per behaviour, no new general
+   machinery
+2. **Q2, T087: accents and big libraries only.** "Björk" applies; with 1,000 artists the last is
+   suggested and applies. The Turkish-locale run is dropped
+3. **Q3, T089 and T090: (a).** One test per action button (each sends its own action for its own
+   release; a click elsewhere in a row sends nothing), plus the stand-in's missing `closest` case. The
+   runtime-writes extension (T089) is dropped
+4. **Q4, T088: yes** (first answered "no", corrected to "yes"). A5 checks the Artist field exactly as
+   the contract writes it
+5. **Q5, T092–T094: all three**
+6. **Q6, the T091 list: yes**, as T095 (A, 5 behaviours), T096 (B, 7) and T097 (C, 4)
+
+Method: a test that cannot fail against the existing code (a characterization test, or a new example
+of an existing behaviour) is shown to catch its defect by one hand-made break, restored at once.
