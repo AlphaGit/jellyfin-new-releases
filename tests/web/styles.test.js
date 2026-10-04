@@ -281,6 +281,50 @@ test('A17: no rule that reaches a source link dims it, so hover and focus keep t
     assert.deepEqual(rules().filter(rule => reachesSourceLink(rule.selector) && dimsText(rule.declared)).map(rule => rule.selector), []);
 });
 
+/**
+ * Whether `selector` can match an element around a source link: its subject is `div`, `article`, `*` or bare
+ * pseudo-classes, names only the link's ancestors, and every ancestor compound before it names only the
+ * link's ancestors. ponytail: a subject with an attribute selector (`[role="tabpanel"]`) is not read.
+ */
+function reachesLinkAncestor(selector) {
+    const parts = selector.trim().split(/\s*([>+~])\s*|\s+/);
+    const subject = parts.pop();
+    const ancestors = parts.filter((part, i) => i % 2 === 0 && !['+', '~'].includes(parts[i + 1]));
+    return !subject.includes('[') && ['', 'div', 'article', '*'].includes(/^[\w*]*/.exec(subject)[0])
+        && [subject, ...ancestors].every(compound => (compound.match(/[.#][\w-]+/g) || []).every(name => LINK_ANCESTORS.includes(name)));
+}
+
+for (const [selector, expected] of [
+    ['#nr-user-view', true],
+    ['#nr-user-view #nr-panel', true],
+    ['#nr-user-view .nr-list', true],
+    ['#nr-user-view .nr-row', true],
+    ['#nr-user-view .nr-row:hover .nr-links', true],
+    ['#nr-user-view .nr-row > div', true],
+    ['#nr-user-view .nr-cover + div', true],
+    ['#nr-user-view article:hover', true],
+    ['#nr-user-view :hover', true],
+    ['#nr-user-view .nr-links a', false],
+    ['#nr-user-view .nr-meta', false],
+    ['#nr-user-view .nr-status', false],
+    ['#nr-user-view .nr-artist', false],
+    ['#nr-user-view .nr-filter label', false],
+    ['#nr-user-view .nr-filters div', false],
+    ['#nr-user-view h1', false],
+]) {
+    test(`A18 helper: "${selector}" ${expected ? 'can' : 'cannot'} reach an element around a source link`, () => {
+        assert.equal(reachesLinkAncestor(selector), expected);
+    });
+}
+
+test('A18: hover and focus keep the source link\'s background and do not dim the elements around it', () => {
+    const backgrounds = rules().filter(rule => reachesSourceLink(rule.selector)
+        && (isVisibleColour(rule.declared.background) || isVisibleColour(rule.declared['background-color'])));
+    const dimmed = rules().filter(rule => reachesLinkAncestor(rule.selector) && dimsText(rule.declared));
+
+    assert.deepEqual([backgrounds.map(rule => rule.selector), dimmed.map(rule => rule.selector)], [[], []]);
+});
+
 test('A14: a visited source link keeps the same colour', () => {
     assert.equal(declarations('.nr-links a:visited').color, declarations('.nr-links a').color);
 });

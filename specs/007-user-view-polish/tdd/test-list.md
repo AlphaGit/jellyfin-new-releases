@@ -26,7 +26,7 @@ loading cannot be observed by a fake DOM that does no layout. Their acceptance l
 declarations that produce them, and the real-browser pass in `quickstart.md` §2 checks the pixels.
 
 **Remediation, 2026-10-03.** The TDD audit (`tdd/verification.md`) and the maintainer's decisions on it
-reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second audit (`ad2b277`) adds A17.
+reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second audit (`ad2b277`) adds A17. The third audit (`f68901c`) adds A18.
 
 ## Outer loop: acceptance behaviors
 
@@ -48,6 +48,7 @@ reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second 
 | A15 | Text that equals an artist name with case ignored applies that artist | US1-AS2, FR-002 | example | DONE | `tests/web/artist-filter.test.js::A15: typing "{text}" applies the artist whose name it equals with case ignored` (rows `asp`, `aSP`, `WASP`, `__PROTO__`) |
 | A16 | Every rule that reaches a source link and declares a colour keeps 4.5:1 against the card, so hover and focus keep the contrast | US4-AS2, FR-010 | example | DONE | `tests/web/styles.test.js::A16: every rule that reaches a source link and declares a colour keeps 4.5:1 against the card, so hover and focus keep it too` |
 | A17 | No rule that reaches a source link dims it (`opacity` below 1, or a `filter`), so hover and focus keep the contrast A16 measures | US4-AS2, FR-010 | example | DONE | `tests/web/styles.test.js::A17: no rule that reaches a source link dims it, so hover and focus keep the contrast A16 measures`; `dimsText` is pinned by `A17 helper: …` table rows |
+| A18 | No rule that reaches a source link gives it a visible background, and no rule that reaches an element around it dims it, so hover and focus keep the contrast A16 measures | US4-AS2, FR-010 | example | DONE | `tests/web/styles.test.js::A18: hover and focus keep the source link's background and do not dim the elements around it`; `reachesLinkAncestor` is pinned by `A18 helper: …` table rows |
 | A14 | The source link keeps its underline, its `:visited` state has the same colour, and focus shows the outline | US4-AS2, FR-010 | example | DONE | `tests/web/styles.test.js::A14: a visited source link keeps the same colour / no rule takes the underline off a source link / a focused source link shows the focus outline`; the underline and focus tests read every rule through `rules`, `reachesSourceLink`, `removesUnderline` and `removesOutline`, each pinned by `A14 helper: …` table rows |
 
 ## Inner loop: unit behaviors

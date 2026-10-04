@@ -979,3 +979,32 @@ real-browser pass. A closed-world list of selectors was considered and not chose
 - strength: Q8, P4 (`initial`) and N6 (`none`) each fail U60. Each was applied to a file copy,
   restored, and checked against `HEAD`
 - ceiling: a function with nested parentheses, such as a gradient, is not read
+
+## Cycle 63: A18 hover and focus keep the link's background and do not dim the elements around it (T063, third audit Finding 5) — test-after
+
+- list: A18 appended. US4-AS2 says the link "keeps the same contrast" on hover and focus. A16 and
+  A17 read only the link's own colour and dimming, so the third audit's mutants Q6
+  (`.nr-links a:hover { background: #00a4dc }`, 1:1) and Q7 (`.nr-row:hover .nr-links { opacity: .3 }`)
+  survived. Q7 is the ancestor limit that cycle 58 recorded
+- helper (new, in `tests/web/styles.test.js`): `reachesLinkAncestor(selector)`, pinned by a table of
+  16 rows. It accepts `#nr-user-view`, `#nr-panel`, `.nr-list`, `.nr-row`, `.nr-row:hover .nr-links`,
+  `.nr-row > div`, `.nr-cover + div`, `article:hover` and `:hover`. It rejects the link itself
+  (`.nr-links a`), the link's siblings and other page elements (`.nr-meta`, `.nr-status`, `.nr-artist`,
+  `.nr-filter label`, `.nr-filters div`, `h1`)
+- red (helper): `reachesLinkAncestor` declared as `return false`. `node --test tests/web/styles.test.js`
+  -> the 9 accepting rows fail, e.g. `not ok 89 - A18 helper: "\#nr-user-view" can reach an element around a source link` (9 failed).
+  Green: the predicate as written. File -> 119 passed
+- test: `tests/web/styles.test.js::A18: hover and focus keep the source link's background and do not dim the elements around it` (new).
+  It lists every rule that reaches a source link with a visible `background` or `background-color`
+  (`isVisibleColour`), and every rule that reaches an element around the link and dims it (`dimsText`).
+  Both lists must be empty
+- red (behaviour): **passed on the first run.** The page declares no background on a source link and
+  no opacity or filter on an element around it. This is **test-after**: no red exists. Evidence instead:
+  - Q6, `#nr-user-view .nr-links a:hover { background: #00a4dc; }` -> A18 fails (1 failed)
+  - Q7, `#nr-user-view .nr-row:hover .nr-links { opacity: .3; }` -> A18 fails (1 failed)
+
+  Both were applied to a file copy, restored, and checked against `HEAD`
+- green: no production change. Suite -> node 247 passed
+- ceiling: a background on an element around the link is not read, because the card's own
+  background is the one A13 and A16 measure against. A subject with an attribute selector is not read
+- open: needs the maintainer's decision to accept it as test-after, like A16 and A17
