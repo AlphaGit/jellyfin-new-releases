@@ -36,10 +36,10 @@ condition itself — two copies of the plugin in one host — cannot be built by
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| A1 | A server upgraded from the previous release and restarted runs only the new release | US1-AS1, SC-001, FR-001 | example | BLOCKED — manual, maintainer's server; T026 T026 steps 5–7 | |
-| A2 | An upgraded server restarted five times runs the same single release every time | US1-AS2, SC-002, FR-002 | example | BLOCKED — manual, maintainer's server; T026 T026 step 6 | |
-| A3 | On an upgraded server the New Releases view renders, on every restart | US1-AS3 | example | BLOCKED — manual, maintainer's server; T026 T026 steps 6 and 9 | |
-| A4 | An upgrade after the renaming release needs no operator step beyond the restart | US1-AS4, SC-003, FR-003, FR-007a | example | BLOCKED — manual, maintainer's server; T026 T026 step 7 | |
+| A1 | A server upgraded from the previous release and restarted runs only the new release | US1-AS1, SC-001, FR-001 | example | BLOCKED — manual, maintainer's server; T026 steps 5–7 | |
+| A2 | An upgraded server restarted five times runs the same single release every time | US1-AS2, SC-002, FR-002 | example | BLOCKED — manual, maintainer's server; T026 step 6 | |
+| A3 | On an upgraded server the New Releases view renders, on every restart | US1-AS3 | example | BLOCKED — manual, maintainer's server; T026 steps 6 and 9 | |
+| A4 | An upgrade after the renaming release needs no operator step beyond the restart | US1-AS4, SC-003, FR-003, FR-007a | example | BLOCKED — manual, maintainer's server; T026 step 7 | |
 | A5 | Changing the plugin's name in `build.yaml` alone fails the suite | US2-AS1, SC-004, FR-005 | example | DONE | deliberate mutant, cycle 5 of `tdd/cycle-log.md` |
 | A6 | Renaming the release asset, or creating the release after the catalogue entry, fails the suite | SC-006 | example | DONE | deliberate mutants, cycle 20 of `tdd/cycle-log.md` |
 
