@@ -157,3 +157,17 @@ failed before the implementation.
 - green: no rule change. Suite -> 324 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 11: U11 an asset carrying the version in its file name is rejected under the right tag
+
+- test: `ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected`, new case
+  `("1.0.0.0", ExampleSiteRoot + "v1.0.0.0/new-releases_1.0.0.0.zip")` — right root, right tag,
+  JPRM's own file name
+- red: none on the first run. Same filter as cycle 9 -> `Passed!  - Failed:     0, Passed:     6`
+- mutant: `asset` in `AssertSourceUrlNamesItsOwnVersion` changed from `$"/{Slug}.zip"` to
+  `$"/{Slug}_{number}.zip"`. Same command -> `…IsRejected(number: "1.0.0.0", sourceUrl: "https://example.invalid/owner/repo/releases/downlo"···) [FAIL]`
+  (1 failed, 5 passed). It is this case: the Pages-style case still fails the `{root}v` prefix,
+  and the old-slug cases end in `jellyfin-new-releases…`. Restored from a file copy, verified with `cmp -s`
+- green: no rule change. Suite -> 325 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry

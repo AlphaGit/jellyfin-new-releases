@@ -220,6 +220,7 @@ public class RepositoryManifestTests
     [InlineData("1.0.0.0", ExampleSiteRoot + "jellyfin-new-releases.zip")]
     [InlineData("1.2.3.1", ExampleSiteRoot + "v1.2.3/new-releases.zip")]
     [InlineData("1.0.0.0", ExampleSiteRoot + "new-releases/new-releases_1.0.0.0.zip")]
+    [InlineData("1.0.0.0", ExampleSiteRoot + "v1.0.0.0/new-releases_1.0.0.0.zip")]
     public void ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected(string number, string sourceUrl)
     {
         using var entry = JsonDocument.Parse(
