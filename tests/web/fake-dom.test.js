@@ -66,3 +66,30 @@ test('remove detaches an element from the element it was appended to', () => {
 
     assert.deepEqual(box.children, []);
 });
+
+/** A row as a browser builds it from the markup the view writes: article.nr-row > div.nr-actions > button[data-action]. */
+function actionRow() {
+    const article = new FakeElement('row');
+    article.tagName = 'ARTICLE';
+    article.setAttribute('class', 'nr-row');
+    const actions = article.appendChild(new FakeElement('actions'));
+    actions.tagName = 'DIV';
+    actions.setAttribute('class', 'nr-actions');
+    const button = actions.appendChild(new FakeElement('button'));
+    button.tagName = 'BUTTON';
+    button.setAttribute('data-action', 'Ignore');
+    return { article, actions, button };
+}
+
+test('closest finds the nearest element, itself included, that a tag, class or attribute selector names', () => {
+    const { article, actions, button } = actionRow();
+
+    assert.deepEqual(
+        ['button[data-action]', '.nr-actions', '.nr-row', 'article', '.nr-missing'].map(selector => button.closest(selector)),
+        [button, actions, article, article, null],
+    );
+});
+
+test('closest refuses a selector it does not model, rather than answering it wrongly', () => {
+    assert.throws(() => actionRow().button.closest('.nr-row .nr-actions'), /not modelled/);
+});

@@ -26,7 +26,7 @@ loading cannot be observed by a fake DOM that does no layout. Their acceptance l
 declarations that produce them, and the real-browser pass in `quickstart.md` §2 checks the pixels.
 
 **Remediation, 2026-10-03.** The TDD audit (`tdd/verification.md`) and the maintainer's decisions on it
-reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second audit (`ad2b277`) adds A17. The third audit (`f68901c`) adds A18. The fourth audit (`8e7daf7`) adds U67, the closed-world check. The fifth audit (`78b0f4b`) adds U68, the closed world over the markup.
+reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second audit (`ad2b277`) adds A17. The third audit (`f68901c`) adds A18. The fourth audit (`8e7daf7`) adds U67, the closed-world check. The fifth audit (`78b0f4b`) adds U68, the closed world over the markup. The sixth audit (`dbab71c`) adds U69 and the characterization behaviours U70–U72 (maintainer decision T083).
 
 ## Outer loop: acceptance behaviors
 
@@ -131,6 +131,12 @@ reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second 
 | --- | --- | --- | --- | --- | --- |
 | U38 | `addEventListener(type, handler, options)` keeps `options` readable by a test | invariant: A8 and U53 need the capture flag | example | DONE | `tests/web/fake-dom.test.js::addEventListener keeps the options it was given readable` |
 | U39 | `remove()` detaches an element from its owner | invariant: A9 and U52 need removal | example | DONE | `tests/web/fake-dom.test.js::remove detaches an element from the element it was appended to` |
+
+### `tests/web/fake-dom.js`: traversal (test infrastructure U72 needs, maintainer decision T083)
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U69 | `closest(selector)` returns the nearest of the element and its ancestors that one compound selector names, `null` when none does, and throws on a selector it does not model | invariant: U72 needs it | example | DONE | `tests/web/fake-dom.test.js::closest finds the nearest element, itself included, that a tag, class or attribute selector names / closest refuses a selector it does not model, rather than answering it wrongly` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`: Artist filter
 

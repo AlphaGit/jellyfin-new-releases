@@ -1303,3 +1303,18 @@ maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
   and the classes come from the first of two duplicates. File -> 34 passed
 - strength: G3 now fails five U68 template tests. W1, W10 and W13 still fail. Each was applied to a
   file copy, restored, and checked against `HEAD`
+
+## Cycle 72: U69 the fake DOM finds the nearest element a selector names (T083)
+
+- list: U69 appended under a new `fake-dom.js` traversal section. U72 needs it: the action handler
+  reads `e.target.closest('button[data-action]')` and `button.closest('.nr-row')`, which the stand-in
+  did not model
+- test: `tests/web/fake-dom.test.js::closest finds the nearest element, itself included, that a tag, class or attribute selector names`
+  and `…::closest refuses a selector it does not model, rather than answering it wrongly` (new), over an
+  `article.nr-row > div.nr-actions > button[data-action]` tree built with `appendChild`
+- red: `node --test tests/web/fake-dom.test.js` -> both fail with
+  `TypeError: actionRow(...).button.closest is not a function` (2 failed)
+- green: `FakeElement.closest(selector)` matches one compound of a tag (the element's `tagName`),
+  classes (its `class` attribute) and attribute names, walking up `parentNode`, and throws on anything
+  else. File -> 8 passed; suite -> node 309 passed
+- profile: "What it does not" now states the traversal the stand-in models

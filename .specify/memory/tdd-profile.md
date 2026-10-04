@@ -140,8 +140,10 @@ the tree is clean.
   recorded (that is how `pageshow` and the administrator page's action buttons are driven).
   **What it does not**: it parses no markup, so an assertion on `innerHTML` proves what the page
   *wrote*, never what a browser would render. Nothing is dispatched, nothing bubbles, no event
-  object is synthesized, and there is no traversal — so `closest`, and therefore the list page's
-  click handler, stays outside it. `row`, `read`, `fill` and `query` remain manual.
+  object is synthesized, and traversal is limited to `closest` (added by `007` cycle 72): one
+  compound of a tag, classes and attributes, up the `appendChild` chain, with the tag a test gives
+  as `tagName` and the classes from the `class` attribute. A test that builds a row's elements can
+  therefore drive the list page's click handler. `row`, `read`, `fill` and `query` remain manual.
   Full statement: `specs/005-page-json-casing/contracts/page-sandbox.md`. Do not read a passing
   page test as proof of anything in the second list.
 

@@ -58,6 +58,24 @@ class FakeElement {
     }
 
     /**
+     * The nearest of this element and the elements it was appended to that `selector` names. A selector is
+     * one compound of a tag, classes and attribute names (`button[data-action]`, `.nr-row`); anything else
+     * throws. The tag is the `tagName` a test gives the element, the classes its `class` attribute.
+     */
+    closest(selector) {
+        const parts = /^([a-z]*)((?:\.[\w-]+)*)((?:\[[\w-]+\])*)$/i.exec(selector);
+        if (!parts || !selector) { throw new Error(`fake-dom: closest('${selector}') is not modelled; only one compound of a tag, classes and attributes is.`); }
+        const [, tag, classes, attributes] = parts;
+        const matches = element => (!tag || (element.tagName || '').toLowerCase() === tag.toLowerCase())
+            && classes.split('.').filter(Boolean).every(name => (element.getAttribute('class') || '').split(/\s+/).includes(name))
+            && [...attributes.matchAll(/\[([\w-]+)\]/g)].every(([, name]) => element.getAttribute(name) !== null);
+        for (let element = this; element; element = element.parentNode) {
+            if (matches(element)) { return element; }
+        }
+        return null;
+    }
+
+    /**
      * `#id` resolves through the document that owns this element; anything else is treated as a
      * child this element owns, created once and reused. There is no tag or class matching here:
      * `querySelector('tbody')` answers "the tbody of this element", which is all the pages ask.
