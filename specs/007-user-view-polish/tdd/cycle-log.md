@@ -1286,3 +1286,20 @@ maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
   passed on its first run, because the page writes nothing else. Evidence: Y3, Y6, Y7, Y10, V4 and
   Y11 (`panel.className = 'nr-status'`) each fail it
 - strength: each mutant was applied to a file copy, restored, and checked against `HEAD`
+
+## Cycle 71: `signatures` reads every tag or fails (T082, sixth audit Finding 4)
+
+- what: a test correction. `signatures` skipped a tag with an unquoted or single-quoted value, so the
+  sixth audit's G3 (`<span class=nr-badge style=opacity:.3>`) escaped U68 and was caught only by an
+  unrelated render test. The behaviour U68 is unchanged
+- red: 6 rows added to the `signatures` table (unquoted values, single-quoted values with a space, a
+  comment, `<template>`, self-closing tags, a duplicate `class`), and a new test that an unreadable tag
+  fails `signatures`. `node --test tests/web/markup.test.js` -> 4 failed: the unquoted, single-quoted
+  and comment rows, e.g. `not ok 7 - U68 helper: "<span class=nr-badge style=opacity:.3>" has the shapes ["span.nr-badge[class style]"]`,
+  and `not ok 13 - U68 helper: a tag that signatures cannot read fails it, rather than going unread`.
+  The `<template>`, self-closing and duplicate-`class` rows already passed
+- green: `signatures` reads double-quoted, single-quoted and unquoted values, skips comments, and
+  throws when the tags it read are fewer than the `<` + letter it finds. Its comment states that `id`
+  and the classes come from the first of two duplicates. File -> 34 passed
+- strength: G3 now fails five U68 template tests. W1, W10 and W13 still fail. Each was applied to a
+  file copy, restored, and checked against `HEAD`

@@ -17,10 +17,21 @@ const { imgAttribute } = require('./cover-markup.js');
 const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web', 'user-view.html'), 'utf8');
 const settled = () => new Promise(resolve => setImmediate(resolve));
 
-/** Every opening tag in `html` as `name#id.classes[attribute names]`: names in lower case and sorted, duplicates kept. */
+/** An attribute value: double-quoted, single-quoted, or unquoted. */
+const VALUE = String.raw`"[^"]*"|'[^']*'|[^\s"'=<>\x60]+`;
+
+/**
+ * Every opening tag in `html` as `name#id.classes[attribute names]`: names in lower case and sorted, duplicates
+ * kept, and `id` and the classes taken from the first of two duplicates. Comments are skipped. A tag it cannot
+ * read fails it, so nothing goes unread.
+ */
 function signatures(html) {
-    return [...html.matchAll(/<([a-z][\w-]*)((?:\s+[^\s"'=<>\/]+(?:\s*=\s*"[^"]*")?)*)\s*\/?>/gi)].map(([, name, rest]) => {
-        const attributes = [...rest.matchAll(/([^\s"'=<>\/]+)(?:\s*=\s*"([^"]*)")?/g)].map(([, key, value]) => [key.toLowerCase(), value]);
+    const markup = html.replace(/<!--[\s\S]*?-->/g, '');
+    const tags = [...markup.matchAll(new RegExp(String.raw`<([a-z][\w-]*)((?:\s+[^\s"'=<>\/]+(?:\s*=\s*(?:${VALUE}))?)*)\s*\/?>`, 'gi'))];
+    if (tags.length !== (markup.match(/<[a-z]/gi) || []).length) throw new Error(`signatures: a tag could not be read in ${JSON.stringify(html)}`);
+    return tags.map(([, name, rest]) => {
+        const attributes = [...rest.matchAll(new RegExp(String.raw`([^\s"'=<>\/]+)(?:\s*=\s*(${VALUE}))?`, 'g'))]
+            .map(([, key, value = '']) => [key.toLowerCase(), value.replace(/^(["'])(.*)\1$/, '$2')]);
         const value = key => (attributes.find(([found]) => found === key) || [])[1];
         const classes = (value('class') || '').split(/\s+/).filter(Boolean).map(name => '.' + name).join('');
         return name.toLowerCase() + (value('id') ? '#' + value('id') : '') + classes + '[' + attributes.map(([key]) => key).sort().join(' ') + ']';
@@ -34,11 +45,21 @@ for (const [html, expected] of [
     ['<p>text</p><span hidden>', ['p[]', 'span[hidden]']],
     ['<a href="x>y" style="color: red">', ['a[href style]']],
     ['</div>', []],
+    ['<span class=nr-badge style=opacity:.3>', ['span.nr-badge[class style]']],
+    ["<a href='x' title='y z'>", ['a[href title]']],
+    ['<!-- <p class="x"> --><p>', ['p[]']],
+    ['<template><p></p></template>', ['template[]', 'p[]']],
+    ['<br/><img src="a" />', ['br[]', 'img[src]']],
+    ['<div class="a" class="b">', ['div.a[class class]']],
 ]) {
     test(`U68 helper: ${JSON.stringify(html)} has the shapes ${JSON.stringify(expected)}`, () => {
         assert.deepEqual(signatures(html), expected);
     });
 }
+
+test('U68 helper: a tag that signatures cannot read fails it, rather than going unread', () => {
+    assert.throws(() => signatures('<p><div class="a>'), /could not be read/);
+});
 
 for (const [markup, name, expected] of [
     ['<img LOADING="eager" loading="lazy">', 'loading', 'eager'],
