@@ -539,3 +539,17 @@ recorded mutant its test catches:
 - green: no workflow change. Suite -> 341 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 29: U29 the package is moved from the folder `jprm plugin build --output` names
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_MovesThePackageFromTheFolderJprmWritesTo` (new;
+  second audit finding 20, task T049)
+- red: none on the first run; both folders are `./artifacts` since before 006. **Test-after**,
+  stated as such.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.TheReleaseWorkflow_MovesThePackageFromTheFolderJprmWritesTo" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     1`
+- mutant: survivor S2, `--output ./out`. Same command -> `Assert.Equal() Failure: Strings differ` /
+  `Expected: "./out"` / `Actual:   "./artifacts"` (1 failed). Restored from a file copy, verified with `cmp -s`
+- green: no workflow change. Suite -> 342 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry

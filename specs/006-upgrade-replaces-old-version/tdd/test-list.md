@@ -116,7 +116,7 @@ ordering and presence check, as `ReleaseWorkflowTests.Steps` already does.
 | U25 | The workflow moves the file JPRM writes, `{Slug}_${{ steps.ver.outputs.version4 }}.zip`, and no other | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_MovesTheFileJprmWrites` |
 | U26 | The file the workflow moves the package to is the file `gh release create` uploads | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo` |
 | U28 | The workflow moves the package after `jprm plugin build` and before `gh release create` | FR-010 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_MovesThePackageBetweenBuildingAndReleasingIt` |
-| U29 | The folder the workflow moves the package from is the folder `jprm plugin build --output` names | FR-010 | example | PENDING | |
+| U29 | The folder the workflow moves the package from is the folder `jprm plugin build --output` names | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_MovesThePackageFromTheFolderJprmWritesTo` |
 
 `U13` must anchor the file name at a path or quote boundary. Cycle 3 found `003`'s U39 is a bare
 substring check: after the rename, `new-releases_<v>.zip` is found inside the stale

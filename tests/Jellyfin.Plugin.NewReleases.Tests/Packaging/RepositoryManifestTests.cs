@@ -131,6 +131,21 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
+    /// 006 U29: JPRM writes the package into the folder its `--output` names. The move must read
+    /// from that folder, or it looks for a file JPRM never wrote (006 second audit, survivor S2).
+    /// </summary>
+    [Fact]
+    public void TheReleaseWorkflow_MovesThePackageFromTheFolderJprmWritesTo()
+    {
+        var output = Regex.Match(ReleaseWorkflowSteps, @"jprm plugin build[^\n]*--output\s+""?([^\s""]+?)/?""?(?=\s|$)");
+        var moved = Regex.Match(ReleaseWorkflowSteps, $@"(?m)^\s*mv\s+""?([^\s""]+)/{Regex.Escape(Slug)}_");
+        Assert.True(output.Success, "jprm plugin build names no --output folder");
+        Assert.True(moved.Success, "the workflow does not move JPRM's package");
+
+        Assert.Equal(output.Groups[1].Value, moved.Groups[1].Value);
+    }
+
+    /// <summary>
     /// 006 U26: the release uploads the file the package was renamed to. Upload anything else
     /// and the release step fails on a missing file, after the package was built (006 audit,
     /// finding 1).
