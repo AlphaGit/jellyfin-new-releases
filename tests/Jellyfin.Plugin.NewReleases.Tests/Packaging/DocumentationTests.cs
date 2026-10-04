@@ -13,6 +13,10 @@ public class DocumentationTests
 {
     private static readonly string Readme = RepositoryFiles.ReadAllText("README.md");
 
+    /// <summary>The address servers read the catalogue from (006 FR-012).</summary>
+    private const string CatalogueAddress =
+        "https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json";
+
     /// <summary>
     /// One markdown section's body. Asserting against the whole README lets prose elsewhere
     /// satisfy a check about a section that may not even exist.
@@ -75,7 +79,7 @@ public class DocumentationTests
     public void Install_NamesTheRawCatalogueAddress()
     {
         Assert.Contains(
-            "https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json",
+            CatalogueAddress,
             SectionOf("## Install"),
             StringComparison.Ordinal);
     }
@@ -127,7 +131,7 @@ public class DocumentationTests
     public void Changelog_020_NamesTheRepositoryAddressThatReplacesTheOldOne()
     {
         Assert.Contains(
-            "https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json",
+            CatalogueAddress,
             ChangelogSection("0.2.0"),
             StringComparison.Ordinal);
     }

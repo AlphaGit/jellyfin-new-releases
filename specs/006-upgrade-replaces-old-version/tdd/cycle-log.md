@@ -391,3 +391,10 @@ failed before the implementation.
 - refactor: the catalogue address is now written twice in this class; extracted in its own
   structural commit after this one
 - commit: see the commit that carries this entry
+
+## Refactor after cycle 24: one constant for the catalogue address
+
+- structural only: `DocumentationTests.CatalogueAddress` holds the raw catalogue address `U20`
+  and `U23` both assert
+- suite: build 0 warnings; `dotnet test --configuration Release` -> 337 passed, 0 failed
+- commit: see the commit that carries this entry
