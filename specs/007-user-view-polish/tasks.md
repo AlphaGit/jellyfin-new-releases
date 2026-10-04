@@ -388,3 +388,12 @@ cleared.** T100–T104 are polish and do not block.
 - [X] T102 Finding 5 (MED): move U84 from `tests/web/requests.test.js:144-153` to `tests/web/view.test.js`, and the `keepsListening` table from `tests/web/view.test.js:66-81` to `tests/web/fake-dom.test.js`. Done when the suite is green and B84 and Y4 still fail. [U84] [U71]
 - [X] T103 Finding 6 (LOW): make the 1,000-artist test in `tests/web/artist-filter.test.js:138-146` compare every suggested name, or rename it to what it checks. Done when the suite is green and H2 still fails it.
 - [X] T104 Finding 7 (LOW): let the U72 rows use `loadedView`, let U70 and U77 share one link reader, and share one page-source read. Done when the suite is green and J4, Y9 and B77 still fail.
+
+---
+
+## Phase 16: TDD remediation
+
+From the ninth [`tdd/verification.md`](./tdd/verification.md) (verdict **PASS_WITH_GAPS**, audited at
+`457bd78` under the maintainer's stopping rule). Nothing blocks the feature.
+
+- [ ] T105 Finding 1 (LOW): give `tests/web/view.test.js` one file-local setup for the loaded view, as `requests.test.js` has `loadedView`, and use it in U84 and U85 (`:32`, `:80`). Done when `node --test "tests/web/*.test.js"` is green and B84 and B85b still fail it.
