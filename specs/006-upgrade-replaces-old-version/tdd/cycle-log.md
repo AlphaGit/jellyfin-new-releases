@@ -398,3 +398,20 @@ failed before the implementation.
   and `U23` both assert
 - suite: build 0 warnings; `dotnet test --configuration Release` -> 337 passed, 0 failed
 - commit: see the commit that carries this entry
+
+## Notes and deviations: `/speckit-implement`, the tasks without a behaviour
+
+- T001: the baseline is the one recorded at the top of this log, at `c0e20a2`
+- T006: no change. `build.yaml`'s `overview` and `description` never name the plugin; "Jellyfin"
+  appears there only as the server it runs on
+- T016: the rule went to a sibling note, `docs/plugin-name.md`, not into `docs/http-surface.md`,
+  which is about routes
+- T022: `build.yaml` `0.2.0` and the project `<Version>0.2.0.0</Version>`, committed with the
+  changelog's `0.2.0` content (T020, T031). The `0.2.0` heading says `unreleased` until tagged
+- T023: build 0 warnings; `dotnet test --configuration Release` -> 337 passed; node -> 358 passed.
+  Scenario 1 re-run on the final tree: `build.yaml` `name` set to `"Another Name"`,
+  `--filter "FullyQualifiedName~PluginSanityTests"` -> `Plugin_DisplayName_MatchesTheNameThePackageDeclares [FAIL]`
+  (1 failed, 7 passed), restored and verified with `cmp -s`. Scenario 2 is cycle 20; the workflow
+  has not changed since
+- T024, T025, T026 stay open: pushing to `main`, tagging `v0.2.0` and the real-server pass are the
+  maintainer's

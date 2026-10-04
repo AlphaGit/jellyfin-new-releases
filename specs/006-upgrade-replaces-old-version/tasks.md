@@ -48,7 +48,7 @@ the release hosting is restated and reworked on a green suite.
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirm the baseline is green before changing anything: `dotnet build --configuration Release` with zero warnings, `dotnet test --configuration Release`, `node --test "tests/web/*.test.js"`. Record the counts; a red baseline means no red produced later can be attributed to this feature
+- [X] T001 Confirm the baseline is green before changing anything: `dotnet build --configuration Release` with zero warnings, `dotnet test --configuration Release`, `node --test "tests/web/*.test.js"`. Record the counts; a red baseline means no red produced later can be attributed to this feature
 
 ---
 
@@ -86,7 +86,7 @@ confirm one copy loads every time (`quickstart.md` pass 2).
 ### Implementation for User Story 1 — the name
 
 - [X] T005 [U1] [US1] Change `name` in `build.yaml` from `"Jellyfin New Releases"` to `"New Releases"` until T004 is green. In the same step, change `jellyfin-new-releases_` to `new-releases_` at `.github/workflows/package.yml:86` and in the comment at line 45, because `003`'s U39 derives the slug from `build.yaml` and goes red otherwise. Nothing else in the workflow changes here; T007–T012 rework it
-- [ ] T006 [US1] Update the `overview`/`description` wording in `build.yaml` only if it reads as the old name in prose. Do not touch `guid`, `targetAbi`, `framework` or `artifacts`
+- [X] T006 [US1] Update the `overview`/`description` wording in `build.yaml` only if it reads as the old name in prose. Do not touch `guid`, `targetAbi`, `framework` or `artifacts`
 
 **Checkpoint**: the names agree and the suite proves it. The workflow still publishes to Pages under the new slug.
 
@@ -121,8 +121,8 @@ rename the plugin without knowing what a rename costs.
 
 - [X] T014 [A5] [US2] Verify T004 fails for the right reason by mutating `build.yaml`'s `name`, running `--filter "FullyQualifiedName~PluginSanityTests"`, and restoring from a file copy verified with `cmp -s`. **Never restore with `git checkout --`** — it reverts the whole file to `HEAD` and takes uncommitted work with it, which has cost work twice on this project
 - [X] T015 [A6] [US2] Run `quickstart.md` pass 1, scenario 2's two mutants on `.github/workflows/package.yml` (`SC-006`) — rename the uploaded file, then move `gh release create` after `jprm repo add` — each restored from a file copy verified with `cmp -s`. Record both in `tdd/cycle-log.md`
-- [ ] T016 [P] [US2] Record the rule in `docs/http-surface.md`, or in a sibling note beside it: the plugin's displayed name is stated in `build.yaml` and `Plugin.cs`, those two must never disagree, Jellyfin groups and deletes installed copies **by name**, a rename strands every copy under the old name and costs a one-time manual removal, and JPRM derives the package slug from the name, so a rename also moves the release asset's name (`FR-008`)
-- [ ] T017 [P] [US2] Add a one-line pointer to that rule in the Conventions list of `CLAUDE.md`
+- [X] T016 [P] [US2] Record the rule in `docs/http-surface.md`, or in a sibling note beside it: the plugin's displayed name is stated in `build.yaml` and `Plugin.cs`, those two must never disagree, Jellyfin groups and deletes installed copies **by name**, a rename strands every copy under the old name and costs a one-time manual removal, and JPRM derives the package slug from the name, so a rename also moves the release asset's name (`FR-008`)
+- [X] T017 [P] [US2] Add a one-line pointer to that rule in the Conventions list of `CLAUDE.md`
 
 **Checkpoint**: the mismatch cannot return silently, and the cost of a deliberate rename is written
 down where it will be read.
@@ -131,15 +131,15 @@ down where it will be read.
 
 ## Phase 5: Polish & Release
 
-- [ ] T018 [P] Amend `specs/003-jellyfin-12-compat/contracts/plugin-repository-manifest.md`, which pins `"name": "Jellyfin New Releases"` and the Pages `sourceUrl` shape, to `New Releases` and the release-asset address — the rule `005` applied to its route contracts: a contract must not describe something the project no longer produces
+- [X] T018 [P] Amend `specs/003-jellyfin-12-compat/contracts/plugin-repository-manifest.md`, which pins `"name": "Jellyfin New Releases"` and the Pages `sourceUrl` shape, to `New Releases` and the release-asset address — the rule `005` applied to its route contracts: a contract must not describe something the project no longer produces
 - [X] T029 [U20] [U21] Write failing `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/DocumentationTests.cs::Install_NamesTheRawCatalogueAddress` (`U20`) and `::Install_NamesNoPagesAddress` (`U21`), one cycle each, against `README.md`'s `## Install` section through the existing `SectionOf`. Both red against today's README
 - [X] T019 [U20] [U21] Replace step 2 of `## Install` in `README.md` with the catalogue address `https://raw.githubusercontent.com/<owner>/<repository>/main/repo/manifest.json`, stating this repository's resolved value; drop the Pages wording, until T029 is green. `003`'s U30 must stay green
-- [ ] T020 [P] Replace the Pages address at `CHANGELOG.md:43` with the raw catalogue address, as confirmed in the planning session
+- [X] T020 [P] Replace the Pages address at `CHANGELOG.md:43` with the raw catalogue address, as confirmed in the planning session
 - [X] T030 [U22] [U23] Write failing `DocumentationTests.cs::Changelog_020_NamesTheOldNameDirectoryToRemove` (`U22`) and `::Changelog_020_NamesTheRepositoryAddressThatReplacesTheOldOne` (`U23`), one cycle each, reading the `## 0.2.0` section by the same heading rule as `entryFor` in `.github/scripts/changelog-entry.js`. Red: `CHANGELOG.md` has no `0.2.0` section
 - [X] T021 [U22] [U23] Add the `0.2.0` entry to `CHANGELOG.md`. It MUST carry `FR-007`'s one-time operator steps: that a directory remains under the old name, that it is `Jellyfin New Releases_<version>` under the server's plugin directory, that it must be removed once; that the repository address is now `https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json` and replaces the old one in Dashboard → Plugins → Repositories; and that no later upgrade needs anything, until T030 is green
-- [ ] T031 Add `007-user-view-polish`'s unreleased changes to the `0.2.0` section of `CHANGELOG.md`, read from `specs/007-user-view-polish/spec.md`, in Keep a Changelog form like the `0.1.1` entry. T030 must stay green
-- [ ] T022 Bump the version to `0.2.0` in `build.yaml` and `0.2.0.0` in `src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj`, in the same commit as T021 and T031, as the constitution requires
-- [ ] T023 Run `quickstart.md` pass 1 in full: build with zero warnings, `dotnet test`, `node --test "tests/web/*.test.js"`, and scenarios 1 and 2
+- [X] T031 Add `007-user-view-polish`'s unreleased changes to the `0.2.0` section of `CHANGELOG.md`, read from `specs/007-user-view-polish/spec.md`, in Keep a Changelog form like the `0.1.1` entry. T030 must stay green
+- [X] T022 Bump the version to `0.2.0` in `build.yaml` and `0.2.0.0` in `src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj`, in the same commit as T021 and T031, as the constitution requires
+- [X] T023 Run `quickstart.md` pass 1 in full: build with zero warnings, `dotnet test`, `node --test "tests/web/*.test.js"`, and scenarios 1 and 2
 - [ ] T024 Push to `main` and verify the CI run green (`gh run watch`). A feature is done when the CI run for that push is verified green, not when it is pushed
 - [ ] T025 Tag `v0.2.0` and run `quickstart.md` scenario 3: the GitHub Release carries `new-releases.zip`; the raw catalogue lists `0.2.0.0` only, under `name: "New Releases"`; its `sourceUrl` is the release asset, answers 200 after redirects, and its checksum matches the downloaded bytes
 - [ ] T026 [A1] [A2] [A3] [A4] `quickstart.md` pass 2 — the real-server pass on a running Jellyfin 12. **JD's own pass.** Replace the repository address first, as the `0.2.0` notes say. Steps 4–6 only show the transition survives; **step 7 is the one that matters** — publish a further release, update, and watch the old directory disappear with no manual step, which is the proof the host's cleanup is working now that the names agree. Then turn GitHub Pages off in the repository settings. Record the pass in `docs/`
