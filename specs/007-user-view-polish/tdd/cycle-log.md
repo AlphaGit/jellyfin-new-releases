@@ -893,3 +893,15 @@ them. Each commit was matched by its message and file list.
 | Cycle 57: U60 keywords | `a1e0b2f` |
 | Cycle 58: A17 | `739e6df` |
 | Refactor: one CSS rule parser | `82c8ee9` |
+
+## Maintainer decision on the second TDD audit, 2026-10-03 (T053, second audit Finding 3)
+
+**Test-after behaviours.** Each one below passed on its first run, because the page already did the
+job. Each is labelled test-after in its own cycle, with its evidence:
+
+| Behaviour | Cycle | Code that already did it | Mutants caught today |
+| --- | --- | --- | --- |
+| A16 | 54 | one colour `#00a4dc` for every link state (A13) | N10, N8, P2 |
+| A17 | 58 | no `opacity` or `filter` on a source link | P9, P10 |
+
+**Decision (maintainer, 2026-10-03): accepted**, both.
