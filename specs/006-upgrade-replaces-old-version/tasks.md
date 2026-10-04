@@ -213,3 +213,14 @@ green. The single-test command is
 - [ ] T045 Finding 14 (MED): add the missing sides of the copied predicates — a two-part tag `v1.2` accepted for `1.2.0.0`, a five-part tag rejected, and an address with no tag directory rejected by `ReleaseRootOf` (`RepositoryManifestTests.cs:285-317`). Done when each new case is observed failing against a mutant of the helper it pins
 - [ ] T046 Finding 15 (MED): decide whether U14 and U18 may pin the workflow's exact spelling (`${{ github.repository }}`, a one-line `node -e`) or should accept equivalent forms; record the decision in `tdd/cycle-log.md`, and loosen nothing without it. Done when the decision is recorded
 - [ ] T047 Findings 16–18 (LOW): rename `Install_*`/`Changelog_020_*` to the file's `Readme_` style or record why not; share the `Plugin` construction and the manifest read in `PluginSanityTests`; note T005's moved half in its task text only if the maintainer wants the record changed. Done when the suite is green and the report's LOW rows are resolved or waived in writing
+
+## Phase 7: TDD remediation (second audit)
+
+From the re-audit at `c210cd1`, verdict **FAIL**. **The feature is not done until T048, T049 and
+T036 are cleared.** T048 and T049 go through `/speckit-tdd-run`, each observed failing against its
+survivor first.
+
+- [ ] T048 Finding 19 (HIGH): pin that the release workflow moves the package after `jprm plugin build` and before `gh release create`, with a test in `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/ReleaseWorkflowTests.cs` using its `IndexOf`. Done when survivor S1 (swap `.github/workflows/package.yml:82` and `:83`) fails the suite
+- [ ] T049 Finding 20 (HIGH): pin that the `mv` source folder is the folder `jprm plugin build --output` names, in `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs`. Done when survivor S2 (`--output ./out` at `.github/workflows/package.yml:63`) fails the suite
+- [ ] T050 Findings 21–22 (MED): give U26 its own reason to fail (find the `mv` by its destination), and decide whether `MovesJprmsPackage` may pin the exact spelling or should accept equivalent forms; record the decision in `tdd/cycle-log.md`. Done when a mutant that breaks only U25's claim fails U25 alone
+- [ ] T051 Findings 23–26 (LOW): fix or waive in writing the upload-token regex (`RepositoryManifestTests.cs:142`), the independent quotes (`:48`), the overstated comment (`:259-263`) and the literal `new_releases` row (`:277`). Done when the suite is green and each is fixed or waived in `tdd/cycle-log.md`

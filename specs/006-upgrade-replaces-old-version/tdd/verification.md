@@ -3,147 +3,121 @@ feature: 006-upgrade-replaces-old-version
 verdict: FAIL
 standard: .specify/templates/overrides/tdd-test-quality-rubric.md # project override of the extension rubric (TEST_AFTER_ACCEPTED row)
 profile: .specify/memory/tdd-profile.md
-verified_at: 74313fc
-behaviors: 30
+verified_at: c210cd1
+previous_audit: 74313fc (FAIL)
+behaviors: 33
 proven: 14
 likely: 0
-test_after: 10
-test_after_accepted: 0
+test_after: 0
+test_after_accepted: 13
 no_test: 4 # A1–A4: manual by the maintainer's decision, T026 not yet run
 not_applicable: 2 # U3, U6: tests that predate 006, credited and re-read
-high_smells: 1
+high_smells: 0
 criteria_total: 11 # 5 acceptance scenarios + 6 success criteria
 criteria_covered: 3 # US2-AS1 and SC-004 (A5), SC-006 (A6); the 8 others wait on the real-server pass
 mutation_score: unmeasured # profile records mutation: null; deliberate mutants only
-deliberate_mutants: 13 run, 10 caught, 3 survived (M5, M12, M14), all inside behaviours marked DONE
-suite: 337 passed, 0 failed, 10 s (dotnet) + 358 passed, 0 failed (node)
-independent: no # this session wrote the tests; the smell pass came from a fresh-context subagent and every cited line was re-read here
+deliberate_mutants: 25 run, 23 caught, 2 survived (S1, S2), both inside behaviours marked DONE
+suite: 340 passed, 0 failed, 10 s (dotnet); node not re-run, no page or node test changed since 74313fc
+independent: no # this session wrote the tests; the smell pass came from a fresh-context subagent reading through git, and every cited line was re-read here
 ---
 
 # TDD Verification: An upgrade leaves exactly one version of the plugin running
 
-**Verdict: FAIL.** The decisive reason: three deliberate mutants survive inside behaviours marked
-`DONE`. A release workflow that moves a file JPRM never writes (M5, M14) and an address rule
-without its asset-name check (M12) both leave the suite green. M5 is the coverage `003`'s U39 had
-before 006 restated it, so an existing guard was weakened.
+**Verdict: FAIL.** The decisive reason: two deliberate mutants survive inside `U25` and `U26`, the
+behaviours the first audit's remediation added. The tests pin how the `mv` line is spelt and what
+it moves the file to. They do not pin that the move comes before the upload (S1), or that the move
+reads the folder JPRM writes to (S2). Either mutant gives a release that fails only on a real tag.
 
-Ten behaviours also have no recorded red, and no maintainer acceptance exists for them yet. The
-four host-level criteria wait on the manual real-server pass.
+The criteria gate is also still closed: the four host-level scenarios wait on the maintainer's
+manual pass.
 
-What holds: 14 behaviours are `PROVEN`. Each has its red in the cycle log and its test committed
-with its subject, and the history agrees with the log in every case. The two identity pins (`U1`,
-`U5`), the tag rule (`U8`), the catalogue address (`U14`), the permissions (`U17`), the notes
-(`U18`) and both changelog lines caught their mutants.
+What changed since `74313fc`:
+
+- **Finding 1 is cleared.** The workflow-shape mutants M5 and M14 are now caught by `U25` and `U26`.
+- **Finding 2 is cleared.** M12 is caught by `U27`.
+- **Finding 3 is cleared.** The branch is gone, and with one simulated entry the rule now rejects
+  a Pages address and accepts the `0.2.0` address.
+- **Finding 4 is cleared.** The 13 test-after behaviours meet all three conditions of
+  `TEST_AFTER_ACCEPTED`:
+  - each is labelled in the cycle log with its evidence;
+  - the maintainer's decision is dated 2026-10-04;
+  - each one's recorded mutant was re-run today and caught.
 
 ## Test-first evidence
 
-History source: 29 commits `857440d..74313fc` on `AlphaGit/tdd-run-red-green`. None is squashed or
-amended. Every cycle commit carries its test file together with its subject (`git log --name-only`).
+History source: 38 commits `857440d..c210cd1` on `AlphaGit/tdd-run-red-green`. None is squashed or
+amended.
 
 | Behavior | Class | Evidence |
 | --- | --- | --- |
-| U4 | PROVEN | cycle 1 red `lists 2 version(s), expected 0`; `857440d` test + `repo/manifest.json` |
-| U5 | PROVEN | cycle 2 red `Expected "New Releases" / Actual "Jellyfin New Releases"`; `d4237a1` |
-| U1 | PROVEN | cycle 3 red, same mismatch against `build.yaml`; `8ecf180` |
-| U24 | PROVEN | cycle 6 red `…releases/download/` vs `…/v3.0.0/`; `00c9563` (subject is the test helper `ReleaseRootOf`) |
-| U7 | PROVEN | cycle 7 red `Assert.EndsWith() Failure`; `66e198c` |
-| U8 | PROVEN | cycle 8 red `v1.2.3.0` vs `v1.2.3`; `a12cdc9` |
-| U13 | PROVEN | cycle 13 red `Assert.Matches() Failure`; `3388e4f` test + `package.yml` |
-| U14 | PROVEN | cycle 14 red `Assert.Matches() Failure`; `49b614b` |
-| U16 | PROVEN | cycle 16 red, three `Found: "actions/…"`; `ad530d2` |
-| U17 | PROVEN | cycle 17 red `Assert.DoesNotMatch() Failure`, twice; `74c16e3` |
-| U18 | PROVEN | cycle 18 red `gh release create is given no --notes-file`; `0c846ad` |
-| U20 | PROVEN | cycle 21 red `Sub-string not found`; `eb6512e` test + `README.md` |
-| U22 | PROVEN | cycle 23 red `CHANGELOG.md has no section for 0.2.0`; `d2c37f8` |
-| U23 | PROVEN | cycle 24 red `Sub-string not found`; `c918032` |
-| U2, U9, U10, U11, U12, U15, U19, U21 | TEST_AFTER | Each passed on its first run against code an earlier cycle wrote; the log records a deliberate mutant for each, but no red before the code. No maintainer acceptance is on record |
-| A5, A6 | TEST_AFTER | Closed by mutants after their units were green (cycles 5, 20); no red was recorded before `U1`/`U13`–`U19` existed. No acceptance on record |
-| U3, U6 | NOT_APPLICABLE | Tests that predate 006, re-read: they assert the literal identity strings and the frozen GUID |
-| A1, A2, A3, A4 | NO_TEST | Host-level; the maintainer chose manual tests on their own server (T026), not run yet |
+| U1, U4, U5, U7, U8, U13, U14, U16, U17, U18, U20, U22, U23, U24 | PROVEN | Unchanged from the previous audit. Each red is in the cycle log, and the commit carries the test with its subject |
+| U2, U9, U10, U11, U12, U15, U19, U21, A5, A6 | TEST_AFTER_ACCEPTED | Labelled with evidence in cycles 4, 5, 9–12, 15, 19, 20 and 22, and in the acceptance table. Accepted 2026-10-04 (`c210cd1`). Mutants caught today, see below |
+| U25, U26, U27 | TEST_AFTER_ACCEPTED | Cycles 25–27 state "test-after" with the reason. Accepted 2026-10-04. M5, M14 and M12 caught today |
+| U3, U6 | NOT_APPLICABLE | Tests that predate 006 |
+| A1, A2, A3, A4 | NO_TEST | Host-level; manual by the maintainer's decision (T026), not run |
 
-To move the ten `TEST_AFTER` rows to `TEST_AFTER_ACCEPTED`, the rubric override needs three things
-for each one:
+### Existing tests changed since `74313fc`
 
-- the cycle log labels the behaviour test-after with its evidence;
-- the cycle log records the maintainer's dated decision to accept it;
-- a recorded mutant inside it is caught today.
+`Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` lost its `if (versions.Count > 0)`.
 
-The third holds for all ten. The first is partly there, as "red: none on the first run". The second
-is missing for every one of them.
+- **Before:** the per-entry rule ran only inside the branch.
+- **After:** `Assert.All` reads the root inside its lambda.
 
-### Existing tests changed by 006
-
-| Test | Before | After | Judgment |
-| --- | --- | --- | --- |
-| `003` U39 `RepositoryManifestTests.cs:107-112` | `Assert.Contains($"{Slug}_${{ steps.ver.outputs.version4 }}.zip", workflow)` tied the slug to the file JPRM builds | anchored match on the `gh release create` upload name only | **Weakened.** The tie to JPRM's output name is gone; M5 proves it (finding 1) |
-| `003` U27 `ReleaseWorkflowTests.cs:38-45` | `build < add < commit < deploy` | `build < release < add < commit` | Legitimate: `deploy` left with Pages (`FR-012`), and `U16` pins its absence. `build < add` holds by transitivity |
-| `003` U23/U25 count `RepositoryManifestTests.cs:32` | `PublishedVersionsToday = 2` | `0` | Rule change decided by the spec (session 2026-10-04). It leaves no real entry for the per-entry rules until `0.2.0` ships (finding 3) |
-| `003` U25 helper `:296-303` | `StartsWith(root)` + `EndsWith($"{Slug}_{number}.zip")` | `StartsWith(root+"v")` + `EndsWith("/{Slug}.zip")` + tag equality | Stricter, but its `EndsWith` is unpinned (finding 2) |
-| `003` U26 rows `:238-240` | rejected for "another site / another version / no version" | still rejected, but the first prefix check rejects rows 239–240 before their stated reason is reached | Kept, but they no longer test what they say (finding 6) |
-| `003` U40 `:128-136` | Pages-shape literals | release-shape literals, assertions unchanged | Legitimate (cycle 7) |
-| `003` U41 `:142` | root = directory of the file | root = above the tag directory | Behaviour change with its own red (`U24`) |
+The rule is the same for every catalogue, and it is now reachable. No assertion was removed or
+loosened in `8a73458..c210cd1`; the smell pass confirmed this from the diff.
 
 ### `tasks.md` against the list
 
 - No task is ticked against a behaviour that is not `DONE`.
-- T005 `[U1]` is ticked, but its second half (the `package.yml:86` path) did not happen in that
-  cycle. Cycle 3 records the move to T013, and T013 is done. LOW, recorded.
-- T026 `[A1]–[A4]` is open, correctly.
+- T034 and T035 meet their own "done when", but they have no behaviour marker, so they are
+  unticked and wait for `/speckit-implement`. The auditor does not tick them.
 
 ## Findings
 
+Open from the previous audit, unchanged: findings 5 to 18 of `74313fc`. They are carried here
+under their task ids T036–T047. New findings come first.
+
 | # | Severity | Finding | Evidence |
 | --- | --- | --- | --- |
-| 1 | HIGH | **Surviving mutants inside U13; existing guard weakened.** Nothing ties the workflow's `mv` source to the file JPRM writes, or the `mv` target to the uploaded file. A workflow that moves `jellyfin-new-releases_<v4>.zip` (M5) or writes `new-release.zip` (M14) stays green, and fails only on a real tag. It should assert the `mv` source is `{Slug}_${{ steps.ver.outputs.version4 }}.zip` and its target is the file `gh release create` uploads | `.github/workflows/package.yml:82-83`; `RepositoryManifestTests.cs:107-112`; M5, M14 |
-| 2 | HIGH | **Surviving mutant inside U11.** Deleting `Assert.EndsWith(asset, …)` leaves all accepting and rejecting rows green. `v1.0.0.0/new-releases_1.0.0.0.zip` is still rejected, through the slice and `Equal`, and no row pairs the right tag with a wrong asset name of the same length. It should add rejecting rows such as `v1.0.0.0/new_releases.zip` and `v1.0.0.0/{another slug}.zip` | `RepositoryManifestTests.cs:302`, rows `:238-243`; M12 |
-| 3 | HIGH | **Conditional logic in a changed test (003 code).** `Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` asserts only inside `if (versions.Count > 0)`. 006's U4 set the count to 0, so the branch never runs, and the test now asserts only the count `:94` already pins. The source-address rule binds no real catalogue entry until `0.2.0` ships. It should assert without a branch, so it is non-vacuous the moment an entry appears | `RepositoryManifestTests.cs:220-230`; branch from `b62fbd7` (003) |
-| 4 | HIGH (gate) | **Ten behaviours without a recorded red** and with no maintainer acceptance: U2, U9, U10, U11, U12, U15, U19, U21, A5, A6. Each has a mutant caught today, except U11's own guard (finding 2) | `tdd/cycle-log.md` cycles 4, 5, 9–12, 15, 19, 20, 22 |
-| 5 | HIGH (gate) | **Eight criteria without an executed test:** US1-AS1–AS4, SC-001, SC-002, SC-003, SC-005. The suite cannot reach them by design; the maintainer runs them by hand in T026, and that has not been run | `tdd/test-list.md` A1–A4; `tasks.md` T026 |
-| 6 | MED | `003`'s rejecting rows `jellyfin-new-releases_2.0.0.0.zip` and `jellyfin-new-releases.zip` now fail the first `StartsWith(root+"v")`, so neither tests "another version" or "no version" as its name says | `RepositoryManifestTests.cs:239-240` |
-| 7 | MED | **Predicate without a table.** The permissions check `^\s*pages\s*:` misses `permissions: write-all` and the flow form `{ pages: write }`. `tdd-profile.md` requires a `[Theory]` of accepting and rejecting cases for a predicate | `ReleaseWorkflowTests.cs:62-72` |
-| 8 | MED | **Shape, not dataflow.** U18 passes as long as the notes path and the version stand on the `entryFor(` line. Swapping `process.argv[1]` and `[2]` would still pass. It should run the notes command, or move it into `changelog-entry.js` and test it with node | `ReleaseWorkflowTests.cs:79-88`; `package.yml:81` |
-| 9 | MED | **Re-implemented reader.** `ChangelogSection` copies `entryFor` without its trim and empty-section rule. If the two drift, the test reads text the release does not publish | `DocumentationTests.cs:103-112` |
-| 10 | MED | **Missing pin of the canonical value.** `FR-004` fixes `New Releases`, but `U1`/`U5` only compare two derived values. Changing `Plugin.cs`, `build.yaml` and the catalogue together stays green, unlike `Plugin_Guid_IsStable` | `PluginSanityTests.cs:37,66` |
-| 11 | MED | **Weaker than the requirement.** U22 asserts only `Jellyfin New Releases_`. `FR-007` also asks for "once" and "how to recognise it", and the test's comment claims "and nothing else", which nothing asserts | `DocumentationTests.cs:114-123` |
-| 12 | MED | **Mystery guest / isolation.** `RepositoryManifestTests` reads `package.yml` in a static initializer. A broken workflow file fails the pure predicate tests (U7–U12, U24) with `TypeInitializationException` | `RepositoryManifestTests.cs:21-22` |
-| 13 | MED | **Magic values.** The rejecting rows hard-code `new-releases`/`jellyfin-new-releases`, while the class says it is slug-agnostic for forks. After a rename the rows are rejected for the wrong reason | `RepositoryManifestTests.cs:238-243`, `:35-36` |
-| 14 | MED | **Predicate copied from the workflow with one side missing.** `InFourParts` has no two-part (`v1.2`) or five-part case, and `ReleaseRootOf` has no rejecting case (an address with no tag directory) | `RepositoryManifestTests.cs:285-290,309-317` |
-| 15 | MED | **Coupled to the implementation.** U14 needs the literal `${{ github.repository }}`, and U18 needs a one-line `node -e`. Equivalent rewrites of the workflow turn them red | `RepositoryManifestTests.cs:123`; `ReleaseWorkflowTests.cs:85-87` |
-| 16 | LOW | **Foreign style.** The prefixes `Install_`/`Changelog_020_` differ from the file's `Readme_`, and `003`'s U30 is now a subset of U20 | `DocumentationTests.cs:65,79,93,120,131` |
-| 17 | LOW | **Duplicated setup.** `new Plugin(Substitute…, Substitute…)` repeated, and U5 parses the manifest again instead of sharing `TheOnlyPlugin` | `PluginSanityTests.cs:33,48,61-64` |
-| 18 | LOW | T005 is ticked though its workflow half moved to T013 (see `tasks.md` above) | `tasks.md` T005; cycle 3 |
-
-Vetted from the subagent's report and dropped: "U40 works only because both hosts have the same
-length". `StartsWith` rejects any different host, whatever its length.
+| 19 | HIGH | **Surviving mutant inside U26 (S1).** With `gh release create` moved above `mv`, the suite stays at 340 passed. Nothing orders the move before the upload, although U26's own comment names this failure. It should also assert that the `mv` index is above the `jprm plugin build` index and below the `gh release create` index, as `ReleaseWorkflowTests.IndexOf` does for the other steps | `package.yml:82-83`; `RepositoryManifestTests.cs:134-147` |
+| 20 | HIGH | **Surviving mutant inside U25 (S2).** With `jprm plugin build … --output ./out`, the suite stays green, and the `mv` then reads a folder JPRM never wrote. U25 pins the literal `./artifacts`, not the folder JPRM writes to. It should assert that the `mv` source folder equals the `--output` argument of `jprm plugin build` | `package.yml:63,82`; `RepositoryManifestTests.cs:47-48,126-131` |
+| 5 | HIGH (gate) | **Eight criteria without an executed test:** US1-AS1–AS4, SC-001, SC-002, SC-003, SC-005. Manual, the maintainer's own pass (T026, T036) | `tdd/test-list.md` A1–A4 |
+| 21 | MED | **Redundant test.** U26 matches the same `MovesJprmsPackage` pattern that U25 asserts, so one bug fails both. It should find the `mv` by its destination | `RepositoryManifestTests.cs:130,141` |
+| 22 | MED | **Spelling, not meaning.** `MovesJprmsPackage` needs the literal `${{ steps.ver.outputs.version4 }}` with inner spaces, plain `mv`, and `./artifacts`. Equivalent workflow lines (`${{steps.ver.outputs.version4}}`, `mv -f`, `cp`) fail it, and the padding loop (`-lt 3`) is not tied to it | `RepositoryManifestTests.cs:47-48`; `package.yml:48` |
+| 23 | LOW | The upload regex takes the token after the tag as the file. A flag before the file, a `\` continuation, or `artifacts/x.zip` against `./artifacts/x.zip` would give a false red | `RepositoryManifestTests.cs:142` |
+| 24 | LOW | The two `"?` in `MovesJprmsPackage` are independent, so an unterminated quote — a shell error — still matches | `RepositoryManifestTests.cs:48` |
+| 25 | LOW | The comment "binds the first published version the moment it appears" overstates. The count check fails first, and the rule binds only once `PublishedVersionsToday` is raised. A bad `versions[0]` is also now reported against every entry | `RepositoryManifestTests.cs:259-263` |
+| 26 | LOW | Magic value: the row `new_releases` is literal while the class derives `Slug` for forks. It could be derived, e.g. `Slug.Replace('-', '_')`, with a guard that the two differ | `RepositoryManifestTests.cs:277` |
 
 ## Mutation results
 
-No mutation tool is installed (`mutation: null`). There were 13 deliberate mutants, one at a time.
-Each was restored by a byte copy (`filecmp`) and confirmed by a clean `git diff` and a green full
-suite (337) before the next one. A first run was stopped after M1. Its restore kept the backup's
-old timestamp, MSBuild reused the mutated DLL, and the suite stayed red after the restore. The tree
-was rebuilt and confirmed green, and all 13 mutants were run again with the fixed restore. Only the
-second run is recorded here.
+No mutation tool (`mutation: null`). There were 25 deliberate mutants, one at a time. Each was
+restored by a byte copy with a fresh timestamp (so MSBuild recompiles), confirmed with `filecmp`
+and a clean `git diff`, and followed by a full suite run (340) before the next one. After the run,
+the tree was clean and had no backup left.
 
 | Mutant | File | Behavior | Survived | Judgment |
 | --- | --- | --- | --- | --- |
-| M1 `Name` → `"New Release"` | `Plugin.cs:31` | U1, U5 | No | caught by both |
-| M2 `name` → `"New releases"` (case only) | `build.yaml:3` | U1 | No | the ordinal comparison is pinned |
-| M3 catalogue `name` → old name | `repo/manifest.json` | U5 | No | caught |
-| M4 `InFourParts` pads to 3 parts | test helper `:311` | U8 | No | caught |
-| M5 `mv` source → `jellyfin-new-releases_<v4>.zip` | `package.yml:82` | U13 | **Yes** | real: a workflow that cannot find its package ships green (finding 1) |
-| M6 `--plugin-url` tag → `v<version4>` | `package.yml:88` | U14 | No | caught |
-| M7 `pages: write` added back | `package.yml:12` | U17 | No | caught |
-| M8 `--notes-file` path differs from the written one | `package.yml:83` | U18 | No | caught |
-| M9 README address `main` → `master` | `README.md` | U20 | No | caught |
-| M10 old folder name removed from 0.2.0 | `CHANGELOG.md` | U22 | No | caught |
-| M11 0.2.0 address `main` → `master` | `CHANGELOG.md` | U23 | No | caught |
-| M12 `EndsWith(asset)` deleted | test helper `:302` | U11 | **Yes** | real: no row tests the asset name alone (finding 2) |
-| M14 `mv` target → `new-release.zip` | `package.yml:82` | U13 | **Yes** | real: same gap as M5 (finding 1) |
+| `Name` = `"JELLYFIN New Releases"` | `Plugin.cs` | U2 | No | condition 3 for U2 |
+| `name` = `"New Releases Tracker"` | `build.yaml` | A5 | No | condition 3 for A5 |
+| tag-to-version line deleted | test helper | U9 | No | condition 3 for U9 |
+| Pages-era rule restored | test helper | U10 | No | condition 3 for U10 |
+| asset `"/{Slug}_{number}.zip"` | test helper | U11 | No | condition 3 for U11 |
+| root from the entry itself | test helper | U12 | No | condition 3 for U12 |
+| release step after `repo add` | `package.yml` | U15 | No | condition 3 for U15 |
+| notes line below `gh release create` | `package.yml` | U19 | No | condition 3 for U19 |
+| uploaded file `plugin.zip` | `package.yml` | A6 | No | condition 3 for A6 |
+| Pages address added to Install | `README.md` | U21 | No | condition 3 for U21 |
+| M5 `mv` source `jellyfin-new-releases_…` | `package.yml:82` | U25 | No | cleared finding 1 |
+| M14 `mv` target `new-release.zip` | `package.yml:82` | U26 | No | cleared finding 1 |
+| M12 `EndsWith(asset)` deleted | test helper | U27 | No | cleared finding 2 |
+| M1–M4, M6–M11 (as in `74313fc`) | various | U1, U5, U8, U14, U17, U18, U20, U22, U23 | No | all still caught |
+| **S1** `gh release create` above `mv` | `package.yml:82-83` | U26 | **Yes** | real: the upload runs before the file exists (finding 19) |
+| **S2** `--output ./out` | `package.yml:63` | U25 | **Yes** | real: `mv` reads a folder JPRM never wrote (finding 20) |
 
-Sampled: U1, U5, U8, U11, U13, U14, U17, U18, U20, U22, U23. Not sampled here: U2, U4, U7, U9,
-U10, U12, U15, U16, U19, U21, U24. Each of those has a mutant in the cycle log, from the same
-session that wrote it. M13 was defined and skipped as a duplicate of M14.
+S1 and S2 were proposed by the fresh-context smell pass and confirmed here. The pass also proposed
+`-lt 3` → `-lt 2` in the padding loop. That mutant was not run here; it is recorded under
+finding 22.
 
 ## Traceability
 
@@ -153,36 +127,20 @@ session that wrote it. M13 was defined and skipped as a duplicate of M14.
 | US1-AS2, SC-002 | A2 — manual, T026 | No |
 | US1-AS3 | A3 — manual, T026 | No |
 | US1-AS4, SC-003 | A4 — manual, T026 | No |
-| US2-AS1, SC-004 | A5 ← U1, U2, U5 | Yes, at suite level (mutant cycle 5, M1–M3 here) |
+| US2-AS1, SC-004 | A5 ← U1, U2, U5 | Yes, at suite level |
 | SC-005 | none in the suite; T026 steps 4–5 | No |
-| SC-006 | A6 ← U7–U19, U24 | Yes at suite level, with the gaps of findings 1–2 |
+| SC-006 | A6 ← U7–U19, U24–U27 | Yes at suite level, with the gaps of findings 19–20 |
 
-Functional requirements that reach a test:
-
-- `FR-004` (U1, U2, U5);
-- `FR-004a` (U3);
-- `FR-005` (A5);
-- `FR-007` (U22, U23);
-- `FR-009`, as the catalogue half (U4, U7, U9);
-- `FR-010` (U7–U14, U24);
-- `FR-011` (U15, U18, U19);
-- `FR-012` (U10, U16, U17, U20, U21).
-
-No test: `FR-001`, `FR-002`, `FR-003` and `FR-007a` (host-level), `FR-006` (guarded only by the
-unchanged suite) and `FR-008` (prose).
-
-Tests tracing to nothing: none. Every claimed test exists and ran in the 337.
+Tests tracing to nothing: none. Every claimed test exists and ran in the 340.
 
 ## What was not audited
 
-- Mutation by a tool: none is installed. Thirteen hand mutants are a sample, not a score.
+- Mutation by a tool: none is installed. The 25 hand mutants are a sample, not a score.
+- The padding-loop mutant (`-lt 2`) and the equivalent-spelling cases of finding 22: not run.
 - Coverage: `coverlet.collector` is not referenced.
-- The real release workflow: no tag was pushed. Its shape is tested; its run is T025.
-- The host-level criteria (A1–A4, SC-005): manual, the maintainer's own pass, not run.
-- The node suite: 006 changed no page or node test; it was run (358 passed), not graded.
-- `docs/plugin-name.md`, `CLAUDE.md` and the `003` contract amendment: prose, read for accuracy,
-  not tested.
-- Independence: the tests and this audit come from one session. The smell pass came from a
-  fresh-context subagent and every line it cited was re-read here. The ten `TEST_AFTER` rows and
-  the cycle-log mutants were not re-run by anyone independent.
-- Performance: no criterion asks for it. The suite takes 10 s.
+- The real release workflow: no tag pushed (T025).
+- The host-level criteria (A1–A4, SC-005): manual, not run.
+- The node suite: not re-run; nothing it covers changed since `74313fc`, when it passed 358.
+- MED and LOW findings 6–18 from `74313fc`: carried forward unchanged, not re-examined.
+- Independence: tests and audit come from one session. The smell pass on the delta came from a
+  fresh-context subagent and every line it cited was re-read here.
