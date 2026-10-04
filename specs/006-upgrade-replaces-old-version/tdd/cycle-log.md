@@ -689,3 +689,14 @@ Structural only; the suite is 350 passed before and after, and no assertion chan
   `"?` are independent. Both follow the spelling decision recorded under T050: the tests pin the
   workflow as written, and a deliberate rewrite updates the test.
 - **Fixed, finding 26:** done in T044.
+
+## Maintainer decision, 2026-10-04: U28 and U29 accepted as test-after
+
+The maintainer accepted `U28` and `U29` as **test-after** on 2026-10-04. Neither could have a red
+before its code: the workflow already moved the package between build and release, and from the
+folder JPRM writes, when the second audit found both unpinned.
+
+| Behaviour | Cycle | Why no red was possible | Recorded mutant caught |
+| --- | --- | --- | --- |
+| U28 | 28 | the `mv` sat between build and release since cycle 13 | S1, `mv` and `gh release create` swapped |
+| U29 | 29 | both folders were `./artifacts` before 006 | S2, `--output ./out` |
