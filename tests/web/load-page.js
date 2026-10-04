@@ -139,4 +139,9 @@ function renderedList(body, { archive = false } = {}) {
     };
 }
 
-module.exports = { loadPage, loadPageDom, settled, renderedList };
+/** A page's source as text, for the static markup and the `<style>` block the stand-in does not model. */
+function pageSource(fileName) {
+    return fs.readFileSync(path.join(WEB_DIR, fileName), 'utf8');
+}
+
+module.exports = { loadPage, loadPageDom, settled, renderedList, pageSource };

@@ -1,15 +1,14 @@
 'use strict';
 
-const fs = require('node:fs');
-const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { pageSource } = require('./load-page.js');
 
 // 007 US2–US4: the stylesheet rules the view's layout and contrast depend on. The fake DOM does no
 // layout (specs/005-page-json-casing/contracts/page-sandbox.md), so these assert the declarations
 // in the page's own `<style>` block. Pixels are checked in the real-browser pass, quickstart.md §2.
 
-const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web', 'user-view.html'), 'utf8');
+const PAGE = pageSource('user-view.html');
 const STYLE = /<style>([\s\S]*?)<\/style>/.exec(PAGE)[1];
 const SCOPE = '#nr-user-view ';
 

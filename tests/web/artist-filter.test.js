@@ -1,10 +1,8 @@
 'use strict';
 
-const fs = require('node:fs');
-const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { loadPageDom, settled } = require('./load-page.js');
+const { loadPageDom, settled, pageSource } = require('./load-page.js');
 
 // 007 US1: the Artist filter is a native suggestion list (`<input list>` + `<datalist>`). The
 // browser does the matching (FR-001), so these tests assert what the page writes into the list
@@ -158,7 +156,7 @@ test('A1, A2: in a library of 1,000 artists every name is suggested, and the las
 });
 
 /** The page source, for the declarations the fake DOM does not model. */
-const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web', 'user-view.html'), 'utf8');
+const PAGE = pageSource('user-view.html');
 
 test('A5: the Artist control is a text input labelled "Artist" and bound to the suggestion list', () => {
     // Exactly as contracts/user-view.md writes it: `autocomplete="off"` keeps the browser's own history out of the suggestions.

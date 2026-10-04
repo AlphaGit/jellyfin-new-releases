@@ -223,12 +223,15 @@ test('A12: an Archive-tab row writes Restore inside .nr-actions, under the same 
     assert.match(panel, /<div class="nr-actions"><button type="button" data-action="Restore"/);
 });
 
+/** Where each source link of the row with `id` points, as a browser reads it, in order. */
+const sourceLinks = (panel, id) => [...rowOf(panel, id).matchAll(/<a href="([^"]*)" target="_blank"/g)].map(([, href]) => decoded(href));
+
 // U70, characterization (maintainer decision T083): the source links predate 007. This pins what they
 // already do, so a change to where they point fails here.
 test('U70: each source link of a row points at its source URL, in order', () => {
     const body = fixture('releases.json');
     const { panel } = renderedList(body);
-    const hrefs = item => [...rowOf(panel, item.id).matchAll(/<a href="([^"]*)" target="_blank"/g)].map(([, href]) => decoded(href));
+    const hrefs = item => sourceLinks(panel, item.id);
 
     assert.deepEqual(body.items.map(hrefs), body.items.map(item => item.sources.map(source => source.url)));
 });
@@ -239,7 +242,7 @@ test('U77: a release with three sources shows three links, in order', () => {
     const three = { ...body.items[0], sources: [...body.items[0].sources, { source: 'musicbrainz', url: 'https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000199' }] };
     const { panel } = renderedList({ ...body, items: [three] });
 
-    assert.deepEqual([...rowOf(panel, three.id).matchAll(/<a href="([^"]*)" target="_blank"/g)].map(([, href]) => decoded(href)), three.sources.map(source => source.url));
+    assert.deepEqual(sourceLinks(panel, three.id), three.sources.map(source => source.url));
 });
 
 // 007 T091 group B, characterization (BASELINE): the page shows the right words. Only the sentences no

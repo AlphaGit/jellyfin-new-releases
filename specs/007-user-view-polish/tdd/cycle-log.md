@@ -1633,3 +1633,12 @@ as it should. H5 and J3 now lie outside A15 and U68 as narrowed (T099).
   where the helper lives since T094. Its rows are named for the helper, and they say U71 and U57 rely
   on it
 - no behaviour change. Suite -> node 358 passed. B84, Y4 and E2 still fail their tests
+
+## Tidy: one copy of each repeated setup (T104, eighth audit Finding 7)
+
+- the page source: `artist-filter`, `markup`, `styles` and `view` each read `user-view.html` with their
+  own `fs.readFileSync`. They now call `pageSource('user-view.html')` from `tests/web/load-page.js`
+- the source-link reader: U70 and U77 share `sourceLinks(panel, id)` in `render.test.js`
+- the action tests: the U72 rows set up the page through `loadedView`, as the rest of
+  `requests.test.js` does
+- no behaviour change; green to green. Suite -> node 358 passed, also under `LANG=de_DE.UTF-8`

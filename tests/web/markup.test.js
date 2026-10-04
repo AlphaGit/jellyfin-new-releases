@@ -2,9 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const { loadPageDom, settled, renderedList } = require('./load-page.js');
+const { loadPageDom, settled, renderedList, pageSource } = require('./load-page.js');
 const { declaredIds, FakeElement } = require('./fake-dom.js');
 const { fixture } = require('./fixtures.js');
 
@@ -13,7 +11,7 @@ const { fixture } = require('./fixtures.js');
 // attribute, or a duplicate in capital letters fails here until the lists below are reviewed. Attribute
 // values are left to the behaviour tests; this file pins the shape.
 
-const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web', 'user-view.html'), 'utf8');
+const PAGE = pageSource('user-view.html');
 
 /** An attribute value: double-quoted, single-quoted, or unquoted. */
 const VALUE = String.raw`"[^"]*"|'[^']*'|[^\s"'=<>\x60]+`;

@@ -64,8 +64,7 @@ test('the administrator page asks for its status and posts its actions', async (
 // browser builds it from the markup the view writes, and the click is handed to the panel's listener.
 for (const action of ['Ignore', 'HaveIt', 'Restore']) {
     test(`U72: the ${action} button posts ${action} for the release of its row`, async () => {
-        const { requests, document } = recordRequests('user-view.html', { items: [], hasStoredReleases: false });
-        await settled();
+        const { requests, document } = await loadedView({ items: [], hasStoredReleases: false });
         const { button } = actionRow({ id: '102', title: 'Kill for Love', action });
 
         document.getElementById('nr-panel').listeners.click[0]({ target: button });
@@ -76,8 +75,7 @@ for (const action of ['Ignore', 'HaveIt', 'Restore']) {
 }
 
 test('U72: a click inside a row but not on a button posts nothing', async () => {
-    const { requests, document } = recordRequests('user-view.html', { items: [], hasStoredReleases: false });
-    await settled();
+    const { requests, document } = await loadedView({ items: [], hasStoredReleases: false });
     const { actions } = actionRow();
 
     document.getElementById('nr-panel').listeners.click[0]({ target: actions });
