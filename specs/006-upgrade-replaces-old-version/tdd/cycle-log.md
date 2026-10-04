@@ -377,3 +377,17 @@ failed before the implementation.
 - commit: see the commit that carries this entry
 - note: the heading says `unreleased`; the release date replaces it when `0.2.0` is tagged.
   `entryFor` matches `## 0.2.0 ` followed by anything, so the release step reads it either way
+
+## Cycle 24: U23 the `0.2.0` section names the address that replaces the old repository address
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/DocumentationTests.cs::Changelog_020_NamesTheRepositoryAddressThatReplacesTheOldOne` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DocumentationTests.Changelog_020_NamesTheRepositoryAddressThatReplacesTheOldOne" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Contains() Failure: Sub-string not found` / `Not found: "https://raw.githubusercontent.com/AlphaGi"···` (1 failed)
+- green: the "Upgrading from 0.1.x — once" list gains "Replace the repository address", naming
+  the raw catalogue address, where to change it, and that a server left on the old address sees no
+  later version. Suite -> 337 passed, 0 failed. (A first edit attempt did not apply — its anchor
+  text did not match the wrapped lines — so the suite ran once more on red before the real edit;
+  that run was not a green.)
+- refactor: the catalogue address is now written twice in this class; extracted in its own
+  structural commit after this one
+- commit: see the commit that carries this entry

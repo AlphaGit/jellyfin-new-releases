@@ -13,6 +13,10 @@ All notable changes to this project are documented here. The format follows
   `Jellyfin New Releases_<version>` beside the new `New Releases_0.2.0.0`. Stop the server, delete
   the `Jellyfin New Releases_<version>` folder and nothing else, and start it again. No later
   upgrade needs this.
+- **Replace the repository address.** The catalogue is no longer served from GitHub Pages. In
+  Dashboard → Plugins → Repositories, replace the old `github.io` address with
+  `https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json`.
+  A server left on the old address does not see 0.2.0 or any later version.
 
 ## 0.1.1 — 2026-09-20
 

@@ -119,6 +119,20 @@ public class DocumentationTests
     }
 
     /// <summary>
+    /// 006 U23: the old catalogue address stops answering once Pages is off, and a server still
+    /// pointed at it never sees 0.2.0 or anything after. The renaming release's notes must give
+    /// the address that replaces it (006 FR-007).
+    /// </summary>
+    [Fact]
+    public void Changelog_020_NamesTheRepositoryAddressThatReplacesTheOldOne()
+    {
+        Assert.Contains(
+            "https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json",
+            ChangelogSection("0.2.0"),
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// U38: the rule above is a predicate, and a predicate needs a table. These cases were
     /// written from the requirement — "the README must not claim support for 10.11, but may say
     /// it was dropped" — before the predicate existed. An earlier attempt at this check passed a
