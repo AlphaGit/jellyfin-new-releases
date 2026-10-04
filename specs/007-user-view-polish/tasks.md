@@ -349,3 +349,23 @@ each one.
 - [X] T083 Finding 5 (MED): maintainer decision on Y4, Y8 and Y9, the survivors in behaviours that predate 007. Open a separate spec for them, or record why not. Done when a dated cycle-log entry records the decision.
 - [X] T084 Finding 6 (MED): move the `imgAttribute` table out of `tests/web/markup.test.js:43-52`, to the file of its users or to a file for `cover-markup.js`. Done when `markup.test.js` holds only U68's tests and helpers and `node --test "tests/web/*.test.js"` is green.
 - [X] T085 Finding 7 (LOW): keep one copy of `settled`, of the two-route `ApiClient` stub, and of the render-to-panel helper, in the page-side helpers. Done when `grep -n "const settled" tests/web/*.test.js` finds none and `node --test "tests/web/*.test.js"` is green.
+
+---
+
+## Phase 14: TDD remediation
+
+From the seventh [`tdd/verification.md`](./tdd/verification.md) (verdict **FAIL**, audited at
+`3f9061f`). **The feature is not done until T086–T090 are cleared.** Each mutant (H*, J*) is listed in
+the report's "Mutation results" and in the runner the audit used. Apply each mutant to a file copy,
+then restore it and check the restore. Never use `git checkout`. Run the whole page-side suite for
+each one.
+
+- [ ] T086 Finding 1 (HIGH): the maintainer reviews `TEMPLATES` and `RUNTIME` in `tests/web/markup.test.js:129-145, 176-182` against `src/Jellyfin.Plugin.NewReleases/Web/user-view.html`, and the review goes into a dated cycle-log entry that names the reviewed commit. Done when the entry exists. [U68]
+- [ ] T087 [US1] Finding 2 (HIGH): add A15 rows for a precomposed non-ASCII name (`Björk`, `Sigur Rós`), a test with 1,000 artists whose last one is suggested and applies, and run A15 under `LANG=tr_TR.UTF-8` with a name that holds `I`. Add the Turkish run to the profile's locale check. Observe each red against its mutant. Done when mutants H1, H2, H3 and H5 each fail the page-side suite (H5 under `LANG=tr_TR.UTF-8 node --test "tests/web/*.test.js"`). [A1] [A2] [A15]
+- [ ] T088 [US1] Finding 3 (HIGH): make A5 in `tests/web/artist-filter.test.js:136-138` assert that the Artist input carries exactly the attributes and values of `contracts/user-view.md:12`. Done when mutant H4 (`autocomplete="on"`) fails `node --test "tests/web/*.test.js"`. [A5]
+- [ ] T089 [US4] Finding 4 (HIGH): extend U68's runtime test in `tests/web/markup.test.js:184-206` with an action click (through `actionRow`), an Artist `input`, an image `error` and a failed load. Done when mutant J3 (`style` written on the panel on an action click) fails `node --test "tests/web/*.test.js"`. [U68]
+- [ ] T090 Finding 5 (HIGH): split the `closest` test in `tests/web/fake-dom.test.js:70-77` into one table row per case, including an element that lacks the attribute, several classes, a digit in a tag, `*` and the empty selector. Give U72 in `tests/web/requests.test.js:97-107` a second action and a click outside any button. Correct the comment at `tests/web/render.test.js:119-121`. Done when mutants J5 and J4 each fail `node --test "tests/web/*.test.js"`. [U69] [U72]
+- [ ] T091 Finding 6 (MED): maintainer decision on the view's untested pre-007 behaviour (H6, H7, H9, H10, J1 and the probe's other survivors): a separate spec, or more characterization in 007. Done when a dated cycle-log entry records the decision.
+- [ ] T092 Finding 7 (MED): name in `tests/web/markup.test.js:131-145` the fixture facts the repeated shapes depend on (two sources for 101, two missing tracks for 102, two artists), or derive the counts from the fixture. Done when `node --test "tests/web/*.test.js"` is green and each repeated shape has its reason beside it.
+- [ ] T093 Finding 8 (MED): move U71 out of `tests/web/requests.test.js:61-94` to a file whose subject is the view's listeners, and name it in the profile. Done when `node --test "tests/web/*.test.js"` is green and Y4 still fails it.
+- [ ] T094 Finding 9 (LOW): share one `once`/`signal` rule between `keepsListening` and `capturesEveryError` (safe on `null`); rename `load-page.js`'s `rendered` and `markup.test.js`'s `DETAILS` to names that say what they hold; correct the U68 row of `tdd/test-list.md` and the header of `tests/web/cover-markup.js`. Done when `node --test "tests/web/*.test.js"` is green and E2 and Y4 still fail it.
