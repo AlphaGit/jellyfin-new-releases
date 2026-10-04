@@ -1371,3 +1371,22 @@ maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
   live in `tests/web/load-page.js`, `actionRow` in `tests/web/fake-dom.js`, and `markup.test.js` has
   one `artistsAndReleases`. `panelFor` is a one-line view of `rendered`
 - no behaviour change; green to green. Suite -> node 320 passed before and after
+
+## Commits of the sixth remediation
+
+| Entry | Commit |
+| --- | --- |
+| Sixth TDD audit report and Phase 13 tasks | `eeedea7` |
+| Maintainer decisions on the sixth TDD audit (T079, T083) | `d7336a1` |
+| Cycle 69: U68 per-template order | `0d6e599` |
+| Cycle 70: U68 runtime writes | `6118df4` |
+| Cycle 71: `signatures` reads every tag | `acd0071` |
+| Cycle 72: U69 `closest` | `578e818` |
+| Cycle 73: U70 source `href` | `f0a755d` |
+| Cycle 74: U71 listeners | `2055465` |
+| Cycle 75: U72 action path | `7c4cc9a` |
+| Refactor: cover-markup reader's table | `2144808` |
+| Refactor: one copy of each helper | `531493b` |
+
+All 90 mutants of the sixth audit, run at `531493b`, fail their tests except the control E1, which
+passes as it should. K1 fails U67 only.
