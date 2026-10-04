@@ -251,7 +251,7 @@ never `git checkout`.
 - [X] T047 [US1] Finding 8 (LOW): in `tests/web/artist-filter.test.js:95-97, 133-136`, assert on the requests sent after typing (`requests.slice(before)`), not on the initial load. Add a `change` (leave the field) case for US1-AS4. Done when `node --test tests/web/artist-filter.test.js` is green and R3 still fails A4.
 - [X] T048 Finding 9 (LOW): make `tests/web/cover-fallback.test.js:54-69` share one cover-markup reader with `tests/web/render.test.js:186-200`, with one decoding rule. Done when `node --test "tests/web/*.test.js"` is green and mutants N3 and N4 still fail.
 - [X] T049 Finding 10 (LOW): let U57 in `tests/web/cover-fallback.test.js:46` accept either `true` or `{ capture: true }`. Done when mutant N5 (`false`) still fails it.
-- [ ] T050 Finding 11 (LOW): after the maintainer's push, verify the CI run with `gh run list --branch main` and record it, or untick T026 until then.
+- [X] T050 Finding 11 (LOW): after the maintainer's push, verify the CI run with `gh run list --branch main` and record it, or untick T026 until then. Done: `main` pushed at `8875456` on 2026-10-04; CI run `37167992270` (`build`) passed.
 
 ---
 
