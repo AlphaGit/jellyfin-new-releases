@@ -232,3 +232,12 @@ test('U70: each source link of a row points at its source URL, in order', () => 
 
     assert.deepEqual(body.items.map(hrefs), body.items.map(item => item.sources.map(source => source.url)));
 });
+
+// 007 T091 group A, characterization (BASELINE).
+test('U77: a release with three sources shows three links, in order', () => {
+    const body = fixture('releases.json');
+    const three = { ...body.items[0], sources: [...body.items[0].sources, { source: 'musicbrainz', url: 'https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000199' }] };
+    const { panel } = rendered({ ...body, items: [three] });
+
+    assert.deepEqual([...rowOf(panel, three.id).matchAll(/<a href="([^"]*)" target="_blank"/g)].map(([, href]) => decoded(href)), three.sources.map(source => source.url));
+});

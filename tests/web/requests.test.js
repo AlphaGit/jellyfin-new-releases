@@ -118,3 +118,57 @@ test('U72: a click inside a row but not on a button posts nothing', async () => 
     assert.deepEqual(requests.filter(request => request.startsWith('POST')), []);
 });
 
+
+// 007 T091 group A, characterization (BASELINE): the list asks for the right releases. These pin what
+// the view did before 007, so a change to what it asks the server for fails here.
+
+/** Loads the view, lets it settle, and returns the recorder and the document. */
+async function loadedView(body = { items: [], hasStoredReleases: true }) {
+    const loaded = recordRequests('user-view.html', body);
+    await settled();
+    return loaded;
+}
+
+test('U73: the Archive tab asks for archived releases, and the List tab asks for the others', async () => {
+    const { requests, document } = await loadedView();
+    const before = requests.length;
+
+    document.getElementById('nr-tab-archive').listeners.click[0]();
+    await settled();
+    document.getElementById('nr-tab-list').listeners.click[0]();
+    await settled();
+
+    assert.deepEqual(requests.slice(before), ['GET Plugins/NewReleases/Releases?archived=true', 'GET Plugins/NewReleases/Releases']);
+});
+
+for (const [id, value, sent] of [
+    ['nr-f-type', 'EP', 'type=EP'],
+    ['nr-f-state', 'Upcoming', 'state=Upcoming'],
+    ['nr-f-from', '2026-01-01', 'from=2026-01-01'],
+    ['nr-f-to', '2026-12-31', 'to=2026-12-31'],
+]) {
+    test(`U74: setting ${id} to ${value} asks for releases with ${sent}`, async () => {
+        const { requests, document } = await loadedView();
+        const before = requests.length;
+        const field = document.getElementById(id);
+
+        field.value = value;
+        field.listeners.change[0]();
+        await settled();
+
+        assert.deepEqual(requests.slice(before), ['GET Plugins/NewReleases/Releases?' + sent]);
+    });
+}
+
+test('U76: an action in the Archive tab reloads the Archive and stays on it', async () => {
+    const { requests, document } = await loadedView();
+    document.getElementById('nr-tab-archive').listeners.click[0]();
+    await settled();
+    const before = requests.length;
+
+    document.getElementById('nr-panel').listeners.click[0]({ target: actionRow({ action: 'Restore' }).button });
+    await settled();
+
+    assert.deepEqual([requests.slice(before), document.getElementById('nr-tab-archive').getAttribute('aria-selected')],
+        [['POST Plugins/NewReleases/Releases/101/Restore', 'GET Plugins/NewReleases/Releases?archived=true'], 'true']);
+});

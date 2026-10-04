@@ -1464,3 +1464,20 @@ of an existing behaviour) is shown to catch its defect by one hand-made break, r
   hand on a file copy and restored at once: J4 (the handler always posts `/Ignore`) fails the HaveIt and
   Restore tests; J5 (`closest` ignores the attribute) fails the `div[data-action]` row; Y8 still fails
   all three action tests. Files -> 28 passed
+
+## Cycle 79: group A, the list shows the right releases (T095, characterization)
+
+- what the page does, one test each:
+  - U73: the Archive tab asks the server for archived releases; going back to the List tab asks for
+    the others
+  - U74: Type, State, From and To each send their own value, as `type=`, `state=`, `from=` and `to=`
+  - U75: the Type filter offers "All types", then Album, EP, Single, Compilation, Live, Remix and
+    Soundtrack (read from the static markup, in a new file `tests/web/view.test.js` for the view's own
+    controls; the profile names it)
+  - U76: after "Restore" in the Archive tab, the page reloads the Archive and the Archive tab stays
+    selected
+  - U77: a release with three sources shows three links, in order
+- red: none by definition; all pass against the pre-007 page. Evidence, one break each made by hand
+  on a file copy and restored at once: H6 (`archived=false`) fails U73 and U76; B74a (`since=` for
+  From) and B74b (To sends the From date) fail their U74 rows; B75 (`Ep` for `EP`) fails U75; H7 (an
+  action jumps to the List tab) fails U76; B77 (only the first two sources linked) fails U77

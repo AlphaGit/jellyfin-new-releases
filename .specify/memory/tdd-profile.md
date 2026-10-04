@@ -118,7 +118,8 @@ the tree is clean.
   copies of the unit ladder (`user-view.html` and `admin.html`), `esc.test.js` the escaping,
   `page-helpers.test.js` what is left, `render.test.js` and `render-status.test.js` what each page
   does with a real response, `requests.test.js` the paths each page sends, `markup.test.js` the
-  closed world over the user view's markup (`007` U68), and `fake-dom.test.js` and
+  closed world over the user view's markup (`007` U68), `view.test.js` the user view's own controls
+  and their wiring (`007` T091), and `fake-dom.test.js` and
   `cover-markup.test.js` the own contracts of the stand-in and of the cover-markup reader. The two ladder files are twins — change one page's ladder
   and the other must follow. Fixed instants and the `ago`/`ahead` helpers come from
   `tests/web/fixed-clock.js`; never redeclare them in a test file.

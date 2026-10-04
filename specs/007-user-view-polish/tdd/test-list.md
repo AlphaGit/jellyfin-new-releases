@@ -192,6 +192,11 @@ the sixth audit's mutant that each one catches.
 | U70 | Each source link of a row points at its source's URL, in order | FR-011 (existing behaviour unchanged); sixth audit Y9 | example | BASELINE | `tests/web/render.test.js::U70: each source link of a row points at its source URL, in order` |
 | U71 | Every listener the view registers keeps listening: none is registered with `once` or a `signal` | FR-011; sixth audit Y4 | example | BASELINE | `tests/web/requests.test.js::U71: every listener the New Releases view registers keeps listening`; `keepsListening` is pinned by `U71 helper: …` table rows |
 | U72 | Each action button posts its own action for the release of its row, and a click elsewhere in a row posts nothing | FR-011; sixth audit Y8 | example | BASELINE | `tests/web/requests.test.js::U72: the {action} button posts {action} for the release of its row` (Ignore, HaveIt, Restore) `/ a click inside a row but not on a button posts nothing` |
+| U73 | The Archive tab asks for archived releases, and the List tab asks for the others | FR-011; T091 group A | example | BASELINE | `tests/web/requests.test.js::U73: the Archive tab asks for archived releases, and the List tab asks for the others` |
+| U74 | Type, State, From and To each send their own value under the name the server reads | FR-011; T091 group A | example | BASELINE | `tests/web/requests.test.js::U74: setting {field} to {value} asks for releases with {key}={value}` (4 rows) |
+| U75 | The Type filter offers all types, then Album, EP, Single, Compilation, Live, Remix and Soundtrack | FR-011; T091 group A | example | BASELINE | `tests/web/view.test.js::U75: the Type filter offers all types, then Album, EP, Single, Compilation, Live, Remix and Soundtrack` |
+| U76 | An action in the Archive tab reloads the Archive and stays on it | FR-011; T091 group A | example | BASELINE | `tests/web/requests.test.js::U76: an action in the Archive tab reloads the Archive and stays on it` |
+| U77 | A release with three sources shows three links, in order | FR-011; T091 group A | example | BASELINE | `tests/web/render.test.js::U77: a release with three sources shows three links, in order` |
 
 ## Invariants and edge cases still to place
 
