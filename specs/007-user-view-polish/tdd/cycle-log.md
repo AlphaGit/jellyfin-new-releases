@@ -1517,3 +1517,10 @@ of an existing behaviour) is shown to catch its defect by one hand-made break, r
   and B87b (From is a text field) fail U87; B88 (`rel="opener"`) fails U88
 - also: B88 first failed U83 too, because U83 found the link labels through `rel="noopener"`. U83 now
   finds them through `target="_blank"`, so it reads the labels only; B83 still fails it
+
+## Tidy: name the fixture facts the template lists rely on (T092, seventh audit Finding 7)
+
+- what: a comment above four `TEMPLATES` rows says why a shape repeats: release 101 has two sources
+  and the List tab two buttons; release 102 has two missing tracks, a compared edition and one source;
+  release 104 is archived with one source and one button; `artists.json` holds two artists
+- no behaviour change; comments only

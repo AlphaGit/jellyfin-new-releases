@@ -127,11 +127,14 @@ const BUTTON = 'button[aria-label data-action type]';
 const EMPTY = ['p.nr-empty[class]'];
 
 const TEMPLATES = [
+    // Release 101 has two sources (two links); the List tab offers two buttons, Ignore and Have it.
     ['a Missing release at both sources, in the List tab', () => panelFor(only(101)),
         [...LIST, 'article.nr-row[class data-id data-title]', ...COVER, ...DETAILS, 'div.nr-links[class]', LINK, LINK, 'div.nr-actions[class]', BUTTON, BUTTON]],
+    // Release 102 has two missing tracks (two list items), a compared edition (the paragraph) and one source.
     ['an Incomplete release with a compared edition, in the List tab', () => panelFor(only(102)),
         [...LIST, 'article.nr-row[class data-id data-title]', ...COVER, ...DETAILS, 'details[]', 'summary[]', 'ul[]', 'li[]', 'li[]', 'p[]',
             'div.nr-links[class]', LINK, 'div.nr-actions[class]', BUTTON, BUTTON]],
+    // Release 104 is archived (the extra badge) and has one source; the Archive tab offers one button, Restore.
     ['an archived release, in the Archive tab', () => panelFor(only(104), true),
         [...LIST, 'article.nr-row[class data-id data-title]', ...COVER, ...DETAILS, 'span.nr-badge[class]', 'div.nr-links[class]', LINK, 'div.nr-actions[class]', BUTTON]],
     ['a release with no cover', () => panelFor(only(101, { covers: [] })),
@@ -140,6 +143,7 @@ const TEMPLATES = [
     ['an empty selection', () => panelFor({ ...RELEASES, items: [] }), EMPTY],
     ['an empty Archive', () => panelFor(fixture('releases-empty.json'), true), EMPTY],
     ['a list that fails to load', () => loadedInto('nr-panel', () => Promise.reject(new Error('offline'))), EMPTY],
+    // artists.json holds two artists, so two suggestions.
     ['the suggestion list', () => loadedInto('nr-f-artist-list', artistsAndReleases),
         ['option[value]', 'option[value]']],
 ];
