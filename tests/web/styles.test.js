@@ -252,6 +252,37 @@ test('A14: no rule takes the underline off a source link', () => {
     assert.deepEqual(rules().filter(rule => reachesSourceLink(rule.selector) && removesUnderline(rule.declared)).map(rule => rule.selector), []);
 });
 
+/**
+ * Whether `declared` hides the focus outline: a `none` style, a zero width or a `transparent` colour, through
+ * the shorthand or a longhand. ponytail: reads tokens, so a zero-alpha colour function is not read.
+ */
+function removesOutline(declared) {
+    return ['outline', 'outline-style', 'outline-width', 'outline-color']
+        .flatMap(property => (declared[property] || '').trim().toLowerCase().split(/\s+/))
+        .some(token => token === 'none' || token === 'transparent' || parseFloat(token) === 0);
+}
+
+for (const [declared, expected] of [
+    [{ outline: 'none' }, true],
+    [{ outline: '0' }, true],
+    [{ outline: 'none !important' }, true],
+    [{ outline: '0px solid #52b54b' }, true],
+    [{ outline: '2px solid transparent' }, true],
+    [{ 'outline-style': 'none' }, true],
+    [{ 'outline-width': '0' }, true],
+    [{ 'outline-color': 'transparent' }, true],
+    [{}, false],
+    [{ color: '#00a4dc' }, false],
+    [{ outline: '2px solid #52b54b' }, false],
+    [{ 'outline-offset': '0' }, false],
+]) {
+    test(`A14 helper: ${JSON.stringify(declared)} ${expected ? 'removes' : 'keeps'} the focus outline`, () => {
+        assert.equal(removesOutline(declared), expected);
+    });
+}
+
 test('A14: a focused source link shows the focus outline', () => {
-    assert.match(declarations(':focus-visible').outline || '', /solid/);
+    const removed = rules().filter(rule => reachesSourceLink(rule.selector) && removesOutline(rule.declared)).map(rule => rule.selector);
+
+    assert.deepEqual([/solid/.test(declarations(':focus-visible').outline || ''), removed], [true, []]);
 });

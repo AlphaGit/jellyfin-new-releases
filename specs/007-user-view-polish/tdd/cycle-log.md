@@ -914,3 +914,21 @@ Driven from `tdd/verification.md` (verdict FAIL, audited at `f68901c`) and its P
 hand-read CSS. T058–T061 and T063 are fixed with more table rows, each observed red first. Each
 predicate states the CSS it does not read, and `quickstart.md` §2 sends that remaining risk to the
 real-browser pass. A closed-world list of selectors was considered and not chosen.
+
+## Cycle 59: A14's focus test reads every rule that can reach a source link (T058, third audit Finding 1)
+
+- what: a test correction. The third audit's mutant Q4 (`.nr-links a:focus-visible { outline: none }`)
+  survived, because the focus test read only the rule `#nr-user-view :focus-visible`. The behaviour
+  A14 is unchanged
+- helper (new, in `tests/web/styles.test.js`): `removesOutline(declared)`, pinned by a table of 12
+  rows. It accepts `none`, a zero width and `transparent`, through `outline` and its three longhands.
+  It rejects an empty rule, a colour, `2px solid #52b54b` and `outline-offset: 0`
+- red: the predicate declared as `return false`. `node --test tests/web/styles.test.js` -> the 8
+  accepting rows fail, e.g. `not ok 73 - A14 helper: {"outline":"none"} removes the focus outline` (8 failed)
+- green: the predicate as written. File -> 85 passed
+- test change: the focus test keeps its check on `:focus-visible` and also asserts that no rule from
+  `rules()` both reaches a source link and removes its outline
+- strength: Q4 and R13b (`:focus-visible { outline: none }`) each fail the focus test. Each was
+  applied to a file copy, restored, and checked against `HEAD`
+- ceiling: the predicate reads whitespace tokens, so a zero-alpha colour function in `outline-color`
+  is not read
