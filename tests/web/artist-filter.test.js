@@ -149,7 +149,9 @@ test('A1, A2: in a library of 1,000 artists every name is suggested, and the las
 const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web', 'user-view.html'), 'utf8');
 
 test('A5: the Artist control is a text input labelled "Artist" and bound to the suggestion list', () => {
-    assert.match(PAGE, /<label for="nr-f-artist">Artist<\/label><input id="nr-f-artist" type="text" list="nr-f-artist-list"[^>]*><datalist id="nr-f-artist-list"><\/datalist>/);
+    // Exactly as contracts/user-view.md writes it: `autocomplete="off"` keeps the browser's own history out of the suggestions.
+    assert.equal(/<label for="nr-f-artist">[\s\S]*?<\/datalist>/.exec(PAGE)?.[0],
+        '<label for="nr-f-artist">Artist</label><input id="nr-f-artist" type="text" list="nr-f-artist-list" autocomplete="off" placeholder="All artists"><datalist id="nr-f-artist-list"></datalist>');
 });
 
 test('A5: the page adds no key handling to the Artist control, so the browser keeps its own', async () => {

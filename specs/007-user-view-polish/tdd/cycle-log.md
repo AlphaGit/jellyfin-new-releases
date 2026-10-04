@@ -1437,3 +1437,15 @@ of an existing behaviour) is shown to catch its defect by one hand-made break, r
   Evidence instead, each break made by hand on a file copy and restored at once: H1 (the lookup
   normalized to NFD, so accented names never apply) fails both new A15 rows; H2 (only the first 100
   artists suggested) and H3 (only the first 100 indexed) fail the 1,000-artist test. File -> 26 passed
+
+## Cycle 77: the Artist field exactly as the contract writes it (T088, seventh audit Finding 3)
+
+- what the page does: the Artist field is a text field labelled "Artist", tied to the list of library
+  artists, with the browser's own typing history switched off (`autocomplete="off"`) so only artists
+  are suggested, and "All artists" as its placeholder
+- test change: `A5: the Artist control is a text input labelled "Artist" and bound to the suggestion list`
+  compared the field with a pattern that allowed any attribute after `list`. It now compares the
+  label, field and list with the contract's markup (`contracts/user-view.md:10-14`), character for
+  character. Stronger: everything the pattern required is still required
+- red: none against the page, which matches the contract. Evidence: H4 (`autocomplete="on"`) and R4
+  (no `list`) each fail it, made by hand on a file copy and restored at once. File -> 26 passed
