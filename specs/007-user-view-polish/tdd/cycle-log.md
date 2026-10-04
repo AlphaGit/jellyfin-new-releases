@@ -1354,3 +1354,11 @@ maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
   mutant was applied to a file copy, restored, and checked against `HEAD`
 - comment: the note in `render.test.js` that said the join is driven only by the real-server pass now
   points at U72
+
+## Refactor: the cover-markup reader's table moves to its own file (T084, sixth audit Finding 6)
+
+- what: the 4 `imgAttribute` rows sat in `markup.test.js` under "U68 helper", but U68 does not use
+  `imgAttribute`. They move to a new `tests/web/cover-markup.test.js`, the reader's own contract, as
+  `fake-dom.test.js` is the stand-in's. The profile names the file. `markup.test.js` now holds only
+  U68's tests and helpers
+- no behaviour change; green to green. Suite -> node 320 passed before and after

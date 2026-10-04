@@ -7,7 +7,6 @@ const path = require('node:path');
 const { loadPageDom } = require('./load-page.js');
 const { declaredIds, FakeElement } = require('./fake-dom.js');
 const { fixture } = require('./fixtures.js');
-const { imgAttribute } = require('./cover-markup.js');
 
 // 007 U68, the closed world over the markup (T075): every element the view declares or writes carries
 // exactly the reviewed attribute names and classes. An inline style, an added or renamed class, an extra
@@ -60,17 +59,6 @@ for (const [html, expected] of [
 test('U68 helper: a tag that signatures cannot read fails it, rather than going unread', () => {
     assert.throws(() => signatures('<p><div class="a>'), /could not be read/);
 });
-
-for (const [markup, name, expected] of [
-    ['<img LOADING="eager" loading="lazy">', 'loading', 'eager'],
-    ['<img data-src="b" src="a">', 'src', 'a'],
-    ['<img src="a" alt="">', 'alt', ''],
-    ['<img src="a">', 'alt', undefined],
-]) {
-    test(`U68 helper: imgAttribute reads ${name} from ${JSON.stringify(markup)} as a browser does`, () => {
-        assert.equal(imgAttribute(markup, name), expected);
-    });
-}
 
 // The reviewed shapes. Change a list only together with a review of the markup change it records.
 
