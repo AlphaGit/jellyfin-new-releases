@@ -117,17 +117,19 @@ the tree is clean.
 - One file per subject, named for it: `staleness.test.js` and `checked.test.js` hold the two
   copies of the unit ladder (`user-view.html` and `admin.html`), `esc.test.js` the escaping,
   `page-helpers.test.js` what is left, `render.test.js` and `render-status.test.js` what each page
-  does with a real response, `requests.test.js` the paths each page sends, and `fake-dom.test.js`
-  the stand-in's own contract. The two ladder files are twins — change one page's ladder
+  does with a real response, `requests.test.js` the paths each page sends, `markup.test.js` the
+  closed world over the user view's markup (`007` U68), and `fake-dom.test.js` the stand-in's own
+  contract. The two ladder files are twins — change one page's ladder
   and the other must follow. Fixed instants and the `ago`/`ahead` helpers come from
   `tests/web/fixed-clock.js`; never redeclare them in a test file.
 - The embedded pages under `src/Jellyfin.Plugin.NewReleases/Web/` are not modules. Each exposes
   its pure helpers on `NewReleasesInternals` as the first statement of its IIFE; the recorded
   helper `tests/web/load-page.js` runs the page's script in a `node:vm` sandbox and returns them.
   Never hand-roll a second loader. Read a page's source as text only for what the fake DOM cannot
-  model: the static attributes of a control (`artist-filter.test.js` A5) and the `<style>` block
-  (`styles.test.js`). Assert everything else through the loader. Maintainer decision, 2026-10-03
-  (`007` TDD audit Finding 6).
+  model: the static attributes of a control (`artist-filter.test.js` A5), the `<style>` block
+  (`styles.test.js`), and the element shapes of the static markup (`markup.test.js`). Assert
+  everything else through the loader. Maintainer decisions, 2026-10-03 (`007` TDD audit Finding 6,
+  and T075 of the fifth audit).
 - **This project now has a stand-in browser**, added by `005-page-json-casing`:
   `tests/web/fake-dom.js`, written here with no third-party library. `loadPageDom(file, overrides)`
   returns the fake `document` alongside the helpers, and a page runs its initialization to

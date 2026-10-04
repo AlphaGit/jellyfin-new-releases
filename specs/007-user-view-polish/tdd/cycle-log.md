@@ -1175,3 +1175,34 @@ maintainer's reply: "Confirmed. Go ahead. Agreed with option A."
   `U67: the reviewed list accounts for every rule of the stylesheet, so nothing is left unread`
 - strength: W1, V1, V2 and V3 each fail a new U67 test. K1 still fails only the list test. Each was
   applied to a file copy, restored, and checked against `HEAD`
+
+## Cycle 68: U68 the markup holds exactly the reviewed shapes (T074, fifth audit Finding 3)
+
+- list: U68 appended, an invariant, the T075 closed world over the markup
+- file (new): `tests/web/markup.test.js`, one subject as the profile asks. The profile's page-side
+  conventions now name it, and permit the static-markup text read it needs (T075)
+- helpers: `signatures(html)` (new) turns each opening tag into `name#id.classes[attribute names]`,
+  names in lower case and sorted, duplicates kept; 6 table rows. `imgAttribute` in
+  `tests/web/cover-markup.js` now ignores case and returns the first of two duplicates, as a browser
+  reads them; 4 table rows. `fake-dom.js` exports its existing `declaredIds`, so the test does not
+  build a second one
+- red (helpers): `signatures` declared as `return []`. `node --test tests/web/markup.test.js` -> 6
+  failed: the 5 `signatures` rows that expect a shape, e.g.
+  `not ok 3 - U68 helper: "<img LOADING=\"eager\" loading=\"lazy\">" has the shapes ["img[loading loading]"]`,
+  and `not ok 7 - U68 helper: imgAttribute reads loading from "<img LOADING=\"eager\" loading=\"lazy\">" as a browser does`
+- red (lists): with the helpers green and `STATIC` and `WRITTEN` declared as `[]` ->
+  `not ok 11 - U68: the static markup holds exactly the reviewed elements` and
+  `not ok 12 - U68: every element the view writes has a reviewed shape` (2 failed)
+- green: both lists written by hand. `STATIC` follows the page's markup outside `<style>` and
+  `<script>`, 39 elements. `WRITTEN` follows the templates in `cover()`, `row()`, `render()` and
+  `loadArtists()`, 24 distinct shapes, collected from `releases.json` in both tabs, the same items with
+  no cover, `releases-empty.json`, and the suggestion list from `artists.json`. Both matched on the
+  first run. File -> 13 passed
+- test: `U68: no element of the view carries a style attribute once it has loaded` passed on its first
+  run, because the page sets no `style`. Evidence instead: V4 (`panel.setAttribute('style', 'opacity:.3')`)
+  fails it
+- strength: W2–W13 and V4 each fail a U68 test. W6, W7 and W11 also fail U50, U51 and A10 now that
+  `imgAttribute` reads as a browser does. Each was applied to a file copy, restored, and checked
+  against `HEAD`. Suite -> node 286 passed
+- review: `STATIC` and `WRITTEN` are reviewed copies, like U67's list. The maintainer should read
+  them once against the page

@@ -26,7 +26,7 @@ loading cannot be observed by a fake DOM that does no layout. Their acceptance l
 declarations that produce them, and the real-browser pass in `quickstart.md` §2 checks the pixels.
 
 **Remediation, 2026-10-03.** The TDD audit (`tdd/verification.md`) and the maintainer's decisions on it
-reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second audit (`ad2b277`) adds A17. The third audit (`f68901c`) adds A18. The fourth audit (`8e7daf7`) adds U67, the closed-world check.
+reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second audit (`ad2b277`) adds A17. The third audit (`f68901c`) adds A18. The fourth audit (`8e7daf7`) adds U67, the closed-world check. The fifth audit (`78b0f4b`) adds U68, the closed world over the markup.
 
 ## Outer loop: acceptance behaviors
 
@@ -174,6 +174,7 @@ reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second 
 | U63 | The test's contrast function rates `#ffffff` on `#000000` at 21, the formula's upper bound | FR-010 | example | DONE | `tests/web/styles.test.js::U63: the contrast formula rates white on black at 21, its upper bound` |
 | U66 | `.nr-row` declares three columns, the 64 px cover first, then the details, then the actions | US2-AS1 ("beside the release details"), FR-007; discovered in cycle 40 (named by T016, missing from the list) | example | DONE | `tests/web/styles.test.js::U66: a card lays out the 64 px cover, then the details, then the actions` |
 | U67 | The stylesheet holds exactly the reviewed rules, `@media` context included: an added, removed or changed rule fails until the list is reviewed | invariant: closed-world check (T069) for FR-007, FR-009, FR-010 and the layout edge cases; it carries A11, A14, A16–A18 and U59–U61, U66 against any CSS form their predicates do not read | example | DONE | `tests/web/styles.test.js::U67: the stylesheet holds exactly the reviewed rules, so an added, removed or changed rule fails until the list is reviewed` |
+| U68 | Every element the view declares or writes carries exactly the reviewed attribute names and classes, and none carries a `style` attribute once the view has loaded | invariant: closed-world check over the markup (T075) for FR-001, FR-004, FR-007, FR-007a, FR-008, FR-009, FR-010; it carries A5, A10–A14, A17, A18, U50, U51, U61 and U66 against inline styles, extra or renamed classes and duplicate attributes | example | DONE | `tests/web/markup.test.js::U68: the static markup holds exactly the reviewed elements / every element the view writes has a reviewed shape / no element of the view carries a style attribute once it has loaded`; `signatures` and `imgAttribute` are pinned by `U68 helper: …` table rows |
 
 ## Invariants and edge cases still to place
 

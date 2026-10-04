@@ -11,10 +11,10 @@ function coverBox(panel, id) {
     return box ? box[1] : null;
 }
 
-/** The raw (still escaped) value of `name` on the first `<img>` in `markup`, or undefined. */
+/** The raw (still escaped) value of `name` on the first `<img>` in `markup`, or undefined. Names ignore case and the first of two duplicates wins, as in a browser. */
 function imgAttribute(markup, name) {
-    const img = /<img [^>]*>/.exec(markup || '');
-    const attr = img && new RegExp('\\s' + name + '="([^"]*)"').exec(img[0]);
+    const img = /<img [^>]*>/i.exec(markup || '');
+    const attr = img && new RegExp('\\s' + name + '="([^"]*)"', 'i').exec(img[0]);
     return attr ? attr[1] : undefined;
 }
 

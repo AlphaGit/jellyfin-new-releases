@@ -108,4 +108,4 @@ function documentFor(fileName) {
     };
 }
 
-module.exports = { documentFor, FakeElement };
+module.exports = { documentFor, FakeElement, declaredIds };
