@@ -171,3 +171,17 @@ failed before the implementation.
 - green: no rule change. Suite -> 325 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 12: U12 two entries under two different release roots are rejected
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs::EntriesFromTwoDifferentSites_AreRejected`
+  (`003`'s U40; its literals moved to release addresses in cycle 7, assertions unchanged)
+- red: none on the first run; cycle 7 already made it bind release roots.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.EntriesFromTwoDifferentSites_AreRejected" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     1`
+- mutant: `tagStart` built from `SiteRootOf(version)` — the entry's own root — instead of the
+  root passed in. Same command -> `EntriesFromTwoDifferentSites_AreRejected [FAIL]` (1 failed).
+  Restored from a file copy, verified with `cmp -s`
+- green: no rule change. Suite -> 325 passed, 0 failed
+- refactor: done as its own structural commit after this one, over the finished rule
+- commit: see the commit that carries this entry

@@ -88,7 +88,7 @@ Hosted by `RepositoryManifestTests.cs`'s `AssertSourceUrlNamesItsOwnVersion` and
 | U9 | A release address naming another tag is rejected | FR-010, FR-009 | example | DONE | `Packaging/RepositoryManifestTests.cs::ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected("1.2.3.1", …v1.2.3/new-releases.zip)` |
 | U10 | A Pages-style `…/<slug>/<slug>_<version>.zip` address is rejected | FR-010, FR-012 | example | DONE | `Packaging/RepositoryManifestTests.cs::ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected("1.0.0.0", …new-releases/new-releases_1.0.0.0.zip)` |
 | U11 | An asset carrying the version in its file name, `new-releases_<version>.zip`, is rejected under the right tag | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected("1.0.0.0", …v1.0.0.0/new-releases_1.0.0.0.zip)` |
-| U12 | Two entries under two different release roots are rejected | FR-010 | example | PENDING | |
+| U12 | Two entries under two different release roots are rejected | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::EntriesFromTwoDifferentSites_AreRejected` |
 | U24 | The release root of an entry is its address above the tag directory | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::SiteRootOf_ReturnsTheAddressAboveTheEntrysTagDirectory` |
 
 `U8` and `U9` are the two sides of the tag-to-version boundary: `v1.2.3` against `1.2.3.0` passes,
