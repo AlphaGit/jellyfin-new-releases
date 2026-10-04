@@ -113,3 +113,16 @@ failed before the implementation.
 - commit: see the commit that carries this entry
 - note: the three-part tag (`U8`) is deliberately not handled yet; exact equality with the
   four-part version is the smallest rule this test demands
+
+## Cycle 8: U8 a three-part tag `v1.2.3` is accepted for version `1.2.3.0`
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs::AReleaseTaggedInThreeParts_IsAcceptedForItsFourPartVersion` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.AReleaseTaggedInThreeParts_IsAcceptedForItsFourPartVersion" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: ···"leases/download/v1.2.3.0/new-releases.zip"` /
+  `Actual:   ···"releases/download/v1.2.3/new-releases.zip"` (1 failed)
+- green: `AssertSourceUrlNamesItsOwnVersion` requires `{root}v` before and `/{Slug}.zip` after the
+  tag, and the tag padded to four parts by the new `InFourParts` — the same padding the release
+  workflow's `version4` step applies — to equal the entry's version. Build 0 warnings. Suite ->
+  322 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry

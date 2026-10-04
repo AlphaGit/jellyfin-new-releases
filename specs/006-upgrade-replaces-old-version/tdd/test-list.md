@@ -84,7 +84,7 @@ Hosted by `RepositoryManifestTests.cs`'s `AssertSourceUrlNamesItsOwnVersion` and
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U7 | An entry whose `sourceUrl` is `<root>releases/download/v<tag>/new-releases.zip` for its own version is accepted | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::AWellFormedEntry_SourceUrlIsAccepted` |
-| U8 | A three-part tag `v1.2.3` is accepted for version `1.2.3.0` | FR-010 | example | PENDING | |
+| U8 | A three-part tag `v1.2.3` is accepted for version `1.2.3.0` | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::AReleaseTaggedInThreeParts_IsAcceptedForItsFourPartVersion` |
 | U9 | A release address naming another tag is rejected | FR-010, FR-009 | example | PENDING | |
 | U10 | A Pages-style `…/<slug>/<slug>_<version>.zip` address is rejected | FR-010, FR-012 | example | PENDING | |
 | U11 | An asset carrying the version in its file name, `new-releases_<version>.zip`, is rejected under the right tag | FR-010 | example | PENDING | |

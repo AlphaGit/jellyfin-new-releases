@@ -161,6 +161,18 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
+    /// 006 U8: the release is created from the tag, `v1.2.3`, while JPRM writes the version in four
+    /// parts, `1.2.3.0`. Both name the same release, so the address must be accepted for it.
+    /// </summary>
+    [Fact]
+    public void AReleaseTaggedInThreeParts_IsAcceptedForItsFourPartVersion()
+    {
+        using var entry = WellFormedEntry("1.2.3.0", sourceUrl: $"{ExampleSiteRoot}v1.2.3/{Slug}.zip");
+
+        AssertSourceUrlNamesItsOwnVersion(entry.RootElement, ExampleSiteRoot);
+    }
+
+    /// <summary>
     /// U24: the check above runs over an empty list until the first tag, so on its own it proves
     /// nothing. This is its other side: the same check, applied to entries that must fail.
     /// </summary>
@@ -260,6 +272,24 @@ public class RepositoryManifestTests
         var number = version.GetProperty("version").GetString();
         var sourceUrl = version.GetProperty("sourceUrl").GetString()!;
 
-        Assert.Equal($"{siteRoot}v{number}/{Slug}.zip", sourceUrl);
+        var tagStart = $"{siteRoot}v";
+        var asset = $"/{Slug}.zip";
+
+        Assert.StartsWith(tagStart, sourceUrl, StringComparison.Ordinal);
+        Assert.EndsWith(asset, sourceUrl, StringComparison.Ordinal);
+        Assert.Equal(number, InFourParts(sourceUrl[tagStart.Length..^asset.Length]));
+    }
+
+    /// <summary>
+    /// A tag's version padded to the four parts JPRM writes, as the release workflow pads it.
+    /// </summary>
+    private static string InFourParts(string tag)
+    {
+        while (tag.Count(c => c == '.') < 3)
+        {
+            tag += ".0";
+        }
+
+        return tag;
     }
 }
