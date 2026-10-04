@@ -618,3 +618,12 @@ recorded mutant its test catches:
   - "once" removed from the 0.2.0 section -> `not ok 8`
   - each restored, `cmp -s`
 - suite: dotnet -> 346 passed (the two C# tests removed); node -> 361 passed
+
+## `/speckit-implement`: T041, the canonical name pinned
+
+- `PluginSanityTests.Plugin_DisplayName_IsStable` asserts `Plugin.Name` is `New Releases`, beside
+  `Plugin_Guid_IsStable`. It passes on its first run; the name has been `New Releases` throughout
+- mutant: `Plugin.cs`, `build.yaml` and the catalogue all renamed to `Release Radar` together ->
+  `Plugin_DisplayName_IsStable [FAIL]`. The five workflow-slug tests fail too, because the
+  workflow still names `new-releases`; with the workflow renamed as well, this test is the one
+  left to catch it. All three files restored, `cmp -s`; suite -> 347 passed

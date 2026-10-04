@@ -22,6 +22,19 @@ public class PluginSanityTests
     }
 
     /// <summary>
+    /// 006 FR-004: the displayed name is fixed, like the GUID. Jellyfin files installed copies by
+    /// name, so a rename strands every existing install even when all three statements of the
+    /// name change together (`docs/plugin-name.md`). The tests below only make them agree.
+    /// </summary>
+    [Fact]
+    public void Plugin_DisplayName_IsStable()
+    {
+        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+
+        Assert.Equal("New Releases", plugin.Name);
+    }
+
+    /// <summary>
     /// 006 U1: Jellyfin groups installed copies by name and retires all but the newest. A package
     /// declaring one name and a plugin reporting another files copies under two names, so the host
     /// loads both — the defect 006 fixes. Ordinal, although the host compares ignoring case: the
