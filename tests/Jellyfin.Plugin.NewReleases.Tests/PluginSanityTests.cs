@@ -26,7 +26,8 @@ public class PluginSanityTests
     }
 
     /// <summary>
-    /// 006 FR-004: the displayed name is fixed, like the GUID. Jellyfin files installed copies by
+    /// 006 FR-004 and U2: the displayed name is fixed, like the GUID, and — being exactly
+    /// `New Releases` — it does not claim to be part of Jellyfin's official distribution. Jellyfin files installed copies by
     /// name, so a rename strands every existing install even when all three statements of the
     /// name change together (`docs/plugin-name.md`). The tests below only make them agree.
     /// </summary>
@@ -52,19 +53,6 @@ public class PluginSanityTests
         var declared = RepositoryFiles.Scalar(RepositoryFiles.ReadAllText("build.yaml"), "name");
 
         Assert.Equal(plugin.Name, declared);
-    }
-
-    /// <summary>
-    /// 006 U2: this plugin is not part of Jellyfin's official distribution, so the name an operator
-    /// reads in the dashboard must not suggest it is. The assembly identity keeps the host's
-    /// <c>Jellyfin.Plugin.*</c> convention; only the displayed name is bound by this.
-    /// </summary>
-    [Fact]
-    public void Plugin_DisplayName_DoesNotClaimToBeJellyfin()
-    {
-        var plugin = NewPlugin();
-
-        Assert.DoesNotContain("jellyfin", plugin.Name, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

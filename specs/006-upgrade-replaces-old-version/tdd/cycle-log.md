@@ -822,3 +822,14 @@ code or text that existed when the third audit found it unpinned, so no red was 
 | U31 | 31 | the flow check already required a key | F2, any `{` treated as a grant |
 | U33 | 33 | the removal instruction existed since cycle 23 | "No later upgrade needs this." changed |
 | U34 | 34 | the replacement instruction existed since cycle 24 | "replace … with" changed to "add, beside …" |
+
+## `/speckit-implement`: T055, `Plugin_DisplayName_DoesNotClaimToBeJellyfin` retired
+
+- Maintainer's decision, 2026-10-04: retire it (third audit, finding 30). `Plugin_DisplayName_IsStable`
+  pins the exact name `New Releases`, so every name that failed the retired test also fails this
+  one. The retired test could never fail alone. `U2` is now evidenced by `IsStable`, whose comment
+  names it.
+- Evidence that nothing was lost: `U2`'s recorded mutant (`Name` = `"JELLYFIN New Releases"`) still
+  fails the suite, through `Plugin_DisplayName_IsStable`, `…MatchesTheNameThePackageDeclares` and
+  `…MatchesTheNameTheCatalogueLists`. Restored, checked with `cmp -s`. The suite went from 353 to
+  352 passed.
