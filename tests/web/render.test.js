@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const { loadPageDom } = require('./load-page.js');
 const { fixture } = require('./fixtures.js');
 const { HOUR, DAY, ago } = require('./fixed-clock.js');
-const { coverBox, imgAttribute } = require('./cover-markup.js');
+const { rowOf, coverBox, imgAttribute, decoded } = require('./cover-markup.js');
 
 // `render` is the one function that consumes a server response, and until now the one function with
 // no test. These capture what it already does, against a response of the shape the server really
@@ -240,4 +240,14 @@ test('A12: an Archive-tab row writes Restore inside .nr-actions, under the same 
     const { panel } = rendered(fixture('releases.json'), { archive: true });
 
     assert.match(panel, /<div class="nr-actions"><button type="button" data-action="Restore"/);
+});
+
+// U70, characterization (maintainer decision T083): the source links predate 007. This pins what they
+// already do, so a change to where they point fails here.
+test('U70: each source link of a row points at its source URL, in order', () => {
+    const body = fixture('releases.json');
+    const { panel } = rendered(body);
+    const hrefs = item => [...rowOf(panel, item.id).matchAll(/<a href="([^"]*)" target="_blank"/g)].map(([, href]) => decoded(href));
+
+    assert.deepEqual(body.items.map(hrefs), body.items.map(item => item.sources.map(source => source.url)));
 });

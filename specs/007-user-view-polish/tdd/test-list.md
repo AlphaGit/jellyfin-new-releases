@@ -182,6 +182,15 @@ reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second 
 | U67 | The stylesheet holds exactly the reviewed rules, `@media` context included: an added, removed or changed rule fails until the list is reviewed | invariant: closed-world check (T069) for FR-007, FR-009, FR-010 and the layout edge cases; it carries A11, A14, A16–A18 and U59–U61, U66 against any CSS form their predicates do not read | example | DONE | `tests/web/styles.test.js::U67: the stylesheet holds exactly the reviewed rules, so an added, removed or changed rule fails until the list is reviewed` |
 | U68 | Every element the view declares or writes carries exactly the reviewed attribute names and classes, in order for each template, and the view writes on its declared elements only the reviewed attributes, `hidden` and properties | invariant: closed-world check over the markup (T075) for FR-001, FR-004, FR-007, FR-007a, FR-008, FR-009, FR-010; it carries A5, A10–A14, A17, A18, U50, U51, U61 and U66 against inline styles, extra or renamed classes and duplicate attributes | example | DONE | `tests/web/markup.test.js::U68: the static markup holds exactly the reviewed elements / {template} writes exactly the reviewed shapes, in order` (9 templates) `/ through load, both tabs, a filter change, Clear and a render, the view writes on its elements only what is reviewed`; `signatures` and `imgAttribute` are pinned by `U68 helper: …` table rows |
 
+### Characterization of behaviour that predates 007 (maintainer decision T083, 2026-10-04)
+
+These pin code that 007 did not write, so they are green against it by definition. Their evidence is
+the sixth audit's mutant that each one catches.
+
+| id  | behavior | traces | kind | state | test |
+| --- | --- | --- | --- | --- | --- |
+| U70 | Each source link of a row points at its source's URL, in order | FR-011 (existing behaviour unchanged); sixth audit Y9 | example | BASELINE | `tests/web/render.test.js::U70: each source link of a row points at its source URL, in order` |
+
 ## Invariants and edge cases still to place
 
 None. Every edge case in `spec.md` is placed above or named in "Out of scope".

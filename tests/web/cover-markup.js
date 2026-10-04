@@ -4,10 +4,14 @@
 // render.test.js, which checks what the row writes, and cover-fallback.test.js, which builds the
 // `<img>` a browser would hold from it, so both read the markup by one rule.
 
+/** The markup of the row with `id` in `panel`, from its `<article`, or an empty string when there is none. */
+function rowOf(panel, id) {
+    return panel.split('<article').find(r => r.includes('data-id="' + id + '"')) || '';
+}
+
 /** The markup inside the `nr-cover` box of the row with `id` in `panel`, or null when the row has no box. */
 function coverBox(panel, id) {
-    const row = panel.split('<article').find(r => r.includes('data-id="' + id + '"')) || '';
-    const box = /<div class="nr-cover">(.*?)<\/div>/.exec(row);
+    const box = /<div class="nr-cover">(.*?)<\/div>/.exec(rowOf(panel, id));
     return box ? box[1] : null;
 }
 
@@ -24,4 +28,4 @@ function decoded(value) {
         .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 }
 
-module.exports = { coverBox, imgAttribute, decoded };
+module.exports = { rowOf, coverBox, imgAttribute, decoded };

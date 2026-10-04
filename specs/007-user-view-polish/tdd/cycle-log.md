@@ -1318,3 +1318,14 @@ maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
   classes (its `class` attribute) and attribute names, walking up `parentNode`, and throws on anything
   else. File -> 8 passed; suite -> node 309 passed
 - profile: "What it does not" now states the traversal the stand-in models
+
+## Cycle 73: U70 each source link points at its source URL (T083, characterization of Y9)
+
+- list: U70 appended in a new "Characterization of behaviour that predates 007" section, state
+  `BASELINE`
+- helper: `rowOf(panel, id)` moved out of `coverBox` in `tests/web/cover-markup.js` and exported, so the
+  new test reads a row by the same rule as the cover tests
+- test: `tests/web/render.test.js::U70: each source link of a row points at its source URL, in order` (new)
+- red: none, by definition: a characterization test passes against untouched code. It passed on its
+  first run. Evidence instead: Y9 (each `href` set to the source name) fails it. The mutant was applied
+  to a file copy, restored, and checked against `HEAD`. File -> 29 passed
