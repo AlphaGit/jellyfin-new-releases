@@ -932,3 +932,19 @@ real-browser pass. A closed-world list of selectors was considered and not chose
   applied to a file copy, restored, and checked against `HEAD`
 - ceiling: the predicate reads whitespace tokens, so a zero-alpha colour function in `outline-color`
   is not read
+
+## Cycle 60: `reachesSourceLink` reads `~` and `+` as sibling combinators (T059, third audit Finding 2)
+
+- what: a test correction. The third audit's mutants Q1 (`.nr-meta ~ .nr-links a`), Q2
+  (`.nr-title ~ .nr-links a:hover`), Q3 (`.nr-cover + div a`) and Q9 (`#nr-filters ~ #nr-panel a`)
+  survived, because the predicate read every compound before the subject as an ancestor. The
+  behaviours A14 and A16 are unchanged
+- red: 5 rows added to the `A14 helper` selector table. Accepting: the four selectors above.
+  Rejecting: `.nr-title ~ .nr-artist a`. `node --test tests/web/styles.test.js` -> the 4 accepting
+  rows fail, e.g. `not ok 44 - A14 helper: "\#nr-user-view .nr-meta ~ .nr-links a" can reach a source link` (4 failed)
+- green: the predicate keeps each combinator. A compound before `~` or `+` is a sibling, so its ids
+  and classes are not checked. Every other compound before the subject must be one of the link's
+  ancestors. File -> 90 passed
+- strength: Q1, Q2, Q3, Q9, P1, P2 and P3 each fail A14 or A16. Each was applied to a file copy,
+  restored, and checked against `HEAD`
+- ceiling: unchanged. `:is(…)` lists and quoted spaces are not read

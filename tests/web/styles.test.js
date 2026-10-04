@@ -151,15 +151,17 @@ const LINK_ATTRIBUTES = ['href', 'target', 'rel'];
 
 /**
  * Whether `selector` can match a source link: its last compound is `a`, `*` or bare pseudo-classes, with
- * no class or id and only the link's own attributes, and every id or class before it is one of the link's
- * ancestors. ponytail: splits on whitespace and commas, so `:is(…)` lists and quoted spaces are not read.
+ * no class or id and only the link's own attributes, and every id or class of an ancestor compound is one of
+ * the link's ancestors. A compound before `~` or `+` is a sibling, so any element may stand there.
+ * ponytail: splits on whitespace and commas, so `:is(…)` lists and quoted spaces are not read.
  */
 function reachesSourceLink(selector) {
-    const compounds = selector.trim().split(/\s*[>+~]\s*|\s+/);
-    const subject = compounds.pop();
+    const parts = selector.trim().split(/\s*([>+~])\s*|\s+/); // compound, combinator (undefined for a space), compound, …
+    const subject = parts.pop();
+    const ancestors = parts.filter((part, i) => i % 2 === 0 && !['+', '~'].includes(parts[i + 1]));
     return /^(a|\*)?(\[[\w-]+[^\]]*\]|:[\w-]+(\([^)]*\))?)*$/.test(subject) && subject !== ''
         && [...subject.matchAll(/\[([\w-]+)/g)].every(([, name]) => LINK_ATTRIBUTES.includes(name))
-        && compounds.every(compound => (compound.match(/[.#][\w-]+/g) || []).every(name => LINK_ANCESTORS.includes(name)));
+        && ancestors.every(compound => (compound.match(/[.#][\w-]+/g) || []).every(name => LINK_ANCESTORS.includes(name)));
 }
 
 /** Whether `declared` turns the underline off, through the shorthand or the longhand. */
@@ -182,6 +184,11 @@ for (const [selector, expected] of [
     ['#nr-user-view .nr-links a[href]', true],
     ['#nr-user-view .nr-links :any-link', true],
     ['#nr-user-view .nr-links *', true],
+    ['#nr-user-view .nr-meta ~ .nr-links a', true],
+    ['#nr-user-view .nr-title ~ .nr-links a:hover', true],
+    ['#nr-user-view .nr-cover + div a', true],
+    ['#nr-user-view #nr-filters ~ #nr-panel a', true],
+    ['#nr-user-view .nr-title ~ .nr-artist a', false],
     ['#nr-user-view .nr-artist a', false],
     ['#nr-user-view .nr-filter a', false],
     ['#nr-user-view [role="tab"]', false],
