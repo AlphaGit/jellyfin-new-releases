@@ -26,20 +26,22 @@ public class ReleaseWorkflowTests
     }
 
     /// <summary>
-    /// U27: the chain has to run end to end from the tag. A missing link leaves the published
-    /// repository behind the versions that exist, which FR-014 forbids.
+    /// U27, restated by 006 U15: the chain has to run end to end from the tag. A missing link
+    /// leaves the published repository behind the versions that exist, which FR-014 forbids. The
+    /// release comes before the catalogue entry, so the catalogue never names an asset that does
+    /// not exist yet (006 FR-011). Nothing is deployed: the catalogue is read from the branch.
     /// </summary>
     [Fact]
-    public void ReleaseWorkflow_BuildsAddsToTheManifestCommitsAndDeploys_InThatOrder()
+    public void ReleaseWorkflow_BuildsReleasesAddsToTheManifestAndCommits_InThatOrder()
     {
         var build = IndexOf("jprm plugin build");
+        var release = IndexOf("gh release create");
         var add = IndexOf("jprm repo add");
         var commit = IndexOf("git commit");
-        var deploy = IndexOf("actions/deploy-pages");
 
-        Assert.True(build < add, "the version is added to the manifest before the package is built");
+        Assert.True(build < release, "the release is created before the package is built");
+        Assert.True(release < add, "the catalogue names the release asset before the release exists");
         Assert.True(add < commit, "repo/ is committed before the version is added to the manifest");
-        Assert.True(commit < deploy, "the site is deployed before repo/ is committed");
     }
 
     /// <summary>

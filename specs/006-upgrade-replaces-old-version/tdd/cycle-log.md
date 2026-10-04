@@ -238,3 +238,20 @@ failed before the implementation.
   are gone
 - suite: build 0 warnings; `dotnet test --configuration Release` -> 326 passed, 0 failed
 - commit: see the commit that carries this entry
+
+## Cycle 15: U15 build, then release, then catalogue entry, then commit
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_BuildsReleasesAddsToTheManifestAndCommits_InThatOrder`
+  (restates `003`'s U27, `ReleaseWorkflow_BuildsAddsToTheManifestCommitsAndDeploys_InThatOrder`:
+  `gh release create` joins the chain between build and `repo add`; the `deploy-pages` link leaves
+  it, because `FR-012` removes Pages — its absence is `U16`'s to pin, not dropped)
+- red: none on the first run; cycles 13 and 14 already placed the steps in this order.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests.ReleaseWorkflow_BuildsReleasesAddsToTheManifestAndCommits_InThatOrder" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     1`
+- mutant: the "Create the GitHub Release" step moved after "Add the version to the published
+  repository". Same command -> `the catalogue names the release asset before the release exists`
+  (1 failed). Restored from a file copy, verified with `cmp -s`. This is also `quickstart.md`
+  scenario 2's second mutant, recorded again under `A6`
+- green: no workflow change. Suite -> 326 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry

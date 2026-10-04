@@ -107,7 +107,7 @@ ordering and presence check, as `ReleaseWorkflowTests.Steps` already does.
 | --- | --- | --- | --- | --- | --- |
 | U13 | The workflow uploads `{Slug}.zip` to the version's GitHub Release with `gh release create` | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheDerivedSlug_MatchesTheFilenameTheReleaseWorkflowBuilds` |
 | U14 | `jprm repo add` is given `--plugin-url` naming `releases/download/${GITHUB_REF_NAME}/{Slug}.zip` | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_PointsTheCatalogueAtTheReleaseAsset` |
-| U15 | `jprm plugin build` runs before `gh release create`, which runs before `jprm repo add`, which runs before `git commit` | FR-010, FR-011 | example | PENDING | |
+| U15 | `jprm plugin build` runs before `gh release create`, which runs before `jprm repo add`, which runs before `git commit` | FR-010, FR-011 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_BuildsReleasesAddsToTheManifestAndCommits_InThatOrder` |
 | U16 | No step uses `actions/configure-pages`, `actions/upload-pages-artifact` or `actions/deploy-pages` | FR-012 | example | PENDING | |
 | U17 | The workflow's permissions grant neither `pages` nor `id-token` | FR-012 | example | PENDING | |
 | U18 | `gh release create` takes `--notes-file` written by `entryFor` for `${{ steps.ver.outputs.version }}` | FR-011 | example | PENDING | |
