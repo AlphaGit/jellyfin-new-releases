@@ -126,7 +126,7 @@ Hosted by `Packaging/DocumentationTests.cs`, beside `003`'s U30.
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U20 | The `## Install` section names `https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json` | FR-012 | example | PENDING | |
+| U20 | The `## Install` section names `https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json` | FR-012 | example | DONE | `Packaging/DocumentationTests.cs::Install_NamesTheRawCatalogueAddress` |
 | U21 | The `## Install` section names no `github.io` address | FR-012 | example | PENDING | |
 
 ### `CHANGELOG.md` — the renaming release's notes

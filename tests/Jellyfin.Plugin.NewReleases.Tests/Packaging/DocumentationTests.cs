@@ -68,6 +68,19 @@ public class DocumentationTests
     }
 
     /// <summary>
+    /// 006 U20: the catalogue is served from the branch's raw file address, not from Pages
+    /// (006 FR-012). The address an operator copies must be that one, written out in full.
+    /// </summary>
+    [Fact]
+    public void Install_NamesTheRawCatalogueAddress()
+    {
+        Assert.Contains(
+            "https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json",
+            SectionOf("## Install"),
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// U38: the rule above is a predicate, and a predicate needs a table. These cases were
     /// written from the requirement — "the README must not claim support for 10.11, but may say
     /// it was dropped" — before the predicate existed. An earlier attempt at this check passed a

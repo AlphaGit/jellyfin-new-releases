@@ -337,3 +337,15 @@ failed before the implementation.
 - green: suite unchanged at 333 passed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 21: U20 the `## Install` section names the raw catalogue address
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/DocumentationTests.cs::Install_NamesTheRawCatalogueAddress` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DocumentationTests.Install_NamesTheRawCatalogueAddress" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Contains() Failure: Sub-string not found` / `Not found: "https://raw.githubusercontent.com/AlphaGi"···` (1 failed)
+- green: `README.md` install step 2 names
+  `https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json`, and
+  the raw-address pattern for a fork. The Pages wording went with the sentence it lived in.
+  `003`'s U30 still passes. Suite -> 334 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry
