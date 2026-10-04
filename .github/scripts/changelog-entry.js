@@ -24,12 +24,18 @@ function withChangelog(buildYaml, entry) {
 module.exports = { entryFor, withChangelog };
 
 // Release workflow entry point, run from the repository root:
-//   node .github/scripts/changelog-entry.js <version>
+//   node .github/scripts/changelog-entry.js <version>                  writes build.yaml's changelog
+//   node .github/scripts/changelog-entry.js <version> --notes <file>   writes the GitHub Release text
 // Any error is uncaught on purpose, so the step, and the release, fails.
 if (require.main === module) {
     const fs = require('node:fs');
-    const version = process.argv[2];
+    const [version, flag, notes] = process.argv.slice(2);
     const entry = entryFor(fs.readFileSync('CHANGELOG.md', 'utf8'), version);
-    fs.writeFileSync('build.yaml', withChangelog(fs.readFileSync('build.yaml', 'utf8'), entry));
-    console.log(`build.yaml changelog set from the CHANGELOG.md section for ${version}`);
+    if (flag === '--notes') {
+        fs.writeFileSync(notes, entry);
+        console.log(`${notes} set from the CHANGELOG.md section for ${version}`);
+    } else {
+        fs.writeFileSync('build.yaml', withChangelog(fs.readFileSync('build.yaml', 'utf8'), entry));
+        console.log(`build.yaml changelog set from the CHANGELOG.md section for ${version}`);
+    }
 }

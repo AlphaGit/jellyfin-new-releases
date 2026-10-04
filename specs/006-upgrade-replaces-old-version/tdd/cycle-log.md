@@ -585,3 +585,21 @@ recorded mutant its test catches:
   Suite -> 348 passed (the two-case theory became one fact; seven rows added)
 - against the real workflow: `pages: write` added -> `the release job can still publish a site or
   mint an identity token`; `permissions: write-all` -> the same failure. Both restored, `cmp -s`
+
+## `/speckit-implement`: T039, the release notes' dataflow is tested
+
+- red (node): `node --test tests/web/changelog-entry.test.js` -> `not ok 7 - with --notes, the
+  tagged version's section is written to the named file and build.yaml is not read` /
+  `Error: ENOENT: no such file or directory, open 'build.yaml'` / `expected: 0` `actual: 1`
+- green: `.github/scripts/changelog-entry.js` gains `<version> --notes <file>`, which writes the
+  section to the file and leaves `build.yaml` alone. Node -> 359 passed
+- mutant: the script's arguments read as `[notes, flag, version]` -> `not ok 7` (1 failed);
+  restored, `cmp -s`. This is the argument-order swap the second audit said the old regex missed
+- red (C#), U18 and U19 restated to the script call before the workflow changed:
+  `ReleaseWorkflow_GivesTheReleaseTheTaggedVersionsChangelogSection [FAIL]`
+  (`Assert.Matches() Failure: Pattern not found in value`) and
+  `ReleaseWorkflow_WritesTheReleaseNotesBeforeCreatingTheRelease [FAIL]` (`the release workflow has
+  no step containing: changelog-entry.js "${{ steps.ver.outputs.version }}" --notes`)
+- green: `package.yml:81` runs `node .github/scripts/changelog-entry.js "${{ steps.ver.outputs.version }}" --notes ./artifacts/release-notes.md`.
+  dotnet -> 348 passed; node -> 359 passed. Run by hand for `0.2.0`, it writes the section that
+  begins `### Upgrading from 0.1.x — once`

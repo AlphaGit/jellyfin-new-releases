@@ -65,3 +65,24 @@ test('the entry replaces build.yaml\'s changelog as one quoted scalar, and nothi
 test('a build.yaml with no changelog line is an error, so the committed text is never published by accident', () => {
     assert.throws(() => withChangelog('version: "0.1.1"\n', '- One.'), /build\.yaml has no changelog line/);
 });
+
+// 006 T039: the release step writes the GitHub Release text through this script, so the text a
+// release shows is the text the catalogue shows. Run as the workflow runs it, from a working
+// directory holding a CHANGELOG.md and no build.yaml, so the order of its arguments is what is
+// tested and the build.yaml path is not touched.
+test('with --notes, the tagged version\'s section is written to the named file and build.yaml is not read', () => {
+    const os = require('node:os');
+    const { spawnSync } = require('node:child_process');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'changelog-notes-'));
+    try {
+        fs.writeFileSync(path.join(dir, 'CHANGELOG.md'), CHANGELOG);
+        const script = path.join(__dirname, '..', '..', '.github', 'scripts', 'changelog-entry.js');
+
+        const run = spawnSync(process.execPath, [script, '0.1.1', '--notes', 'notes.md'], { cwd: dir, encoding: 'utf8' });
+
+        assert.equal(run.status, 0, run.stderr);
+        assert.equal(fs.readFileSync(path.join(dir, 'notes.md'), 'utf8'), '### Fixed\n\n- One.');
+    } finally {
+        fs.rmSync(dir, { recursive: true, force: true });
+    }
+});

@@ -108,7 +108,8 @@ public class ReleaseWorkflowTests
 
     /// <summary>
     /// 006 U18: the release says what the catalogue says — the tagged version's section of
-    /// CHANGELOG.md, read by the same <c>entryFor</c> that writes the catalogue text (006 FR-011).
+    /// CHANGELOG.md, written by the same script that writes the catalogue text, in its `--notes`
+    /// mode, whose argument order `tests/web/changelog-entry.test.js` pins (006 FR-011, T039).
     /// The notes file `gh release create` reads must be the one that step writes.
     /// </summary>
     [Fact]
@@ -118,7 +119,7 @@ public class ReleaseWorkflowTests
         Assert.True(notes.Success, "gh release create is given no --notes-file");
 
         Assert.Matches(
-            $@"entryFor\([^\n]*{Regex.Escape(notes.Groups[1].Value)}[^\n]*""\$\{{\{{ steps\.ver\.outputs\.version }}}}""",
+            $@"node \.github/scripts/changelog-entry\.js ""\$\{{\{{ steps\.ver\.outputs\.version }}}}"" --notes ""?{Regex.Escape(notes.Groups[1].Value)}""?(?=\s|$)",
             Steps);
     }
 
@@ -130,7 +131,7 @@ public class ReleaseWorkflowTests
     public void ReleaseWorkflow_WritesTheReleaseNotesBeforeCreatingTheRelease()
     {
         Assert.True(
-            IndexOf("entryFor(") < IndexOf("gh release create"),
+            IndexOf("changelog-entry.js \"${{ steps.ver.outputs.version }}\" --notes") < IndexOf("gh release create"),
             "the release is created before its notes are written");
     }
 
