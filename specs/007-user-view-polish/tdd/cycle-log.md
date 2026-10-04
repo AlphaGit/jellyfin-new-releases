@@ -948,3 +948,18 @@ real-browser pass. A closed-world list of selectors was considered and not chose
 - strength: Q1, Q2, Q3, Q9, P1, P2 and P3 each fail A14 or A16. Each was applied to a file copy,
   restored, and checked against `HEAD`
 - ceiling: unchanged. `:is(…)` lists and quoted spaces are not read
+
+## Cycle 61: `removesUnderline` finds a hidden underline (T060, third audit Finding 3)
+
+- what: a test correction. The third audit's mutant Q5 (`.nr-links a { text-decoration-color: transparent }`)
+  survived, because the predicate accepted only a `none` line. The behaviour A14 is unchanged
+- red: 5 rows added to the `A14 helper` underline table. Accepting: `text-decoration-color: transparent`,
+  `text-decoration: underline transparent`, `text-decoration-thickness: 0`. Rejecting:
+  `text-decoration-color: #00a4dc`, `text-decoration-thickness: 2px`. `node --test tests/web/styles.test.js`
+  -> the 3 accepting rows fail, e.g. `not ok 61 - A14 helper: {"text-decoration-color":"transparent"} removes the underline` (3 failed)
+- green: the predicate reads the tokens of `text-decoration` and its three longhands, and finds
+  `none`, `transparent` or a zero length. File -> 95 passed
+- strength: Q5, N9 and R13a each fail A14's underline test. Each was applied to a file copy,
+  restored, and checked against `HEAD`
+- ceiling: the predicate reads whitespace tokens, so a zero-alpha colour function in
+  `text-decoration-color` is not read

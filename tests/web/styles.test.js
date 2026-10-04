@@ -164,9 +164,14 @@ function reachesSourceLink(selector) {
         && ancestors.every(compound => (compound.match(/[.#][\w-]+/g) || []).every(name => LINK_ANCESTORS.includes(name)));
 }
 
-/** Whether `declared` turns the underline off, through the shorthand or the longhand. */
+/**
+ * Whether `declared` turns the underline off or hides it: a `none` line, a `transparent` colour or a zero
+ * thickness, through the shorthand or a longhand. ponytail: reads tokens, so a zero-alpha colour function is not read.
+ */
 function removesUnderline(declared) {
-    return ['text-decoration', 'text-decoration-line'].some(property => /(^|\s)none(\s|!|$)/.test(declared[property] || ''));
+    return ['text-decoration', 'text-decoration-line', 'text-decoration-color', 'text-decoration-thickness']
+        .flatMap(property => (declared[property] || '').trim().toLowerCase().split(/\s+/))
+        .some(token => /^none(!|$)/.test(token) || token === 'transparent' || parseFloat(token) === 0);
 }
 
 for (const [selector, expected] of [
@@ -208,6 +213,11 @@ for (const [declared, expected] of [
     [{ 'text-decoration-line': 'none' }, true],
     [{ 'text-decoration': 'none !important' }, true],
     [{ 'text-decoration': 'none solid red' }, true],
+    [{ 'text-decoration-color': 'transparent' }, true],
+    [{ 'text-decoration': 'underline transparent' }, true],
+    [{ 'text-decoration-thickness': '0' }, true],
+    [{ 'text-decoration-color': '#00a4dc' }, false],
+    [{ 'text-decoration-thickness': '2px' }, false],
     [{}, false],
     [{ color: '#00a4dc' }, false],
     [{ 'text-decoration': 'underline' }, false],
