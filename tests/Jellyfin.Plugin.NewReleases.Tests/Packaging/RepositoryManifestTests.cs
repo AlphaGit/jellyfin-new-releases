@@ -141,7 +141,8 @@ public class RepositoryManifestTests
     public void TheReleaseWorkflow_MovesThePackageFromTheFolderJprmWritesTo()
     {
         var output = Regex.Match(ReleaseWorkflowSteps, @"jprm plugin build[^\n]*--output\s+""?([^\s""]+?)/?""?(?=\s|$)");
-        var moved = Regex.Match(ReleaseWorkflowSteps, $@"(?m)^\s*mv\s+""?([^\s""]+)/{Regex.Escape(Slug)}_");
+        // Any package file name: the name is U25's to pin, the folder is this test's.
+        var moved = Regex.Match(ReleaseWorkflowSteps, @"(?m)^\s*mv\s+""?([^\s""]*)/[^/\s""]+_\$\{\{");
         Assert.True(output.Success, "jprm plugin build names no --output folder");
         Assert.True(moved.Success, "the workflow does not move JPRM's package");
 
@@ -156,12 +157,12 @@ public class RepositoryManifestTests
     [Fact]
     public void TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo()
     {
-        var moved = Regex.Match(ReleaseWorkflowSteps, MovesJprmsPackage + @"\s+""?([^\s""]+)""?");
         var uploaded = Regex.Match(ReleaseWorkflowSteps, @"gh release create\s+\S+\s+""?([^\s""]+)""?");
-        Assert.True(moved.Success, "the workflow does not move JPRM's package");
         Assert.True(uploaded.Success, "gh release create uploads no file");
 
-        Assert.Equal(moved.Groups[1].Value, uploaded.Groups[1].Value);
+        // Found by its destination, not by its source, so this test fails for one reason only:
+        // what U25 pins about the source is U25's to report (006 second audit, finding 21).
+        Assert.Matches($@"(?m)^\s*mv\s+.+\s""?{Regex.Escape(uploaded.Groups[1].Value)}""?\s*$", ReleaseWorkflowSteps);
     }
 
     /// <summary>

@@ -649,3 +649,21 @@ recorded mutant its test catches:
   - `InFourParts` with `if` instead of `while` (pads once) -> `AReleaseTaggedInTwoParts_… [FAIL]`
   - `InFourParts` truncating to four parts -> `…IsRejected(number: "1.2.3.4", …) [FAIL]`
   - each restored, `cmp -s`; suite -> 350 passed
+
+## `/speckit-implement`: T050 and T046, one reason to fail each, and the spelling decision
+
+- `U26` now reads the uploaded file from `gh release create` and requires an `mv` line whose
+  destination is that file; it no longer goes through `MovesJprmsPackage`. `U29` reads the `mv`
+  source folder for any package file name. So the four workflow tests fail one at a time:
+  - M5 (`mv` source `jellyfin-new-releases_…`) -> `TheReleaseWorkflow_MovesTheFileJprmWrites` only
+  - M14 (`mv` target `new-release.zip`) -> `TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo` only
+  - S1 (`mv` and `gh release create` swapped) -> `ReleaseWorkflow_MovesThePackageBetweenBuildingAndReleasingIt` only
+  - S2 (`--output ./out`) -> `TheReleaseWorkflow_MovesThePackageFromTheFolderJprmWritesTo` only
+  - each restored, `cmp -s`; suite -> 350 passed
+- **Decision on spelling (T046, T050; findings 15 and 22), taken during `/speckit-implement` on
+  2026-10-04 and open to the maintainer's override:** the workflow tests keep pinning the exact
+  spelling the workflow uses — `${{ github.repository }}`, `${{ steps.ver.outputs.version4 }}` with
+  its inner spaces, plain `mv`, `./artifacts`, and the one-line script call. The workflow is this
+  project's own file and changes rarely and on purpose; a test that turns red on a deliberate
+  rewrite names the line to update, while one widened to accept every equivalent spelling also
+  accepts more wrong ones. No test was loosened
