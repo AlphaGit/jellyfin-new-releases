@@ -627,3 +627,12 @@ recorded mutant its test catches:
   `Plugin_DisplayName_IsStable [FAIL]`. The five workflow-slug tests fail too, because the
   workflow still names `new-releases`; with the workflow renamed as well, this test is the one
   left to catch it. All three files restored, `cmp -s`; suite -> 347 passed
+
+## `/speckit-implement`: T043, the workflow read on use
+
+- `RepositoryManifestTests.ReleaseWorkflowSteps` becomes a property that reads the workflow when a
+  test asks for it, instead of a static field read in the type initializer. Suite -> 347 passed
+- check: `.github/workflows/package.yml` moved aside, then
+  `--filter "FullyQualifiedName~RepositoryManifestTests"` -> exactly the 5 workflow tests fail and
+  the other 21, the predicate units `U7`–`U12`, `U24`, `U27` among them, pass. Before, a missing
+  workflow failed the whole class through `TypeInitializationException`. File moved back, `git diff` clean

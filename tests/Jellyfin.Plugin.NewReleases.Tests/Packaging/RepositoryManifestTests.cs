@@ -18,8 +18,11 @@ public class RepositoryManifestTests
 {
     private const string ManifestPath = "repo/manifest.json";
 
-    private static readonly string ReleaseWorkflowSteps =
-        RepositoryFiles.WorkflowSteps(".github/workflows/package.yml");
+    /// <summary>
+    /// Read on use, not in the static initializer: a missing or unreadable workflow must fail the
+    /// workflow tests alone, not every test in this class (006 audit, finding 12).
+    /// </summary>
+    private static string ReleaseWorkflowSteps => RepositoryFiles.WorkflowSteps(".github/workflows/package.yml");
     private const string Jellyfin12Abi = TargetVersions.JellyfinAbi;
 
     /// <summary>
