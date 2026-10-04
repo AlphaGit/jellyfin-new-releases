@@ -768,3 +768,15 @@ own test, so `U26` keeps its single reason to fail.
 - green: no predicate change. Suite -> 352 passed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 32: U32 a quoted `permissions: "write-all"` grants both keys
+
+- test: `GrantsPagesOrIdToken_ReadsEveryWayOfGrantingThem`, new row
+  `("permissions: \"write-all\"\n", true)` (finding 28, task T053)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests.GrantsPagesOrIdToken_ReadsEveryWayOfGrantingThem" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `…(permissions: "permissions: \"write-all\"\n", grants: True) [FAIL]` /
+  `Assert.Equal() Failure: Values differ` / `Expected: True` / `Actual:   False` (1 failed, 8 passed)
+- green: the `write-all` check accepts an optional single or double quote before the value.
+  Suite -> 353 passed
+- refactor: none
+- commit: see the commit that carries this entry

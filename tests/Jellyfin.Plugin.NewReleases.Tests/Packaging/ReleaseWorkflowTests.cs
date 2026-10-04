@@ -95,6 +95,7 @@ public class ReleaseWorkflowTests
     [InlineData("permissions:\n  contents: write\n  pages: write\n", true)]
     [InlineData("permissions:\n  id-token: write\n", true)]
     [InlineData("permissions: write-all\n", true)]
+    [InlineData("permissions: \"write-all\"\n", true)]
     [InlineData("permissions: { contents: write, pages: write }\n", true)]
     [InlineData("permissions: { id-token: write }\n", true)]
     public void GrantsPagesOrIdToken_ReadsEveryWayOfGrantingThem(string permissions, bool grants)
@@ -104,7 +105,7 @@ public class ReleaseWorkflowTests
 
     private static bool GrantsPagesOrIdToken(string steps)
         => Regex.IsMatch(steps, @"(?m)^\s*(pages|id-token)\s*:")
-           || Regex.IsMatch(steps, @"(?m)^\s*permissions\s*:\s*write-all\b")
+           || Regex.IsMatch(steps, @"(?m)^\s*permissions\s*:\s*[""']?write-all\b")
            || Regex.IsMatch(steps, @"(?m)^\s*permissions\s*:\s*\{[^}]*\b(pages|id-token)\s*:");
 
     /// <summary>
