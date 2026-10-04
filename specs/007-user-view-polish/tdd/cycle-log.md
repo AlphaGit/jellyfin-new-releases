@@ -963,3 +963,19 @@ real-browser pass. A closed-world list of selectors was considered and not chose
   restored, and checked against `HEAD`
 - ceiling: the predicate reads whitespace tokens, so a zero-alpha colour function in
   `text-decoration-color` is not read
+
+## Cycle 62: U60's colour check reads a `background` shorthand of several tokens (T061, third audit Finding 4)
+
+- what: a test correction. The third audit's mutant Q8 (`background: transparent none` on `.nr-cover`)
+  survived, because `isVisibleColour` returned `true` for any value of more than one token. The
+  behaviour U60 is unchanged
+- red: 8 rows added to the `U60 helper` table. Rejecting: `transparent none`, `none transparent`,
+  `rgba(0,0,0,0) none`, `transparent no-repeat`, `url(cover.png)`. Accepting: `#3a3a3a no-repeat`,
+  `rgba(127,127,127,.18) !important`, `rgb(0 0 0 / .5)`. `node --test tests/web/styles.test.js` -> the
+  5 rejecting rows fail, e.g. `not ok 16 - U60 helper: "transparent none" is not a visible colour` (5 failed)
+- green: `isVisibleColour` splits the value into tokens, sets aside the image, position, size, repeat
+  and box tokens and `!important`, and requires exactly one token left that `isVisibleColourToken` (the
+  former single-token check) accepts. File -> 103 passed
+- strength: Q8, P4 (`initial`) and N6 (`none`) each fail U60. Each was applied to a file copy,
+  restored, and checked against `HEAD`
+- ceiling: a function with nested parentheses, such as a gradient, is not read

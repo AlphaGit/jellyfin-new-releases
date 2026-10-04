@@ -32,10 +32,22 @@ function declarations(selector, css = STYLE.replace(/@media[^{]*\{(?:[^{}]*\{[^{
     return Object.assign({}, ...rules(css).filter(rule => rule.selector === SCOPE + selector).map(rule => rule.declared));
 }
 
-/** Whether a declared colour can be seen: not `none`, not `transparent`, not a CSS-wide keyword (which leaves a background transparent or the parent's), and not a zero alpha in any notation. */
+/** The `background` shorthand's tokens that are not a colour: images, positions, sizes, repeats, boxes, and `!important`. */
+const BACKGROUND_KEYWORDS = /^(none|!important|url\(.*\)|repeat(-[xy])?|no-repeat|space|round|scroll|fixed|local|center|top|bottom|left|right|(border|padding|content)-box|text|auto|cover|contain|-?[\d.]+(%|[a-z]+)?)$/;
+
+/**
+ * Whether a declared background shows a colour: once its image, position, size and repeat tokens are set
+ * aside, exactly one token is left, and it is a visible colour. ponytail: a function with nested
+ * parentheses (a gradient) is not read.
+ */
 function isVisibleColour(value) {
-    const colour = (value || '').trim().toLowerCase();
-    if (['', 'none', 'transparent', 'initial', 'inherit', 'unset', 'revert', 'revert-layer'].includes(colour)) return false;
+    const tokens = ((value || '').trim().toLowerCase().match(/[\w-]+\([^)]*\)|[^\s/]+/g) || []).filter(token => !BACKGROUND_KEYWORDS.test(token));
+    return tokens.length === 1 && isVisibleColourToken(tokens[0]);
+}
+
+/** Whether one colour token can be seen: not `transparent`, not a CSS-wide keyword (which leaves a background transparent or the parent's), and not a zero alpha in any notation. */
+function isVisibleColourToken(colour) {
+    if (['transparent', 'initial', 'inherit', 'unset', 'revert', 'revert-layer'].includes(colour)) return false;
     const call = /^\w+\(([^)]*)\)$/.exec(colour);
     if (call) {
         const parts = call[1].split(/[\s,/]+/).filter(Boolean);
@@ -61,12 +73,20 @@ for (const [value, expected] of [
     ['unset', false],
     ['revert', false],
     ['REVERT-LAYER', false],
+    ['transparent none', false],
+    ['none transparent', false],
+    ['rgba(0,0,0,0) none', false],
+    ['transparent no-repeat', false],
+    ['url(cover.png)', false],
     ['rgba(127,127,127,.18)', true],
     ['rgb(0,0,0)', true],
     ['#3a3a3a', true],
     ['#333', true],
     ['#7f7f7f80', true],
     ['grey', true],
+    ['#3a3a3a no-repeat', true],
+    ['rgba(127,127,127,.18) !important', true],
+    ['rgb(0 0 0 / .5)', true],
 ]) {
     test(`U60 helper: ${JSON.stringify(value)} ${expected ? 'is' : 'is not'} a visible colour`, () => {
         assert.equal(isVisibleColour(value), expected);
