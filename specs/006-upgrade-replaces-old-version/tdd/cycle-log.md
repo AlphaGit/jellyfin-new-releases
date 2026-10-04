@@ -216,3 +216,16 @@ failed before the implementation.
 - note: the workflow is mid-change. "Add the version to the published repository" still names the
   stale `jellyfin-new-releases_<version4>.zip`, which the new step has moved away; `U14` replaces it.
   Do not tag a release before T013 is ticked
+
+## Cycle 14: U14 `jprm repo add` is given `--plugin-url` naming the release asset
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_PointsTheCatalogueAtTheReleaseAsset` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.TheReleaseWorkflow_PointsTheCatalogueAtTheReleaseAsset" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Matches() Failure: Pattern not found in value` (1 failed): the step passed `--url`
+- green: "Add the version to the published repository" now runs
+  `jprm repo add --plugin-url "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/new-releases.zip" ./repo/manifest.json ./artifacts/new-releases.zip`.
+  With `--plugin-url`, JPRM 1.1.0 copies nothing into `repo/` (`research.md` R7). The stale
+  `jellyfin-new-releases_…zip` path cycle 13 left behind is gone. Suite -> 326 passed, 0 failed
+- refactor: the two workflow tests in this class now build the same comment-free text; extracted
+  in its own structural commit after this one
+- commit: see the commit that carries this entry

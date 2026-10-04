@@ -115,6 +115,25 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
+    /// 006 U14: JPRM writes a `sourceUrl` under its own repository folder unless told otherwise.
+    /// The catalogue must instead name the asset of the release the tag just created, or a server
+    /// is sent to a file that was never published.
+    /// </summary>
+    [Fact]
+    public void TheReleaseWorkflow_PointsTheCatalogueAtTheReleaseAsset()
+    {
+        var steps = string.Join(
+            '\n',
+            RepositoryFiles.ReadAllText(".github/workflows/package.yml")
+                .Split('\n')
+                .Where(line => !line.TrimStart().StartsWith('#')));
+
+        Assert.Matches(
+            $@"jprm repo add(?:[^\n]*\\\n)*[^\n]*--plugin-url\s+""?https://github\.com/\$\{{\{{ github\.repository }}}}/releases/download/\$\{{?GITHUB_REF_NAME}}?/{Regex.Escape(Slug)}\.zip(?=[\s""']|$)",
+            steps);
+    }
+
+    /// <summary>
     /// U40: the release-root rule must reject a second entry published somewhere else. Built from
     /// two different literal roots, so neither side of the comparison is derived from the other.
     /// </summary>

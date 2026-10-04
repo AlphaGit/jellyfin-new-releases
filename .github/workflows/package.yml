@@ -91,9 +91,9 @@ jobs:
       - name: Add the version to the published repository
         run: |
           jprm repo add \
-            --url "${{ steps.pages.outputs.base_url || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}" \
+            --plugin-url "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/new-releases.zip" \
             ./repo/manifest.json \
-            "./artifacts/jellyfin-new-releases_${{ steps.ver.outputs.version4 }}.zip"
+            ./artifacts/new-releases.zip
 
       - name: Commit the published repository
         run: |
