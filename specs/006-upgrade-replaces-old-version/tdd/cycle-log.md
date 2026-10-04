@@ -729,3 +729,27 @@ folder JPRM writes, when the second audit found both unpinned.
   - The log has one `Loaded plugin: New Releases 0.2.0.0`, one daily trigger for the refresh, no
     `AmbiguousMatchException` and no `[ERR]`.
   - The maintainer verifies T026 by hand.
+
+## Correction to the T050 entry
+
+The T050 entry says "No test was loosened". **That is wrong.** T050 changed `U26` from "the
+destination of the `mv` whose source is JPRM's package equals the uploaded file" to "some `mv` line
+ends in the uploaded file". That loosened the link from JPRM's output to the upload. The third audit
+(`2b97421`, finding 27) showed it with mutant F1, which survived. Cycle 30 restores the link as its
+own test, so `U26` keeps its single reason to fail.
+
+## Cycle 30: U30 the `mv` that produces the uploaded file is the one that moves JPRM's package
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_UploadsJprmsPackageItself`
+  (new; finding 27, task T052)
+- red: none on the first run, because the workflow already has a single `mv` doing both.
+  **Test-after**, stated as such.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.TheReleaseWorkflow_UploadsJprmsPackageItself" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     1`
+- mutant F1: JPRM's file moved to `./artifacts/staged.zip`, and a second
+  `mv ./artifacts/old.zip ./artifacts/new-releases.zip` added. Same command ->
+  `Assert.Matches() Failure: Pattern not found in value` (1 failed). The full suite under F1 fails
+  this test only. F1 survived the third audit; it is caught now. Restored, checked with `cmp -s`
+- green: no workflow change. Suite -> 351 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry

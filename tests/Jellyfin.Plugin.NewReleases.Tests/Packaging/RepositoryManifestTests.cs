@@ -166,6 +166,21 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
+    /// 006 U30: U25 pins that some line moves JPRM's package and U26 that some line produces the
+    /// uploaded file; this pins that they are the same line. Otherwise JPRM's package can go
+    /// one way and the release upload another file entirely (006 third audit, finding 27).
+    /// </summary>
+    [Fact]
+    public void TheReleaseWorkflow_UploadsJprmsPackageItself()
+    {
+        var uploaded = Regex.Match(ReleaseWorkflowSteps, @"gh release create\s+\S+\s+""?([^\s""]+)""?");
+        var producer = Regex.Match(ReleaseWorkflowSteps, $@"(?m)^\s*mv\s+.+\s""?{Regex.Escape(uploaded.Groups[1].Value)}""?\s*$");
+        Assert.True(producer.Success, "no mv line produces the uploaded file");
+
+        Assert.Matches(MovesJprmsPackage, producer.Value);
+    }
+
+    /// <summary>
     /// 006 U14: JPRM writes a `sourceUrl` under its own repository folder unless told otherwise.
     /// The catalogue must instead name the asset of the release the tag just created, or a server
     /// is sent to a file that was never published.

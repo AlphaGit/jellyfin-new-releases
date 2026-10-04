@@ -117,6 +117,9 @@ ordering and presence check, as `ReleaseWorkflowTests.Steps` already does.
 | U26 | The file the workflow moves the package to is the file `gh release create` uploads | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo` |
 | U28 | The workflow moves the package after `jprm plugin build` and before `gh release create` | FR-010 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_MovesThePackageBetweenBuildingAndReleasingIt` |
 | U29 | The folder the workflow moves the package from is the folder `jprm plugin build --output` names | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_MovesThePackageFromTheFolderJprmWritesTo` |
+| U30 | The `mv` that produces the uploaded file is the one that moves JPRM's package | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_UploadsJprmsPackageItself` |
+| U31 | A flow-form `permissions` mapping that names neither `pages` nor `id-token` grants neither | FR-012 | example | PENDING | |
+| U32 | A quoted `permissions: "write-all"` grants `pages` and `id-token` | FR-012 | example | PENDING | |
 
 `U13` must anchor the file name at a path or quote boundary. Cycle 3 found `003`'s U39 is a bare
 substring check: after the rename, `new-releases_<v>.zip` is found inside the stale
@@ -124,6 +127,7 @@ substring check: after the rename, `new-releases_<v>.zip` is found inside the st
 
 `U15` restates `003`'s U27, which ends at `actions/deploy-pages` today.
 
+`U30`–`U34` were added after the audit of `2b97421` (findings 27–29, survivors F1, F2).
 `U28`–`U29` were added after the audit of `c210cd1` (findings 19–20, survivors S1, S2).
 `U25`–`U27` were added after the audit of `74313fc` (`tdd/verification.md` findings 1–2, mutants
 M5, M14, M12 survived). `U25` restores the half of `003`'s U39 that tied the slug to the file JPRM
@@ -149,6 +153,8 @@ Hosted by `Packaging/DocumentationTests.cs`. Read through the same `## <version>
 | --- | --- | --- | --- | --- | --- |
 | U22 | The `0.2.0` section names the `Jellyfin New Releases_` directory as the one to remove once | FR-007 | example | DONE | `tests/web/changelog-entry.test.js::the 0.2.0 notes name the old-name folder, and say to remove it once and nothing else` |
 | U23 | The `0.2.0` section names the raw catalogue address as the repository address that replaces the old one | FR-007 | example | DONE | `tests/web/changelog-entry.test.js::the 0.2.0 notes give the raw catalogue address as the one that replaces the old address` |
+| U33 | The `0.2.0` removal instruction itself says to remove the old-name folder and nothing else, once | FR-007 | example | PENDING | |
+| U34 | The `0.2.0` replacement instruction itself names the raw catalogue address as the replacement | FR-007 | example | PENDING | |
 
 ## Recorded invariants
 
