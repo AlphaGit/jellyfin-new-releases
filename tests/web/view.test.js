@@ -52,14 +52,16 @@ test('U86: the status line is announced politely', () => {
     assert.equal(staticAttribute('nr-announce', 'aria-live'), 'polite');
 });
 
-test('U87: each filter label belongs to its own field, and From and To are date fields', () => {
+test('U87: each filter label belongs to its own field', () => {
     const pairs = [...PAGE.matchAll(/<label for="([^"]*)">[^<]*<\/label>\s*<(?:input|select) [^>]*?id="([^"]*)"/g)].map(([, label, field]) => [label, field]);
 
-    assert.deepEqual([pairs, staticAttribute('nr-f-from', 'type'), staticAttribute('nr-f-to', 'type')], [
-        [['nr-f-artist', 'nr-f-artist'], ['nr-f-type', 'nr-f-type'], ['nr-f-state', 'nr-f-state'], ['nr-f-from', 'nr-f-from'], ['nr-f-to', 'nr-f-to']],
-        'date', 'date',
-    ]);
+    assert.deepEqual(pairs, [['nr-f-artist', 'nr-f-artist'], ['nr-f-type', 'nr-f-type'], ['nr-f-state', 'nr-f-state'], ['nr-f-from', 'nr-f-from'], ['nr-f-to', 'nr-f-to']]);
 });
+
+test('U87: From and To are date fields', () => {
+    assert.deepEqual([staticAttribute('nr-f-from', 'type'), staticAttribute('nr-f-to', 'type')], ['date', 'date']);
+});
+
 
 // U71, characterization (maintainer decision T083): the view's listeners predate 007. A listener that
 // stops after its first event (`once`) or can be cut off (`signal`) sends no request the next time.

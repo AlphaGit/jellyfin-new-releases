@@ -273,15 +273,19 @@ test('U80: the buttons read Ignore, Have it and Restore, and their screen-reader
     ]);
 });
 
-test('U81: the badges read "Upcoming, not yet released" and "Ignored"', () => {
+test('U81: an Upcoming release\'s state badge reads "Upcoming, not yet released"', () => {
+    const badge = /nr-badge-state" role="status">([^<]*)</.exec(rowOf(renderedList(fixture('releases.json')).panel, 103));
+
+    assert.equal(badge?.[1], 'Upcoming, not yet released');
+});
+
+test('U81: in the Archive tab, an ignored release\'s badge reads "Ignored"', () => {
     const body = fixture('releases.json');
     const ignored = { ...body, items: [{ ...body.items[3], archived: { kind: 'Ignore', decidedAt: '2026-09-18T11:04:00+00:00' } }] };
 
-    assert.deepEqual([
-        /nr-badge-state" role="status">([^<]*)</.exec(rowOf(renderedList(body).panel, 103))[1],
-        /<span class="nr-badge">(Ignored|Have it, In library)<\/span>/.exec(renderedList(ignored, { archive: true }).panel)?.[1],
-    ], ['Upcoming, not yet released', 'Ignored']);
+    assert.equal(/<span class="nr-badge">(Ignored|Have it, In library)<\/span>/.exec(renderedList(ignored, { archive: true }).panel)?.[1], 'Ignored');
 });
+
 
 test('U82: one missing track is counted in the singular', () => {
     const body = fixture('releases.json');

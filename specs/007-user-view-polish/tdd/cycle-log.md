@@ -1616,3 +1616,10 @@ name). T101, T102 and T104 only reorganize tests and stay open.
 
 All 123 recorded breaks, run at `34ba883`, fail the tests except three. E1 is the control and passes
 as it should. H5 and J3 now lie outside A15 and U68 as narrowed (T099).
+
+## Tidy: one check per test for U81 and U87 (T101, eighth audit Finding 4)
+
+- U81 becomes two tests: the Upcoming state badge, and the "Ignored" badge in the Archive tab. A
+  missing Upcoming badge now gives a diff, not a `TypeError`
+- U87 becomes two tests: each label belongs to its own field, and From and To are date fields
+- no behaviour change. B81a, B81b, B87a and B87b each now fail exactly one test, which names what broke
