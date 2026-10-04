@@ -94,3 +94,22 @@ failed before the implementation.
 - refactor: none yet. `SiteRootOf` now returns a release root; renaming it waits until the
   source-address rule is restated, so the rename is one structural commit over the finished rule
 - commit: see the commit that carries this entry
+
+## Cycle 7: U7 an entry whose `sourceUrl` is the release asset for its own version is accepted
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs::AWellFormedEntry_SourceUrlIsAccepted`
+  (existing, `003`'s U25 accepting side). The rule change is in its fixture: `WellFormedEntry`'s
+  default `sourceUrl` became `{ExampleSiteRoot}v{version}/{Slug}.zip`, and `ExampleSiteRoot`
+  became `https://example.invalid/owner/repo/releases/download/`
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.AWellFormedEntry_SourceUrlIsAccepted" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.EndsWith() Failure: String end does not match` /
+  `String: ···"leases/download/v1.2.3.0/new-releases.zip"` / `Expected end: "new-releases_1.2.3.0.zip"` (1 failed)
+- green: `AssertSourceUrlNamesItsOwnVersion` now requires `sourceUrl` to equal
+  `{root}v{version}/{Slug}.zip` exactly — stricter than the `StartsWith` + `EndsWith` pair it
+  replaces. The full suite then failed `EntriesFromTwoDifferentSites_AreRejected` (`003`'s U40) on
+  its accepting half: its literals were the old shape. Only its two literals moved to the release
+  shape; both assertions are unchanged. Suite -> 321 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry
+- note: the three-part tag (`U8`) is deliberately not handled yet; exact equality with the
+  four-part version is the smallest rule this test demands

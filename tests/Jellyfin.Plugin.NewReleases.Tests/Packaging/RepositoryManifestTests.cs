@@ -37,9 +37,10 @@ public class RepositoryManifestTests
             .Replace(' ', '-');
 
     /// <summary>
-    /// A well-formed entry, shaped exactly as `jprm repo add` writes one. The published manifest
-    /// lists no versions until the first tag, so without this the helpers below would only ever
-    /// run over an empty list and could reject everything without a test noticing.
+    /// A well-formed entry, shaped exactly as `jprm repo add --plugin-url` writes one: its package
+    /// is the asset of the version's own GitHub Release (006 FR-010). The published manifest lists
+    /// no versions until the first tag, so without this the helpers below would only ever run over
+    /// an empty list and could reject everything without a test noticing.
     /// </summary>
     private static JsonDocument WellFormedEntry(
         string version = "1.2.3.0",
@@ -50,7 +51,7 @@ public class RepositoryManifestTests
             ["version"] = version,
             ["changelog"] = "anything",
             ["targetAbi"] = targetAbi,
-            ["sourceUrl"] = sourceUrl ?? $"{ExampleSiteRoot}{Slug}_{version}.zip",
+            ["sourceUrl"] = sourceUrl ?? $"{ExampleSiteRoot}v{version}/{Slug}.zip",
             ["checksum"] = "0123456789abcdef0123456789abcdef",
             ["timestamp"] = "2026-09-20T00:00:00Z",
         }));
@@ -110,8 +111,8 @@ public class RepositoryManifestTests
     [Fact]
     public void EntriesFromTwoDifferentSites_AreRejected()
     {
-        using var here = WellFormedEntry("1.0.0.0", sourceUrl: $"https://one.invalid/p/{Slug}_1.0.0.0.zip");
-        using var elsewhere = WellFormedEntry("2.0.0.0", sourceUrl: $"https://two.invalid/p/{Slug}_2.0.0.0.zip");
+        using var here = WellFormedEntry("1.0.0.0", sourceUrl: $"https://one.invalid/o/r/releases/download/v1.0.0.0/{Slug}.zip");
+        using var elsewhere = WellFormedEntry("2.0.0.0", sourceUrl: $"https://two.invalid/o/r/releases/download/v2.0.0.0/{Slug}.zip");
 
         var siteRoot = SiteRootOf(here.RootElement);
 
@@ -233,7 +234,7 @@ public class RepositoryManifestTests
         => version.TryGetProperty(name, out var value) ? value.GetString() : null;
 
     /// <summary>A stand-in site root for the rejecting cases. Test data, not this project's URL.</summary>
-    private const string ExampleSiteRoot = "https://example.invalid/repo/plugin/";
+    private const string ExampleSiteRoot = "https://example.invalid/owner/repo/releases/download/";
 
     /// <summary>
     /// Fails when the published repository gains or loses a version, so neither per-entry check
@@ -259,7 +260,6 @@ public class RepositoryManifestTests
         var number = version.GetProperty("version").GetString();
         var sourceUrl = version.GetProperty("sourceUrl").GetString()!;
 
-        Assert.StartsWith(siteRoot, sourceUrl, StringComparison.Ordinal);
-        Assert.EndsWith($"{Slug}_{number}.zip", sourceUrl, StringComparison.Ordinal);
+        Assert.Equal($"{siteRoot}v{number}/{Slug}.zip", sourceUrl);
     }
 }
