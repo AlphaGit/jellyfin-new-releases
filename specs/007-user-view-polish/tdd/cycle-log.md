@@ -1546,3 +1546,25 @@ of an existing behaviour) is shown to catch its defect by one hand-made break, r
   its cover box
 - no behaviour change; green to green. Suite -> node 354 passed (one more: the `null` row). E2 and Y4
   still fail their tests
+
+## Commits of the seventh remediation
+
+| Entry | Commit |
+| --- | --- |
+| Seventh TDD audit report and Phase 14 tasks | `52f2c48` |
+| Maintainer decisions (T086, T091, stopping rule) | `f036497` |
+| Grilling session and T095–T097 | `6d97235` |
+| Cycle 76: accents and 1,000 artists | `e39e1c7` |
+| Cycle 77: the Artist field as the contract writes it | `c7ad570` |
+| Cycle 78: each action button | `a81f990` |
+| Cycle 79: group A | `aed9357` |
+| Cycle 80: group B | `6185e73` |
+| Cycle 81: group C | `b049c71` |
+| Tidy: fixture facts (T092) | `f9a10e7` |
+| Tidy: U71 moves (T093) | `42cdcf8` |
+| Tidy: one listener rule, names, descriptions (T094) | `fdc6eec` |
+
+All 121 recorded mutants, run at `fdc6eec`, fail their tests except three, each by a recorded decision:
+E1 is the control and passes as it should; H5 (Turkish lower-casing) was dropped in the grilling
+session (Q2); J3 (a style written after an action click) belongs to T089, dropped in Q3. K1 fails U67
+only.
