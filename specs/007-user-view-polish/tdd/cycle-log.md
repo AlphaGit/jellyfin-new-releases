@@ -1243,3 +1243,25 @@ maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
   the list in state `BASELINE`. Y8 needs `closest` in the fake DOM, which the profile lists as not
   modelled; the fake DOM gains a minimal `closest`, driven by its own tests
 - **T080–T082, T084, T085: go ahead**
+
+## Cycle 69: U68 pins each written template in order (T080, sixth audit Finding 2)
+
+- what: a test correction. `WRITTEN` pooled every template into one sorted set of distinct shapes,
+  so the sixth audit's Y1 (cover inside the details box), Y2 (extra wrapper around the actions), Z1 (a
+  second cover box), Z2 (links inside `span.nr-badge`), G1 (a styled "Could not load") and G2 (a
+  styled span in "The Archive is empty") survived. The behaviour U68 is unchanged
+- test: `WRITTEN` and its one test are replaced by `TEMPLATES`, one ordered list of shapes for each
+  template, and one test per template: `U68: {template} writes exactly the reviewed shapes, in order`.
+  The 9 templates: a Missing release at both sources, an Incomplete release with a compared edition,
+  an archived release in the Archive tab, a release with no cover, no stored releases, an empty
+  selection, an empty Archive, a list that fails to load, and the suggestion list. The last two
+  branches had no rendering before
+- red: every list declared as `[]`. `node --test tests/web/markup.test.js` -> 9 failed, e.g.
+  `not ok 19 - U68: a list that fails to load writes exactly the reviewed shapes, in order` (9 failed)
+- green: the 9 lists written by hand from `row()`, `cover()`, `render()`, `load()` and
+  `loadArtists()`, sharing the constants `LIST`, `COVER`, `DETAILS`, `LINK`, `BUTTON` and `EMPTY`.
+  All matched on the first run. File -> 21 passed
+- strength: Y1, Y2, Z1, Z2, G1 and G2 each fail a template test. W2–W9, W11 and W12 still fail. Each
+  was applied to a file copy, restored, and checked against `HEAD`
+- review: the 9 lists replace `WRITTEN`, which the maintainer reviewed (T079). They need their own
+  review
