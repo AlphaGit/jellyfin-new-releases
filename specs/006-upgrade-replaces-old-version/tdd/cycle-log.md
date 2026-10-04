@@ -363,3 +363,17 @@ failed before the implementation.
 - green: no README change. Suite -> 335 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 23: U22 the `0.2.0` section names the old-name directory to remove once
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/DocumentationTests.cs::Changelog_020_NamesTheOldNameDirectoryToRemove`
+  (new, with a `ChangelogSection` helper that applies `entryFor`'s heading rule)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DocumentationTests.Changelog_020_NamesTheOldNameDirectoryToRemove" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `CHANGELOG.md has no section for 0.2.0` (1 failed)
+- green: `CHANGELOG.md` gains `## 0.2.0 — unreleased` with "Upgrading from 0.1.x — once": the
+  `Jellyfin New Releases_<version>` folder, why it is left behind, how to remove it and nothing
+  else, and that no later upgrade needs it. Suite -> 336 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry
+- note: the heading says `unreleased`; the release date replaces it when `0.2.0` is tagged.
+  `entryFor` matches `## 0.2.0 ` followed by anything, so the release step reads it either way

@@ -3,6 +3,17 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 0.2.0 — unreleased
+
+### Upgrading from 0.1.x — once
+
+- **Remove the copy left under the old name.** The plugin was published as "Jellyfin New
+  Releases" and is now "New Releases". Jellyfin replaces an older copy only when the names match,
+  so after this update the server's plugin directory holds a folder named
+  `Jellyfin New Releases_<version>` beside the new `New Releases_0.2.0.0`. Stop the server, delete
+  the `Jellyfin New Releases_<version>` folder and nothing else, and start it again. No later
+  upgrade needs this.
+
 ## 0.1.1 — 2026-09-20
 
 ### Fixed

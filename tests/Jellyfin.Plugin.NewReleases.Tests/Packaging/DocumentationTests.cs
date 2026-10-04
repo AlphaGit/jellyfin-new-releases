@@ -92,6 +92,33 @@ public class DocumentationTests
     }
 
     /// <summary>
+    /// One version's section of CHANGELOG.md, by the rule <c>entryFor</c> in
+    /// <c>.github/scripts/changelog-entry.js</c> applies: from its `## &lt;version&gt;` heading to
+    /// the next `## ` heading. What is asserted here is what the release and the catalogue publish.
+    /// </summary>
+    private static string ChangelogSection(string version)
+    {
+        var lines = RepositoryFiles.ReadAllText("CHANGELOG.md").Split('\n');
+        var heading = "## " + version;
+        var start = Array.FindIndex(lines, line => line == heading || line.StartsWith(heading + " ", StringComparison.Ordinal));
+        Assert.True(start >= 0, $"CHANGELOG.md has no section for {version}");
+
+        var rest = lines.Skip(start + 1).TakeWhile(line => !line.StartsWith("## ", StringComparison.Ordinal));
+        return string.Join('\n', rest);
+    }
+
+    /// <summary>
+    /// 006 U22: the renaming release leaves one copy filed under the old name, which the host never
+    /// groups with the new one and so never removes. Its notes must name that directory so the
+    /// operator removes it, once, and nothing else (006 FR-007).
+    /// </summary>
+    [Fact]
+    public void Changelog_020_NamesTheOldNameDirectoryToRemove()
+    {
+        Assert.Contains("Jellyfin New Releases_", ChangelogSection("0.2.0"), StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// U38: the rule above is a predicate, and a predicate needs a table. These cases were
     /// written from the requirement — "the README must not claim support for 10.11, but may say
     /// it was dropped" — before the predicate existed. An earlier attempt at this check passed a
