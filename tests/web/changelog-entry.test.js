@@ -86,3 +86,26 @@ test('with --notes, the tagged version\'s section is written to the named file a
         fs.rmSync(dir, { recursive: true, force: true });
     }
 });
+
+// 006 U22, U23 (FR-007): the renaming release's notes, read through the same entryFor the release
+// and the catalogue publish them with, rather than through a copy of its rule (006 audit,
+// findings 9 and 11).
+const RAW_CATALOGUE = 'https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json';
+const section020 = () => entryFor(
+    fs.readFileSync(path.join(__dirname, '..', '..', 'CHANGELOG.md'), 'utf8'),
+    '0.2.0');
+
+test('the 0.2.0 notes name the old-name folder, and say to remove it once and nothing else', () => {
+    const notes = section020();
+
+    assert.match(notes, /`Jellyfin New Releases_<version>`/);
+    assert.match(notes, /\bonce\b/);
+    assert.match(notes, /\bnothing else\b/);
+});
+
+test('the 0.2.0 notes give the raw catalogue address as the one that replaces the old address', () => {
+    const notes = section020();
+
+    assert.ok(notes.includes(RAW_CATALOGUE), `no ${RAW_CATALOGUE} in the 0.2.0 notes`);
+    assert.match(notes, /\breplace\b/i);
+});

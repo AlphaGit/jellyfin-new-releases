@@ -603,3 +603,18 @@ recorded mutant its test catches:
 - green: `package.yml:81` runs `node .github/scripts/changelog-entry.js "${{ steps.ver.outputs.version }}" --notes ./artifacts/release-notes.md`.
   dotnet -> 348 passed; node -> 359 passed. Run by hand for `0.2.0`, it writes the section that
   begins `### Upgrading from 0.1.x — once`
+
+## `/speckit-implement`: T040 and T042, the 0.2.0 notes tested through the real `entryFor`
+
+- `U22` and `U23` move from C# to `tests/web/changelog-entry.test.js`, reading `CHANGELOG.md`
+  through the exported `entryFor` — the function the release and the catalogue publish with —
+  instead of `DocumentationTests.ChangelogSection`, a C# copy without its trim and empty-section
+  rule. `ChangelogSection`, `Changelog_020_NamesTheOldNameDirectoryToRemove` and
+  `Changelog_020_NamesTheRepositoryAddressThatReplacesTheOldOne` are removed; the behaviours stay
+  tested, and `U22` now asserts more (T042: "once" and "nothing else", which its comment claimed)
+- first run: node `# pass 9`, the content already being there; each mutant then fails the right test:
+  - M10, the folder name removed from the 0.2.0 section -> `not ok 8 - the 0.2.0 notes name the old-name folder…`
+  - M11, the address's `main` -> `master` -> `not ok 9 - the 0.2.0 notes give the raw catalogue address…`
+  - "once" removed from the 0.2.0 section -> `not ok 8`
+  - each restored, `cmp -s`
+- suite: dotnet -> 346 passed (the two C# tests removed); node -> 361 passed

@@ -147,8 +147,8 @@ Hosted by `Packaging/DocumentationTests.cs`. Read through the same `## <version>
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U22 | The `0.2.0` section names the `Jellyfin New Releases_` directory as the one to remove once | FR-007 | example | DONE | `Packaging/DocumentationTests.cs::Changelog_020_NamesTheOldNameDirectoryToRemove` |
-| U23 | The `0.2.0` section names the raw catalogue address as the repository address that replaces the old one | FR-007 | example | DONE | `Packaging/DocumentationTests.cs::Changelog_020_NamesTheRepositoryAddressThatReplacesTheOldOne` |
+| U22 | The `0.2.0` section names the `Jellyfin New Releases_` directory as the one to remove once | FR-007 | example | DONE | `tests/web/changelog-entry.test.js::the 0.2.0 notes name the old-name folder, and say to remove it once and nothing else` |
+| U23 | The `0.2.0` section names the raw catalogue address as the repository address that replaces the old one | FR-007 | example | DONE | `tests/web/changelog-entry.test.js::the 0.2.0 notes give the raw catalogue address as the one that replaces the old address` |
 
 ## Recorded invariants
 
