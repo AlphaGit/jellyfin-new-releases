@@ -1206,3 +1206,25 @@ maintainer's reply: "Confirmed. Go ahead. Agreed with option A."
   against `HEAD`. Suite -> node 286 passed
 - review: `STATIC` and `WRITTEN` are reviewed copies, like U67's list. The maintainer should read
   them once against the page
+
+## Refactor: one block parser for every stylesheet reader (T076, fifth audit Finding 5)
+
+- what: `rules()`, `declarations()` and U59's `narrowScreen()` read `@media` three different ways.
+  All of them now read through `blocks(css)`, the parser behind U67's `stylesheet()`, which keeps each
+  rule's `@media` condition. `declarations(selector, media)` takes the condition (`''` for the top
+  level), and U59 asks for `'@media (max-width: 600px)'`. `narrowScreen()` is gone. `dimsText`'s
+  ceiling comment now also names `calc()` and `var()`
+- no behaviour change; green to green. Suite -> node 286 passed before and after, commit `2a7c0c0`
+- strength kept: all 75 mutants of the fifth audit run at `2a7c0c0`. Every one fails its tests but
+  the control E1, which passes as it should. K1 fails U67 only. Each was applied to a file copy,
+  restored, and checked against `HEAD`
+
+## Commits of the fifth remediation
+
+| Entry | Commit |
+| --- | --- |
+| Fifth TDD audit report and Phase 12 tasks | `288de38` |
+| Maintainer decisions on the fifth TDD audit (T072, T075, T077, T078) | `4a68406` |
+| Cycle 67: U67 reads every style source | `8edb9c0` |
+| Cycle 68: U68 closed world over the markup | `3af8788` |
+| Refactor: one block parser | `2a7c0c0` |
