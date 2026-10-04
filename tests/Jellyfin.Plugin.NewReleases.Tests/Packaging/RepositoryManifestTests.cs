@@ -28,11 +28,11 @@ public class RepositoryManifestTests
     /// <summary>
     /// How many versions the published repository lists right now. 0.1.0.0 and 0.1.1.0 were
     /// review releases for the real-server passes, published under the old package slug, and were
-    /// cleared on 2026-10-04 (006 U4). 0.2.0 is the first version published under the new name;
-    /// until it is, the per-entry checks below run only against synthetic entries. Raise this
+    /// cleared on 2026-10-04 (006 U4). 0.2.0.0, the first version under the new name, was
+    /// published the same day, so the per-entry checks below bind a real entry again. Raise this
     /// with each release; the failure message says so.
     /// </summary>
-    private const int PublishedVersionsToday = 0;
+    private const int PublishedVersionsToday = 1;
 
     /// <summary>
     /// The package slug JPRM derives from the plugin's name. Read from <c>build.yaml</c> rather
