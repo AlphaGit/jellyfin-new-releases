@@ -795,3 +795,18 @@ own test, so `U26` keeps its single reason to fail.
 - green: no `CHANGELOG.md` change. Node -> 362 passed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 34: U34 the replacement instruction itself names the raw address as the replacement
+
+- test: `tests/web/changelog-entry.test.js::the 0.2.0 replacement instruction swaps the old github.io address for the raw catalogue address`
+  (new; finding 29, task T054)
+- red: none on the first run, because the text exists since cycle 24. **Test-after**, stated as
+  such. `node --test tests/web/changelog-entry.test.js` -> `# pass 11`
+- mutant: "replace the old `github.io` address with" changed to "add, beside the old `github.io`
+  address," -> `not ok 11 - the 0.2.0 replacement instruction…`. `U23` still passes under this
+  mutant: the address is still there, and so is the bold "Replace the repository address." So this
+  test is the one that pins the instruction. Restored, checked with `cmp -s`
+- green: no `CHANGELOG.md` change. Node -> 363 passed (also under `LANG=de_DE.UTF-8`);
+  dotnet -> 353 passed
+- refactor: none
+- commit: see the commit that carries this entry

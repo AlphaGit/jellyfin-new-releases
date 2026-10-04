@@ -118,3 +118,11 @@ test('the 0.2.0 removal instruction deletes the old-name folder and nothing else
         section020(),
         /delete\s+the `Jellyfin New Releases_<version>` folder and nothing else,[^.]*\.\s+No later\s+upgrade needs this\./);
 });
+
+// 006 U34: the replacement step as one instruction — the old address goes, the raw address takes
+// its place — so the address merely appearing near the word "replace" cannot stand in for it.
+test('the 0.2.0 replacement instruction swaps the old github.io address for the raw catalogue address', () => {
+    const escaped = RAW_CATALOGUE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    assert.match(section020(), new RegExp(`replace the old \`github\\.io\` address with\\s+\`${escaped}\``));
+});

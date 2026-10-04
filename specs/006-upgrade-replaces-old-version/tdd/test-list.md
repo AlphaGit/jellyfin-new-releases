@@ -154,7 +154,7 @@ Hosted by `Packaging/DocumentationTests.cs`. Read through the same `## <version>
 | U22 | The `0.2.0` section names the `Jellyfin New Releases_` directory as the one to remove once | FR-007 | example | DONE | `tests/web/changelog-entry.test.js::the 0.2.0 notes name the old-name folder, and say to remove it once and nothing else` |
 | U23 | The `0.2.0` section names the raw catalogue address as the repository address that replaces the old one | FR-007 | example | DONE | `tests/web/changelog-entry.test.js::the 0.2.0 notes give the raw catalogue address as the one that replaces the old address` |
 | U33 | The `0.2.0` removal instruction itself says to remove the old-name folder and nothing else, once | FR-007 | example | DONE | `tests/web/changelog-entry.test.js::the 0.2.0 removal instruction deletes the old-name folder and nothing else, and only this once` |
-| U34 | The `0.2.0` replacement instruction itself names the raw catalogue address as the replacement | FR-007 | example | PENDING | |
+| U34 | The `0.2.0` replacement instruction itself names the raw catalogue address as the replacement | FR-007 | example | DONE | `tests/web/changelog-entry.test.js::the 0.2.0 replacement instruction swaps the old github.io address for the raw catalogue address` |
 
 ## Recorded invariants
 
