@@ -480,3 +480,24 @@ failed before the implementation.
 - green: no rule change. Suite -> 340 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Refactor after cycle 27: no branch in the catalogue-wide address check (T034)
+
+- structural, test only: `Manifest_EverySourceUrlSharesOneSiteRoot_AndNamesItsOwnVersion` loses
+  `003`'s `if (versions.Count > 0)` (finding 3). `Assert.All` reads the root from `versions[0]`
+  inside its lambda, so an empty catalogue asserts the count only and the first entry is bound the
+  moment it appears. Same result as before for every catalogue; the smell, not a behaviour, changed
+- check: `grep -n "if (versions.Count" RepositoryManifestTests.cs` -> no match. Build 0 warnings;
+  suite -> 340 passed
+- evidence the check binds (temporary, both files restored and verified with `cmp -s`):
+  - one Pages-style entry with `PublishedVersionsToday` still 0 -> the count fails first:
+    `repo/manifest.json lists 1 version(s), expected 0.`
+  - `PublishedVersionsToday = 1` and the Pages-style entry
+    `https://AlphaGit.github.io/jellyfin-new-releases/new-releases/new-releases_0.2.0.0.zip` ->
+    `Assert.All() Failure: 1 out of 1 items in the collection did not pass.` /
+    `Assert.StartsWith() Failure: String start does not match`
+  - `PublishedVersionsToday = 1` and the address the `0.2.0` release will write,
+    `https://github.com/AlphaGit/jellyfin-new-releases/releases/download/v0.2.0/new-releases.zip`
+    -> `Passed!`, so the rule accepts the first real entry
+- T034 carries no behaviour marker, so this loop leaves its checkbox for `/speckit-implement`
+- commit: see the commit that carries this entry

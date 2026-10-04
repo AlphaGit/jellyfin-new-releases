@@ -258,11 +258,9 @@ public class RepositoryManifestTests
 
         AssertPublishedVersionCount(versions);
 
-        if (versions.Count > 0)
-        {
-            var releaseRoot = ReleaseRootOf(versions[0]);
-            Assert.All(versions, entry => AssertSourceUrlNamesItsOwnVersion(entry, releaseRoot));
-        }
+        // No branch: the root is read only when an entry exists, so the rule binds the first
+        // published version the moment it appears (006 audit, finding 3).
+        Assert.All(versions, entry => AssertSourceUrlNamesItsOwnVersion(entry, ReleaseRootOf(versions[0])));
     }
 
     /// <summary>
