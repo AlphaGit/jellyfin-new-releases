@@ -141,3 +141,19 @@ failed before the implementation.
 - green: no rule change. Suite -> 323 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 10: U10 a Pages-style `…/<slug>/<slug>_<version>.zip` address is rejected
+
+- test: `ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected`, new case
+  `("1.0.0.0", ExampleSiteRoot + "new-releases/new-releases_1.0.0.0.zip")` — the Pages layout,
+  placed under the release root so that only the address shape can reject it
+- red: none on the first run. Same filter as cycle 9 -> `Passed!  - Failed:     0, Passed:     5`
+- mutant: `AssertSourceUrlNamesItsOwnVersion` put back to the Pages-era rule,
+  `StartsWith(siteRoot)` + `EndsWith($"{Slug}_{number}.zip")`. Same command ->
+  `ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected(number: "1.0.0.0", sourceUrl: "https://example.invalid/owner/repo/releases/downlo"···) [FAIL]`
+  (1 failed, 4 passed). The display is truncated; it is this case, because the only other cases
+  with `"1.0.0.0"` and that root end in `_2.0.0.0.zip` and `jellyfin-new-releases.zip`, which the
+  old rule also rejects. Restored from a file copy, verified with `cmp -s`
+- green: no rule change. Suite -> 324 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry
