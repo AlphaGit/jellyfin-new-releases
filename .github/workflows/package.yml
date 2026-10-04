@@ -19,9 +19,6 @@ concurrency:
 jobs:
   package:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -58,9 +55,6 @@ jobs:
       # the runner image; the script uses only its standard library.
       - name: Write the changelog entry into build.yaml
         run: node .github/scripts/changelog-entry.js "${{ steps.ver.outputs.version }}"
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v6
 
       # Build to a staging directory: `jprm repo add` copies the package into repo/ itself, and
       # would otherwise be copying a file onto itself.
@@ -102,12 +96,3 @@ jobs:
           git add repo
           git commit -m "release: publish ${{ steps.ver.outputs.version }} to the plugin repository"
           git push origin "HEAD:${{ github.event.repository.default_branch }}"
-
-      - name: Upload the site
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: ./repo
-
-      - name: Deploy to Pages
-        id: deployment
-        uses: actions/deploy-pages@v5

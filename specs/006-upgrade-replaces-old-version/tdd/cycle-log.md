@@ -255,3 +255,16 @@ failed before the implementation.
 - green: no workflow change. Suite -> 326 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 16: U16 no step uses a GitHub Pages action
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_DeploysNoPagesSite`
+  (new theory: `actions/configure-pages`, `actions/upload-pages-artifact`, `actions/deploy-pages`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests.ReleaseWorkflow_DeploysNoPagesSite" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> three `[FAIL]`, e.g. `Found:  "actions/deploy-pages"` (3 failed)
+- green: `.github/workflows/package.yml` loses "Configure Pages", "Upload the site", "Deploy to
+  Pages", and the job's `environment: github-pages` block, whose `url` read the deploy step's
+  output and would otherwise dangle. Permissions are `U17`'s. Suite -> 329 passed, 0 failed
+- refactor: none in this cycle; the Pages wording in the workflow's comments is cleared once the
+  permissions are settled
+- commit: see the commit that carries this entry

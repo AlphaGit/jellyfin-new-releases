@@ -45,6 +45,20 @@ public class ReleaseWorkflowTests
     }
 
     /// <summary>
+    /// 006 U16: packages are release assets and the catalogue is read from the branch, so no
+    /// release depends on GitHub Pages (006 FR-012). A Pages step left behind would keep a second,
+    /// stale copy of the catalogue answering at the old address.
+    /// </summary>
+    [Theory]
+    [InlineData("actions/configure-pages")]
+    [InlineData("actions/upload-pages-artifact")]
+    [InlineData("actions/deploy-pages")]
+    public void ReleaseWorkflow_DeploysNoPagesSite(string pagesAction)
+    {
+        Assert.DoesNotContain(pagesAction, Steps, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// U28: JPRM rewrites TargetFramework in the project file while packaging and is expected to
     /// put it back. Contract statement 6 is about that element specifically, and a local dry run
     /// confirmed JPRM restores it — while leaving the rewritten &lt;Version&gt; behind. A whole-file
