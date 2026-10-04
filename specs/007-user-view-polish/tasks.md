@@ -372,3 +372,19 @@ each one.
 - [X] T095 [US2] T091 group A (characterization, `BASELINE`): the list shows the right releases. The Archive tab asks for archived releases and the List tab does not; Type, State, From and To each send their own value under the name the server reads; the Type filter offers Album, EP, Single, Compilation, Live, Remix, Soundtrack; an action in the Archive tab reloads the Archive and stays on it; a release with three sources shows three links. Done when each test fails against a hand-made break of its behaviour and `node --test "tests/web/*.test.js"` is green. [U73] [U74] [U75] [U76] [U77]
 - [X] T096 [US2] T091 group B (characterization, `BASELINE`): the page shows the right words. The failed-load sentence; the three empty states (the Archive one also before the first refresh); the button texts and their screen-reader labels; the state and archive badges; "1 missing track" and "2 missing tracks"; the source link labels; the status line after each action. Done as T095. [U78] [U79] [U80] [U81] [U82] [U83] [U84]
 - [X] T097 [US4] T091 group C (characterization, `BASELINE`): a screen reader and keyboard get it right. The List tab is selected on open, switching swaps the selection and the panel's label; status announcements are on; each label belongs to its own field, and From and To are date fields; source links open with `rel="noopener"`. Done as T095. [U85] [U86] [U87] [U88]
+
+---
+
+## Phase 15: TDD remediation
+
+From the eighth [`tdd/verification.md`](./tdd/verification.md) (verdict **FAIL**, audited at
+`093d2a1` under the maintainer's stopping rule). **The feature is not done until T098 and T099 are
+cleared.** T100–T104 are polish and do not block.
+
+- [ ] T098 [US1] Finding 1 (HIGH): add an A4 case in `tests/web/artist-filter.test.js`: with ASP applied, typing "AS" asks for the full list at once, with no `change` event. Done when the probe's P1 (the typing handler reloads only for an artist or an empty field) fails `node --test "tests/web/*.test.js"`. [A4]
+- [ ] T099 Finding 2 (HIGH): maintainer decision. Either narrow the A15 and U68 rows of `tdd/test-list.md` to the scope the grilling session set (A15 in the suite's English locale; U68's runtime check through load, both tabs, a filter change, Clear and a render), or add a rubric override row for accepted survivors. Done when a dated cycle-log entry records the choice and the list or the rubric says it.
+- [ ] T100 Finding 3 (MED): make U85 in `tests/web/view.test.js:33-48` read the opened tab state from the loaded page, falling back to the markup only where the page writes nothing. Done when `node --test "tests/web/*.test.js"` is green and H9 and B85 still fail it. [U85]
+- [ ] T101 Finding 4 (MED): split U81 (`tests/web/render.test.js:276-284`) and U87 (`tests/web/view.test.js:54-62`) into one test per badge and one per check. Done when the suite is green and B81a, B81b, B87a and B87b each still fail one test. [U81] [U87]
+- [ ] T102 Finding 5 (MED): move U84 from `tests/web/requests.test.js:144-153` to `tests/web/view.test.js`, and the `keepsListening` table from `tests/web/view.test.js:66-81` to `tests/web/fake-dom.test.js`. Done when the suite is green and B84 and Y4 still fail. [U84] [U71]
+- [ ] T103 Finding 6 (LOW): make the 1,000-artist test in `tests/web/artist-filter.test.js:138-146` compare every suggested name, or rename it to what it checks. Done when the suite is green and H2 still fails it.
+- [ ] T104 Finding 7 (LOW): let the U72 rows use `loadedView`, let U70 and U77 share one link reader, and share one page-source read. Done when the suite is green and J4, Y9 and B77 still fail.
