@@ -50,6 +50,8 @@ function stylesheet(css = STYLE) {
 // U67, the closed world (T069): the reviewed list of every rule the page declares. A rule added, removed or
 // changed in user-view.html fails here until this list is reviewed and updated with it. The predicates
 // further down check what these values mean (contrast, a visible colour, no dimming, the underline).
+// Entries marked `007` were added or changed by 007. The other 21 predate it and are pinned as they stood
+// at a3b3579. The maintainer reviewed the list on 2026-10-03 (cycle log, T072).
 const STYLESHEET = [
     ['#nr-user-view h1', 'margin: 0 0 .5em; font-size: 1.5em; font-weight: 700'],
     ['#nr-user-view h2', 'font-size: 1.05em; font-weight: 700; margin: 1.25em 0 .35em; padding-bottom: .3em; border-bottom: 1px solid rgba(127,127,127,.35)'],
@@ -62,23 +64,23 @@ const STYLESHEET = [
     ['#nr-user-view .nr-filter label', 'display: block; font-size: .78em; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; opacity: .7; margin-bottom: .25em'],
     ['#nr-user-view .nr-filter select, #nr-user-view .nr-filter input', 'width: 100%; box-sizing: border-box; padding: .4em .55em; border-radius: 4px; border: 1px solid rgba(127,127,127,.4); background: rgba(0,0,0,.25); color: inherit; font-size: .9em'],
     ['#nr-user-view .nr-list', 'display: flex; flex-direction: column; gap: .5em'],
-    ['#nr-user-view .nr-row', 'display: grid; grid-template-columns: 64px 1fr auto; gap: .25em 1em; padding: .7em 1em; background: rgba(127,127,127,.08); border: 1px solid rgba(127,127,127,.25); border-radius: 6px'],
-    ['#nr-user-view .nr-cover', 'width: 64px; height: 64px; background: rgba(127,127,127,.18)'],
-    ['#nr-user-view .nr-cover img', 'display: block; width: 100%; height: 100%; object-fit: cover'],
+    ['#nr-user-view .nr-row', 'display: grid; grid-template-columns: 64px 1fr auto; gap: .25em 1em; padding: .7em 1em; background: rgba(127,127,127,.08); border: 1px solid rgba(127,127,127,.25); border-radius: 6px'], // 007
+    ['#nr-user-view .nr-cover', 'width: 64px; height: 64px; background: rgba(127,127,127,.18)'], // 007
+    ['#nr-user-view .nr-cover img', 'display: block; width: 100%; height: 100%; object-fit: cover'], // 007
     ['#nr-user-view .nr-title', 'font-size: 1.1em; font-weight: 700'],
     ['#nr-user-view .nr-artist a', 'color: inherit'],
     ['#nr-user-view .nr-meta', 'display: flex; flex-wrap: wrap; gap: .4em .8em; align-items: center; font-size: .85em; opacity: .9'],
     ['#nr-user-view .nr-badge', 'display: inline-block; font-size: .72em; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .18em .55em; border-radius: 10px; background: #3a3a3a; color: #ddd'],
     ['#nr-user-view .nr-badge-state', 'background: #24405c'],
-    ['#nr-user-view .nr-actions', 'display: flex; flex-direction: column; gap: .4em; align-items: stretch'],
-    ['#nr-user-view .nr-actions button', 'width: 100%; padding: .35em .8em; border-radius: 4px; border: 1px solid rgba(127,127,127,.4); background: transparent; color: inherit; cursor: pointer'],
+    ['#nr-user-view .nr-actions', 'display: flex; flex-direction: column; gap: .4em; align-items: stretch'], // 007
+    ['#nr-user-view .nr-actions button', 'width: 100%; padding: .35em .8em; border-radius: 4px; border: 1px solid rgba(127,127,127,.4); background: transparent; color: inherit; cursor: pointer'], // 007
     ['#nr-user-view .nr-links a', 'margin-right: .6em'],
-    ['#nr-user-view .nr-links a, #nr-user-view .nr-links a:visited', 'color: #00a4dc'],
+    ['#nr-user-view .nr-links a, #nr-user-view .nr-links a:visited', 'color: #00a4dc'], // 007
     ['#nr-user-view details', 'margin-top: .3em; font-size: .88em'],
     ['#nr-user-view .nr-empty', 'padding: 3em 1em; text-align: center; opacity: .8'],
     ['#nr-user-view .nr-visually-hidden', 'position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)'],
     ['#nr-user-view :focus-visible', 'outline: 2px solid #52b54b; outline-offset: 2px'],
-    ['@media (max-width: 600px) #nr-user-view .nr-actions', 'grid-column: 1 / -1; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr'],
+    ['@media (max-width: 600px) #nr-user-view .nr-actions', 'grid-column: 1 / -1; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr'], // 007
 ];
 
 test('U67: the stylesheet holds exactly the reviewed rules, so an added, removed or changed rule fails until the list is reviewed', () => {

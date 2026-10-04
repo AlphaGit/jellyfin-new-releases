@@ -1135,3 +1135,21 @@ design. T069's check is therefore read as "K1 fails no predicate-based test".
 | Cycle 64: U67 closed world | `5ebd87c` |
 | Cycle 65: line predicates pass correct CSS | `3ae9a45` |
 | Cycle 66: `dimsText` | this entry's commit |
+
+## Maintainer decisions on the fifth TDD audit, 2026-10-03 (T072, T075, T077, T078)
+
+Driven from `tdd/verification.md` (verdict FAIL, audited at `78b0f4b`) and its Phase 12 tasks. The
+maintainer's reply: "Confirmed. Go ahead. Agreed with option A."
+
+- **T072 — review of the U67 list: confirmed (maintainer, 2026-10-03).** The list reviewed is
+  `STYLESHEET` as committed in `5ebd87c` and unchanged up to `288de38`. Its comment now marks the 7
+  entries that 007 added or changed (`// 007`); the other 21 predate 007 and are pinned as they stood
+  at `a3b3579`
+- **T078 — the K1 reading of T069: confirmed (maintainer, 2026-10-03).** K1 (a correct stylesheet
+  change) fails U67 only, and no predicate-based test
+- **T075 — decision: option A, extend the closed world to the markup (maintainer, 2026-10-03).** The
+  page has exactly one `<style>` element; its only at-rule is the pinned `@media`; every element
+  template that `row()` and `cover()` write, and the static controls, carry an exact set of attribute
+  names and an exact class list; no `style` attribute is written or declared. T073 and T074 carry it
+  out
+- **T077:** the commit of cycle 66 is `78b0f4b`
