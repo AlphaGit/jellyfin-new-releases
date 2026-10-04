@@ -120,7 +120,7 @@ rename the plugin without knowing what a rename costs.
 (`quickstart.md` pass 1, scenario 1).
 
 - [X] T014 [A5] [US2] Verify T004 fails for the right reason by mutating `build.yaml`'s `name`, running `--filter "FullyQualifiedName~PluginSanityTests"`, and restoring from a file copy verified with `cmp -s`. **Never restore with `git checkout --`** — it reverts the whole file to `HEAD` and takes uncommitted work with it, which has cost work twice on this project
-- [ ] T015 [A6] [US2] Run `quickstart.md` pass 1, scenario 2's two mutants on `.github/workflows/package.yml` (`SC-006`) — rename the uploaded file, then move `gh release create` after `jprm repo add` — each restored from a file copy verified with `cmp -s`. Record both in `tdd/cycle-log.md`
+- [X] T015 [A6] [US2] Run `quickstart.md` pass 1, scenario 2's two mutants on `.github/workflows/package.yml` (`SC-006`) — rename the uploaded file, then move `gh release create` after `jprm repo add` — each restored from a file copy verified with `cmp -s`. Record both in `tdd/cycle-log.md`
 - [ ] T016 [P] [US2] Record the rule in `docs/http-surface.md`, or in a sibling note beside it: the plugin's displayed name is stated in `build.yaml` and `Plugin.cs`, those two must never disagree, Jellyfin groups and deletes installed copies **by name**, a rename strands every copy under the old name and costs a one-time manual removal, and JPRM derives the package slug from the name, so a rename also moves the release asset's name (`FR-008`)
 - [ ] T017 [P] [US2] Add a one-line pointer to that rule in the Conventions list of `CLAUDE.md`
 

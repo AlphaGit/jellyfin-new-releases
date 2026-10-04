@@ -321,3 +321,19 @@ failed before the implementation.
 - green: no workflow change. Suite -> 333 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 20: A6 renaming the release asset, or releasing after the catalogue entry, fails the suite
+
+- test: the suite; closed by `U7`–`U19` and `U24`, evidenced by `quickstart.md` pass 1, scenario 2
+- mutant 1: the uploaded file in `gh release create` renamed from `./artifacts/new-releases.zip`
+  to `./artifacts/plugin.zip`.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `RepositoryManifestTests.TheDerivedSlug_MatchesTheFilenameTheReleaseWorkflowBuilds [FAIL]`
+  (1 failed, 21 passed). Restored from a file copy, verified with `cmp -s`
+- mutant 2: "Create the GitHub Release" moved after "Add the version to the published repository".
+  `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `ReleaseWorkflowTests.ReleaseWorkflow_BuildsReleasesAddsToTheManifestAndCommits_InThatOrder [FAIL]`
+  (1 failed, 11 passed). Restored from a file copy, verified with `cmp -s`; `git status` clean
+- green: suite unchanged at 333 passed
+- refactor: none
+- commit: see the commit that carries this entry
