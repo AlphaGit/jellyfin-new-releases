@@ -1042,3 +1042,14 @@ real-browser pass. A closed-world list of selectors was considered and not chose
 | Cycle 62: background shorthand | `719eaa2` |
 | Cycle 63: A18 | `940663c` |
 | Refactor: one selector parser | `37e24f5` |
+
+## Maintainer decision on A18, 2026-10-03 (third audit Finding 5)
+
+**Test-after behaviour.** It passed on its first run, because the page already did the job. It is
+labelled test-after in its own cycle, with its evidence:
+
+| Behaviour | Cycle | Code that already did it | Mutants caught today |
+| --- | --- | --- | --- |
+| A18 | 63 | no background on a source link; no `opacity` or `filter` on an element around it | Q6, Q7 |
+
+**Decision (maintainer, 2026-10-03): accepted.**
