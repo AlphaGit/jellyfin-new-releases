@@ -81,6 +81,17 @@ public class DocumentationTests
     }
 
     /// <summary>
+    /// 006 U21: the other side of U20. The Pages address stops answering once Pages is turned
+    /// off, so an install step that still offers it, even beside the right one, sends some
+    /// operators to a catalogue that is gone.
+    /// </summary>
+    [Fact]
+    public void Install_NamesNoPagesAddress()
+    {
+        Assert.DoesNotContain("github.io", SectionOf("## Install"), StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
     /// U38: the rule above is a predicate, and a predicate needs a table. These cases were
     /// written from the requirement — "the README must not claim support for 10.11, but may say
     /// it was dropped" — before the predicate existed. An earlier attempt at this check passed a

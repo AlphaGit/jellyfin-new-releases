@@ -349,3 +349,17 @@ failed before the implementation.
   `003`'s U30 still passes. Suite -> 334 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 22: U21 the `## Install` section names no `github.io` address
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/DocumentationTests.cs::Install_NamesNoPagesAddress` (new)
+- red: none on the first run; cycle 21 rewrote the sentence that held the Pages address.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~DocumentationTests.Install_NamesNoPagesAddress" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     1`
+- mutant: install step 2 also says the old `https://alphagit.github.io/jellyfin-new-releases/manifest.json`
+  "also works", beside the raw address — which `U20` alone accepts. Same command ->
+  `Assert.DoesNotContain() Failure: Sub-string found` / `Found:  "github.io"` (1 failed). Restored
+  from a file copy, verified with `cmp -s`
+- green: no README change. Suite -> 335 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry
