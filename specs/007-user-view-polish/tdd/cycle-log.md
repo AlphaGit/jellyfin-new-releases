@@ -1500,3 +1500,20 @@ of an existing behaviour) is shown to catch its defect by one hand-made break, r
   waiting message before the first refresh) fail U79; B80 ("Have it" reads "Ignore") and H8 (its label
   says "Ignore") fail U80; B81a and B81b fail U81; B82 fails U82; B83 (labels swapped) fails U83; B84
   fails U84
+
+## Cycle 81: group C, a screen reader and keyboard get it right (T097, characterization)
+
+- what the page does, one test each:
+  - U85: on open the List tab is selected and the panel is labelled by it; clicking Archive moves both
+    to the Archive tab, and clicking List moves them back
+  - U86: the status line is announced politely (`aria-live="polite"`)
+  - U87: each filter label belongs to its own field (Artist, Type, State, From, To), and From and To
+    are date fields
+  - U88: every source link opens in a new tab without access to the page
+    (`target="_blank" rel="noopener"`)
+- red: none by definition. Evidence, one break each made by hand on a file copy and restored at
+  once: H9 (no tab selected on open), J1 (`aria-selected` set to any value) and B85 (the panel labelled
+  by the wrong tab) fail U85; B86 (`aria-live="off"`) fails U86; B87a (the Type label points at State)
+  and B87b (From is a text field) fail U87; B88 (`rel="opener"`) fails U88
+- also: B88 first failed U83 too, because U83 found the link labels through `rel="noopener"`. U83 now
+  finds them through `target="_blank"`, so it reads the labels only; B83 still fails it

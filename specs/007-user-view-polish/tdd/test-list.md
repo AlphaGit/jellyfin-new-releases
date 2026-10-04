@@ -204,6 +204,10 @@ the sixth audit's mutant that each one catches.
 | U82 | One missing track is counted in the singular | FR-011; T091 group B | example | BASELINE | `tests/web/render.test.js::U82: one missing track is counted in the singular` |
 | U83 | The source links read "MusicBrainz" and "Deezer" | FR-011; T091 group B | example | BASELINE | `tests/web/render.test.js::U83: the source links read MusicBrainz and Deezer` |
 | U84 | After an action the status line says "Ignored X", "Marked X as Have it" or "Restored X" | FR-011; T091 group B | example | BASELINE | `tests/web/requests.test.js::U84: after {action} the status line says "{sentence}"` (3 rows) |
+| U85 | The List tab is selected on open, and switching tabs moves the selection and the panel's label | FR-011; T091 group C | example | BASELINE | `tests/web/view.test.js::U85: the List tab is selected on open, and switching tabs moves the selection and the panel's label` |
+| U86 | The status line is announced politely (`aria-live="polite"`) | FR-011; T091 group C | example | BASELINE | `tests/web/view.test.js::U86: the status line is announced politely` |
+| U87 | Each filter label belongs to its own field, and From and To are date fields | FR-011; T091 group C | example | BASELINE | `tests/web/view.test.js::U87: each filter label belongs to its own field, and From and To are date fields` |
+| U88 | Every source link opens in a new tab without access to the page (`target="_blank" rel="noopener"`) | FR-011; T091 group C | example | BASELINE | `tests/web/render.test.js::U88: every source link opens in a new tab without access to the page` |
 
 ## Invariants and edge cases still to place
 

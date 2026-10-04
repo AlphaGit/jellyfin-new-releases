@@ -291,5 +291,14 @@ test('U82: one missing track is counted in the singular', () => {
 });
 
 test('U83: the source links read MusicBrainz and Deezer', () => {
-    assert.deepEqual([...rowOf(rendered(fixture('releases.json')).panel, 101).matchAll(/rel="noopener">([^<]*)<\/a>/g)].map(([, text]) => text), ['MusicBrainz', 'Deezer']);
+    assert.deepEqual([...rowOf(rendered(fixture('releases.json')).panel, 101).matchAll(/target="_blank"[^>]*>([^<]*)<\/a>/g)].map(([, text]) => text), ['MusicBrainz', 'Deezer']);
+});
+
+// 007 T091 group C, characterization (BASELINE).
+test('U88: every source link opens in a new tab without access to the page', () => {
+    const body = fixture('releases.json');
+    const { panel } = rendered(body);
+    const links = [...panel.matchAll(/<a href="[^"]*"( [^>]*)>/g)].map(([, rest]) => rest).filter(rest => rest.includes('target'));
+
+    assert.deepEqual(links, body.items.flatMap(item => item.sources.map(() => ' target="_blank" rel="noopener"')));
 });
