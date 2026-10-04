@@ -89,9 +89,13 @@ Hosted by `RepositoryManifestTests.cs`'s `AssertSourceUrlNamesItsOwnVersion` and
 | U10 | A Pages-style `…/<slug>/<slug>_<version>.zip` address is rejected | FR-010, FR-012 | example | PENDING | |
 | U11 | An asset carrying the version in its file name, `new-releases_<version>.zip`, is rejected under the right tag | FR-010 | example | PENDING | |
 | U12 | Two entries under two different release roots are rejected | FR-010 | example | PENDING | |
+| U24 | The release root of an entry is its address above the tag directory | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::SiteRootOf_ReturnsTheAddressAboveTheEntrysTagDirectory` |
 
 `U8` and `U9` are the two sides of the tag-to-version boundary: `v1.2.3` against `1.2.3.0` passes,
-against `1.2.3.1` fails. `U12` restates `003`'s U40 to release roots.
+against `1.2.3.1` fails. `U12` restates `003`'s U40 to release roots. `U24` was added in the loop, before `U7`: with `003`'s U41 the root
+is the directory holding the file, which under release addresses includes the tag, so no two
+versions could ever share one root and `003`'s U25 would fail the day a second version publishes.
+It restates `003`'s U41.
 
 ### `.github/workflows/package.yml` — the release workflow
 

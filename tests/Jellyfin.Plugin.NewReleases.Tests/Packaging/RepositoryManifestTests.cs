@@ -121,15 +121,19 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
-    /// U41: `SiteRootOf` must return the entry's own directory, not something it constructed.
-    /// Fed a literal this class did not build.
+    /// U41, restated by 006 U24: `SiteRootOf` must return the address above the entry's tag
+    /// directory, read from the entry, not something it constructed. Every version is published
+    /// under its own tag, so the directory holding the file differs per version and cannot be what
+    /// all entries share. Fed a literal this class did not build.
     /// </summary>
     [Fact]
-    public void SiteRootOf_ReturnsTheDirectoryOfTheEntrysOwnSourceUrl()
+    public void SiteRootOf_ReturnsTheAddressAboveTheEntrysTagDirectory()
     {
-        using var entry = WellFormedEntry("3.0.0.0", sourceUrl: "https://host.invalid/a/b/pkg_3.0.0.0.zip");
+        using var entry = WellFormedEntry(
+            "3.0.0.0",
+            sourceUrl: "https://host.invalid/owner/repo/releases/download/v3.0.0/pkg.zip");
 
-        Assert.Equal("https://host.invalid/a/b/", SiteRootOf(entry.RootElement));
+        Assert.Equal("https://host.invalid/owner/repo/releases/download/", SiteRootOf(entry.RootElement));
     }
 
     /// <summary>
@@ -246,7 +250,8 @@ public class RepositoryManifestTests
     {
         var sourceUrl = version.GetProperty("sourceUrl").GetString()!;
         Assert.StartsWith("https://", sourceUrl, StringComparison.Ordinal);
-        return sourceUrl[..(sourceUrl.LastIndexOf('/') + 1)];
+        var tagDirectory = sourceUrl[..sourceUrl.LastIndexOf('/')];
+        return tagDirectory[..(tagDirectory.LastIndexOf('/') + 1)];
     }
 
     private static void AssertSourceUrlNamesItsOwnVersion(JsonElement version, string siteRoot)

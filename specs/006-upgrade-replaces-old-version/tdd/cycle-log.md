@@ -79,3 +79,18 @@ failed before the implementation.
 - green: suite back to 321 passed after the restore
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 6: U24 the release root of an entry is its address above the tag directory
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs::SiteRootOf_ReturnsTheAddressAboveTheEntrysTagDirectory`
+  (restates `003`'s U41, `SiteRootOf_ReturnsTheDirectoryOfTheEntrysOwnSourceUrl`; behaviour added to
+  the list in the loop, see the test list's note under `U12`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.SiteRootOf_ReturnsTheAddressAboveTheEntrysTagDirectory" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: ···"ost.invalid/owner/repo/releases/download/"` /
+  `Actual:   ···"alid/owner/repo/releases/download/v3.0.0/"` (1 failed)
+- green: `SiteRootOf` drops the file and then the tag directory. Build 0 warnings. Suite
+  `dotnet test --configuration Release` -> 321 passed, 0 failed. `003`'s U40 still passes on its
+  old-shape literals: their root is now the host, which still differs between its two entries
+- refactor: none yet. `SiteRootOf` now returns a release root; renaming it waits until the
+  source-address rule is restated, so the rename is one structural commit over the finished rule
+- commit: see the commit that carries this entry
