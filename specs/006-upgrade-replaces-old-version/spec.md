@@ -74,6 +74,23 @@ workflow does. This specification is written against the outcome, not against th
 - Q: Does the host really never retire a stale copy — the premise the automatic cleanup rested on? → A: No, and the premise was wrong. Read from the host's source: at discovery it calls `Directory.Delete(path, true)` on an older copy whenever a newer enabled copy **of the same name** exists, and marks it deleted if the delete fails. Its cleanup is complete within one name. The only copies it cannot reach are those under a name it no longer groups, and a name change is the only thing that creates those.
 - Q: Given that, does the plugin still remove copies itself? → A: No. Removing it would re-implement deletion the host already performs, and the only thing it uniquely adds is clearing the orphan left by this one rename. That is permanent destructive code for a transition that happens once. The rename release documents a single manual removal instead. The constitution's "no release requires the operator to delete plugin data" is about the finished product, not a pre-release transition, so this is a bounded exception rather than a breach.
 
+### Session 2026-10-04
+
+Opened by test planning, which found the rename breaks the release workflow: JPRM derives the
+package slug from the packaging name — `slugify(build_cfg['name'])` in JPRM 1.1.0, with no override
+— so the package file, its folder in the published repository and two existing tests all change with
+it. The earlier statement that the publishing workflow "is already correct" was wrong for this
+rename.
+
+- Q: The two versions already in the catalogue, `0.1.0` and `0.1.1`, sit under the old slug. Keep them, or treat the project as having no published version? → A: Remove them. They were review releases for the real-server passes. The catalogue keeps the plugin's entry, with its permanent identifier, the new name and no versions. The `v0.1.0` and `v0.1.1` tags stay in git as history.
+- Q: What is the package file called? → A: `new-releases.zip`, with no version in the file name. Jellyfin does not require one: it checks only that the source location ends in `.zip` and that the bytes match the version's checksum, and names the install directory from the catalogue, not from the file.
+- Q: Where does each version's package live, given one file name and many versions? → A: As an asset of that version's GitHub Release. Its public download address is distinct per tag and is never overwritten, so it serves as the historical address of every version, and rollback by reinstall keeps working.
+- Q: Where is the catalogue served from? → A: From the repository's raw file address on the default branch, `https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json`. GitHub Pages is no longer used.
+- Q: How is the GitHub Release created, and what does it say? → A: By the release workflow, with the `gh` command the runner already carries — no new dependency. Its text is the tagged version's section of `CHANGELOG.md`, the same text the catalogue shows. The release is created before the catalogue entry that points at it is committed.
+- Q: Does this belong in this feature or a new one? → A: This feature. The rename is what breaks the workflow, so the two cannot ship apart.
+- Q: Does the one-time removal step survive, now the catalogue starts empty? → A: Yes. The repository is public and an unknown operator may have installed `0.1.0` or `0.1.1`. The release notes also tell the operator to replace the repository address, because the old one stops answering.
+- Q: Which version is the first release under the new name? → A: `0.2.0`. It must be above every installed copy for the host to offer it as an update, and it also carries `007`'s unreleased changes.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Someone upgrades and the plugin keeps working (Priority: P1)
@@ -157,10 +174,12 @@ what the suite can reach has to be pinned precisely.
 - **FR-005**: A test MUST fail when the places that state the plugin's displayed name stop agreeing.
 - **FR-006**: This feature MUST NOT change what any endpoint returns, what data is stored, who may
   see what, or how sources are used, and MUST NOT change any address the plugin serves. It changes
-  the plugin's displayed name and what it removes from disk, nothing else.
+  the plugin's displayed name, what it removes from disk, and how releases are published, nothing
+  else.
 - **FR-007**: The release that renames the plugin MUST tell the operator, in its release notes, that
   one directory left under the old name must be removed once, which directory it is, and how to
-  recognise it. After that single step the host's own cleanup covers every later upgrade.
+  recognise it. The same notes MUST give the new repository address and say that it replaces the old
+  one. After those single steps the host's own cleanup covers every later upgrade.
 - **FR-007a**: No release after the renaming one MUST require any manual step. If a future release
   ever changes the displayed name again it inherits this same one-time cost, which is why `FR-008`
   records the rule.
@@ -170,7 +189,16 @@ what the suite can reach has to be pinned precisely.
 - **FR-009**: An operator MUST be able to return to any previously published release by reinstalling
   it from the catalogue. Rollback to a copy still on disk was never available — the host deletes a
   superseded copy at discovery — so nothing here takes it away. The published manifest retains every
-  released version, which is what makes the guarantee hold.
+  version released from `0.2.0` on, each pointing at a package that is never overwritten, which is
+  what makes the guarantee hold. `0.1.0` and `0.1.1` are removed from it and are not covered.
+- **FR-010**: Every release's package MUST be named `new-releases.zip` and MUST be published as an
+  asset of that version's GitHub Release. The catalogue entry for the version MUST point at that
+  asset's public download address.
+- **FR-011**: The GitHub Release MUST be created by the release workflow from the version's tag, and
+  its text MUST be the tagged version's section of `CHANGELOG.md`.
+- **FR-012**: The catalogue MUST be served from
+  `https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json`. No
+  release MUST depend on GitHub Pages.
 
 ### Key Entities
 
@@ -198,6 +226,9 @@ what the suite can reach has to be pinned precisely.
   fails the suite.
 - **SC-005**: A server carrying a copy under the old name returns to one copy after the operator
   performs the single documented removal, and never needs another.
+- **SC-006**: Every version in the catalogue installs from its own GitHub Release asset,
+  `new-releases.zip`, and the suite fails if the release workflow or the catalogue stop producing
+  that address.
 
 ## Assumptions
 
@@ -223,8 +254,11 @@ what the suite can reach has to be pinned precisely.
   feature makes the plugin correct under the behaviour the host actually has.
 - Any change to what the plugin does: endpoints' contents, stored data, ownership rules, sources,
   the refresh, or either page's behaviour.
-- The publishing workflow's steps. It is already correct; it publishes a package, and the defect is
-  in what that package declares, not in how it is built or served.
+- Any change to the publishing workflow beyond what `FR-010` to `FR-012` require. The defect is in
+  what the package declares; the workflow changes only because the rename moves the package's slug,
+  and the decisions of session 2026-10-04 settle where the package and the catalogue now live.
+- **Turning GitHub Pages off** in the repository settings. A manual step for the maintainer once
+  `0.2.0` is out, not something a release performs.
 - **Giving each release its own addresses** so a stale copy cannot collide. Considered and rejected:
   it would bind every future release to renaming routes it has no other reason to change, contradict
   `005`'s convention of naming routes as the host names its own, and break an operator scripting the
