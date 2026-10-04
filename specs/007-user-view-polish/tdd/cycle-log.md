@@ -1053,3 +1053,18 @@ labelled test-after in its own cycle, with its evidence:
 | A18 | 63 | no background on a source link; no `opacity` or `filter` on an element around it | Q6, Q7 |
 
 **Decision (maintainer, 2026-10-03): accepted.**
+
+## Maintainer decision on the fourth TDD audit, 2026-10-03 (T069, fourth audit Finding 5)
+
+Driven from `tdd/verification.md` (verdict FAIL, audited at `8e7daf7`) and its Phase 11 tasks.
+
+**Decision (maintainer, 2026-10-03): closed-world check.** `styles.test.js` gets a reviewed,
+hand-written list of every rule in the `<style>` block of `user-view.html`, `@media` context
+included, and one test that compares the page with it. Any added, removed or changed rule fails
+until someone reviews it and updates the list. The predicates stay: they check the meaning of the
+values the list pins (contrast, visible colour, no dimming). This replaces the T062 approach of more
+table rows for each CSS form. The ceilings that T062 recorded remain in the predicates, but a rule
+can now reach the page only through a reviewed change to the list.
+
+Consequence for control K1: a correct change to the stylesheet now fails the closed-world test by
+design. T069's check is therefore read as "K1 fails no predicate-based test".
