@@ -176,12 +176,22 @@ const LINK_ATTRIBUTES = ['href', 'target', 'rel'];
  * ponytail: splits on whitespace and commas, so `:is(…)` lists and quoted spaces are not read.
  */
 function reachesSourceLink(selector) {
-    const parts = selector.trim().split(/\s*([>+~])\s*|\s+/); // compound, combinator (undefined for a space), compound, …
-    const subject = parts.pop();
-    const ancestors = parts.filter((part, i) => i % 2 === 0 && !['+', '~'].includes(parts[i + 1]));
+    const { subject, ancestors } = compounds(selector);
     return /^(a|\*)?(\[[\w-]+[^\]]*\]|:[\w-]+(\([^)]*\))?)*$/.test(subject) && subject !== ''
         && [...subject.matchAll(/\[([\w-]+)/g)].every(([, name]) => LINK_ATTRIBUTES.includes(name))
-        && ancestors.every(compound => (compound.match(/[.#][\w-]+/g) || []).every(name => LINK_ANCESTORS.includes(name)));
+        && ancestors.every(namesOnlyLinkAncestors);
+}
+
+/** The last compound of `selector`, and the compounds before it that must be its ancestors: not those before `~` or `+`, which are siblings. */
+function compounds(selector) {
+    const parts = selector.trim().split(/\s*([>+~])\s*|\s+/); // compound, combinator (undefined for a space), compound, …
+    const subject = parts.pop();
+    return { subject, ancestors: parts.filter((part, i) => i % 2 === 0 && !['+', '~'].includes(parts[i + 1])) };
+}
+
+/** Whether every id and class in `compound` is one of a source link's ancestors. */
+function namesOnlyLinkAncestors(compound) {
+    return (compound.match(/[.#][\w-]+/g) || []).every(name => LINK_ANCESTORS.includes(name));
 }
 
 /**
@@ -287,11 +297,9 @@ test('A17: no rule that reaches a source link dims it, so hover and focus keep t
  * link's ancestors. ponytail: a subject with an attribute selector (`[role="tabpanel"]`) is not read.
  */
 function reachesLinkAncestor(selector) {
-    const parts = selector.trim().split(/\s*([>+~])\s*|\s+/);
-    const subject = parts.pop();
-    const ancestors = parts.filter((part, i) => i % 2 === 0 && !['+', '~'].includes(parts[i + 1]));
+    const { subject, ancestors } = compounds(selector);
     return !subject.includes('[') && ['', 'div', 'article', '*'].includes(/^[\w*]*/.exec(subject)[0])
-        && [subject, ...ancestors].every(compound => (compound.match(/[.#][\w-]+/g) || []).every(name => LINK_ANCESTORS.includes(name)));
+        && [subject, ...ancestors].every(namesOnlyLinkAncestors);
 }
 
 for (const [selector, expected] of [
