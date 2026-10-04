@@ -33,5 +33,10 @@ Install the build on a Jellyfin 12 server with a large music library. Then open
    the same.
 5. The "MusicBrainz" / "Deezer" links are easy to read. Narrow the window below 600 px: no
    horizontal scroll, and the buttons sit under the details.
+6. Hover over a source link, then Tab to it. It keeps its colour, its underline and its
+   background, and it shows the focus outline. The stylesheet tests do not read every form of CSS:
+   `:is()` lists, gradients, a zero-alpha colour function in an outline or underline colour, an
+   attribute selector on an element around the link, and a background on the card. This step is
+   the check for those.
 
 A defect found here becomes a new spec (project rule), not a change to this one.

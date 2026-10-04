@@ -1008,3 +1008,37 @@ real-browser pass. A closed-world list of selectors was considered and not chose
 - ceiling: a background on an element around the link is not read, because the card's own
   background is the one A13 and A16 measure against. A subject with an attribute selector is not read
 - open: needs the maintainer's decision to accept it as test-after, like A16 and A17
+
+## Refactor: one selector parser for both link predicates
+
+- what: `reachesSourceLink` and `reachesLinkAncestor` each split a selector into compounds. Both now
+  call `compounds(selector)`, which returns the subject and the compounds that must be its ancestors,
+  and `namesOnlyLinkAncestors(compound)`
+- no behaviour change; green to green. Suite -> node 247 passed before and after, also under
+  `LANG=de_DE.UTF-8`
+- strength kept: all 34 deliberate mutants of the third audit (R*, N*, P*, E2, Q1–Q9, and the C#
+  R9, R10, R11b) fail their tests. E1 (`{ capture: true }`) still passes U57. Each was applied to a
+  file copy, restored, and checked against `HEAD`
+
+## Recorded ceiling and task links (T062 closed, T064)
+
+- T062: each predicate in `tests/web/styles.test.js` names the CSS it does not read in its comment:
+  `:is()` lists and quoted spaces (`reachesSourceLink`), a zero-alpha colour function
+  (`removesOutline`, `removesUnderline`), a function with nested parentheses (`isVisibleColour`), and
+  an attribute selector on the subject (`reachesLinkAncestor`). Cycle 63 records that a background on
+  an element around the link is not read. `quickstart.md` §2 step 6 sends this remaining risk to the
+  real-browser pass
+- T064: T044 now carries `[A16]` and T055 carries `[A17]`
+
+## Commits of the third remediation
+
+| Entry | Commit |
+| --- | --- |
+| Maintainer decision on the third TDD audit (T062) | `c171d06` |
+| Third TDD audit report and Phase 10 tasks | `7c64d97` |
+| Cycle 59: A14 focus outline | `d644d7a` |
+| Cycle 60: sibling combinators | `8e41243` |
+| Cycle 61: hidden underline | `eb816a1` |
+| Cycle 62: background shorthand | `719eaa2` |
+| Cycle 63: A18 | `940663c` |
+| Refactor: one selector parser | `37e24f5` |
