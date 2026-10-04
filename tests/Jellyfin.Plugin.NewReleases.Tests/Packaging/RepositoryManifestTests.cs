@@ -126,6 +126,24 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
+    /// 006 U26: the release uploads the file the package was renamed to. Upload anything else
+    /// and the release step fails on a missing file, after the package was built (006 audit,
+    /// finding 1).
+    /// </summary>
+    [Fact]
+    public void TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo()
+    {
+        var moved = Regex.Match(
+            ReleaseWorkflowSteps,
+            $@"(?m)^\s*mv\s+""?\./artifacts/{Regex.Escape(Slug)}_\$\{{\{{ steps\.ver\.outputs\.version4 }}}}\.zip""?\s+""?([^\s""]+)""?");
+        var uploaded = Regex.Match(ReleaseWorkflowSteps, @"gh release create\s+\S+\s+""?([^\s""]+)""?");
+        Assert.True(moved.Success, "the workflow does not move JPRM's package");
+        Assert.True(uploaded.Success, "gh release create uploads no file");
+
+        Assert.Equal(moved.Groups[1].Value, uploaded.Groups[1].Value);
+    }
+
+    /// <summary>
     /// 006 U14: JPRM writes a `sourceUrl` under its own repository folder unless told otherwise.
     /// The catalogue must instead name the asset of the release the tag just created, or a server
     /// is sent to a file that was never published.

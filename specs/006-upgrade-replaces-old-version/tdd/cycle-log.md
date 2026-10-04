@@ -430,3 +430,22 @@ failed before the implementation.
 - green: no workflow change. Suite -> 338 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 26: U26 the release uploads the file the package was moved to
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo` (new;
+  finding 1, task T032)
+- red: none valid. The first run failed with `the workflow does not move JPRM's package` — the
+  **test** was broken: its `\S+` could not cross the spaces inside `${{ … }}`. Not recorded as a
+  red; the pattern was corrected to the same literal `U25` uses. The corrected test passed on its
+  first run, because the workflow was already right (cycle 13). **Test-after**, stated as such.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     1`
+- mutant: the audit's M14, `mv` target `./artifacts/new-release.zip`. Same command ->
+  `Assert.Equal() Failure: Strings differ` / `Expected: "./artifacts/new-release.zip"` /
+  `Actual:   "./artifacts/new-releases.zip"` (1 failed). M14 survived the audit; it is caught now.
+  Restored from a file copy, verified with `cmp -s`
+- green: no workflow change. Suite -> 339 passed, 0 failed
+- refactor: the `mv` pattern is now written in `U25` and `U26`; extracted in its own structural
+  commit after this one
+- commit: see the commit that carries this entry

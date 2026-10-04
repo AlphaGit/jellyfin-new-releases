@@ -114,7 +114,7 @@ ordering and presence check, as `ReleaseWorkflowTests.Steps` already does.
 | U18 | `gh release create` takes `--notes-file` written by `entryFor` for `${{ steps.ver.outputs.version }}` | FR-011 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_GivesTheReleaseTheTaggedVersionsChangelogSection` |
 | U19 | The release notes are written before `gh release create` runs | FR-011 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_WritesTheReleaseNotesBeforeCreatingTheRelease` |
 | U25 | The workflow moves the file JPRM writes, `{Slug}_${{ steps.ver.outputs.version4 }}.zip`, and no other | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_MovesTheFileJprmWrites` |
-| U26 | The file the workflow moves the package to is the file `gh release create` uploads | FR-010 | example | PENDING | |
+| U26 | The file the workflow moves the package to is the file `gh release create` uploads | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo` |
 
 `U13` must anchor the file name at a path or quote boundary. Cycle 3 found `003`'s U39 is a bare
 substring check: after the rename, `new-releases_<v>.zip` is found inside the stale
