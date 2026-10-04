@@ -26,7 +26,7 @@ loading cannot be observed by a fake DOM that does no layout. Their acceptance l
 declarations that produce them, and the real-browser pass in `quickstart.md` §2 checks the pixels.
 
 **Remediation, 2026-10-03.** The TDD audit (`tdd/verification.md`) and the maintainer's decisions on it
-reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second audit (`ad2b277`) adds A17. The third audit (`f68901c`) adds A18.
+reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second audit (`ad2b277`) adds A17. The third audit (`f68901c`) adds A18. The fourth audit (`8e7daf7`) adds U67, the closed-world check.
 
 ## Outer loop: acceptance behaviors
 
@@ -173,6 +173,7 @@ reopen A4 and U42 (the filter now ignores case) and add A15 and A16. The second 
 | U62 | The test's contrast function rates `#0000ee` on `#1c1c1c` below 4.5, which pins it against the defect the spec reports | FR-010 | example | DONE | `tests/web/styles.test.js::U62: the contrast formula rates the browser's default link blue on the card below 4.5, the defect the spec reports` |
 | U63 | The test's contrast function rates `#ffffff` on `#000000` at 21, the formula's upper bound | FR-010 | example | DONE | `tests/web/styles.test.js::U63: the contrast formula rates white on black at 21, its upper bound` |
 | U66 | `.nr-row` declares three columns, the 64 px cover first, then the details, then the actions | US2-AS1 ("beside the release details"), FR-007; discovered in cycle 40 (named by T016, missing from the list) | example | DONE | `tests/web/styles.test.js::U66: a card lays out the 64 px cover, then the details, then the actions` |
+| U67 | The stylesheet holds exactly the reviewed rules, `@media` context included: an added, removed or changed rule fails until the list is reviewed | invariant: closed-world check (T069) for FR-007, FR-009, FR-010 and the layout edge cases; it carries A11, A14, A16–A18 and U59–U61, U66 against any CSS form their predicates do not read | example | DONE | `tests/web/styles.test.js::U67: the stylesheet holds exactly the reviewed rules, so an added, removed or changed rule fails until the list is reviewed` |
 
 ## Invariants and edge cases still to place
 

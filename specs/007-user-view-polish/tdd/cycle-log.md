@@ -1068,3 +1068,28 @@ can now reach the page only through a reviewed change to the list.
 
 Consequence for control K1: a correct change to the stylesheet now fails the closed-world test by
 design. T069's check is therefore read as "K1 fails no predicate-based test".
+
+## Cycle 64: U67 the stylesheet holds exactly the reviewed rules (T065–T068, fourth audit Findings 1–4)
+
+- list: U67 appended, an invariant. It closes the stylesheet as a world: the predicate tests check what
+  the pinned values mean, and U67 makes sure no other rule exists
+- helper (new, in `tests/web/styles.test.js`): `stylesheet(css)` lists every rule block in source order
+  as `[selectors, declarations]`, with the `@media` condition in front of the selectors and the
+  declarations joined by `; `, whitespace collapsed
+- test: `tests/web/styles.test.js::U67: the stylesheet holds exactly the reviewed rules, so an added, removed or changed rule fails until the list is reviewed` (new),
+  `assert.deepEqual(stylesheet(), STYLESHEET)`
+- red: `STYLESHEET` declared as `[]`. `node --test tests/web/styles.test.js` ->
+  `not ok 1 - U67: the stylesheet holds exactly the reviewed rules, …` with `+ actual - expected` (1 failed)
+- green: `STYLESHEET` written by hand from the `<style>` block of `user-view.html`, 28 rules. The 007
+  rules were read against `contracts/user-view.md` "Stylesheet rules the tests read": `.nr-actions`
+  `align-items: stretch`, `.nr-actions button` `width: 100%`, `.nr-links a, .nr-links a:visited`
+  `color: #00a4dc`, `.nr-cover` 64 × 64 with a neutral background, `.nr-cover img` `object-fit: cover`,
+  the `600px` media rule, and `.nr-row` `64px 1fr auto` (T016). The other 21 rules predate 007 and are
+  transcribed as the page has them. The list matched on the first run. File -> 121 passed
+- strength: all 56 HTML and C# mutants of the fourth audit fail their tests. U67 catches every
+  stylesheet mutant, including S1–S10, X1–X3, M1–M4 and the six recorded-ceiling survivors C1–C5 and
+  S7. E1 (`{ capture: true }`) still passes U57. K1 (correct CSS) now fails U67 by design, and also
+  A14's focus test, which is cycle 65. R12 edits this test file and runs after the commit. Each mutant
+  was applied to a file copy, restored, and checked against `HEAD`
+- review: the list is a reviewed copy, not an approved snapshot. The maintainer should read it once
+  against the page. Any later change to the `<style>` block must change this list in the same commit
