@@ -5,6 +5,7 @@ const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPageDom, settled } = require('./load-page.js');
+const { declaredIds } = require('./fake-dom.js');
 
 // The New Releases view's own controls: what its static markup declares and how its controls are
 // wired. 007 T091 characterizes the parts that predate 007 (BASELINE), so a change to them fails here.
@@ -57,4 +58,36 @@ test('U87: each filter label belongs to its own field, and From and To are date 
         [['nr-f-artist', 'nr-f-artist'], ['nr-f-type', 'nr-f-type'], ['nr-f-state', 'nr-f-state'], ['nr-f-from', 'nr-f-from'], ['nr-f-to', 'nr-f-to']],
         'date', 'date',
     ]);
+});
+
+// U71, characterization (maintainer decision T083): the view's listeners predate 007. A listener that
+// stops after its first event (`once`) or can be cut off (`signal`) sends no request the next time.
+// The stand-in records options but ignores them, so they are read here.
+
+/** Whether a listener registered with `options` hears every event: no `once`, no `signal`. */
+function keepsListening(options) {
+    return typeof options !== 'object' || (!options.once && options.signal === undefined);
+}
+
+for (const [options, expected] of [
+    [undefined, true],
+    [true, true],
+    [false, true],
+    [{ capture: true }, true],
+    [{ passive: true, once: false }, true],
+    [{ once: true }, false],
+    [{ capture: true, once: true }, false],
+    [{ signal: {} }, false],
+]) {
+    test(`U71 helper: ${JSON.stringify(options)} ${expected ? 'keeps' : 'stops'} listening`, () => {
+        assert.equal(keepsListening(options), expected);
+    });
+}
+
+test('U71: every listener the New Releases view registers keeps listening', () => {
+    const { document } = loadPageDom('user-view.html', { ApiClient: { ajax: () => Promise.resolve({ items: [], hasStoredReleases: false }) } });
+    const stopping = [...declaredIds('user-view.html')].flatMap(id => Object.entries(document.getElementById(id).listenerOptions)
+        .flatMap(([type, all]) => all.filter(options => !keepsListening(options)).map(() => id + ' ' + type)));
+
+    assert.deepEqual(stopping, []);
 });

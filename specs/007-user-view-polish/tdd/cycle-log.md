@@ -1524,3 +1524,10 @@ of an existing behaviour) is shown to catch its defect by one hand-made break, r
   and the List tab two buttons; release 102 has two missing tracks, a compared edition and one source;
   release 104 is archived with one source and one button; `artists.json` holds two artists
 - no behaviour change; comments only
+
+## Tidy: U71 moves to the file about the view's own controls (T093, seventh audit Finding 8)
+
+- what: U71 (every listener keeps listening), its `keepsListening` helper and its table move from
+  `requests.test.js`, whose subject is the paths the page sends, to `view.test.js`, whose subject is the
+  view's controls and their wiring. It now loads the page through `loadPageDom` directly
+- no behaviour change; green to green. Suite -> node 353 passed. Y4 still fails U71

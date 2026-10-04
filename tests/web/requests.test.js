@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPageDom, settled } = require('./load-page.js');
-const { declaredIds, actionRow } = require('./fake-dom.js');
+const { actionRow } = require('./fake-dom.js');
 
 // What each page actually asks the server for, captured from a recording `ApiClient` while the page
 // runs. This is the paths as sent, not as written in the source: 005 dropped the source-scanning
@@ -58,38 +58,6 @@ test('the administrator page asks for its status and posts its actions', async (
         'POST Plugins/NewReleases/Admin/Purge',
         'POST Plugins/NewReleases/Admin/ClearArchive',
     ]);
-});
-
-// U71, characterization (maintainer decision T083): the view's listeners predate 007. A listener that
-// stops after its first event (`once`) or can be cut off (`signal`) sends no request the next time.
-// The stand-in records options but ignores them, so they are read here.
-
-/** Whether a listener registered with `options` hears every event: no `once`, no `signal`. */
-function keepsListening(options) {
-    return typeof options !== 'object' || (!options.once && options.signal === undefined);
-}
-
-for (const [options, expected] of [
-    [undefined, true],
-    [true, true],
-    [false, true],
-    [{ capture: true }, true],
-    [{ passive: true, once: false }, true],
-    [{ once: true }, false],
-    [{ capture: true, once: true }, false],
-    [{ signal: {} }, false],
-]) {
-    test(`U71 helper: ${JSON.stringify(options)} ${expected ? 'keeps' : 'stops'} listening`, () => {
-        assert.equal(keepsListening(options), expected);
-    });
-}
-
-test('U71: every listener the New Releases view registers keeps listening', () => {
-    const { document } = recordRequests('user-view.html', { items: [], hasStoredReleases: false });
-    const stopping = [...declaredIds('user-view.html')].flatMap(id => Object.entries(document.getElementById(id).listenerOptions)
-        .flatMap(([type, all]) => all.filter(options => !keepsListening(options)).map(() => id + ' ' + type)));
-
-    assert.deepEqual(stopping, []);
 });
 
 // U72, characterization (maintainer decision T083): the action handler predates 007. A row is built as a
