@@ -77,13 +77,34 @@ public class ReleaseWorkflowTests
     /// release and push the catalogue. A token that can still publish a site or mint an identity
     /// token is a wider grant than the release uses.
     /// </summary>
-    [Theory]
-    [InlineData("pages")]
-    [InlineData("id-token")]
-    public void ReleaseWorkflow_GrantsNoPagesPermission(string permission)
+    [Fact]
+    public void ReleaseWorkflow_GrantsNoPagesPermission()
     {
-        Assert.DoesNotMatch($@"(?m)^\s*{Regex.Escape(permission)}\s*:", Steps);
+        Assert.False(GrantsPagesOrIdToken(Steps), "the release job can still publish a site or mint an identity token");
     }
+
+    /// <summary>
+    /// The predicate above is a rule, and a rule needs a table (`tdd-profile.md`). Written from the
+    /// ways a workflow can grant a permission — a key under `permissions:`, the `write-all`
+    /// shorthand, the flow form — before the predicate was widened (006 second audit, finding 7).
+    /// </summary>
+    [Theory]
+    [InlineData("permissions:\n  contents: write\n", false)]
+    [InlineData("permissions: read-all\n", false)]
+    [InlineData("permissions:\n  contents: write\n  pages: write\n", true)]
+    [InlineData("permissions:\n  id-token: write\n", true)]
+    [InlineData("permissions: write-all\n", true)]
+    [InlineData("permissions: { contents: write, pages: write }\n", true)]
+    [InlineData("permissions: { id-token: write }\n", true)]
+    public void GrantsPagesOrIdToken_ReadsEveryWayOfGrantingThem(string permissions, bool grants)
+    {
+        Assert.Equal(grants, GrantsPagesOrIdToken(permissions));
+    }
+
+    private static bool GrantsPagesOrIdToken(string steps)
+        => Regex.IsMatch(steps, @"(?m)^\s*(pages|id-token)\s*:")
+           || Regex.IsMatch(steps, @"(?m)^\s*permissions\s*:\s*write-all\b")
+           || Regex.IsMatch(steps, @"(?m)^\s*permissions\s*:\s*\{[^}]*\b(pages|id-token)\s*:");
 
     /// <summary>
     /// 006 U18: the release says what the catalogue says — the tagged version's section of

@@ -569,3 +569,19 @@ recorded mutant its test catches:
   - `Equal(number, InFourParts(…))` deleted -> 2 rows fail: another version, and `1.2.3.1` against `v1.2.3`
   - the Pages-layout and versioned-asset rows are rejected by two checks each, as their comments say
   - each restored from a file copy, `cmp -s`; suite back to 342 passed
+
+## `/speckit-implement`: T038, the permissions rule as a predicate with a table
+
+- `ReleaseWorkflow_GrantsNoPagesPermission` becomes one `[Fact]` over the predicate
+  `GrantsPagesOrIdToken`; the new `[Theory]` `GrantsPagesOrIdToken_ReadsEveryWayOfGrantingThem`
+  holds seven rows written before the predicate changed: two that grant nothing
+  (`contents: write`, `read-all`) and five that grant (`pages:`, `id-token:`, `write-all`, and the
+  flow form with each key)
+- red, with the predicate still today's regex:
+  `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests.GrantsPagesOrIdToken_ReadsEveryWayOfGrantingThem|FullyQualifiedName~ReleaseWorkflowTests.ReleaseWorkflow_GrantsNoPagesPermission" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> 3 `[FAIL]`: `permissions: { id-token: write }`, `permissions: { contents: write, pages: write }`,
+  `permissions: write-all` (3 failed, 5 passed)
+- green: the predicate also matches `permissions: write-all` and a flow mapping naming either key.
+  Suite -> 348 passed (the two-case theory became one fact; seven rows added)
+- against the real workflow: `pages: write` added -> `the release job can still publish a site or
+  mint an identity token`; `permissions: write-all` -> the same failure. Both restored, `cmp -s`
