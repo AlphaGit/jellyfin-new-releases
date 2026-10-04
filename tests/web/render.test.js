@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { rendered } = require('./load-page.js');
+const { loadPageDom, rendered, settled } = require('./load-page.js');
 const { fixture } = require('./fixtures.js');
 const { HOUR, DAY, ago } = require('./fixed-clock.js');
 const { rowOf, coverBox, imgAttribute, decoded } = require('./cover-markup.js');
@@ -240,4 +240,56 @@ test('U77: a release with three sources shows three links, in order', () => {
     const { panel } = rendered({ ...body, items: [three] });
 
     assert.deepEqual([...rowOf(panel, three.id).matchAll(/<a href="([^"]*)" target="_blank"/g)].map(([, href]) => decoded(href)), three.sources.map(source => source.url));
+});
+
+// 007 T091 group B, characterization (BASELINE): the page shows the right words. Only the sentences no
+// earlier test reads are pinned here.
+
+test('U78: a list that fails to load says it could not load', async () => {
+    const { document } = loadPageDom('user-view.html', { ApiClient: { ajax: () => Promise.reject(new Error('offline')) } });
+    await settled();
+
+    assert.equal(document.getElementById('nr-panel').innerHTML, '<p class="nr-empty">Could not load New Releases.</p>');
+});
+
+for (const [label, body] of [
+    ['with stored releases', { ...fixture('releases.json'), items: [] }],
+    ['before the first refresh', fixture('releases-empty.json')],
+]) {
+    test(`U79: an empty Archive says the Archive is empty, ${label}`, () => {
+        assert.equal(rendered(body, { archive: true }).panel, '<p class="nr-empty">The Archive is empty.</p>');
+    });
+}
+
+/** Each button of the row with `id`, as `[screen-reader label, visible text]`. */
+const buttonsOf = (panel, id) => [...rowOf(panel, id).matchAll(/<button [^>]*aria-label="([^"]*)">([^<]*)<\/button>/g)].map(([, label, text]) => [label, text]);
+
+test('U80: the buttons read Ignore, Have it and Restore, and their screen-reader labels name the release', () => {
+    const body = fixture('releases.json');
+
+    assert.deepEqual([buttonsOf(rendered(body).panel, 101), buttonsOf(rendered(body, { archive: true }).panel, 104)], [
+        [['Ignore Closer to Grey', 'Ignore'], ['Mark Closer to Grey as Have it', 'Have it']],
+        [['Restore II', 'Restore']],
+    ]);
+});
+
+test('U81: the badges read "Upcoming, not yet released" and "Ignored"', () => {
+    const body = fixture('releases.json');
+    const ignored = { ...body, items: [{ ...body.items[3], archived: { kind: 'Ignore', decidedAt: '2026-09-18T11:04:00+00:00' } }] };
+
+    assert.deepEqual([
+        /nr-badge-state" role="status">([^<]*)</.exec(rowOf(rendered(body).panel, 103))[1],
+        /<span class="nr-badge">(Ignored|Have it, In library)<\/span>/.exec(rendered(ignored, { archive: true }).panel)?.[1],
+    ], ['Upcoming, not yet released', 'Ignored']);
+});
+
+test('U82: one missing track is counted in the singular', () => {
+    const body = fixture('releases.json');
+    const one = { ...body, items: [{ ...body.items[1], missingTracks: ['Into the Black'] }] };
+
+    assert.match(rendered(one).panel, /<summary>1 missing track<\/summary>/);
+});
+
+test('U83: the source links read MusicBrainz and Deezer', () => {
+    assert.deepEqual([...rowOf(rendered(fixture('releases.json')).panel, 101).matchAll(/rel="noopener">([^<]*)<\/a>/g)].map(([, text]) => text), ['MusicBrainz', 'Deezer']);
 });

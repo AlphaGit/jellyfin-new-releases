@@ -172,3 +172,14 @@ test('U76: an action in the Archive tab reloads the Archive and stays on it', as
     assert.deepEqual([requests.slice(before), document.getElementById('nr-tab-archive').getAttribute('aria-selected')],
         [['POST Plugins/NewReleases/Releases/101/Restore', 'GET Plugins/NewReleases/Releases?archived=true'], 'true']);
 });
+
+for (const [action, said] of [['Ignore', 'Ignored Kill for Love'], ['HaveIt', 'Marked Kill for Love as Have it'], ['Restore', 'Restored Kill for Love']]) {
+    test(`U84: after ${action} the status line says "${said}"`, async () => {
+        const { document } = await loadedView();
+
+        document.getElementById('nr-panel').listeners.click[0]({ target: actionRow({ id: '102', title: 'Kill for Love', action }).button });
+        await settled();
+
+        assert.equal(document.getElementById('nr-announce').textContent, said);
+    });
+}

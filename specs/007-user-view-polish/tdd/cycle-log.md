@@ -1481,3 +1481,22 @@ of an existing behaviour) is shown to catch its defect by one hand-made break, r
   on a file copy and restored at once: H6 (`archived=false`) fails U73 and U76; B74a (`since=` for
   From) and B74b (To sends the From date) fail their U74 rows; B75 (`Ep` for `EP`) fails U75; H7 (an
   action jumps to the List tab) fails U76; B77 (only the first two sources linked) fails U77
+
+## Cycle 80: group B, the page shows the right words (T096, characterization)
+
+- what the page does, one test each, for the sentences no earlier test read ("No data yet…",
+  "Nothing missing…", "2 missing tracks" and "Have it, In library" were already pinned):
+  - U78: a list that fails to load says "Could not load New Releases."
+  - U79: an empty Archive says "The Archive is empty.", with stored releases and before the first
+    refresh
+  - U80: the buttons read "Ignore", "Have it" and "Restore", and a screen reader hears "Ignore
+    Closer to Grey", "Mark Closer to Grey as Have it" and "Restore II"
+  - U81: the badges read "Upcoming, not yet released" and "Ignored"
+  - U82: "1 missing track", in the singular
+  - U83: the source links read "MusicBrainz" and "Deezer"
+  - U84: after an action the status line says "Ignored X", "Marked X as Have it" or "Restored X"
+- red: none by definition. Evidence, one break each made by hand on a file copy and restored at
+  once: H10 fails U78; B79a (the Archive says "Nothing missing") and B79b (the Archive shows the
+  waiting message before the first refresh) fail U79; B80 ("Have it" reads "Ignore") and H8 (its label
+  says "Ignore") fail U80; B81a and B81b fail U81; B82 fails U82; B83 (labels swapped) fails U83; B84
+  fails U84
