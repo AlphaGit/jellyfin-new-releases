@@ -18,6 +18,23 @@ All notable changes to this project are documented here. The format follows
   `https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json`.
   A server left on the old address does not see 0.2.0 or any later version.
 
+### Changed
+
+- **The Artist filter is a text field with suggestions.** Type part of a library artist's name
+  and pick from the browser's own suggestions. The filter applies only to a name that matches a
+  library artist; clearing the field, or Clear, removes it. It stays operable by keyboard.
+- **"Ignore", "Have it" and "Restore" share one button style.** "Ignore" and "Have it" have the
+  same width and line up on each card.
+- **The source link is readable in the dark theme.** Its text has a contrast of at least 4.5:1
+  against the card, and it still reads as a link.
+
+### Added
+
+- **Each release card shows the record's cover.** The cover comes from Deezer, then from the
+  Cover Art Archive when Deezer has none, and a neutral placeholder of the same size shows when
+  neither loads. Covers load only as cards come into view, directly from those image hosts; the
+  plugin server does not fetch, store or proxy them.
+
 ## 0.1.1 — 2026-09-20
 
 ### Fixed
@@ -55,8 +72,9 @@ All notable changes to this project are documented here. The format follows
 - Per-user library access on the list and the Archive.
 - Per-source request rate, daily budget and cooldown; identifying User-Agent.
 - A published plugin repository at
-  `https://alphagit.github.io/jellyfin-new-releases/manifest.json`, kept current by the release
-  workflow, so the plugin can be installed from the Jellyfin catalogue rather than sideloaded.
+  `https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json`,
+  kept current by the release workflow, so the plugin can be installed from the Jellyfin catalogue
+  rather than sideloaded.
 
 ### Removed
 
