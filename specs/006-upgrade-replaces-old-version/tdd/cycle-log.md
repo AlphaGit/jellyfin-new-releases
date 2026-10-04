@@ -66,3 +66,16 @@ failed before the implementation.
 - commit: see the commit that carries this entry
 - note: the first attempt at the mutant run printed nothing because of a shell quoting mistake in
   the command, not a test result; it was re-run as recorded above
+
+## Cycle 5: A5 changing the plugin's name in `build.yaml` alone fails the suite
+
+- test: the suite; the behaviour is closed by `U1` (cycle 3), evidenced here by a deliberate mutant
+- mutant: `build.yaml:3` `name` set to `"New Releases Tracker"`, nothing else changed.
+  `dotnet test --configuration Release` -> `Failed!  - Failed:     2, Passed:   319`:
+  `PluginSanityTests.Plugin_DisplayName_MatchesTheNameThePackageDeclares [FAIL]` and
+  `RepositoryManifestTests.TheDerivedSlug_MatchesTheFilenameTheReleaseWorkflowBuilds [FAIL]`
+  (the slug `new-releases-tracker` is no substring of the workflow). Restored from a file copy,
+  verified with `cmp -s`; `git status` clean for the file
+- green: suite back to 321 passed after the restore
+- refactor: none
+- commit: see the commit that carries this entry
