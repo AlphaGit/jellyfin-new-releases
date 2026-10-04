@@ -415,3 +415,18 @@ failed before the implementation.
   has not changed since
 - T024, T025, T026 stay open: pushing to `main`, tagging `v0.2.0` and the real-server pass are the
   maintainer's
+
+## Cycle 25: U25 the workflow moves the file JPRM writes
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_MovesTheFileJprmWrites` (new;
+  remediation of `tdd/verification.md` finding 1, task T032)
+- red: none on the first run, and none was possible: the workflow line this pins was written in
+  cycle 13, before the audit found it unpinned. **Test-after**, stated as such.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.TheReleaseWorkflow_MovesTheFileJprmWrites" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     1`
+- mutant: the audit's M5, `mv` source `./artifacts/jellyfin-new-releases_${{ steps.ver.outputs.version4 }}.zip`.
+  Same command -> `Assert.Matches() Failure: Pattern not found in value` (1 failed). M5 survived
+  the audit; it is caught now. Restored from a file copy, verified with `cmp -s`
+- green: no workflow change. Suite -> 338 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry

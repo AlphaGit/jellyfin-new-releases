@@ -90,6 +90,7 @@ Hosted by `RepositoryManifestTests.cs`'s `AssertSourceUrlNamesItsOwnVersion` and
 | U11 | An asset carrying the version in its file name, `new-releases_<version>.zip`, is rejected under the right tag | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected("1.0.0.0", …v1.0.0.0/new-releases_1.0.0.0.zip)` |
 | U12 | Two entries under two different release roots are rejected | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::EntriesFromTwoDifferentSites_AreRejected` |
 | U24 | The release root of an entry is its address above the tag directory | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::ReleaseRootOf_ReturnsTheAddressAboveTheEntrysTagDirectory` |
+| U27 | A release address with the right tag and a wrong asset name is rejected | FR-010 | example | PENDING | |
 
 `U8` and `U9` are the two sides of the tag-to-version boundary: `v1.2.3` against `1.2.3.0` passes,
 against `1.2.3.1` fails. `U12` restates `003`'s U40 to release roots. `U24` was added in the loop, before `U7`: with `003`'s U41 the root
@@ -112,12 +113,19 @@ ordering and presence check, as `ReleaseWorkflowTests.Steps` already does.
 | U17 | The workflow's permissions grant neither `pages` nor `id-token` | FR-012 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_GrantsNoPagesPermission` (2 cases) |
 | U18 | `gh release create` takes `--notes-file` written by `entryFor` for `${{ steps.ver.outputs.version }}` | FR-011 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_GivesTheReleaseTheTaggedVersionsChangelogSection` |
 | U19 | The release notes are written before `gh release create` runs | FR-011 | example | DONE | `Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_WritesTheReleaseNotesBeforeCreatingTheRelease` |
+| U25 | The workflow moves the file JPRM writes, `{Slug}_${{ steps.ver.outputs.version4 }}.zip`, and no other | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheReleaseWorkflow_MovesTheFileJprmWrites` |
+| U26 | The file the workflow moves the package to is the file `gh release create` uploads | FR-010 | example | PENDING | |
 
 `U13` must anchor the file name at a path or quote boundary. Cycle 3 found `003`'s U39 is a bare
 substring check: after the rename, `new-releases_<v>.zip` is found inside the stale
 `jellyfin-new-releases_<v>.zip`, so the wrong workflow path passes it.
 
-`U15` restates `003`'s U27, which ends at `actions/deploy-pages` today. `003`'s U28, U33, U51 and the
+`U15` restates `003`'s U27, which ends at `actions/deploy-pages` today.
+
+`U25`–`U27` were added after the audit of `74313fc` (`tdd/verification.md` findings 1–2, mutants
+M5, M14, M12 survived). `U25` restores the half of `003`'s U39 that tied the slug to the file JPRM
+writes; `U26` ties the moved file to the uploaded one; `U27` pins the asset-name check in
+`AssertSourceUrlNamesItsOwnVersion`. `003`'s U28, U33, U51 and the
 tag-trigger test are untouched by this feature and must stay green; they trace to `003`, not here.
 
 ### `README.md` — the install step

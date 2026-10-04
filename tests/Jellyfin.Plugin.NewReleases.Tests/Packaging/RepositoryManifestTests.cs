@@ -112,6 +112,20 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
+    /// 006 U25: JPRM writes the package as `{slug}_{four-part version}.zip`, and the workflow
+    /// renames it before uploading. A source spelt any other way names a file that does not
+    /// exist, and the release fails only when a tag is pushed. Restores the half of U39 that
+    /// tied the slug to JPRM's own output name (006 audit, finding 1).
+    /// </summary>
+    [Fact]
+    public void TheReleaseWorkflow_MovesTheFileJprmWrites()
+    {
+        Assert.Matches(
+            $@"(?m)^\s*mv\s+""?\./artifacts/{Regex.Escape(Slug)}_\$\{{\{{ steps\.ver\.outputs\.version4 }}}}\.zip""?\s",
+            ReleaseWorkflowSteps);
+    }
+
+    /// <summary>
     /// 006 U14: JPRM writes a `sourceUrl` under its own repository folder unless told otherwise.
     /// The catalogue must instead name the asset of the release the tag just created, or a server
     /// is sent to a file that was never published.
