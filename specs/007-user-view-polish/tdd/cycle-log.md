@@ -1604,3 +1604,15 @@ name). T101, T102 and T104 only reorganize tests and stay open.
 - T103: the 1,000-artist test said "every name is suggested" but checked the count and the last name.
   It now compares the whole list of 1,000 names, in order. H2 and H3 still fail it
 - each break was made by hand on a file copy and restored at once. Suite green
+
+## Commits of the eighth remediation
+
+| Entry | Commit |
+| --- | --- |
+| Eighth TDD audit report and Phase 15 tasks | `86e53be` |
+| Cycle 82: editing an applied artist name (T098) | `87c442d` |
+| Maintainer decision: A15 and U68 narrowed (T099) | `9cfdc9e` |
+| Cycle 83: opened tab state, every suggested name (T100, T103) | `34ba883` |
+
+All 123 recorded breaks, run at `34ba883`, fail the tests except three. E1 is the control and passes
+as it should. H5 and J3 now lie outside A15 and U68 as narrowed (T099).
