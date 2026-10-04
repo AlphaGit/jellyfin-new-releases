@@ -1110,3 +1110,28 @@ design. T069's check is therefore read as "K1 fails no predicate-based test".
 - strength: K1 now fails U67 only, which is the closed world working as decided. R13a, R13b, N9, Q4,
   Q5 and M2 each fail A14 as well as U67. Each was applied to a file copy, restored, and checked
   against `HEAD`
+
+## Cycle 66: `dimsText` reads `!important` and names its ceiling (T070, fourth audit Finding 6)
+
+- what: a test correction. `dimsText` had no ceiling comment, and it misread `!important`: mutant M4
+  (`.nr-links a:hover { opacity: 50% !important }`) passed A17, and `filter: none!important` read as
+  dimming. The behaviours A17 and A18 are unchanged
+- red: 2 rows added to the `A17 helper` table: `opacity: 50% !important` (dims) and
+  `filter: none!important` (does not dim). `node --test tests/web/styles.test.js` -> both fail,
+  e.g. `not ok 91 - A17 helper: {"opacity":"50% !important"} dims the text` (2 failed)
+- green: `dimsText` sets `!important` aside before it reads `opacity` and `filter`. Its comment now
+  names its ceiling: `color-mix()` and `mix-blend-mode` are not read. File -> 127 passed
+- strength: M4, P9, P10 and Q7 each fail A17 or A18 as well as U67. Each was applied to a file copy,
+  restored, and checked against `HEAD`
+
+## Task link and commits of the fourth remediation (T071)
+
+- T071: T063 now carries `[A18]`
+
+| Entry | Commit |
+| --- | --- |
+| Fourth TDD audit report and Phase 11 tasks | `926acef` |
+| Maintainer decision on the fourth TDD audit (T069) | `2257177` |
+| Cycle 64: U67 closed world | `5ebd87c` |
+| Cycle 65: line predicates pass correct CSS | `3ae9a45` |
+| Cycle 66: `dimsText` | this entry's commit |

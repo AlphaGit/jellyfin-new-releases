@@ -328,10 +328,13 @@ test('A16: every rule that reaches a source link and declares a colour keeps 4.5
     assert.deepEqual([colours.length > 0, below], [true, []]);
 });
 
-/** Whether `declared` dims what it reaches: an `opacity` below 1, or any `filter` but `none`. */
+/**
+ * Whether `declared` dims what it reaches: an `opacity` below 1, or any `filter` but `none`, `!important` or not.
+ * ponytail: reads `opacity` and `filter` only, so a dimming `color-mix()` or `mix-blend-mode` is not read.
+ */
 function dimsText(declared) {
-    const opacity = (declared.opacity || '').trim();
-    return parseFloat(opacity) / (opacity.endsWith('%') ? 100 : 1) < 1 || !['', 'none'].includes((declared.filter || '').trim());
+    const [opacity, filter] = [declared.opacity, declared.filter].map(value => (value || '').replace(/!\s*important/i, '').trim());
+    return parseFloat(opacity) / (opacity.endsWith('%') ? 100 : 1) < 1 || !['', 'none'].includes(filter);
 }
 
 for (const [declared, expected] of [
@@ -344,6 +347,8 @@ for (const [declared, expected] of [
     [{ opacity: '0' }, true],
     [{ opacity: '30%' }, true],
     [{ filter: 'brightness(.5)' }, true],
+    [{ opacity: '50% !important' }, true],
+    [{ filter: 'none!important' }, false],
 ]) {
     test(`A17 helper: ${JSON.stringify(declared)} ${expected ? 'dims' : 'does not dim'} the text`, () => {
         assert.equal(dimsText(declared), expected);
