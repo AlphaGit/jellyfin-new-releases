@@ -1594,3 +1594,13 @@ the grilling session set, so it no longer claims what the maintainer chose not t
 "The other missing tests" is read as T098 and the two polish items that are missing checks: T100
 (U85 reads the opened tab state from the loaded page) and T103 (the 1,000-artist test compares every
 name). T101, T102 and T104 only reorganize tests and stay open.
+
+## Cycle 83: two checks the eighth audit found missing (T100, T103)
+
+- T100, U85: "the List tab is selected on open" was read from the markup, not from the page after it
+  loaded, so a start-up script that unselected the List tab passed. The test now reads each tab's
+  state from the loaded page, and from the markup only where the page wrote nothing. Evidence: B85b
+  (start-up sets the List tab to not selected) now fails it; H9, J1 and B85 still do
+- T103: the 1,000-artist test said "every name is suggested" but checked the count and the last name.
+  It now compares the whole list of 1,000 names, in order. H2 and H3 still fail it
+- each break was made by hand on a file copy and restored at once. Suite green

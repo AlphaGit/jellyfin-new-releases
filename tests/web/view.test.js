@@ -33,9 +33,10 @@ function staticAttribute(id, name) {
 test('U85: the List tab is selected on open, and switching tabs moves the selection and the panel\'s label', async () => {
     const { document } = loadPageDom('user-view.html', { ApiClient: { ajax: () => Promise.resolve({ items: [], hasStoredReleases: true }) } });
     await settled();
-    const state = () => ['nr-tab-list', 'nr-tab-archive'].map(id => document.getElementById(id).getAttribute('aria-selected'))
-        .concat(document.getElementById('nr-panel').getAttribute('aria-labelledby'));
-    const opened = [staticAttribute('nr-tab-list', 'aria-selected'), staticAttribute('nr-tab-archive', 'aria-selected'), staticAttribute('nr-panel', 'aria-labelledby')];
+    // What the loaded page holds: what its script wrote, or else what its markup declares.
+    const now = (id, name) => document.getElementById(id).getAttribute(name) ?? staticAttribute(id, name);
+    const state = () => [now('nr-tab-list', 'aria-selected'), now('nr-tab-archive', 'aria-selected'), now('nr-panel', 'aria-labelledby')];
+    const opened = state();
     document.getElementById('nr-tab-archive').listeners.click[0]();
     const archive = state();
     document.getElementById('nr-tab-list').listeners.click[0]();

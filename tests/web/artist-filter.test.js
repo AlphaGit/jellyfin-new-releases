@@ -153,8 +153,8 @@ test('A1, A2: in a library of 1,000 artists every name is suggested, and the las
 
     await type(document, 'Artist 1000');
 
-    assert.deepEqual([suggestions(document).length, suggestions(document).at(-1), requests.slice(before)],
-        [1000, 'Artist 1000', ['GET Plugins/NewReleases/Releases?artistId=c' + '1000'.padStart(31, '0')]]);
+    assert.deepEqual([suggestions(document), requests.slice(before)],
+        [LIBRARY.items.map(artist => artist.name), ['GET Plugins/NewReleases/Releases?artistId=c' + '1000'.padStart(31, '0')]]);
 });
 
 /** The page source, for the declarations the fake DOM does not model. */
