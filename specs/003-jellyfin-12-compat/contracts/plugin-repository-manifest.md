@@ -2,18 +2,23 @@
 
 Satisfies `FR-005`, `FR-009`, `FR-013`, `FR-014`, `SC-004` and User Story 2.
 
+**Amended by `006-upgrade-replaces-old-version`**: the plugin's name, where packages live, and the
+address the document is served from. A contract must not describe what the project no longer
+produces.
+
 An operator adds one URL to Dashboard → Plugins → Repositories, and Jellyfin fetches this document
-to decide what to offer them. It is produced by the release workflow and never hand-edited.
+to decide what to offer them. It is produced by the release workflow. It was hand-edited once, to
+clear the review releases `0.1.0` and `0.1.1`.
 
 ## Address
 
 ```text
-https://<owner>.github.io/<repository>/manifest.json
+https://raw.githubusercontent.com/<owner>/<repository>/main/repo/manifest.json
 ```
 
-Served by GitHub Pages from the committed `repo/` directory. The packages sit beside it under
-`repo/jellyfin-new-releases/`, so both the document and what it points at come from the same origin
-and the same commit.
+The committed `repo/manifest.json`, read from the default branch. Nothing is deployed. Each
+version's package is an asset of that version's GitHub Release, at an address that is never
+overwritten.
 
 ## Document
 
@@ -23,7 +28,7 @@ A JSON array of plugin objects. This project publishes exactly one.
 [
   {
     "guid": "b8a15db8-e368-42c4-9048-390faf0094db",
-    "name": "Jellyfin New Releases",
+    "name": "New Releases",
     "description": "Tracks releases by the library artists ...",
     "overview": "Releases by your library artists that your library does not have yet.",
     "owner": "Alpha",
@@ -33,7 +38,7 @@ A JSON array of plugin objects. This project publishes exactly one.
         "version": "1.0.0.0",
         "changelog": "...",
         "targetAbi": "12.0.0.0",
-        "sourceUrl": "https://<owner>.github.io/<repository>/jellyfin-new-releases/jellyfin-new-releases_1.0.0.0.zip",
+        "sourceUrl": "https://github.com/<owner>/<repository>/releases/download/v1.0.0/new-releases.zip",
         "checksum": "<md5 of the zip>",
         "timestamp": "2026-09-13T00:00:00Z"
       }
@@ -50,7 +55,7 @@ A JSON array of plugin objects. This project publishes exactly one.
 | `name`, `description`, `overview`, `owner`, `category` | Identity shown in the catalogue | `build.yaml` |
 | `versions[].version` | The tag, without its `v` prefix | git tag → `jprm plugin build --version` |
 | `versions[].targetAbi` | `12.0.0.0` | `build.yaml` `targetAbi` |
-| `versions[].sourceUrl` | An address under the same Pages site that resolves to the package | derived by `jprm repo add` from the repository URL and the plugin slug |
+| `versions[].sourceUrl` | The `new-releases.zip` asset of the version's own GitHub Release, under one release root shared by every entry | `jprm repo add --plugin-url`, from the tag |
 | `versions[].checksum` | MD5 of the exact bytes at `sourceUrl` | computed by JPRM |
 | `versions[].timestamp` | Build time | JPRM |
 | `versions[].changelog` | Matching the `CHANGELOG.md` entry for the version | `build.yaml` `changelog`, written at release from that entry by `.github/scripts/changelog-entry.js` (`T064`) |
@@ -60,8 +65,8 @@ version is at or above it, so a server older than Jellyfin 12 is never offered t
 Jellyfin 12 server is.
 
 `versions` accumulates. `jprm repo add` merges a new entry into the existing document instead of
-replacing it, and because `repo/` is committed, no previously published version can be dropped by a
-later deployment.
+replacing it, and because `repo/manifest.json` is committed, no previously published version can be
+dropped by a later release.
 
 ## Empty is valid
 
@@ -71,8 +76,8 @@ chain; tagging a release is the maintainer's act, and is out of scope.
 
 ## Package layout
 
-Each package is a zip named `jellyfin-new-releases_<version>.zip` containing the artefacts listed in
-`build.yaml`:
+Each package is a zip named `new-releases.zip`, attached to its version's GitHub Release, containing
+the artefacts listed in `build.yaml`:
 
 ```text
 Jellyfin.Plugin.NewReleases.dll
@@ -108,8 +113,8 @@ by the maintainer's decision and is not part of this feature.
 1. `repo/manifest.json` parses as a JSON array of one object whose `guid` is the frozen plugin GUID.
 2. Every entry in `versions` has a non-empty `version`, `sourceUrl`, `checksum` and `timestamp`, and
    a `targetAbi` of `12.0.0.0`.
-3. Every `sourceUrl` is under the published site root and its filename matches
-   `jellyfin-new-releases_<version>.zip` for that entry's version.
+3. Every `sourceUrl` is `<release root>v<tag>/new-releases.zip`, under one release root, with the
+   tag naming that entry's version.
 4. For a package built locally, the `checksum` recorded equals the MD5 of the built zip.
 5. `build.yaml` declares `targetAbi: "12.0.0.0"` and `framework: "net10.0"`, and its `guid` matches
    the GUID compiled into the plugin.
