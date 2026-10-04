@@ -5,8 +5,9 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
-# The published repository lives in the committed repo/ directory and is served by Pages, so a
-# release both writes back to the branch and deploys the site.
+# Each version's package is an asset of its GitHub Release; the catalogue is the committed
+# repo/manifest.json, which servers read from the default branch's raw address. So a release
+# creates the GitHub Release and writes the catalogue back to the branch. Nothing is deployed.
 permissions:
   contents: write
 
@@ -37,7 +38,7 @@ jobs:
         run: pip install jprm==1.1.0
 
       # JPRM normalises a version to four parts and names the package for the normalised one,
-      # so tag v1.0.0 yields jellyfin-new-releases_1.0.0.0.zip. Both forms are needed: the three
+      # so tag v1.0.0 yields new-releases_1.0.0.0.zip. Both forms are needed: the three
       # part one to pass to JPRM, the four part one to find what it wrote.
       - name: Derive version from tag
         id: ver
@@ -54,8 +55,8 @@ jobs:
       - name: Write the changelog entry into build.yaml
         run: node .github/scripts/changelog-entry.js "${{ steps.ver.outputs.version }}"
 
-      # Build to a staging directory: `jprm repo add` copies the package into repo/ itself, and
-      # would otherwise be copying a file onto itself.
+      # Build to a staging directory, outside repo/: the package is published as a release asset,
+      # never committed.
       - name: Package with JPRM
         run: |
           mkdir -p ./artifacts

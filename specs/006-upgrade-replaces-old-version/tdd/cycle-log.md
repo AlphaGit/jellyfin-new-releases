@@ -279,3 +279,11 @@ failed before the implementation.
 - refactor: the workflow's comments still describe Pages; rewritten in its own structural commit
   after this one
 - commit: see the commit that carries this entry
+
+## Refactor after cycle 17: the workflow's comments describe what it now does
+
+- structural only, comments: the header no longer says the catalogue is served by Pages; the
+  version comment names `new-releases_1.0.0.0.zip`; the staging comment no longer says
+  `jprm repo add` copies the package into `repo/`, which `--plugin-url` stopped
+- suite: `dotnet test --configuration Release` -> 331 passed, 0 failed
+- commit: see the commit that carries this entry
