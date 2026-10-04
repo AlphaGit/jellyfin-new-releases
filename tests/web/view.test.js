@@ -22,6 +22,13 @@ test('U75: the Type filter offers all types, then Album, EP, Single, Compilation
 
 // 007 T091 group C, characterization (BASELINE): a screen reader and keyboard get it right.
 
+/** Loads the view with stored releases and an empty list, and lets it settle. */
+async function loadedView() {
+    const loaded = loadPageDom('user-view.html', { ApiClient: { ajax: () => Promise.resolve({ items: [], hasStoredReleases: true }) } });
+    await settled();
+    return loaded;
+}
+
 /** The value of `name` on the static element with `id`, or undefined. */
 function staticAttribute(id, name) {
     const tag = new RegExp(`<[a-z]+ [^>]*\\bid="${id}"[^>]*>`).exec(PAGE)?.[0] || '';
@@ -29,8 +36,7 @@ function staticAttribute(id, name) {
 }
 
 test('U85: the List tab is selected on open, and switching tabs moves the selection and the panel\'s label', async () => {
-    const { document } = loadPageDom('user-view.html', { ApiClient: { ajax: () => Promise.resolve({ items: [], hasStoredReleases: true }) } });
-    await settled();
+    const { document } = await loadedView();
     // What the loaded page holds: what its script wrote, or else what its markup declares.
     const now = (id, name) => document.getElementById(id).getAttribute(name) ?? staticAttribute(id, name);
     const state = () => [now('nr-tab-list', 'aria-selected'), now('nr-tab-archive', 'aria-selected'), now('nr-panel', 'aria-labelledby')];
@@ -76,8 +82,7 @@ test('U71: every listener the New Releases view registers keeps listening', () =
 // 007 T091 group B, characterization (BASELINE): the status line a screen reader announces after an action.
 for (const [action, said] of [['Ignore', 'Ignored Kill for Love'], ['HaveIt', 'Marked Kill for Love as Have it'], ['Restore', 'Restored Kill for Love']]) {
     test(`U84: after ${action} the status line says "${said}"`, async () => {
-        const { document } = loadPageDom('user-view.html', { ApiClient: { ajax: () => Promise.resolve({ items: [], hasStoredReleases: true }) } });
-        await settled();
+        const { document } = await loadedView();
 
         document.getElementById('nr-panel').listeners.click[0]({ target: actionRow({ id: '102', title: 'Kill for Love', action }).button });
         await settled();

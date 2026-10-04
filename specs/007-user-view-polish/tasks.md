@@ -396,4 +396,4 @@ cleared.** T100–T104 are polish and do not block.
 From the ninth [`tdd/verification.md`](./tdd/verification.md) (verdict **PASS_WITH_GAPS**, audited at
 `457bd78` under the maintainer's stopping rule). Nothing blocks the feature.
 
-- [ ] T105 Finding 1 (LOW): give `tests/web/view.test.js` one file-local setup for the loaded view, as `requests.test.js` has `loadedView`, and use it in U84 and U85 (`:32`, `:80`). Done when `node --test "tests/web/*.test.js"` is green and B84 and B85b still fail it.
+- [X] T105 Finding 1 (LOW): give `tests/web/view.test.js` one file-local setup for the loaded view, as `requests.test.js` has `loadedView`, and use it in U84 and U85 (`:32`, `:80`). Done when `node --test "tests/web/*.test.js"` is green and B84 and B85b still fail it.

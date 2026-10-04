@@ -1653,3 +1653,14 @@ as it should. H5 and J3 now lie outside A15 and U68 as narrowed (T099).
 
 All 123 recorded breaks, run at `dd43c21`, fail the tests except E1 (the control, which passes as it
 should) and H5 and J3 (outside A15 and U68 as narrowed by T099). K1 fails U67 only.
+
+## Maintainer decisions on the ninth TDD audit, 2026-10-04, and T105
+
+The maintainer's reply: "1. Fix it. 2. Ignore. 3. Yes, do it."
+
+- **T105, done**: `tests/web/view.test.js` has one file-local `loadedView()` (stored releases, an empty
+  list, settled), and U84 and U85 use it. U71 keeps its own setup on purpose: it needs no stored
+  releases and no wait. No behaviour change; suite -> node 358 passed; B84, B85b and H9 still fail
+- **The late-response observation: ignored (maintainer, 2026-10-04).** No spec is opened for a slow
+  "ASP" response that arrives after the field is cleared
+- **Merge to `main` and push: approved**, followed by a CI check
