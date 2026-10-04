@@ -810,3 +810,15 @@ own test, so `U26` keeps its single reason to fail.
   dotnet -> 353 passed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Maintainer decision, 2026-10-04: U30, U31, U33 and U34 accepted as test-after
+
+The maintainer accepted `U30`, `U31`, `U33` and `U34` as **test-after** on 2026-10-04. Each pins
+code or text that existed when the third audit found it unpinned, so no red was possible.
+
+| Behaviour | Cycle | Why no red was possible | Recorded mutant caught |
+| --- | --- | --- | --- |
+| U30 | 30 | one `mv` already moved JPRM's package to the uploaded file | F1, a second `mv` producing the uploaded file |
+| U31 | 31 | the flow check already required a key | F2, any `{` treated as a grant |
+| U33 | 33 | the removal instruction existed since cycle 23 | "No later upgrade needs this." changed |
+| U34 | 34 | the replacement instruction existed since cycle 24 | "replace … with" changed to "add, beside …" |
