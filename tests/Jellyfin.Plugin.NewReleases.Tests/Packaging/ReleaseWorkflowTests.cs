@@ -72,6 +72,22 @@ public class ReleaseWorkflowTests
     }
 
     /// <summary>
+    /// 006 U18: the release says what the catalogue says — the tagged version's section of
+    /// CHANGELOG.md, read by the same <c>entryFor</c> that writes the catalogue text (006 FR-011).
+    /// The notes file `gh release create` reads must be the one that step writes.
+    /// </summary>
+    [Fact]
+    public void ReleaseWorkflow_GivesTheReleaseTheTaggedVersionsChangelogSection()
+    {
+        var notes = Regex.Match(Steps, @"gh release create(?:[^\n]*\\\n)*[^\n]*--notes-file\s+""?([^\s""]+)");
+        Assert.True(notes.Success, "gh release create is given no --notes-file");
+
+        Assert.Matches(
+            $@"entryFor\([^\n]*{Regex.Escape(notes.Groups[1].Value)}[^\n]*""\$\{{\{{ steps\.ver\.outputs\.version }}}}""",
+            Steps);
+    }
+
+    /// <summary>
     /// U28: JPRM rewrites TargetFramework in the project file while packaging and is expected to
     /// put it back. Contract statement 6 is about that element specifically, and a local dry run
     /// confirmed JPRM restores it — while leaving the rewritten &lt;Version&gt; behind. A whole-file

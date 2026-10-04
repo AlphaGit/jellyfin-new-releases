@@ -78,8 +78,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          node -e 'const fs = require("node:fs"); const { entryFor } = require("./.github/scripts/changelog-entry.js"); fs.writeFileSync(process.argv[1], entryFor(fs.readFileSync("CHANGELOG.md", "utf8"), process.argv[2]));' ./artifacts/release-notes.md "${{ steps.ver.outputs.version }}"
           mv "./artifacts/new-releases_${{ steps.ver.outputs.version4 }}.zip" ./artifacts/new-releases.zip
-          gh release create "$GITHUB_REF_NAME" ./artifacts/new-releases.zip --title "$GITHUB_REF_NAME"
+          gh release create "$GITHUB_REF_NAME" ./artifacts/new-releases.zip --title "$GITHUB_REF_NAME" --notes-file ./artifacts/release-notes.md
 
       - name: Add the version to the published repository
         run: |

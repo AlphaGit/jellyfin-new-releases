@@ -287,3 +287,24 @@ failed before the implementation.
   `jprm repo add` copies the package into `repo/`, which `--plugin-url` stopped
 - suite: `dotnet test --configuration Release` -> 331 passed, 0 failed
 - commit: see the commit that carries this entry
+
+## Cycle 18: U18 the release text is the tagged version's changelog section
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_GivesTheReleaseTheTaggedVersionsChangelogSection`
+  (new: reads the path `gh release create --notes-file` names, then requires an `entryFor(` line
+  that writes that path for `"${{ steps.ver.outputs.version }}"`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests.ReleaseWorkflow_GivesTheReleaseTheTaggedVersionsChangelogSection" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `gh release create is given no --notes-file` (1 failed)
+- green: "Create the GitHub Release" first runs a `node -e` line that writes
+  `entryFor(CHANGELOG.md, "${{ steps.ver.outputs.version }}")` to `./artifacts/release-notes.md`,
+  and `gh release create` gains `--notes-file ./artifacts/release-notes.md`. Checked by hand first:
+  for `0.1.1` it writes the section starting `### Fixed`; for `9.9.9` it exits 1 with
+  `CHANGELOG.md has no section for 9.9.9`, so a missing section still fails the run. Suite ->
+  332 passed, 0 failed; node -> 358 passed
+- mutant: the notes line fed `"${{ steps.ver.outputs.version4 }}"` instead. Same command ->
+  `Assert.Matches() Failure: Pattern not found in value` (1 failed). Restored from a file copy,
+  verified with `cmp -s`; the test then passes again. A first attempt used `sed`, whose result
+  could not be confirmed; it was restored and repeated with a checked replacement, recorded here
+- refactor: none. The `node -e` line is long, but moving it into `changelog-entry.js` would add a
+  second entry point to a script no task here changes
+- commit: see the commit that carries this entry
