@@ -140,8 +140,8 @@ down where it will be read.
 - [X] T031 Add `007-user-view-polish`'s unreleased changes to the `0.2.0` section of `CHANGELOG.md`, read from `specs/007-user-view-polish/spec.md`, in Keep a Changelog form like the `0.1.1` entry. T030 must stay green
 - [X] T022 Bump the version to `0.2.0` in `build.yaml` and `0.2.0.0` in `src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj`, in the same commit as T021 and T031, as the constitution requires
 - [X] T023 Run `quickstart.md` pass 1 in full: build with zero warnings, `dotnet test`, `node --test "tests/web/*.test.js"`, and scenarios 1 and 2
-- [ ] T024 Push to `main` and verify the CI run green (`gh run watch`). A feature is done when the CI run for that push is verified green, not when it is pushed
-- [ ] T025 Tag `v0.2.0` and run `quickstart.md` scenario 3: the GitHub Release carries `new-releases.zip`; the raw catalogue lists `0.2.0.0` only, under `name: "New Releases"`; its `sourceUrl` is the release asset, answers 200 after redirects, and its checksum matches the downloaded bytes
+- [X] T024 Push to `main` and verify the CI run green (`gh run watch`). A feature is done when the CI run for that push is verified green, not when it is pushed
+- [X] T025 Tag `v0.2.0` and run `quickstart.md` scenario 3: the GitHub Release carries `new-releases.zip`; the raw catalogue lists `0.2.0.0` only, under `name: "New Releases"`; its `sourceUrl` is the release asset, answers 200 after redirects, and its checksum matches the downloaded bytes
 - [ ] T026 [A1] [A2] [A3] [A4] `quickstart.md` pass 2 — the real-server pass on a running Jellyfin 12. **JD's own pass.** Replace the repository address first, as the `0.2.0` notes say. Steps 4–6 only show the transition survives; **step 7 is the one that matters** — publish a further release, update, and watch the old directory disappear with no manual step, which is the proof the host's cleanup is working now that the names agree. Then turn GitHub Pages off in the repository settings. Record the pass in `docs/`
 
 ---

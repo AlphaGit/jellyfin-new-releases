@@ -700,3 +700,32 @@ folder JPRM writes, when the second audit found both unpinned.
 | --- | --- | --- | --- |
 | U28 | 28 | the `mv` sat between build and release since cycle 13 | S1, `mv` and `gh release create` swapped |
 | U29 | 29 | both folders were `./artifacts` before 006 | S2, `--output ./out` |
+
+## Release and deploy, 2026-10-04
+
+- **T024:** `main` fast-forwarded from `c0e20a2` to `c32c2f6`. CI `build` run 37237550544 succeeded.
+- **T025:** tag `v0.2.0` on `c32c2f6`. The `package` run 37237617007 succeeded on its first run,
+  and every step passed, `Create the GitHub Release` among them. Scenario 3 checks:
+  - the release has `new-releases.zip`, and its text begins `### Upgrading from 0.1.x — once`;
+  - the raw catalogue lists one plugin, `New Releases`, and only `0.2.0.0`;
+  - its `sourceUrl` is `…/releases/download/v0.2.0/new-releases.zip` and answers 200 after
+    redirects (942,966 bytes);
+  - the MD5 of the download, `c3b9a393f53a0640936d2c1dedfc1655`, equals the catalogue checksum;
+  - the package's `meta.json` has the name `New Releases` and the version `0.2.0.0`.
+- **After the release:** the bot commit `ef8b154` added `0.2.0.0` to the catalogue. That turned
+  the count test red as designed (`lists 1 version(s), expected 0`). `PublishedVersionsToday` was
+  raised to 1 in `dbf9794`, and the address rule now binds the real entry. CI 37237743062 succeeded.
+- **Deploy over SSH**, to `jellyfin.alphasmanifesto.com` (Jellyfin `12.1+ubu2404`), for the
+  maintainer's T026 pass:
+  - `/etc/jellyfin/system.xml` was backed up to `system.xml.bak-20261004215207`. The repository
+    entry was then changed to the name `New Releases` and the raw catalogue address, the step the
+    `0.2.0` notes give.
+  - The release asset was checked against the catalogue MD5 and extracted to
+    `/var/lib/jellyfin/plugins/New Releases_0.2.0.0`, with Jellyfin stopped.
+  - On start-up (`Startup complete 0:00:09.7580484`), only `New Releases_0.2.0.0` was left, as
+    `New Releases 0.2.0.0 Active`. **The old `Jellyfin New Releases_0.1.1.0` folder was gone with
+    no manual step.** Its `meta.json` already named it `New Releases`, so the host grouped both
+    copies and deleted the older one.
+  - The log has one `Loaded plugin: New Releases 0.2.0.0`, one daily trigger for the refresh, no
+    `AmbiguousMatchException` and no `[ERR]`.
+  - The maintainer verifies T026 by hand.
