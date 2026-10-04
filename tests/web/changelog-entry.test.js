@@ -109,3 +109,12 @@ test('the 0.2.0 notes give the raw catalogue address as the one that replaces th
     assert.ok(notes.includes(RAW_CATALOGUE), `no ${RAW_CATALOGUE} in the 0.2.0 notes`);
     assert.match(notes, /\breplace\b/i);
 });
+
+// 006 U33: the removal step as one instruction — which folder, nothing else, and that no later
+// upgrade needs it — so a heading that says "once" cannot stand in for it (006 third audit,
+// finding 29).
+test('the 0.2.0 removal instruction deletes the old-name folder and nothing else, and only this once', () => {
+    assert.match(
+        section020(),
+        /delete\s+the `Jellyfin New Releases_<version>` folder and nothing else,[^.]*\.\s+No later\s+upgrade needs this\./);
+});

@@ -780,3 +780,18 @@ own test, so `U26` keeps its single reason to fail.
   Suite -> 353 passed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 33: U33 the removal instruction itself says which folder, nothing else, and only once
+
+- test: `tests/web/changelog-entry.test.js::the 0.2.0 removal instruction deletes the old-name folder and nothing else, and only this once`
+  (new; finding 29, task T054)
+- red: none on the first run, because the `0.2.0` text exists since cycle 23. **Test-after**,
+  stated as such. `node --test tests/web/changelog-entry.test.js` -> `# pass 10`
+- mutants, one at a time:
+  - instruction only ("No later upgrade needs this." changed to "Repeat this after every
+    upgrade.") -> `not ok 10 - the 0.2.0 removal instruction…`
+  - heading only ("— once" removed) -> `not ok 8 - the 0.2.0 notes name the old-name folder…`
+  - so a change to either fails its own test. Each restored, checked with `cmp -s`
+- green: no `CHANGELOG.md` change. Node -> 362 passed
+- refactor: none
+- commit: see the commit that carries this entry
