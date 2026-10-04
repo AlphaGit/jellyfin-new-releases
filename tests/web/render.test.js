@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { loadPageDom, rendered, settled } = require('./load-page.js');
+const { loadPageDom, renderedList, settled } = require('./load-page.js');
 const { fixture } = require('./fixtures.js');
 const { HOUR, DAY, ago } = require('./fixed-clock.js');
 const { rowOf, coverBox, imgAttribute, decoded } = require('./cover-markup.js');
@@ -20,31 +20,31 @@ const WAITING = 'No data yet. New Releases is waiting for its first refresh.';
 test('with stored releases the panel holds one row per item', () => {
     const body = fixture('releases.json');
 
-    const { panel } = rendered(body);
+    const { panel } = renderedList(body);
 
     assert.equal(panel.match(/class="nr-row"/g).length, body.items.length);
 });
 
 test('with stored releases the panel does not hold the waiting message', () => {
-    assert.doesNotMatch(rendered(fixture('releases.json')).panel, new RegExp(WAITING));
+    assert.doesNotMatch(renderedList(fixture('releases.json')).panel, new RegExp(WAITING));
 });
 
 test('with no stored releases the panel holds the waiting message', () => {
-    assert.match(rendered(fixture('releases-empty.json')).panel, new RegExp(WAITING));
+    assert.match(renderedList(fixture('releases-empty.json')).panel, new RegExp(WAITING));
 });
 
 test('with no stored releases the panel holds no row', () => {
-    assert.doesNotMatch(rendered(fixture('releases-empty.json')).panel, /class="nr-row"/);
+    assert.doesNotMatch(renderedList(fixture('releases-empty.json')).panel, /class="nr-row"/);
 });
 
 test('with stored releases but nothing in this selection the panel says so', () => {
     const body = { ...fixture('releases.json'), items: [] };
 
-    assert.match(rendered(body).panel, /Nothing missing for this selection\./);
+    assert.match(renderedList(body).panel, /Nothing missing for this selection\./);
 });
 
 test('a rendered row carries its artist, title, type, date and state', () => {
-    const { panel } = rendered(fixture('releases.json'));
+    const { panel } = renderedList(fixture('releases.json'));
 
     assert.match(panel, /Closer to Grey/);
     assert.match(panel, /Chromatics/);
@@ -54,7 +54,7 @@ test('a rendered row carries its artist, title, type, date and state', () => {
 });
 
 test('an Incomplete row carries its missing tracks and the edition they were compared with', () => {
-    const { panel } = rendered(fixture('releases.json'));
+    const { panel } = renderedList(fixture('releases.json'));
 
     assert.match(panel, /2 missing tracks/);
     assert.match(panel, /<li>Into the Black<\/li>/);
@@ -64,21 +64,21 @@ test('an Incomplete row carries its missing tracks and the edition they were com
 test('a rendered row carries one link per source', () => {
     const body = fixture('releases.json');
 
-    const { panel } = rendered(body);
+    const { panel } = renderedList(body);
 
     const links = body.items.reduce((total, item) => total + item.sources.length, 0);
     assert.equal(panel.match(/ target="_blank"/g).length, links);
 });
 
 test('an undated row is grouped and printed as Undated', () => {
-    const { panel } = rendered(fixture('releases.json'));
+    const { panel } = renderedList(fixture('releases.json'));
 
     assert.match(panel, /<h2>Undated<\/h2>/);
     assert.match(panel, /<span>Undated<\/span>/);
 });
 
 test('on the Archive tab a row carries its archived badge and the kind of the decision', () => {
-    const { panel } = rendered(fixture('releases.json'), { archive: true });
+    const { panel } = renderedList(fixture('releases.json'), { archive: true });
 
     assert.match(panel, /<span class="nr-badge">Have it, In library<\/span>/);
 });
@@ -86,7 +86,7 @@ test('on the Archive tab a row carries its archived badge and the kind of the de
 test('with no instant on record the staleness line is empty and the list still renders', () => {
     const body = { ...fixture('releases.json'), releasesLastCheckedAt: null };
 
-    const { panel, staleness } = rendered(body);
+    const { panel, staleness } = renderedList(body);
 
     assert.equal(staleness.textContent, '');
     assert.equal(staleness.hidden, true);
@@ -94,7 +94,7 @@ test('with no instant on record the staleness line is empty and the list still r
 });
 
 test('with an instant older than the refresh interval the staleness sentence appears', () => {
-    const { staleness } = rendered(fixture('releases-stale.json'));
+    const { staleness } = renderedList(fixture('releases-stale.json'));
 
     assert.equal(staleness.textContent, 'Releases last checked 7 weeks ago.');
     assert.equal(staleness.hidden, false);
@@ -103,14 +103,14 @@ test('with an instant older than the refresh interval the staleness sentence app
 // 002 FR-006: the page hands the rule the interval the response carries, not a fixed day. Every
 // fixture serves 24, so these two set it on either side.
 test('a weekly interval keeps a two-day-old instant quiet', () => {
-    const { staleness } = rendered({ ...fixture('releases.json'), releasesLastCheckedAt: ago(2 * DAY), refreshIntervalHours: 168 });
+    const { staleness } = renderedList({ ...fixture('releases.json'), releasesLastCheckedAt: ago(2 * DAY), refreshIntervalHours: 168 });
 
     assert.equal(staleness.textContent, '');
     assert.equal(staleness.hidden, true);
 });
 
 test('a six-hour interval states a twelve-hour-old instant', () => {
-    const { staleness } = rendered({ ...fixture('releases.json'), releasesLastCheckedAt: ago(12 * HOUR), refreshIntervalHours: 6 });
+    const { staleness } = renderedList({ ...fixture('releases.json'), releasesLastCheckedAt: ago(12 * HOUR), refreshIntervalHours: 6 });
 
     assert.equal(staleness.textContent, 'Releases last checked 12 hours ago.');
     assert.equal(staleness.hidden, false);
@@ -120,8 +120,8 @@ test('a six-hour interval states a twelve-hour-old instant', () => {
 // half in the markup: the values are the action segments the plugin registers. The join itself is
 // pinned by U72 in requests.test.js, one test per action, since the stand-in models `closest` (007 cycle 72).
 test('a rendered row offers the actions under the names the decision routes are served under', () => {
-    const { panel } = rendered(fixture('releases.json'));
-    const archived = rendered(fixture('releases.json'), { archive: true }).panel;
+    const { panel } = renderedList(fixture('releases.json'));
+    const archived = renderedList(fixture('releases.json'), { archive: true }).panel;
 
     assert.deepEqual([...new Set([...panel.matchAll(/data-action="(\w+)"/g)].map(m => m[1]))], ['Ignore', 'HaveIt']);
     assert.deepEqual([...new Set([...archived.matchAll(/data-action="(\w+)"/g)].map(m => m[1]))], ['Restore']);
@@ -130,7 +130,7 @@ test('a rendered row offers the actions under the names the decision routes are 
 test('a narrowed response lists only what it carries', () => {
     const body = fixture('releases-filtered.json');
 
-    const { panel } = rendered(body);
+    const { panel } = renderedList(body);
 
     assert.equal(panel.match(/class="nr-row"/g).length, 1);
     assert.equal(body.items.length, 1);
@@ -143,7 +143,7 @@ const MARKUP_TITLE = '<img src=x onerror=alert(1)>';
 
 function renderedWithTitle(title) {
     const body = fixture('releases.json');
-    return rendered({ ...body, items: [{ ...body.items[0], title }] }).panel;
+    return renderedList({ ...body, items: [{ ...body.items[0], title }] }).panel;
 }
 
 test('a title containing markup is written into the row as text', () => {
@@ -170,7 +170,7 @@ const BOTH_SOURCES = 101; // releases.json: Closer to Grey, at MusicBrainz and D
 test('U48: a row\'s cover image src is its first cover URL', () => {
     const body = fixture('releases.json');
 
-    const box = coverBox(rendered(body).panel, BOTH_SOURCES);
+    const box = coverBox(renderedList(body).panel, BOTH_SOURCES);
 
     assert.equal(imgAttribute(box, 'src'), body.items.find(i => i.id === BOTH_SOURCES).covers[0]);
 });
@@ -178,21 +178,21 @@ test('U48: a row\'s cover image src is its first cover URL', () => {
 test('U49: a row\'s cover image lists the remaining cover URLs, in order, as its fallbacks', () => {
     const body = fixture('releases.json');
 
-    const box = coverBox(rendered(body).panel, BOTH_SOURCES);
+    const box = coverBox(renderedList(body).panel, BOTH_SOURCES);
 
     assert.equal(imgAttribute(box, 'data-fallback'), body.items.find(i => i.id === BOTH_SOURCES).covers.slice(1).join(' '));
 });
 
 test('U50: a row\'s cover image loads lazily', () => {
-    assert.equal(imgAttribute(coverBox(rendered(fixture('releases.json')).panel, BOTH_SOURCES), 'loading'), 'lazy');
+    assert.equal(imgAttribute(coverBox(renderedList(fixture('releases.json')).panel, BOTH_SOURCES), 'loading'), 'lazy');
 });
 
 test('U51: a row\'s cover image sends no referrer', () => {
-    assert.equal(imgAttribute(coverBox(rendered(fixture('releases.json')).panel, BOTH_SOURCES), 'referrerpolicy'), 'no-referrer');
+    assert.equal(imgAttribute(coverBox(renderedList(fixture('releases.json')).panel, BOTH_SOURCES), 'referrerpolicy'), 'no-referrer');
 });
 
 test('U52: a row\'s cover image declares a 64 by 64 box', () => {
-    const box = coverBox(rendered(fixture('releases.json')).panel, BOTH_SOURCES);
+    const box = coverBox(renderedList(fixture('releases.json')).panel, BOTH_SOURCES);
 
     assert.deepEqual([imgAttribute(box, 'width'), imgAttribute(box, 'height')], ['64', '64']);
 });
@@ -201,24 +201,24 @@ test('U53: a row with no cover URL writes the cover box with no image', () => {
     const body = fixture('releases.json');
     body.items.find(i => i.id === BOTH_SOURCES).covers = [];
 
-    assert.equal(coverBox(rendered(body).panel, BOTH_SOURCES), '');
+    assert.equal(coverBox(renderedList(body).panel, BOTH_SOURCES), '');
 });
 
 test('U54: cover URLs are written escaped, in the src and in the fallbacks', () => {
     const body = fixture('releases.json');
     body.items.find(i => i.id === BOTH_SOURCES).covers = ['https://x.test/a"><script>', 'https://x.test/b?c=1&d=2'];
 
-    const box = coverBox(rendered(body).panel, BOTH_SOURCES);
+    const box = coverBox(renderedList(body).panel, BOTH_SOURCES);
 
     assert.deepEqual([imgAttribute(box, 'src'), imgAttribute(box, 'data-fallback')], ['https://x.test/a&quot;&gt;&lt;script&gt;', 'https://x.test/b?c=1&amp;d=2']);
 });
 
 test('A10: a rendered cover image has empty alt text, so a screen reader skips it', () => {
-    assert.equal(imgAttribute(coverBox(rendered(fixture('releases.json')).panel, BOTH_SOURCES), 'alt'), '');
+    assert.equal(imgAttribute(coverBox(renderedList(fixture('releases.json')).panel, BOTH_SOURCES), 'alt'), '');
 });
 
 test('A12: an Archive-tab row writes Restore inside .nr-actions, under the same rule as Ignore and Have it', () => {
-    const { panel } = rendered(fixture('releases.json'), { archive: true });
+    const { panel } = renderedList(fixture('releases.json'), { archive: true });
 
     assert.match(panel, /<div class="nr-actions"><button type="button" data-action="Restore"/);
 });
@@ -227,7 +227,7 @@ test('A12: an Archive-tab row writes Restore inside .nr-actions, under the same 
 // already do, so a change to where they point fails here.
 test('U70: each source link of a row points at its source URL, in order', () => {
     const body = fixture('releases.json');
-    const { panel } = rendered(body);
+    const { panel } = renderedList(body);
     const hrefs = item => [...rowOf(panel, item.id).matchAll(/<a href="([^"]*)" target="_blank"/g)].map(([, href]) => decoded(href));
 
     assert.deepEqual(body.items.map(hrefs), body.items.map(item => item.sources.map(source => source.url)));
@@ -237,7 +237,7 @@ test('U70: each source link of a row points at its source URL, in order', () => 
 test('U77: a release with three sources shows three links, in order', () => {
     const body = fixture('releases.json');
     const three = { ...body.items[0], sources: [...body.items[0].sources, { source: 'musicbrainz', url: 'https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000199' }] };
-    const { panel } = rendered({ ...body, items: [three] });
+    const { panel } = renderedList({ ...body, items: [three] });
 
     assert.deepEqual([...rowOf(panel, three.id).matchAll(/<a href="([^"]*)" target="_blank"/g)].map(([, href]) => decoded(href)), three.sources.map(source => source.url));
 });
@@ -257,7 +257,7 @@ for (const [label, body] of [
     ['before the first refresh', fixture('releases-empty.json')],
 ]) {
     test(`U79: an empty Archive says the Archive is empty, ${label}`, () => {
-        assert.equal(rendered(body, { archive: true }).panel, '<p class="nr-empty">The Archive is empty.</p>');
+        assert.equal(renderedList(body, { archive: true }).panel, '<p class="nr-empty">The Archive is empty.</p>');
     });
 }
 
@@ -267,7 +267,7 @@ const buttonsOf = (panel, id) => [...rowOf(panel, id).matchAll(/<button [^>]*ari
 test('U80: the buttons read Ignore, Have it and Restore, and their screen-reader labels name the release', () => {
     const body = fixture('releases.json');
 
-    assert.deepEqual([buttonsOf(rendered(body).panel, 101), buttonsOf(rendered(body, { archive: true }).panel, 104)], [
+    assert.deepEqual([buttonsOf(renderedList(body).panel, 101), buttonsOf(renderedList(body, { archive: true }).panel, 104)], [
         [['Ignore Closer to Grey', 'Ignore'], ['Mark Closer to Grey as Have it', 'Have it']],
         [['Restore II', 'Restore']],
     ]);
@@ -278,8 +278,8 @@ test('U81: the badges read "Upcoming, not yet released" and "Ignored"', () => {
     const ignored = { ...body, items: [{ ...body.items[3], archived: { kind: 'Ignore', decidedAt: '2026-09-18T11:04:00+00:00' } }] };
 
     assert.deepEqual([
-        /nr-badge-state" role="status">([^<]*)</.exec(rowOf(rendered(body).panel, 103))[1],
-        /<span class="nr-badge">(Ignored|Have it, In library)<\/span>/.exec(rendered(ignored, { archive: true }).panel)?.[1],
+        /nr-badge-state" role="status">([^<]*)</.exec(rowOf(renderedList(body).panel, 103))[1],
+        /<span class="nr-badge">(Ignored|Have it, In library)<\/span>/.exec(renderedList(ignored, { archive: true }).panel)?.[1],
     ], ['Upcoming, not yet released', 'Ignored']);
 });
 
@@ -287,17 +287,17 @@ test('U82: one missing track is counted in the singular', () => {
     const body = fixture('releases.json');
     const one = { ...body, items: [{ ...body.items[1], missingTracks: ['Into the Black'] }] };
 
-    assert.match(rendered(one).panel, /<summary>1 missing track<\/summary>/);
+    assert.match(renderedList(one).panel, /<summary>1 missing track<\/summary>/);
 });
 
 test('U83: the source links read MusicBrainz and Deezer', () => {
-    assert.deepEqual([...rowOf(rendered(fixture('releases.json')).panel, 101).matchAll(/target="_blank"[^>]*>([^<]*)<\/a>/g)].map(([, text]) => text), ['MusicBrainz', 'Deezer']);
+    assert.deepEqual([...rowOf(renderedList(fixture('releases.json')).panel, 101).matchAll(/target="_blank"[^>]*>([^<]*)<\/a>/g)].map(([, text]) => text), ['MusicBrainz', 'Deezer']);
 });
 
 // 007 T091 group C, characterization (BASELINE).
 test('U88: every source link opens in a new tab without access to the page', () => {
     const body = fixture('releases.json');
-    const { panel } = rendered(body);
+    const { panel } = renderedList(body);
     const links = [...panel.matchAll(/<a href="[^"]*"( [^>]*)>/g)].map(([, rest]) => rest).filter(rest => rest.includes('target'));
 
     assert.deepEqual(links, body.items.flatMap(item => item.sources.map(() => ' target="_blank" rel="noopener"')));

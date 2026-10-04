@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { loadPageDom, settled, rendered } = require('./load-page.js');
+const { loadPageDom, settled, renderedList } = require('./load-page.js');
 const { declaredIds, FakeElement } = require('./fake-dom.js');
 const { fixture } = require('./fixtures.js');
 
@@ -101,7 +101,7 @@ test('U68: the static markup holds exactly the reviewed elements', () => {
 });
 
 /** What the view writes into the panel for `body`, in the List tab or the Archive tab. */
-const panelFor = (body, archive = false) => rendered(body, { archive }).panel;
+const panelFor = (body, archive = false) => renderedList(body, { archive }).panel;
 
 /** What the view writes into `id` once it has loaded with `ajax` answering its requests. */
 async function loadedInto(id, ajax) {
@@ -121,7 +121,7 @@ const only = (id, changes = {}) => ({ ...RELEASES, items: [{ ...RELEASES.items.f
 // change it records.
 const LIST = ['div.nr-list[class]', 'h2[]'];
 const COVER = ['div.nr-cover[class]', 'img[alt data-fallback height loading referrerpolicy src width]'];
-const DETAILS = ['div[]', 'div.nr-title[class]', 'div.nr-artist[class]', 'a[href]', 'div.nr-meta[class]', 'span.nr-badge[class]', 'span[]', 'span.nr-badge.nr-badge-state[class role]'];
+const DETAILS_COLUMN = ['div[]', 'div.nr-title[class]', 'div.nr-artist[class]', 'a[href]', 'div.nr-meta[class]', 'span.nr-badge[class]', 'span[]', 'span.nr-badge.nr-badge-state[class role]'];
 const LINK = 'a[href rel target]';
 const BUTTON = 'button[aria-label data-action type]';
 const EMPTY = ['p.nr-empty[class]'];
@@ -129,16 +129,16 @@ const EMPTY = ['p.nr-empty[class]'];
 const TEMPLATES = [
     // Release 101 has two sources (two links); the List tab offers two buttons, Ignore and Have it.
     ['a Missing release at both sources, in the List tab', () => panelFor(only(101)),
-        [...LIST, 'article.nr-row[class data-id data-title]', ...COVER, ...DETAILS, 'div.nr-links[class]', LINK, LINK, 'div.nr-actions[class]', BUTTON, BUTTON]],
+        [...LIST, 'article.nr-row[class data-id data-title]', ...COVER, ...DETAILS_COLUMN, 'div.nr-links[class]', LINK, LINK, 'div.nr-actions[class]', BUTTON, BUTTON]],
     // Release 102 has two missing tracks (two list items), a compared edition (the paragraph) and one source.
     ['an Incomplete release with a compared edition, in the List tab', () => panelFor(only(102)),
-        [...LIST, 'article.nr-row[class data-id data-title]', ...COVER, ...DETAILS, 'details[]', 'summary[]', 'ul[]', 'li[]', 'li[]', 'p[]',
+        [...LIST, 'article.nr-row[class data-id data-title]', ...COVER, ...DETAILS_COLUMN, 'details[]', 'summary[]', 'ul[]', 'li[]', 'li[]', 'p[]',
             'div.nr-links[class]', LINK, 'div.nr-actions[class]', BUTTON, BUTTON]],
     // Release 104 is archived (the extra badge) and has one source; the Archive tab offers one button, Restore.
     ['an archived release, in the Archive tab', () => panelFor(only(104), true),
-        [...LIST, 'article.nr-row[class data-id data-title]', ...COVER, ...DETAILS, 'span.nr-badge[class]', 'div.nr-links[class]', LINK, 'div.nr-actions[class]', BUTTON]],
+        [...LIST, 'article.nr-row[class data-id data-title]', ...COVER, ...DETAILS_COLUMN, 'span.nr-badge[class]', 'div.nr-links[class]', LINK, 'div.nr-actions[class]', BUTTON]],
     ['a release with no cover', () => panelFor(only(101, { covers: [] })),
-        [...LIST, 'article.nr-row[class data-id data-title]', 'div.nr-cover[class]', ...DETAILS, 'div.nr-links[class]', LINK, LINK, 'div.nr-actions[class]', BUTTON, BUTTON]],
+        [...LIST, 'article.nr-row[class data-id data-title]', 'div.nr-cover[class]', ...DETAILS_COLUMN, 'div.nr-links[class]', LINK, LINK, 'div.nr-actions[class]', BUTTON, BUTTON]],
     ['no stored releases', () => panelFor(fixture('releases-empty.json')), EMPTY],
     ['an empty selection', () => panelFor({ ...RELEASES, items: [] }), EMPTY],
     ['an empty Archive', () => panelFor(fixture('releases-empty.json'), true), EMPTY],

@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPage, loadPageDom } = require('./load-page.js');
-const { FakeElement } = require('./fake-dom.js');
+const { FakeElement, keepsListening } = require('./fake-dom.js');
 const { fixture } = require('./fixtures.js');
 const { coverBox, imgAttribute, decoded } = require('./cover-markup.js');
 
@@ -46,7 +46,7 @@ test('U56: nextCover with no fallback left removes the image, and the cover box 
  * spelling, and no option that stops it early (`once`, `signal`). `passive` changes nothing for `error`.
  */
 function capturesEveryError(options) {
-    return options === true || (options?.capture === true && !options.once && options.signal === undefined);
+    return options === true || (options?.capture === true && keepsListening(options));
 }
 
 for (const [options, expected] of [

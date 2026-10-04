@@ -1,8 +1,9 @@
 'use strict';
 
-// The cover box a release row writes (007 US2), read from the panel's markup as a string. Shared by
-// render.test.js, which checks what the row writes, and cover-fallback.test.js, which builds the
-// `<img>` a browser would hold from it, so both read the markup by one rule.
+// A release row and its cover box (007 US2), read from the panel's markup as a string. Shared by
+// render.test.js, which checks what a row writes (its cover, links, buttons and badges), and
+// cover-fallback.test.js, which builds the `<img>` a browser would hold from it, so both read the
+// markup by one rule.
 
 /** The markup of the row with `id` in `panel`, from its `<article`, or an empty string when there is none. */
 function rowOf(panel, id) {

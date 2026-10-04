@@ -145,4 +145,12 @@ function actionRow({ id = '101', title = 'Closer to Grey', action = 'Ignore' } =
     return { article, actions, button };
 }
 
-module.exports = { documentFor, FakeElement, declaredIds, actionRow };
+/**
+ * Whether a listener registered with `options` hears every event, as the stand-in records them: no
+ * options, a capture flag, or an options object with neither `once` nor a `signal`.
+ */
+function keepsListening(options) {
+    return options === null || typeof options !== 'object' || (!options.once && options.signal === undefined);
+}
+
+module.exports = { documentFor, FakeElement, declaredIds, actionRow, keepsListening };

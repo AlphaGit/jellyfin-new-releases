@@ -5,7 +5,7 @@ const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPageDom, settled } = require('./load-page.js');
-const { declaredIds } = require('./fake-dom.js');
+const { declaredIds, keepsListening } = require('./fake-dom.js');
 
 // The New Releases view's own controls: what its static markup declares and how its controls are
 // wired. 007 T091 characterizes the parts that predate 007 (BASELINE), so a change to them fails here.
@@ -64,13 +64,9 @@ test('U87: each filter label belongs to its own field, and From and To are date 
 // stops after its first event (`once`) or can be cut off (`signal`) sends no request the next time.
 // The stand-in records options but ignores them, so they are read here.
 
-/** Whether a listener registered with `options` hears every event: no `once`, no `signal`. */
-function keepsListening(options) {
-    return typeof options !== 'object' || (!options.once && options.signal === undefined);
-}
-
 for (const [options, expected] of [
     [undefined, true],
+    [null, true],
     [true, true],
     [false, true],
     [{ capture: true }, true],

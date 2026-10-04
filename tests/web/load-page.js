@@ -121,8 +121,8 @@ function loadPageDom(fileName, overrides = {}) {
 /** Lets every pending promise callback run; the pages chain their loads through `.then`. */
 const settled = () => new Promise(resolve => setImmediate(resolve));
 
-/** Loads the New Releases view and renders one response through it, in the List tab or the Archive tab. Returns what the panel holds. */
-function rendered(body, { archive = false } = {}) {
+/** Loads the New Releases view (not the administrator page) and renders one response through its list, in the List tab or the Archive tab. Returns what the panel holds. */
+function renderedList(body, { archive = false } = {}) {
     const { internals, document } = loadPageDom('user-view.html', {
         ApiClient: { ajax: () => Promise.resolve(body) },
     });
@@ -139,4 +139,4 @@ function rendered(body, { archive = false } = {}) {
     };
 }
 
-module.exports = { loadPage, loadPageDom, settled, rendered };
+module.exports = { loadPage, loadPageDom, settled, renderedList };

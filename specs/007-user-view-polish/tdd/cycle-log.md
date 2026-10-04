@@ -1531,3 +1531,18 @@ of an existing behaviour) is shown to catch its defect by one hand-made break, r
   `requests.test.js`, whose subject is the paths the page sends, to `view.test.js`, whose subject is the
   view's controls and their wiring. It now loads the page through `loadPageDom` directly
 - no behaviour change; green to green. Suite -> node 353 passed. Y4 still fails U71
+
+## Tidy: one listener rule, clearer names, corrected descriptions (T094, seventh audit Finding 9)
+
+- one rule: `keepsListening` moves to `tests/web/fake-dom.js`, next to the options the stand-in
+  records, and now answers `true` for `null` instead of throwing. U57's `capturesEveryError` is
+  "capture, and keeps listening", so it no longer repeats the `once`/`signal` rule. U71's table gains a
+  `null` row
+- names: `load-page.js`'s `rendered` is now `renderedList`, so it no longer shares its name with the
+  administrator page's `rendered` in `render-status.test.js`; `markup.test.js`'s `DETAILS` is now
+  `DETAILS_COLUMN`, so it is not read as the `<details>` element
+- descriptions: the U68 row of the test list names `signatures` and `writesOn` as its helpers and
+  points at `cover-markup.test.js` for `imgAttribute`; `cover-markup.js`'s header says it reads a row and
+  its cover box
+- no behaviour change; green to green. Suite -> node 354 passed (one more: the `null` row). E2 and Y4
+  still fail their tests
