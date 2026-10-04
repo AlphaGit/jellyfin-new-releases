@@ -1342,3 +1342,15 @@ maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
   the stand-in recorded on every declared element. It passed on its first run, as a characterization
   test does. Evidence: Y4 (`{ once: true }` on the filters' `change` listeners) fails it. E2 still
   fails U57. Each mutant was applied to a file copy, restored, and checked against `HEAD`
+
+## Cycle 75: U72 an action posts to its row's release (T083, characterization of Y8)
+
+- list: U72 appended to the characterization section, state `BASELINE`
+- test: `tests/web/requests.test.js::U72: an action posts to the release of the row its button sits in`
+  (new). It builds `article.nr-row[data-id] > div.nr-actions > button[data-action]` with `appendChild`,
+  hands a click on the button to the panel's listener, and asserts the one `POST` the view sends
+- red: none, by definition: it passed on its first run against the pre-007 handler. Evidence: Y8 (the
+  handler reads the row from `.nr-actions`, so it posts `Releases/undefined/Ignore`) fails it. The
+  mutant was applied to a file copy, restored, and checked against `HEAD`
+- comment: the note in `render.test.js` that said the join is driven only by the real-server pass now
+  points at U72

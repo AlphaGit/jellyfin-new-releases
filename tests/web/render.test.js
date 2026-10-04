@@ -134,10 +134,9 @@ test('a six-hour interval states a twelve-hour-old instant', () => {
     assert.equal(staleness.hidden, false);
 });
 
-// The click handler reads a row's `data-action` and joins it into the path it posts. The join
-// itself needs `closest`, which the stand-in does not model, so what is pinned here is the half a
-// test can see: the values in the markup are the action segments the plugin registers. The join is
-// driven only by the real-server pass.
+// The click handler reads a row's `data-action` and joins it into the path it posts. This pins the
+// half in the markup: the values are the action segments the plugin registers. The join itself is
+// pinned by U72 in requests.test.js, since the stand-in models `closest` (007 cycle 72).
 test('a rendered row offers the actions under the names the decision routes are served under', () => {
     const { panel } = rendered(fixture('releases.json'));
     const archived = rendered(fixture('releases.json'), { archive: true }).panel;

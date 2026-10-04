@@ -191,6 +191,7 @@ the sixth audit's mutant that each one catches.
 | --- | --- | --- | --- | --- | --- |
 | U70 | Each source link of a row points at its source's URL, in order | FR-011 (existing behaviour unchanged); sixth audit Y9 | example | BASELINE | `tests/web/render.test.js::U70: each source link of a row points at its source URL, in order` |
 | U71 | Every listener the view registers keeps listening: none is registered with `once` or a `signal` | FR-011; sixth audit Y4 | example | BASELINE | `tests/web/requests.test.js::U71: every listener the New Releases view registers keeps listening`; `keepsListening` is pinned by `U71 helper: …` table rows |
+| U72 | An action posts to the release of the row its button sits in | FR-011; sixth audit Y8 | example | BASELINE | `tests/web/requests.test.js::U72: an action posts to the release of the row its button sits in` |
 
 ## Invariants and edge cases still to place
 
