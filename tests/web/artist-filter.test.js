@@ -76,6 +76,18 @@ test('A3: after ASP is applied, emptying the field requests releases with no art
     assert.equal(requests.at(-1), UNFILTERED);
 });
 
+for (const text of ['AS', 'ASPx']) {
+    test(`A4: after ASP is applied, editing the field to "${text}" asks for the full list at once, before leaving the field`, async () => {
+        const { document, requests } = await loadView();
+        await type(document, 'ASP');
+        const before = requests.length;
+
+        await type(document, text);
+
+        assert.deepEqual(requests.slice(before), [UNFILTERED]);
+    });
+}
+
 test('A3: after ASP is applied, pressing Clear requests releases with no artistId', async () => {
     const { document, requests } = await loadView();
     await type(document, 'ASP');

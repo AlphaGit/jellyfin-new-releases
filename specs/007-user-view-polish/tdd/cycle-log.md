@@ -1568,3 +1568,15 @@ All 121 recorded mutants, run at `fdc6eec`, fail their tests except three, each 
 E1 is the control and passes as it should; H5 (Turkish lower-casing) was dropped in the grilling
 session (Q2); J3 (a style written after an action click) belongs to T089, dropped in Q3. K1 fails U67
 only.
+
+## Cycle 82: editing an applied artist name drops the filter at once (T098, eighth audit Finding 1)
+
+- what the page does: someone picks "ASP", then edits the field to "AS" or "ASPx". The list goes back
+  to every artist at once, while they are still typing, because the text no longer names an artist
+  (FR-002, A4 "while typing")
+- test: `A4: after ASP is applied, editing the field to "{text}" asks for the full list at once, before leaving the field`
+  (rows `AS` and `ASPx`, new). No `change` event is fired, so leaving the field plays no part
+- red: none against the page, which already does this; these are new examples of A4. Evidence: the
+  eighth audit's P1 (the typing handler reloads only for an artist or an empty field) fails both
+  rows, and R1 still fails them too. Each break was made by hand on a file copy and restored at once.
+  File -> 28 passed
