@@ -14,6 +14,16 @@ internal static class RepositoryFiles
     public static string ReadAllText(string relativePath)
         => File.ReadAllText(Path.Combine(Root.FullName, relativePath));
 
+    /// <summary>
+    /// Reads a workflow with its comment lines removed. What a workflow does must be judged on the
+    /// steps that run, not on prose that happens to name a command.
+    /// </summary>
+    /// <param name="relativePath">Path relative to the repository root.</param>
+    public static string WorkflowSteps(string relativePath)
+        => string.Join(
+            '\n',
+            ReadAllText(relativePath).Split('\n').Where(line => !line.TrimStart().StartsWith('#')));
+
     /// <summary>Reports whether a repository-root-relative file exists.</summary>
     /// <param name="relativePath">Path relative to the repository root.</param>
     public static bool Exists(string relativePath)

@@ -17,6 +17,9 @@ namespace Jellyfin.Plugin.NewReleases.Tests.Packaging;
 public class RepositoryManifestTests
 {
     private const string ManifestPath = "repo/manifest.json";
+
+    private static readonly string ReleaseWorkflowSteps =
+        RepositoryFiles.WorkflowSteps(".github/workflows/package.yml");
     private const string Jellyfin12Abi = TargetVersions.JellyfinAbi;
 
     /// <summary>
@@ -103,15 +106,9 @@ public class RepositoryManifestTests
     [Fact]
     public void TheDerivedSlug_MatchesTheFilenameTheReleaseWorkflowBuilds()
     {
-        var steps = string.Join(
-            '\n',
-            RepositoryFiles.ReadAllText(".github/workflows/package.yml")
-                .Split('\n')
-                .Where(line => !line.TrimStart().StartsWith('#')));
-
         Assert.Matches(
             $@"gh release create(?:[^\n]*\\\n)*[^\n]*[\s/""']{Regex.Escape(Slug)}\.zip(?=[\s""']|$)",
-            steps);
+            ReleaseWorkflowSteps);
     }
 
     /// <summary>
@@ -122,15 +119,9 @@ public class RepositoryManifestTests
     [Fact]
     public void TheReleaseWorkflow_PointsTheCatalogueAtTheReleaseAsset()
     {
-        var steps = string.Join(
-            '\n',
-            RepositoryFiles.ReadAllText(".github/workflows/package.yml")
-                .Split('\n')
-                .Where(line => !line.TrimStart().StartsWith('#')));
-
         Assert.Matches(
             $@"jprm repo add(?:[^\n]*\\\n)*[^\n]*--plugin-url\s+""?https://github\.com/\$\{{\{{ github\.repository }}}}/releases/download/\$\{{?GITHUB_REF_NAME}}?/{Regex.Escape(Slug)}\.zip(?=[\s""']|$)",
-            steps);
+            ReleaseWorkflowSteps);
     }
 
     /// <summary>

@@ -229,3 +229,12 @@ failed before the implementation.
 - refactor: the two workflow tests in this class now build the same comment-free text; extracted
   in its own structural commit after this one
 - commit: see the commit that carries this entry
+
+## Refactor after cycle 14: one reader for a workflow's steps
+
+- structural only: `Support/RepositoryFiles.WorkflowSteps(path)` reads a workflow with its comment
+  lines removed. `ReleaseWorkflowTests.Steps` and the new `RepositoryManifestTests.ReleaseWorkflowSteps`
+  both use it; the two inline copies cycles 13 and 14 wrote, and `ReleaseWorkflowTests.Workflow`,
+  are gone
+- suite: build 0 warnings; `dotnet test --configuration Release` -> 326 passed, 0 failed
+- commit: see the commit that carries this entry

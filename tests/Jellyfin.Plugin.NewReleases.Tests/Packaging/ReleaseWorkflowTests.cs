@@ -12,16 +12,11 @@ namespace Jellyfin.Plugin.NewReleases.Tests.Packaging;
 /// </summary>
 public class ReleaseWorkflowTests
 {
-    private static readonly string Workflow =
-        RepositoryFiles.ReadAllText(".github/workflows/package.yml");
-
     /// <summary>
     /// The workflow with its comment lines removed. Ordering must be judged on the steps that
     /// run, not on prose that happens to name a command.
     /// </summary>
-    private static readonly string Steps = string.Join(
-        '\n',
-        Workflow.Split('\n').Where(line => !line.TrimStart().StartsWith('#')));
+    private static readonly string Steps = RepositoryFiles.WorkflowSteps(".github/workflows/package.yml");
 
     private static int IndexOf(string fragment)
     {
