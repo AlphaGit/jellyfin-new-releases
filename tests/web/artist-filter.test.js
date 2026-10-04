@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { loadPageDom } = require('./load-page.js');
+const { loadPageDom, settled } = require('./load-page.js');
 
 // 007 US1: the Artist filter is a native suggestion list (`<input list>` + `<datalist>`). The
 // browser does the matching (FR-001), so these tests assert what the page writes into the list
@@ -18,8 +18,6 @@ const ARTISTS = {
     ],
 };
 
-/** Lets every pending promise callback run; the page chains its loads through `.then`. */
-const settled = () => new Promise(resolve => setImmediate(resolve));
 
 /** Loads the view with an `ApiClient` that answers Artists with `artists` (an `Error` rejects it) and records every request. */
 async function loadView(artists = ARTISTS) {

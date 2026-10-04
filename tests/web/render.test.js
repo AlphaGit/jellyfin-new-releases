@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { loadPageDom } = require('./load-page.js');
+const { rendered } = require('./load-page.js');
 const { fixture } = require('./fixtures.js');
 const { HOUR, DAY, ago } = require('./fixed-clock.js');
 const { rowOf, coverBox, imgAttribute, decoded } = require('./cover-markup.js');
@@ -14,24 +14,6 @@ const { rowOf, coverBox, imgAttribute, decoded } = require('./cover-markup.js');
 //
 // They assert on the string the page wrote. Nothing here parses markup; see
 // specs/005-page-json-casing/contracts/page-sandbox.md for what that does and does not prove.
-
-/** Loads the view and renders one response through it, returning what the panel now holds. */
-function rendered(body, { archive = false } = {}) {
-    const { internals, document } = loadPageDom('user-view.html', {
-        ApiClient: { ajax: () => Promise.resolve(body) },
-    });
-
-    if (archive) {
-        document.getElementById('nr-tab-archive').listeners.click[0]();
-    }
-
-    internals.render(body);
-
-    return {
-        panel: document.getElementById('nr-panel').innerHTML,
-        staleness: document.getElementById('nr-staleness'),
-    };
-}
 
 const WAITING = 'No data yet. New Releases is waiting for its first refresh.';
 

@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { documentFor, FakeElement } = require('./fake-dom.js');
+const { documentFor, FakeElement, actionRow } = require('./fake-dom.js');
 
 // The stand-in specified by specs/005-page-json-casing/contracts/page-sandbox.md. Its own contract
 // is tested here because FR-017 and FR-018 make it a deliverable with stated limits, not a private
@@ -66,20 +66,6 @@ test('remove detaches an element from the element it was appended to', () => {
 
     assert.deepEqual(box.children, []);
 });
-
-/** A row as a browser builds it from the markup the view writes: article.nr-row > div.nr-actions > button[data-action]. */
-function actionRow() {
-    const article = new FakeElement('row');
-    article.tagName = 'ARTICLE';
-    article.setAttribute('class', 'nr-row');
-    const actions = article.appendChild(new FakeElement('actions'));
-    actions.tagName = 'DIV';
-    actions.setAttribute('class', 'nr-actions');
-    const button = actions.appendChild(new FakeElement('button'));
-    button.tagName = 'BUTTON';
-    button.setAttribute('data-action', 'Ignore');
-    return { article, actions, button };
-}
 
 test('closest finds the nearest element, itself included, that a tag, class or attribute selector names', () => {
     const { article, actions, button } = actionRow();

@@ -118,4 +118,25 @@ function loadPageDom(fileName, overrides = {}) {
     return { internals: sandbox.NewReleasesInternals, document: sandbox.document };
 }
 
-module.exports = { loadPage, loadPageDom };
+/** Lets every pending promise callback run; the pages chain their loads through `.then`. */
+const settled = () => new Promise(resolve => setImmediate(resolve));
+
+/** Loads the New Releases view and renders one response through it, in the List tab or the Archive tab. Returns what the panel holds. */
+function rendered(body, { archive = false } = {}) {
+    const { internals, document } = loadPageDom('user-view.html', {
+        ApiClient: { ajax: () => Promise.resolve(body) },
+    });
+
+    if (archive) {
+        document.getElementById('nr-tab-archive').listeners.click[0]();
+    }
+
+    internals.render(body);
+
+    return {
+        panel: document.getElementById('nr-panel').innerHTML,
+        staleness: document.getElementById('nr-staleness'),
+    };
+}
+
+module.exports = { loadPage, loadPageDom, settled, rendered };

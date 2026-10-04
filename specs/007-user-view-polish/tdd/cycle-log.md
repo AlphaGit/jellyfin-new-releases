@@ -1362,3 +1362,12 @@ maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
   `fake-dom.test.js` is the stand-in's. The profile names the file. `markup.test.js` now holds only
   U68's tests and helpers
 - no behaviour change; green to green. Suite -> node 320 passed before and after
+
+## Refactor: one copy of each page-test helper (T085, sixth audit Finding 7)
+
+- what: `settled` had three copies (`markup`, `artist-filter`, `requests`), `markup.test.js`'s
+  `panelFor` copied `render.test.js`'s `rendered`, the Artists-and-Releases `ajax` stub appeared twice
+  in `markup.test.js`, and cycles 72 and 75 each built the same row tree. Now `settled` and `rendered`
+  live in `tests/web/load-page.js`, `actionRow` in `tests/web/fake-dom.js`, and `markup.test.js` has
+  one `artistsAndReleases`. `panelFor` is a one-line view of `rendered`
+- no behaviour change; green to green. Suite -> node 320 passed before and after

@@ -126,4 +126,23 @@ function documentFor(fileName) {
     };
 }
 
-module.exports = { documentFor, FakeElement, declaredIds };
+/**
+ * A row's elements as a browser builds them from the markup the New Releases view writes,
+ * `article.nr-row > div.nr-actions > button[data-action]`, joined by `appendChild` so `closest` can walk them.
+ */
+function actionRow({ id = '101', title = 'Closer to Grey', action = 'Ignore' } = {}) {
+    const article = new FakeElement('row');
+    article.tagName = 'ARTICLE';
+    article.setAttribute('class', 'nr-row');
+    Object.assign(article.dataset, { id, title });
+    const actions = article.appendChild(new FakeElement('actions'));
+    actions.tagName = 'DIV';
+    actions.setAttribute('class', 'nr-actions');
+    const button = actions.appendChild(new FakeElement('button'));
+    button.tagName = 'BUTTON';
+    button.setAttribute('data-action', action);
+    button.dataset.action = action;
+    return { article, actions, button };
+}
+
+module.exports = { documentFor, FakeElement, declaredIds, actionRow };

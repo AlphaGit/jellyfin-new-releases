@@ -2,8 +2,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { loadPageDom } = require('./load-page.js');
-const { declaredIds, FakeElement } = require('./fake-dom.js');
+const { loadPageDom, settled } = require('./load-page.js');
+const { declaredIds, actionRow } = require('./fake-dom.js');
 
 // What each page actually asks the server for, captured from a recording `ApiClient` while the page
 // runs. This is the paths as sent, not as written in the source: 005 dropped the source-scanning
@@ -25,8 +25,6 @@ function recordRequests(page, body = {}, overrides = {}) {
     return { requests, ...loaded };
 }
 
-/** Lets every pending promise callback run; the pages chain their loads through `.then`. */
-const settled = () => new Promise(resolve => setImmediate(resolve));
 
 test('the New Releases view asks for the artist filter and the list', async () => {
     const { requests } = recordRequests('user-view.html', { items: [], hasStoredReleases: false });
@@ -99,16 +97,7 @@ test('U71: every listener the New Releases view registers keeps listening', () =
 test('U72: an action posts to the release of the row its button sits in', async () => {
     const { requests, document } = recordRequests('user-view.html', { items: [], hasStoredReleases: false });
     await settled();
-    const article = new FakeElement('row');
-    article.tagName = 'ARTICLE';
-    article.setAttribute('class', 'nr-row');
-    Object.assign(article.dataset, { id: '101', title: 'Closer to Grey' });
-    const actions = article.appendChild(new FakeElement('actions'));
-    actions.setAttribute('class', 'nr-actions');
-    const button = actions.appendChild(new FakeElement('button'));
-    button.tagName = 'BUTTON';
-    button.setAttribute('data-action', 'Ignore');
-    button.dataset.action = 'Ignore';
+    const { button } = actionRow({ id: '101', title: 'Closer to Grey', action: 'Ignore' });
 
     document.getElementById('nr-panel').listeners.click[0]({ target: button });
     await settled();

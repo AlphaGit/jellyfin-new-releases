@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { loadPageDom } = require('./load-page.js');
+const { loadPageDom, settled, rendered } = require('./load-page.js');
 const { declaredIds, FakeElement } = require('./fake-dom.js');
 const { fixture } = require('./fixtures.js');
 
@@ -14,7 +14,6 @@ const { fixture } = require('./fixtures.js');
 // values are left to the behaviour tests; this file pins the shape.
 
 const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'Jellyfin.Plugin.NewReleases', 'Web', 'user-view.html'), 'utf8');
-const settled = () => new Promise(resolve => setImmediate(resolve));
 
 /** An attribute value: double-quoted, single-quoted, or unquoted. */
 const VALUE = String.raw`"[^"]*"|'[^']*'|[^\s"'=<>\x60]+`;
@@ -102,12 +101,7 @@ test('U68: the static markup holds exactly the reviewed elements', () => {
 });
 
 /** What the view writes into the panel for `body`, in the List tab or the Archive tab. */
-function panelFor(body, archive = false) {
-    const { internals, document } = loadPageDom('user-view.html', { ApiClient: { ajax: () => Promise.resolve(body) } });
-    if (archive) document.getElementById('nr-tab-archive').listeners.click[0]();
-    internals.render(body);
-    return document.getElementById('nr-panel').innerHTML;
-}
+const panelFor = (body, archive = false) => rendered(body, { archive }).panel;
 
 /** What the view writes into `id` once it has loaded with `ajax` answering its requests. */
 async function loadedInto(id, ajax) {
@@ -117,6 +111,9 @@ async function loadedInto(id, ajax) {
 }
 
 const RELEASES = fixture('releases.json');
+
+/** An `ajax` that answers the Artists request with `artists.json` and every other with `releases.json`. */
+const artistsAndReleases = options => Promise.resolve(fixture(options.url.includes('Artists') ? 'artists.json' : 'releases.json'));
 const only = (id, changes = {}) => ({ ...RELEASES, items: [{ ...RELEASES.items.find(item => item.id === id), ...changes }] });
 
 // The reviewed shapes of each template the view writes, in order. A template is one branch of `render`,
@@ -143,7 +140,7 @@ const TEMPLATES = [
     ['an empty selection', () => panelFor({ ...RELEASES, items: [] }), EMPTY],
     ['an empty Archive', () => panelFor(fixture('releases-empty.json'), true), EMPTY],
     ['a list that fails to load', () => loadedInto('nr-panel', () => Promise.reject(new Error('offline'))), EMPTY],
-    ['the suggestion list', () => loadedInto('nr-f-artist-list', options => Promise.resolve(fixture(options.url.includes('Artists') ? 'artists.json' : 'releases.json'))),
+    ['the suggestion list', () => loadedInto('nr-f-artist-list', artistsAndReleases),
         ['option[value]', 'option[value]']],
 ];
 
@@ -186,7 +183,7 @@ const RUNTIME = {
 
 test('U68: through load, both tabs, a filter change, Clear and a render, the view writes on its elements only what is reviewed', async () => {
     const { internals, document } = loadPageDom('user-view.html', {
-        ApiClient: { ajax: options => Promise.resolve(fixture(options.url.includes('Artists') ? 'artists.json' : 'releases.json')) },
+        ApiClient: { ajax: artistsAndReleases },
     });
     const unreviewed = () => [...declaredIds('user-view.html')]
         .flatMap(id => writesOn(document.getElementById(id)).filter(write => !(RUNTIME[id] || []).includes(write)).map(write => id + ' ' + write));
