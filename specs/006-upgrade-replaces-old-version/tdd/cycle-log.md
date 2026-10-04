@@ -196,3 +196,23 @@ failed before the implementation.
   `003` test method names that say "Site" are kept: other features' documents cite them
 - suite: build 0 warnings; `dotnet test --configuration Release` -> 325 passed, 0 failed
 - commit: see the commit that carries this entry
+
+## Cycle 13: U13 the workflow uploads `{Slug}.zip` to the version's GitHub Release
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs::TheDerivedSlug_MatchesTheFilenameTheReleaseWorkflowBuilds`
+  (restates `003`'s U39: an anchored `Assert.Matches` on `gh release create … {Slug}.zip` over the
+  workflow's non-comment lines, replacing the bare `Assert.Contains` cycle 3 found too weak)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.TheDerivedSlug_MatchesTheFilenameTheReleaseWorkflowBuilds" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Matches() Failure: Pattern not found in value` (1 failed): no `gh release create` step
+- green: `.github/workflows/package.yml` gains "Create the GitHub Release" after the framework
+  check: `mv` JPRM's `new-releases_<version4>.zip` to `new-releases.zip`, then
+  `gh release create "$GITHUB_REF_NAME" ./artifacts/new-releases.zip --title "$GITHUB_REF_NAME"`
+  with `GH_TOKEN`. Suite -> 325 passed, 0 failed
+- anchor check: the uploaded file renamed to `jellyfin-new-releases.zip` -> the same test fails,
+  `Assert.Matches() Failure: Pattern not found in value`. Restored from a file copy, verified with `cmp -s`
+- refactor: deferred. The comment-stripping now exists here and in `ReleaseWorkflowTests.Steps`;
+  it is extracted once `U14`–`U19` have settled what both classes read
+- commit: see the commit that carries this entry
+- note: the workflow is mid-change. "Add the version to the published repository" still names the
+  stale `jellyfin-new-releases_<version4>.zip`, which the new step has moved away; `U14` replaces it.
+  Do not tag a release before T013 is ticked

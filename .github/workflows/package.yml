@@ -78,6 +78,16 @@ jobs:
             src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj
           git checkout -- src/Jellyfin.Plugin.NewReleases/Jellyfin.Plugin.NewReleases.csproj
 
+      # Every version's package is the asset of its own GitHub Release, under one name with no
+      # version in it (006 FR-010). The tag names the release, so each version's address differs
+      # and is never overwritten. `gh` comes with the runner image.
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mv "./artifacts/new-releases_${{ steps.ver.outputs.version4 }}.zip" ./artifacts/new-releases.zip
+          gh release create "$GITHUB_REF_NAME" ./artifacts/new-releases.zip --title "$GITHUB_REF_NAME"
+
       - name: Add the version to the published repository
         run: |
           jprm repo add \

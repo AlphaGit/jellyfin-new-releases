@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Jellyfin.Plugin.NewReleases.Tests.Support;
 using Xunit;
 
@@ -92,16 +93,25 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
-    /// U39: the slug is derived here from `build.yaml`, and used on both sides of every
-    /// source-URL assertion — so a wrong derivation agrees with itself. This anchors it to the
-    /// one place the filename is really produced: the release workflow's zip path.
+    /// U39, restated by 006 U13: the slug is derived here from `build.yaml`, and used on both
+    /// sides of every source-URL assertion — so a wrong derivation agrees with itself. This
+    /// anchors it to the one place the asset is really named: the file the release workflow
+    /// uploads with `gh release create`. Matched whole, from a path, space or quote boundary to
+    /// one, because a bare substring check let a stale `jellyfin-new-releases_…zip` satisfy
+    /// `new-releases_…zip` (006 cycle 3). Comment lines are not steps and are skipped.
     /// </summary>
     [Fact]
     public void TheDerivedSlug_MatchesTheFilenameTheReleaseWorkflowBuilds()
     {
-        var workflow = RepositoryFiles.ReadAllText(".github/workflows/package.yml");
+        var steps = string.Join(
+            '\n',
+            RepositoryFiles.ReadAllText(".github/workflows/package.yml")
+                .Split('\n')
+                .Where(line => !line.TrimStart().StartsWith('#')));
 
-        Assert.Contains($"{Slug}_${{{{ steps.ver.outputs.version4 }}}}.zip", workflow, StringComparison.Ordinal);
+        Assert.Matches(
+            $@"gh release create(?:[^\n]*\\\n)*[^\n]*[\s/""']{Regex.Escape(Slug)}\.zip(?=[\s""']|$)",
+            steps);
     }
 
     /// <summary>

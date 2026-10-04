@@ -105,7 +105,7 @@ ordering and presence check, as `ReleaseWorkflowTests.Steps` already does.
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U13 | The workflow uploads `{Slug}.zip` to the version's GitHub Release with `gh release create` | FR-010 | example | PENDING | |
+| U13 | The workflow uploads `{Slug}.zip` to the version's GitHub Release with `gh release create` | FR-010 | example | DONE | `Packaging/RepositoryManifestTests.cs::TheDerivedSlug_MatchesTheFilenameTheReleaseWorkflowBuilds` |
 | U14 | `jprm repo add` is given `--plugin-url` naming `releases/download/${GITHUB_REF_NAME}/{Slug}.zip` | FR-010 | example | PENDING | |
 | U15 | `jprm plugin build` runs before `gh release create`, which runs before `jprm repo add`, which runs before `git commit` | FR-010, FR-011 | example | PENDING | |
 | U16 | No step uses `actions/configure-pages`, `actions/upload-pages-artifact` or `actions/deploy-pages` | FR-012 | example | PENDING | |
