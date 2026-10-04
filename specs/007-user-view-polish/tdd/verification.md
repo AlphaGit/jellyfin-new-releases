@@ -3,203 +3,154 @@ feature: 007-user-view-polish
 verdict: FAIL
 standard: .specify/templates/overrides/tdd-test-quality-rubric.md # project override of the extension rubric (TEST_AFTER_ACCEPTED row)
 profile: .specify/memory/tdd-profile.md
-verified_at: 8e7daf7
-previous_audit: f68901c (FAIL)
-behaviors: 50 # 84 on the list, 34 DROPPED
-proven: 34
+verified_at: 78b0f4b
+previous_audit: 8e7daf7 (FAIL)
+behaviors: 51 # 85 on the list, 34 DROPPED
+proven: 35
 likely: 3
 test_after: 0
 test_after_accepted: 13
 no_test: 0
 dropped: 34
-high_smells: 4
+high_smells: 3
 criteria_total: 13
-criteria_covered: 13 # US4-AS2 and US2-AS3 with gaps, see Findings 1–4
+criteria_covered: 13 # with gaps in US1-AS5, US2-AS1, US2-AS4, US3 and US4, see Findings 2 and 3
 mutation_score: unmeasured # profile records mutation: null
-deliberate_mutants: 58 applied; 34 caught; 22 survived inside a behaviour (16 outside the recorded ceiling, 6 inside it); 2 controls (E1 passes as it should, K1 fails a correct stylesheet) # scope: user-view.html, ReleasesController.cs, styles.test.js
-suite: 318 passed, 0 failed, 11 s (dotnet) + 247 passed, 0 failed, 0.2 s (node; also under LANG=de_DE.UTF-8)
-independent: no # this session wrote cycles 59–63; the smell pass and the new mutants came from fresh-context subagents and were re-verified here
+deliberate_mutants: 75 applied; 56 caught; 17 survived inside a behaviour; 2 controls behave as intended (E1 passes, K1 fails U67 only) # scope: user-view.html, ReleasesController.cs, styles.test.js
+suite: 318 passed, 0 failed, 10 s (dotnet) + 254 passed, 0 failed, 0.2 s (node; also under LANG=de_DE.UTF-8)
+independent: no # this session wrote cycles 64–66; the smell pass and the new mutants came from fresh-context subagents and were re-verified here
 ---
 
 # TDD Verification: Polish the New Releases view
 
-**Verdict: FAIL.** 16 deliberate mutants that no recorded ceiling covers survive inside `DONE`
-behaviours. An example: `#nr-user-view .nr-links a { all: unset; }` removes the source link's
-underline and focus outline, and every test stays green.
+**Verdict: FAIL.** 17 deliberate mutants outside the `<style>` rules survive inside `DONE` behaviours,
+and the U67 list has no recorded review. For example, a second `<style>` element with
+`.nr-links a { text-decoration: none }`, or `style="width:50%"` on the "Ignore" button, leaves every
+test green.
 
-This is the fourth audit. The third one (`f68901c`) gave FAIL with four `HIGH` findings. The
-remediation closed all of them:
+This is the fifth audit. The fourth (`8e7daf7`) gave FAIL with 22 survivors inside the stylesheet.
+The closed-world check U67 closed that class completely:
 
-- Q1–Q9 now fail their tests.
-- `A18` was added for Q6 and Q7.
-- The maintainer accepted `A18` as test-after on 2026-10-03.
-- CI is green on `main` at `8875456` (T050).
+- All 58 earlier mutants are caught again, including the 22 survivors and the six recorded-ceiling
+  mutants.
+- K1 now fails U67 only.
+- `dimsText` reads `!important`.
 
-Every test-first class now holds. The verdict fails on test strength only.
+Every test-first class still holds.
 
-The pattern is the one that the third audit's Finding 6 described, and it is stronger now. Each
-remediation adds table rows for the previous audit's mutants. A fresh probe then finds new CSS that
-the predicates misread:
+The new survivors are outside the rules that U67 reads. They fall into two places:
 
-| Audit | New survivors |
-| --- | --- |
-| Second | 5 |
-| Third | 7 |
-| Fourth (this one) | 16 outside the recorded ceiling, and 6 inside it |
+- **Style sources other than the first `<style>` block's plain rules**: a second `<style>` element, an
+  `@supports` or `@layer` wrapper, and a nested `@media`.
+- **The markup the page writes**: an inline `style`, an added or renamed class, a `disabled`
+  attribute, and an attribute repeated in capital letters.
 
-This audit sampled wider than the third. It also probed `U60`, `U61`, `U66` and `A11`, which read
-one exact selector each.
+Unlike the predicate tables, both places are finite. The page has one stylesheet and a fixed set of
+element templates. A closed world over each one ends this class of survivor.
 
 ## Test-first evidence
 
-Commit convention: each cycle's test and source land in one commit. Cycles 2–58 were checked by the
-earlier audits. This audit re-read cycles 59–63, the refactor entry, the ceiling entry, the commit
-map and the decision on `A18`. It also read the full diff `f68901c..8e7daf7`. That range changes no
-file under `src/`. Each cycle commit (`d644d7a`, `8e41243`, `eb816a1`, `719eaa2`, `940663c`) changes
-only `tests/web/styles.test.js` and the feature's documents. The refactor commit (`37e24f5`) changes
-only the test file. Each cycle records a red on its helper table, and the diff explains each one. The
-commit map in the cycle log matches the history.
+Cycles 2–63 were checked by the earlier audits. This audit re-read the T069 decision, cycles 64–66,
+and the commit map. It also read the full diff `8e7daf7..78b0f4b`. That range changes no file under
+`src/`. Each cycle commit (`5ebd87c`, `3ae9a45`, `78b0f4b`) changes only `tests/web/styles.test.js` and
+the feature's documents. Each cycle records a red that its diff explains. Cycle 64's red is U67
+against an empty list.
 
 | Behavior | Class | Evidence |
 | --- | --- | --- |
-| A1 | PROVEN | cycle 2 red; `cd52744` |
-| A2 | PROVEN | cycle 3 red; `3791558` |
-| A3 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; R1, R2 caught today |
-| A4 | PROVEN | cycle 49 red on 4 rows; `64ff918` |
-| A5 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; R4, R5 caught today |
-| A7 | LIKELY | cycle 14 red; test committed in `9947c90`, after its source |
-| A8 | LIKELY | cycle 23 red in an untracked file; committed in `41cec3b`, after `98ae035` |
-| A9 | LIKELY | as A8 |
-| A10 | PROVEN | cycle 23 red, re-observed in cycle 33; `319d07c` |
-| A11 | PROVEN | cycle 42 red; `7df504a`. X3 survives (Finding 1) |
-| A12 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; R11 caught today |
-| A13 | PROVEN | cycle 47 red; `084d299` |
-| A14 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; R13a, R13b, N9, P1, P3, Q1, Q3, Q4, Q5, Q9 caught today. S2–S6, M1, M2 survive (Findings 1–3); C2, C3, C5 survive inside the ceiling (Finding 4) |
-| A15 | PROVEN | cycle 51 red, 4 rows; `3e4bc76` |
-| A16 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; N10, N8, P2, Q2 caught today. S1 survives (Finding 2) |
-| A17 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; P9, P10 caught today. M4, S9 survive (Findings 2, 3) |
-| A18 | TEST_AFTER_ACCEPTED | labelled in cycle 63; accepted 2026-10-03 (`8875456`); Q6, Q7 caught today. S8, S9 survive (Findings 2, 3); C1, C4, S7 survive inside the ceiling (Finding 4) |
-| U31 | PROVEN | cycle 15 red; `7da7bce` |
-| U32 | PROVEN | cycle 17 red; `bc52ad7` |
-| U33 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; R9 caught today |
-| U34 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; R10 caught today |
-| U35 | PROVEN | cycle 20 red; `2ed2f69` |
-| U36 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; R11b caught today |
-| U37 | PROVEN | cycle 16 red; `6d6d8fa` |
-| U38 | PROVEN | cycle 24 red; `8a26cf0` |
-| U39 | PROVEN | cycle 25 red; `14a92eb` |
-| U42 | PROVEN | cycle 8 red; baseline changed with a red in cycle 51; `3e4bc76` |
-| U44 | PROVEN | cycle 9 red; `f146cb6` |
-| U45 | PROVEN | cycle 50 red; `6495435`; R6 caught today |
-| U46 | PROVEN | cycle 11 red; `e57fa95` |
-| U47 | PROVEN | cycle 7 red; `5dcac35` |
-| U48–U54 | PROVEN | cycles 26–32, one red each |
-| U55 | PROVEN | cycle 35 red; `33a7bc0` |
-| U56 | PROVEN | cycle 36 red; `d11940b` |
-| U57 | PROVEN | cycle 37 red; corrected with a red in cycle 56; E2 caught, E1 passes |
-| U58 | PROVEN | cycle 34 red; `d0ef65f` |
-| U59 | PROVEN | cycle 44 red; `2962937` |
-| U60 | PROVEN | cycle 39 red; helper corrected with reds in cycles 53, 57 and 62. S10, M3 survive (Findings 1, 2) |
-| U61 | PROVEN | cycle 40 red; `0d75bc8`. X2 survives (Finding 1) |
-| U62 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; R12 caught today |
-| U63 | PROVEN | cycle 45 red; `d48a008` |
-| U64 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; R7 caught today |
-| U65 | TEST_AFTER_ACCEPTED | accepted 2026-10-03; R8 caught today |
-| U66 | PROVEN | cycle 41 red; `629dd0e`. X1 survives (Finding 1) |
+| A1, A2, A4, A10, A13, A15 | PROVEN | cycles 2, 3, 49, 23/33, 47, 51 |
+| A3, A5, A12, A14, A16, A17, A18, U33, U34, U36, U62, U64, U65 | TEST_AFTER_ACCEPTED | each labelled, accepted 2026-10-03, and a recorded mutant caught today (R1, R2, R4, R5, R11, R13a, R13b, N10, N8, P9, P10, Q6, Q7, R9, R10, R11b, R12, R7, R8) |
+| A7, A8, A9 | LIKELY | reds recorded; history cannot show the order (second audit) |
+| A11, U59, U60, U61, U66 | PROVEN | cycles 42, 44, 39, 40, 41; helpers corrected with reds in later cycles |
+| U31, U32, U35, U37–U39, U42, U44–U58, U63 | PROVEN | as in the fourth audit |
+| **U67** | **PROVEN** | cycle 64 red (`STYLESHEET = []`, 1 failed); `5ebd87c` adds the test and the list together. The list itself is Finding 1 |
 | A6, U1–U30, U40, U41, U43 | DROPPED | removed by the 2026-10-03 clarification |
 
-**`TEST_AFTER_ACCEPTED` conditions.** All three conditions hold for each of the thirteen. A cycle-log
-entry labels each one test-after with its evidence. A cycle-log entry records a dated decision to
-accept it. A recorded mutant fails its test today. The attribution of each decision to the
-maintainer rests on the log's own statement, because every commit has the same author.
+`A5`, `A10`, `A11`, `A12`, `A13`, `A14`, `A17`, `A18`, `U50`, `U51`, `U59`, `U61` and `U66` each have a
+survivor (Findings 2 and 3).
 
-**Existing tests changed since `f68901c`.**
+**`TEST_AFTER_ACCEPTED` conditions.** All three conditions still hold for each of the thirteen. The
+attribution of each decision to the maintainer rests on the log's own statement.
+
+**Existing tests changed since `8e7daf7`.**
 
 | Test | Before | After | Judgment |
 | --- | --- | --- | --- |
-| `styles.test.js:373-377` A14 focus | `:focus-visible` outline matches `solid` | the same check, plus no rule that reaches a source link removes the outline | Stronger. Q4 caught |
-| `styles.test.js:178-195` `reachesSourceLink` | every compound before the subject read as an ancestor | compounds before `~` or `+` read as siblings | Wider acceptance; no row lost. Q1–Q3, Q9 caught |
-| `styles.test.js:201-205` `removesUnderline` | `none` on the shorthand or the line longhand | also `transparent` and a zero length, on four properties | Stronger. Q5 caught. False failure on a colour function with a zero channel (Finding 5) |
-| `styles.test.js:43-58` `isVisibleColour` | any multi-token value accepted | exactly one colour token must remain | Stronger. Q8 caught |
+| `styles.test.js:254-265` `removesUnderline` | its own whitespace split | calls `hidesLine`, which reads a colour function as one token and sets `!` aside | Stronger: K1's false failure gone. M2 now caught by A14 too |
+| `styles.test.js:416-418` `removesOutline` | its own split; missed `none!important` | calls `hidesLine` | Stronger |
+| `styles.test.js:331-338` `dimsText` | missed `!important` | sets `!important` aside; ceiling comment added | Stronger. M4 caught by A17 |
 
 No test was skipped, renamed out of a filter, or excluded. No row of an earlier table was removed or
 inverted.
 
-**`tasks.md` against the list.** Every ticked task's ids are `DONE`. `T063` is ticked and drove `A18`,
-but it carries no `[A18]` (Finding 7), which is the gap that `T064` fixed for `T044` and `T055`.
-`T026` and `T050` now hold: `main` is at `8e7daf7` and CI run `37168054919` passed.
+**`tasks.md` against the list.** Every ticked task's ids are `DONE`. `T063` now carries `[A18]`. No
+task carries `[U67]`. T065–T068 name the behaviours whose mutants U67 catches, which is accurate.
 
 ## Findings
 
 | # | Severity | Finding | Evidence |
 | --- | --- | --- | --- |
-| 1 | HIGH | **Five tests read one exact selector or one exact property.** `declarations(selector)[property]` sees only rules whose selector is exactly `#nr-user-view <selector>`. A more specific rule, a shorthand over the longhand, or a longhand over the shorthand changes the computed value unseen. Survivors: S2 `.nr-links a[href]:visited { color: #c58af9 }` (A14 visited colour), S10 `.nr-cover { background-color: transparent }` (U60 reads only `background`), X1 `.nr-row { grid-template: auto / 1fr 64px auto }` (U66), X2 `.nr-row .nr-cover img { object-fit: fill }` (U61), X3 `.nr-row .nr-actions button { width: auto }` (A11). U59 has the same form. These tests date from cycles 39–48. The third audit did not probe them. **Should assert**: every rule that reaches the element, each property through its shorthand and longhands. Or a closed-world check (Finding 5) | `tests/web/styles.test.js:96-113`, `:336-338` |
-| 2 | HIGH | **The token predicates misread values that a reasonable author writes.** Survivors: S1 `color: #00a4dc66` (A16: `luminance` reads 6 hex digits and ignores the alpha; the real contrast is 1.98), S3 `all: unset` (A14: no predicate reads `all`), S5 `outline-color: #1c1c1c` and S6 `text-decoration-color: #1c1c1c` (A14: a colour equal to the card hides the line, but only `transparent` is read), M2 `outline: none!important` (A14: `removesOutline` tests `token === 'none'`, while `removesUnderline` accepts `none!`), M3 `background: transparent!important` (U60), M4 `opacity: 50% !important` (A17: `dimsText` has no table row for it and no ceiling comment), S8 `box-shadow: inset 0 0 0 2em #3a3a3a` (A18 reads only `background` and `background-color`) | `tests/web/styles.test.js:43-58`, `:138-148`, `:201-205`, `:268-272`, `:328-334`, `:348-352` |
-| 3 | HIGH | **The selector reader misreads valid selectors.** Survivors: S4 `.nr-links a:not([download])` (an attribute inside `:not()` is read as one the link must have), M1 `.nr-links a[rel~="noopener"]` (`compounds` splits on `~` inside brackets), S9 `ARTICLE:hover { opacity: .6 }` (type selectors are compared with case). Checked in isolation: `.nr-links a:nth-child(2n+1)` and `.nr-row div:not(.nr-meta)` are also read as reaching nothing. The ceiling comment names only whitespace, commas and `:is()` | `tests/web/styles.test.js:174-195`, `:299-304` |
-| 4 | HIGH | **Six mutants survive inside the recorded ceiling, and the rubric has no class for that.** C1 (a gradient with nested parentheses), C2 (`:is()`), C3 and C5 (a zero-alpha colour function), C4 (an attribute on the subject), and S7 (a background on the row, recorded in cycle 63). The maintainer's T062 decision sends this risk to `quickstart.md` §2 step 6. The rubric still fails a surviving mutant inside a `DONE` behaviour, as the third audit's Finding 6 said. **Should assert**: either the closed-world check of Finding 5, which catches added rules of any form, or a rubric override row for recorded-ceiling survivors, like the 2026-10-01 `TEST_AFTER_ACCEPTED` row | `tdd/cycle-log.md` T062 entry and cycle 63; `quickstart.md` §2 step 6 |
-| 5 | MED | **The predicate approach does not converge.** The survivor count grows from audit to audit: 5, then 7, then 22. Each table row closes one input form, and CSS has more forms than the tables can list. The predicates also fail correct CSS: K1 (`outline: 2px solid rgb(82 181 0)` on `:focus-visible`) fails A14, because a whitespace token `0` inside a colour function reads as a zero width. `removesUnderline` does the same for `rgb(255 0 0)`. **Should assert** (maintainer's choice): a closed-world check. That is a reviewed, hand-written list of every rule in the `<style>` block (selector and declarations) that the test compares with the page. Any added or changed rule then fails until someone reviews it and updates the list. The existing predicates keep checking the listed values (contrast, visible colour). This catches every "add a rule" mutant of Findings 1–4 in one step. It needs no new tool | Findings 1–4; third audit Finding 6 |
-| 6 | MED | **`dimsText` has no ceiling comment.** The T062 entry says that each predicate names the CSS it does not read. `dimsText` (used by A17 and A18) names none, and it misreads `opacity: 50% !important` (M4) and `filter: none!important` | `tests/web/styles.test.js:268-272`; `tdd/cycle-log.md` "Recorded ceiling and task links" |
-| 7 | LOW | **`T063` is ticked with no behaviour id.** It drove `A18`. `T064` fixed this gap for `T044` and `T055` in the same remediation | `tasks.md:292` |
+| 1 | HIGH | **The U67 list has no recorded review.** It meets the catalogue's "self-approving snapshot": `STYLESHEET` was copied from the page in the same commit that accepted it, and it "matched on the first run". 7 of its 28 entries were read against `contracts/user-view.md`, and the predicate tests pin their meaning. The other 21 predate 007 and have no requirement and no reviewer. Cycle 64 says "The maintainer should read it once". No dated entry records that review. **Should**: a dated cycle-log entry that records the maintainer's review at a named commit, and a mark on the 21 entries that predate 007 | `tests/web/styles.test.js:53-86`; `tdd/cycle-log.md` cycle 64 "review" |
+| 2 | HIGH | **U67 reads only the plain rules of the first `<style>` element.** `STYLE` takes the first block. `stylesheet()` skips any at-rule but `@media`, and it keeps only the innermost `@media` condition. Survivors: W1, a second `<style>` element that removes the underline (A14); V1, the link colour rule inside `@supports not (color: red)`, so it never applies (A13, A16); V2, `:focus-visible` inside `@layer x`, so the host theme wins (A14); V3, the narrow-screen rule inside `@media print` (U59). **Should assert**: the page has exactly one `<style>` element; its only at-rule is the pinned `@media`; and `stylesheet()` accounts for every non-whitespace character of the block | `tests/web/styles.test.js:13`, `:39-50` |
+| 3 | HIGH | **The markup the page writes is open.** The render tests check that the expected attributes and classes are present. They do not check that nothing else is. Survivors, each with the whole node suite green: W2, `nr-status` added to the links box, so `opacity: .75` dims the links (A17); W3, the links box renamed `nr-sources`, so the links show the default blue (A13, A14); W4, an inline `style` with no underline and no outline on the link (A14); W5, `style="order:-1"` on the details, so the cover leaves the first column (U66); W8, `style="width:50%"` on Ignore (A11); W9, `class="nr-badge"` on Restore (A12); W10, `disabled` on the Artist field (A5); W12, an inline `object-fit:fill` on the cover (U61); W13, `class="nr-empty"` on `#nr-panel`, which dims the panel (A18); V4, `panel.setAttribute('style', 'opacity:.3')` (A18). An attribute repeated in capital letters before the tested one also survives, because `imgAttribute` matches case-sensitively and the browser keeps the first of two duplicates: W6 `LOADING="eager"` (U50), W7 `REFERRERPOLICY="unsafe-url"` (U51), W11 `ALT="Cover"` (A10). **Should assert**: for each element template that `row()` and `cover()` write, and for the static controls, the exact set of attribute names (lower case, no duplicates) and the exact class list; and no `style` attribute anywhere, written or static | `tests/web/render.test.js:205-242`; `tests/web/cover-markup.js`; `tests/web/artist-filter.test.js` A5 |
+| 4 | MED | **Maintainer decision: extend the closed world to the markup, or record the fake DOM's limit.** The profile already says that an assertion on `innerHTML` proves what the page wrote, not what a browser renders. Findings 2 and 3 are of that kind. One option extends the T069 principle: exact attribute sets, exact class lists and one stylesheet, all read through the loader and the text reads the profile permits. The other option records these forms as out of the hermetic suite's reach and sends them to `quickstart.md` §2. The rubric fails surviving mutants inside `DONE` behaviours either way, so the second option needs a rubric override row as well | Findings 2, 3; `.specify/memory/tdd-profile.md` "What it does not" |
+| 5 | LOW | **Four CSS readers treat at-rules four ways.** `rules()` keeps `@media` rules without their condition. `declarations()` removes `@media` blocks with a regex. `stylesheet()` keeps the innermost condition. `narrowScreen()` finds the block by text. None of them reads `@supports` or `@layer`. T057 had made one parser. `dimsText`'s new ceiling comment also omits `calc()` and `var()`, which read as "does not dim" | `tests/web/styles.test.js:17, 31, 39, 168`, `:331-338` |
+| 6 | LOW | **The commit map leaves cycle 66 unnamed.** It reads "this entry's commit". The commit is `78b0f4b` | `tdd/cycle-log.md` "Task link and commits of the fourth remediation" |
+| 7 | LOW | **T069's done-check was reinterpreted by the loop.** The task said K1 passes `styles.test.js`. The decision entry says K1 is "read as" failing no predicate-based test. That sentence sits under "Decision (maintainer)", but the maintainer's words were only "go ahead with the closed-world check". The reinterpretation is sound, because a closed world must fail a stylesheet change. The maintainer has not confirmed it | `tdd/cycle-log.md` "Maintainer decision on the fourth TDD audit"; `tasks.md` T069 |
 
-The smell pass reported one more item: assertion roulette in the A14 focus test (`:376`), which puts
-two checks in one tuple. This audit did not take it. The tuple `deepEqual` is the house style
-(`U60` `:99`, `A11` `:111`, `U59` `:129`, `A16` `:265`), and its diff shows which element broke.
-
-**Suite properties.** Both suites are fast: node takes 0.2 s and dotnet takes 11 s. Both are
-deterministic and isolated: the tests use no clock and no network, the locale is pinned, and
-`STYLE` is read once. Each table row is its own named test. Refactor-insensitivity is weak, and
-Findings 1–5 are the cause. The page tests read the stylesheet as text, not as computed style, so a
-change in syntax alone can turn a test red (K1) or let a defect through (Findings 1–3).
+**Suite properties.** Both suites are fast: node takes 0.2 s and dotnet takes 10 s. Both are
+deterministic and isolated. U67 is deliberately sensitive to syntax. Reordering declarations or
+writing `#fff` for `#ffffff` fails it, and its `deepEqual` diff names the rule. That cost is
+acceptable for a closed world, but only once the review in Finding 1 is recorded. U67 and the
+predicate tests complement each other. U67 catches any change. The predicates catch a reviewed but
+wrong update to the list. The smell pass found no redundant, foreign-style or bypassed-helper test.
 
 ## Mutation results
 
-No mutation tool (profile: `mutation: null`). The scratch runner of the third audit applied 58
-deliberate mutants, one at a time. It copied the file aside, applied literal replacements that each
-had to match exactly once, ran the behaviour's test file or filter, and copied the file back. It then
-checked each restore against `HEAD` with `git diff --quiet`. After the run, `git status` was clean,
-and both full suites were green again (dotnet 318, node 247).
+No mutation tool (profile: `mutation: null`). The scratch runner applied each mutant to a file copy,
+one at a time. Each literal replacement had to match exactly once. It ran the behaviour's test file,
+or the whole node suite for W* and V*, and copied the file back. It checked each restore against
+`HEAD` with `git diff --quiet`. After the run, `git status` was clean, and both full suites were green
+(dotnet 318, node 254).
 
 Sample:
 
-- The 35 mutants of the third audit, re-run.
-- S1–S10, X1–X3 and C1–C5, designed by a fresh-context subagent from the test file and the page.
-- M1–M4, from the fresh-context smell pass.
-- K1, a correct stylesheet as a control.
+- The 58 mutants of the fourth audit, re-run at `78b0f4b`.
+- W1–W13, designed by a fresh-context subagent that edited only scratch copies outside the
+  repository.
+- V1–V4, from the fresh-context smell pass.
 
-Each one was re-run here. Each added rule carries the `#nr-user-view ` prefix and sits before the
-`@media` block.
+Each one was re-run here on the real tree.
 
 | Mutant | Behavior | Survived | Judgment |
 | --- | --- | --- | --- |
-| R1, R2, R4, R5, R6, R7, R8, R11, R12, R13a, R13b, R9, R10, R11b | accepted test-after behaviours (condition 3) | No | Each fails its test |
-| N6, N8, N9, N10, P1–P4, P9, P10, E2, Q1–Q9 | A13, A14, A16, A17, A18, U57, U60 | No | Earlier audits' mutants and survivors, all caught |
-| E1 `{ capture: true }` | U57 (control) | Passes | Equivalent registration, so passing is correct |
-| **K1** `:focus-visible { outline: 2px solid rgb(82 181 0) }` | A14 (control) | **Fails** | **False failure on correct CSS. Finding 5** |
-| **S2** `.nr-links a[href]:visited { color: #c58af9 }` | A14 | **Yes** | **Real defect: visited colour differs. Finding 1** |
-| **S10** `.nr-cover { background-color: transparent }` | U60 | **Yes** | **Real defect: transparent placeholder. Finding 1** |
-| **X1** `.nr-row { grid-template: auto / 1fr 64px auto }` | U66 | **Yes** | **Real defect: the cover is not the first column. Finding 1** |
-| **X2** `.nr-row .nr-cover img { object-fit: fill }` | U61 | **Yes** | **Real defect: the cover stretches. Finding 1** |
-| **X3** `.nr-row .nr-actions button { width: auto }` | A11 | **Yes** | **Real defect: the buttons differ in width. Finding 1** |
-| **S1** `.nr-links a:hover { color: #00a4dc66 }` | A16 | **Yes** | **Real defect: hover contrast 1.98. Finding 2** |
-| **S3** `.nr-links a { all: unset }` | A14 | **Yes** | **Real defect: no underline, no outline. Finding 2** |
-| **S5** `.nr-links a:focus-visible { outline-color: #1c1c1c }` | A14 | **Yes** | **Real defect: invisible outline. Finding 2** |
-| **S6** `.nr-links a:hover { text-decoration-color: #1c1c1c }` | A14 | **Yes** | **Real defect: invisible underline. Finding 2** |
-| **M2** `.nr-links a:focus-visible { outline: none!important }` | A14 | **Yes** | **Real defect: no outline. Finding 2** |
-| **M3** `.nr-cover` `background: transparent!important` | U60 | **Yes** | **Real defect: transparent placeholder. Finding 2** |
-| **M4** `.nr-links a:hover { opacity: 50% !important }` | A17 | **Yes** | **Real defect: dimmed link. Finding 2** |
-| **S8** `.nr-links a:hover { box-shadow: inset 0 0 0 2em #3a3a3a }` | A18 | **Yes** | **Real defect: a background in effect. Finding 2** |
-| **S4** `.nr-links a:not([download]) { text-decoration-line: none }` | A14 | **Yes** | **Real defect: no underline. Finding 3** |
-| **M1** `.nr-links a[rel~="noopener"] { text-decoration: none }` | A14 | **Yes** | **Real defect: no underline. Finding 3** |
-| **S9** `ARTICLE:hover { opacity: .6 }` | A18 | **Yes** | **Real defect: dimmed row. Finding 3** |
-| C1 gradient background on the link | A18 | Yes | Inside the recorded ceiling. Finding 4 |
-| C2 `:is(.nr-links, .nr-artist) a { text-decoration: none }` | A14 | Yes | Inside the recorded ceiling. Finding 4 |
-| C3 `text-decoration-color: rgba(0,0,0,0)` | A14 | Yes | Inside the recorded ceiling. Finding 4 |
-| C4 `.nr-row[data-id]:hover { opacity: .6 }` | A18 | Yes | Inside the recorded ceiling. Finding 4 |
-| C5 `outline-color: rgba(0,0,0,0)` | A14 | Yes | Inside the recorded ceiling. Finding 4 |
-| S7 `.nr-row:hover { background: #0e7fa8 }` | A16, A18 | Yes | Inside the ceiling recorded in cycle 63 (contrast 1.59). Finding 4 |
+| R*, N*, P*, Q*, S*, X*, C*, M*, E2 (56 mutants) | A3–A18, U33–U36, U45, U57, U59–U66 | No | All caught; every stylesheet mutant fails U67 |
+| E1 `{ capture: true }` | U57 (control) | Passes | Equivalent registration |
+| K1 `outline: 2px solid rgb(82 181 0)` | A14 (control) | Fails U67 only | Closed world as decided; no predicate fails correct CSS |
+| **W1** second `<style>` with `.nr-links a { text-decoration: none }` | A14 | **Yes** | **Real defect. Finding 2** |
+| **V1** link colour inside `@supports not (color: red)` | A13, A16 | **Yes** | **Real defect: default link blue. Finding 2** |
+| **V2** `:focus-visible` inside `@layer x` | A14 | **Yes** | **Real defect: the theme's outline wins. Finding 2** |
+| **V3** the `600px` rule inside `@media print` | U59 | **Yes** | **Real defect: no narrow-screen layout. Finding 2** |
+| **W2** `nr-status` added to the links box | A17 | **Yes** | **Real defect: links at `opacity: .75`. Finding 3** |
+| **W3** links box renamed `nr-sources` | A13, A14 | **Yes** | **Real defect: default link blue. Finding 3** |
+| **W4** inline `text-decoration:none;outline:none` on the link | A14 | **Yes** | **Real defect. Finding 3** |
+| **W5** `style="order:-1"` on the details | U66 | **Yes** | **Real defect: the cover is not first. Finding 3** |
+| **W8** `style="width:50%"` on Ignore | A11 | **Yes** | **Real defect: unequal buttons. Finding 3** |
+| **W9** `class="nr-badge"` on Restore | A12 | **Yes** | **Real defect: Restore styled as a badge. Finding 3** |
+| **W10** `disabled` on the Artist field | A5 | **Yes** | **Real defect: no typing. Finding 3** |
+| **W12** inline `object-fit:fill` on the cover | U61 | **Yes** | **Real defect: stretched cover. Finding 3** |
+| **W13** `class="nr-empty"` on `#nr-panel` | A18 | **Yes** | **Real defect: dimmed panel. Finding 3** |
+| **V4** `panel.setAttribute('style', 'opacity:.3')` | A18 | **Yes** | **Real defect: dimmed panel. Finding 3** |
+| **W6** `LOADING="eager"` before `loading="lazy"` | U50 | **Yes** | **Real defect: eager load. Finding 3** |
+| **W7** `REFERRERPOLICY="unsafe-url"` before the tested one | U51 | **Yes** | **Real defect: referrer sent. Finding 3** |
+| **W11** `ALT="Cover"` before `alt=""` | A10 | **Yes** | **Real defect: cover announced. Finding 3** |
 
-Of the 58 mutants, 34 were caught and 22 survived inside a behaviour: 16 outside the recorded
-ceiling, and 6 inside it. E1 passed, as it should. K1 failed, which it should not.
+One more candidate was judged equivalent and is not counted. Removing `e.preventDefault()` from the
+form's `submit` handler changes nothing, because the form has no submit button and several fields
+block implicit submission.
+
+Of the 75 mutants, 56 were caught and 17 survived inside a behaviour. Both controls behaved as
+intended.
 
 ## Traceability
 
@@ -209,43 +160,34 @@ ceiling, and 6 inside it. E1 passed, as it should. K1 failed, which it should no
 | US1-AS2 (FR-002, FR-005) | A2, A15, U42, U46, U65 | Yes |
 | US1-AS3 (FR-003) | A3 (two tests) | Yes |
 | US1-AS4 (FR-002) | A4 (6 rows, typed and left), U64 | Yes |
-| US1-AS5 (FR-004) | A5 (two tests) | Partly: keyboard operation is the browser's; the markup test reads source text, which the profile permits |
-| US2-AS1 (FR-006, FR-006a) | A7, U31–U37, U48, U52, U66 | Yes: `AcceptanceRig` refresh → `GET Releases`, joined to the page by `releases.json`. U66's layout check has a gap (Finding 1) |
+| US1-AS5 (FR-004) | A5 (two tests) | Partly: keyboard operation is the browser's; extra attributes escape the markup test (Finding 3) |
+| US2-AS1 (FR-006, FR-006a) | A7, U31–U37, U48, U52, U66, U67 | Yes for the data; the card's column order has a markup gap (Finding 3) |
 | US2-AS2 (FR-006a) | A8, U49, U55, U57 | Yes, within the fake DOM's limits |
-| US2-AS3 (FR-007) | A9, U53, U56, U60 | Yes; placeholder visibility has gaps (Findings 1, 2) |
-| US2-AS4 | A10 | Yes |
-| US3-AS1 (FR-009, SC-003) | A11, U59 | Declarations only; a more specific rule escapes (Finding 1); pixel equality is the real-browser pass |
-| US3-AS2 (FR-009) | A12 | Yes |
-| US4-AS1 (FR-010, SC-004) | A13, U62, U63 | Declarations only; rendered contrast is the real-browser pass |
-| US4-AS2 (FR-010) | A14, A16, A17, A18 | Partial: Findings 1–4 |
+| US2-AS3 (FR-007) | A9, U53, U56, U60, U67 | Yes |
+| US2-AS4 | A10 | Yes, but a duplicate attribute escapes (Finding 3) |
+| US3-AS1 (FR-009, SC-003) | A11, U59, U67 | Declarations only; inline styles and at-rule wrappers escape (Findings 2, 3) |
+| US3-AS2 (FR-009) | A12 | Partial: an extra class escapes (Finding 3) |
+| US4-AS1 (FR-010, SC-004) | A13, U62, U63, U67 | Declarations only; a renamed class or `@supports` escapes (Findings 2, 3) |
+| US4-AS2 (FR-010) | A14, A16, A17, A18, U67 | Partial: Findings 2, 3 |
 
-Functional requirements without an acceptance scenario:
+FR-007a (U50), FR-008 (U51) and FR-011 (U36 and the unchanged suite) are covered as before. U50 and
+U51 have the duplicate-attribute gap (Finding 3).
 
-- FR-007a: covered by U50 (`loading="lazy"`).
-- FR-008: covered by U51 (`no-referrer`). U32–U35 assert URL strings only.
-- FR-011: covered by U36 and the unchanged existing suite.
-- FR-002's "MUST NOT show as an applied filter": the page has no applied-filter indicator.
-
-Untested criteria: none. No test traces to nothing. The `A14`, `A17`, `A18`, `U57` and `U60` helper
-rows pin the predicates that their behaviour tests use.
+Untested criteria: none. No test traces to nothing. U67 traces to FR-007, FR-009 and FR-010.
 
 ## What was not audited
 
-- **Independence**: this session wrote cycles 59–63 and the refactor. A fresh-context subagent did
-  the smell pass, and another one designed S1–S10, X1–X3 and C1–C5. This session re-checked every
-  cited line and re-ran every mutant on the real tree. The verdict, the severities and the rejection
-  of one smell-pass item were decided here. Both subagents are the same model family.
-- **Mutation score**: the profile has no mutation tool. 58 deliberate mutants are a sample, aimed at
-  the stylesheet tests. The artist-filter, render and cover-fallback tests were sampled only through
-  their recorded mutants.
-- **Mutants P5–P8 and the C# mutants N11 and N12**: their code and tests have not changed since the
-  second audit, so they were not re-run.
-- **Coverage**: the page runs in a `node:vm` sandbox, which `--experimental-test-coverage` does not
-  instrument. Dotnet coverage is unavailable (`coverage: null`).
-- **Cycles 2–58**: the earlier audits checked these against history. This audit did not repeat that
-  check.
-- **Real-browser behaviour**: datalist matching, keyboard operation, lazy-load timing, pixel widths,
-  rendered contrast, the `error` capture phase, and every CSS form in the recorded ceiling. These
-  belong to the maintainer's pass in `quickstart.md` §2.
+- **Independence**: this session wrote cycles 64–66 and the T069 decision entry. A fresh-context
+  subagent did the smell pass, and another designed W1–W13 on scratch copies. This session re-ran
+  every mutant on the real tree and opened every cited line. The verdict and severities were decided
+  here. All agents are the same model family.
+- **Mutation score**: the profile has no mutation tool. 75 deliberate mutants are a sample. They aim
+  at the page and its stylesheet. The artist-filter logic, the render data paths and the C# code were
+  sampled only through their recorded mutants.
+- **Mutants P5–P8, N11 and N12**: their code and tests have not changed since the second audit.
+- **Coverage**: unavailable for the `node:vm` sandbox and for dotnet (`coverage: null`).
+- **Cycles 2–63** against history: done by earlier audits, not repeated.
+- **Real-browser behaviour**: rendering, layout, contrast on screen, keyboard use, lazy-load timing.
+  These belong to the maintainer's pass in `quickstart.md` §2.
 - **Case folding beyond ASCII**, **the card background `#1c1c1c`** against a running theme, and
-  **performance** for more than 1,000 artists: no criterion or measurement, as in earlier audits.
+  **performance** for more than 1,000 artists: no criterion or measurement.
