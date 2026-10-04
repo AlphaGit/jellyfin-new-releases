@@ -41,6 +41,8 @@ Installed extensions (`specify extension list`; hooks in `.specify/extensions.ym
   scrubbed of keys and PII.
 - HTTP surface: route naming, response field naming, and the one place the route prefix lives
   are fixed by [`docs/http-surface.md`](docs/http-surface.md). Read it before adding an endpoint.
+- Plugin name `New Releases` is fixed and stated in `build.yaml`, `Plugin.cs` and the catalogue;
+  they must agree. A rename strands old installs. See [`docs/plugin-name.md`](docs/plugin-name.md).
 - `TreatWarningsAsErrors` is on. Keep it on.
 
 ## Build
