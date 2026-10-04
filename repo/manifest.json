@@ -6,23 +6,6 @@
         "overview": "Releases by your library artists that your library does not have yet.",
         "owner": "Alpha",
         "category": "General",
-        "versions": [
-            {
-                "version": "0.1.1.0",
-                "changelog": "Fixes both embedded pages on Jellyfin 12: the plugin now states the naming of its own JSON responses instead of inheriting the host default, which the pages could not read. Routes renamed to Jellyfin's own convention.",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://AlphaGit.github.io/jellyfin-new-releases/jellyfin-new-releases/jellyfin-new-releases_0.1.1.0.zip",
-                "checksum": "7bcfa2a8cd87c19dc24055355a0c0c3d",
-                "timestamp": "2026-09-21T01:53:12Z"
-            },
-            {
-                "version": "0.1.0.0",
-                "changelog": "Initial scaffold.",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://AlphaGit.github.io/jellyfin-new-releases/jellyfin-new-releases/jellyfin-new-releases_0.1.0.0.zip",
-                "checksum": "b269d3db8cbb584e49c81440581c089e",
-                "timestamp": "2026-09-20T21:38:08Z"
-            }
-        ]
+        "versions": []
     }
 ]

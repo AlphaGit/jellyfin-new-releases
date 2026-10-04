@@ -5,8 +5,8 @@ using Xunit;
 namespace Jellyfin.Plugin.NewReleases.Tests.Packaging;
 
 /// <summary>
-/// The document an operator points a Jellyfin server at. Produced by <c>jprm repo add</c> and
-/// never hand-edited. Contract:
+/// The document an operator points a Jellyfin server at. Produced by <c>jprm repo add</c>, and
+/// hand-edited exactly once, to clear the review releases (006 U4). Contract:
 /// <c>specs/003-jellyfin-12-compat/contracts/plugin-repository-manifest.md</c>.
 /// <para>
 /// The version checks pass vacuously while <c>versions</c> is empty, which is correct until the
@@ -19,12 +19,13 @@ public class RepositoryManifestTests
     private const string Jellyfin12Abi = TargetVersions.JellyfinAbi;
 
     /// <summary>
-    /// How many versions the published repository lists right now. 0.1.0.0 was published on
-    /// 2026-09-20 for the real-server review, so the per-entry checks below now run against a
-    /// genuinely published entry rather than only against synthetic ones. 0.1.1.0 followed on
-    /// 2026-09-21. Raise this with each release; the failure message says so.
+    /// How many versions the published repository lists right now. 0.1.0.0 and 0.1.1.0 were
+    /// review releases for the real-server passes, published under the old package slug, and were
+    /// cleared on 2026-10-04 (006 U4). 0.2.0 is the first version published under the new name;
+    /// until it is, the per-entry checks below run only against synthetic entries. Raise this
+    /// with each release; the failure message says so.
     /// </summary>
-    private const int PublishedVersionsToday = 2;
+    private const int PublishedVersionsToday = 0;
 
     /// <summary>
     /// The package slug JPRM derives from the plugin's name. Read from <c>build.yaml</c> rather
