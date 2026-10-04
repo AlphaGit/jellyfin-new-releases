@@ -41,6 +41,13 @@ public class RepositoryManifestTests
             .Replace(' ', '-');
 
     /// <summary>
+    /// The workflow line that moves the package JPRM wrote, `{slug}_{four-part version}.zip`,
+    /// up to the end of its source argument.
+    /// </summary>
+    private static readonly string MovesJprmsPackage =
+        $@"(?m)^\s*mv\s+""?\./artifacts/{Regex.Escape(Slug)}_\$\{{\{{ steps\.ver\.outputs\.version4 }}}}\.zip""?";
+
+    /// <summary>
     /// A well-formed entry, shaped exactly as `jprm repo add --plugin-url` writes one: its package
     /// is the asset of the version's own GitHub Release (006 FR-010). The published manifest lists
     /// no versions until the first tag, so without this the helpers below would only ever run over
@@ -120,9 +127,7 @@ public class RepositoryManifestTests
     [Fact]
     public void TheReleaseWorkflow_MovesTheFileJprmWrites()
     {
-        Assert.Matches(
-            $@"(?m)^\s*mv\s+""?\./artifacts/{Regex.Escape(Slug)}_\$\{{\{{ steps\.ver\.outputs\.version4 }}}}\.zip""?\s",
-            ReleaseWorkflowSteps);
+        Assert.Matches(MovesJprmsPackage + @"\s", ReleaseWorkflowSteps);
     }
 
     /// <summary>
@@ -133,9 +138,7 @@ public class RepositoryManifestTests
     [Fact]
     public void TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo()
     {
-        var moved = Regex.Match(
-            ReleaseWorkflowSteps,
-            $@"(?m)^\s*mv\s+""?\./artifacts/{Regex.Escape(Slug)}_\$\{{\{{ steps\.ver\.outputs\.version4 }}}}\.zip""?\s+""?([^\s""]+)""?");
+        var moved = Regex.Match(ReleaseWorkflowSteps, MovesJprmsPackage + @"\s+""?([^\s""]+)""?");
         var uploaded = Regex.Match(ReleaseWorkflowSteps, @"gh release create\s+\S+\s+""?([^\s""]+)""?");
         Assert.True(moved.Success, "the workflow does not move JPRM's package");
         Assert.True(uploaded.Success, "gh release create uploads no file");

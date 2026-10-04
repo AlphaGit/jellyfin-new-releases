@@ -449,3 +449,16 @@ failed before the implementation.
 - refactor: the `mv` pattern is now written in `U25` and `U26`; extracted in its own structural
   commit after this one
 - commit: see the commit that carries this entry
+
+## Refactor after cycle 26: one pattern for the `mv` line
+
+- structural only: `RepositoryManifestTests.MovesJprmsPackage` holds the `mv` source pattern
+  `U25` and `U26` both use; `U25` keeps its trailing `\s`. Two mistakes were caught before the
+  first run and corrected: the field was first placed above `Slug`, which static initialisation
+  order would have left null, and `U25`'s `\s` had been dropped
+- suite: build 0 warnings; `dotnet test --configuration Release` -> 339 passed, 0 failed
+- mutants re-run on the refactored tests, `--filter "FullyQualifiedName~RepositoryManifestTests"`:
+  M5 -> `TheReleaseWorkflow_MovesTheFileJprmWrites [FAIL]` and
+  `TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo [FAIL]` (2 failed); M14 ->
+  `TheReleaseWorkflow_UploadsTheFileItMovedThePackageTo [FAIL]` (1 failed). Both restored, `cmp -s`
+- commit: see the commit that carries this entry
