@@ -905,3 +905,12 @@ job. Each is labelled test-after in its own cycle, with its evidence:
 | A17 | 58 | no `opacity` or `filter` on a source link | P9, P10 |
 
 **Decision (maintainer, 2026-10-03): accepted**, both.
+
+## Maintainer decision on the third TDD audit, 2026-10-03 (T062, third audit Finding 6)
+
+Driven from `tdd/verification.md` (verdict FAIL, audited at `f68901c`) and its Phase 10 tasks.
+
+**Decision (maintainer, 2026-10-03): recorded ceiling.** `styles.test.js` keeps its predicates over
+hand-read CSS. T058–T061 and T063 are fixed with more table rows, each observed red first. Each
+predicate states the CSS it does not read, and `quickstart.md` §2 sends that remaining risk to the
+real-browser pass. A closed-world list of selectors was considered and not chosen.
