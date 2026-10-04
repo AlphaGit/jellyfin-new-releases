@@ -32,6 +32,9 @@ function declarations(selector, css = STYLE.replace(/@media[^{]*\{(?:[^{}]*\{[^{
     return Object.assign({}, ...rules(css).filter(rule => rule.selector === SCOPE + selector).map(rule => rule.declared));
 }
 
+/** What `stylesheet()` reads: an `@media` opening, a rule with its declarations, or a closing brace. */
+const CSS_BLOCKS = /(@media[^{]*)\{|([^{}]+)\{([^{}]*)\}|\}/g;
+
 /**
  * Every rule block in `css`, in source order, as `[selectors, declarations]`: the selector list with its
  * `@media` condition in front when it has one, and the declarations joined by `; `, whitespace collapsed.
@@ -39,7 +42,7 @@ function declarations(selector, css = STYLE.replace(/@media[^{]*\{(?:[^{}]*\{[^{
 function stylesheet(css = STYLE) {
     const found = [];
     let media = '';
-    for (const [, open, selectors, body] of css.matchAll(/(@media[^{]*)\{|([^{}]+)\{([^{}]*)\}|\}/g)) {
+    for (const [, open, selectors, body] of css.matchAll(CSS_BLOCKS)) {
         if (open) media = open.trim() + ' ';
         else if (selectors) found.push([media + selectors.trim().replace(/\s+/g, ' '), body.split(';').map(d => d.trim().replace(/\s+/g, ' ')).filter(Boolean).join('; ')]);
         else media = '';
@@ -85,6 +88,70 @@ const STYLESHEET = [
 
 test('U67: the stylesheet holds exactly the reviewed rules, so an added, removed or changed rule fails until the list is reviewed', () => {
     assert.deepEqual(stylesheet(), STYLESHEET);
+});
+
+/** Every place in `html` that brings a stylesheet: a `<style>` element, or a `<link>` to a stylesheet. */
+function styleSources(html) {
+    return [...html.matchAll(/<style[\s>]|<link\b[^>]*\brel=["']?stylesheet/gi)];
+}
+
+/** Every at-rule in `css`, with its prelude, in source order. */
+function atRules(css) {
+    return [...css.matchAll(/@[\w-]+[^{};]*/g)].map(([rule]) => rule.trim());
+}
+
+/** What is left of `css` once every rule and every `@media` block that `stylesheet()` reads is taken out. */
+function unread(css) {
+    return css.replace(CSS_BLOCKS, '').trim();
+}
+
+for (const [html, expected] of [
+    ['<style>a { color: red; }</style>', 1],
+    ['<style>a { }</style><p>style</p><style>b { }</style>', 2],
+    ['<STYLE media="print">a { }</STYLE>', 1],
+    ['<link rel="stylesheet" href="x.css">', 1],
+    ['<p class="style">styled</p>', 0],
+]) {
+    test(`U67 helper: ${JSON.stringify(html)} brings ${expected} stylesheet(s)`, () => {
+        assert.equal(styleSources(html).length, expected);
+    });
+}
+
+for (const [css, expected] of [
+    ['a { color: red; }', []],
+    ['@media (max-width: 600px) { a { b: c; } }', ['@media (max-width: 600px)']],
+    ['@supports not (color: red) { a { b: c; } }', ['@supports not (color: red)']],
+    ['@layer x { a { b: c; } }', ['@layer x']],
+    ['@media print { @media (max-width: 600px) { a { b: c; } } }', ['@media print', '@media (max-width: 600px)']],
+    ['@import url(x.css);', ['@import url(x.css)']],
+]) {
+    test(`U67 helper: ${JSON.stringify(css)} holds the at-rules ${JSON.stringify(expected)}`, () => {
+        assert.deepEqual(atRules(css), expected);
+    });
+}
+
+for (const [css, expected] of [
+    ['a { b: c; } d, e { f: g; }', ''],
+    ['@media (max-width: 600px) { a { b: c; } }', ''],
+    ['@supports not (color: red) { a { b: c; } }', '@supports not (color: red) {'],
+    ['@layer x { a { b: c; } }', '@layer x {'],
+    ['a { b: c; } stray', 'stray'],
+]) {
+    test(`U67 helper: ${JSON.stringify(css)} leaves ${JSON.stringify(expected)} unread`, () => {
+        assert.equal(unread(css), expected);
+    });
+}
+
+test('U67: the page brings exactly one stylesheet, its own <style> element', () => {
+    assert.equal(styleSources(PAGE).length, 1);
+});
+
+test('U67: the stylesheet\'s only at-rule is the narrow-screen @media the list pins', () => {
+    assert.deepEqual(atRules(STYLE), ['@media (max-width: 600px)']);
+});
+
+test('U67: the reviewed list accounts for every rule of the stylesheet, so nothing is left unread', () => {
+    assert.equal(unread(STYLE), '');
 });
 
 /** The `background` shorthand's tokens that are not a colour: images, positions, sizes, repeats, boxes, and `!important`. */

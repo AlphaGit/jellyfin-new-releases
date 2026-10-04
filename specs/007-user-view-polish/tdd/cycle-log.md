@@ -1153,3 +1153,25 @@ maintainer's reply: "Confirmed. Go ahead. Agreed with option A."
   names and an exact class list; no `style` attribute is written or declared. T073 and T074 carry it
   out
 - **T077:** the commit of cycle 66 is `78b0f4b`
+
+## Cycle 67: U67 reads every style source of the page (T073, fifth audit Finding 2)
+
+- what: a test correction. The fifth audit's mutants W1 (a second `<style>` element), V1 (`@supports`),
+  V2 (`@layer`) and V3 (a nested `@media`) survived, because U67 read only the plain rules of the first
+  `<style>` element. The behaviour U67 is unchanged: the stylesheet holds exactly the reviewed rules
+- helpers (new, in `tests/web/styles.test.js`), each pinned by a table: `styleSources(html)` (5 rows:
+  `<style>` in any case, a second one, a `<link rel="stylesheet">`, and a `class="style"` that is none),
+  `atRules(css)` (6 rows: none, `@media`, `@supports`, `@layer`, nested `@media`, `@import`), and
+  `unread(css)` (5 rows: what is left once the rules and `@media` blocks are taken out). `unread` and
+  `stylesheet` share one pattern, `CSS_BLOCKS`
+- red: the three helpers declared as `return []` / `return ''`, and three new U67 tests that use them.
+  `node --test tests/web/styles.test.js` -> 14 failed: the 12 rows that expect something, e.g.
+  `not ok 9 - U67 helper: "@supports not (color: red) { a { b: c; } }" holds the at-rules ["@supports not (color: red)"]`,
+  and `not ok 18 - U67: the page brings exactly one stylesheet, its own <style> element`,
+  `not ok 19 - U67: the stylesheet's only at-rule is the narrow-screen @media the list pins`
+- green: the helpers as written. File -> 146 passed
+- tests (new): `U67: the page brings exactly one stylesheet, its own <style> element`,
+  `U67: the stylesheet's only at-rule is the narrow-screen @media the list pins`,
+  `U67: the reviewed list accounts for every rule of the stylesheet, so nothing is left unread`
+- strength: W1, V1, V2 and V3 each fail a new U67 test. K1 still fails only the list test. Each was
+  applied to a file copy, restored, and checked against `HEAD`
