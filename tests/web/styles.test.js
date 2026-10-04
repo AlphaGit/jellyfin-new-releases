@@ -252,9 +252,17 @@ function namesOnlyLinkAncestors(compound) {
  * thickness, through the shorthand or a longhand. ponytail: reads tokens, so a zero-alpha colour function is not read.
  */
 function removesUnderline(declared) {
-    return ['text-decoration', 'text-decoration-line', 'text-decoration-color', 'text-decoration-thickness']
-        .flatMap(property => (declared[property] || '').trim().toLowerCase().split(/\s+/))
-        .some(token => /^none(!|$)/.test(token) || token === 'transparent' || parseFloat(token) === 0);
+    return hidesLine(declared, ['text-decoration', 'text-decoration-line', 'text-decoration-color', 'text-decoration-thickness']);
+}
+
+/**
+ * Whether any of `properties` in `declared` holds `none`, `transparent` or a zero length, `!important` or not.
+ * A colour function is one token, so a zero channel inside it is not a zero length.
+ */
+function hidesLine(declared, properties) {
+    return properties
+        .flatMap(property => (declared[property] || '').trim().toLowerCase().match(/[\w-]+\([^)]*\)|[^\s!]+/g) || [])
+        .some(token => token === 'none' || token === 'transparent' || parseFloat(token) === 0);
 }
 
 for (const [selector, expected] of [
@@ -301,6 +309,8 @@ for (const [declared, expected] of [
     [{ 'text-decoration-thickness': '0' }, true],
     [{ 'text-decoration-color': '#00a4dc' }, false],
     [{ 'text-decoration-thickness': '2px' }, false],
+    [{ 'text-decoration-color': 'rgb(255 0 0)' }, false],
+    [{ 'text-decoration': 'underline hsl(0 0% 50%)' }, false],
     [{}, false],
     [{ color: '#00a4dc' }, false],
     [{ 'text-decoration': 'underline' }, false],
@@ -399,9 +409,7 @@ test('A14: no rule takes the underline off a source link', () => {
  * the shorthand or a longhand. ponytail: reads tokens, so a zero-alpha colour function is not read.
  */
 function removesOutline(declared) {
-    return ['outline', 'outline-style', 'outline-width', 'outline-color']
-        .flatMap(property => (declared[property] || '').trim().toLowerCase().split(/\s+/))
-        .some(token => token === 'none' || token === 'transparent' || parseFloat(token) === 0);
+    return hidesLine(declared, ['outline', 'outline-style', 'outline-width', 'outline-color']);
 }
 
 for (const [declared, expected] of [
@@ -417,6 +425,8 @@ for (const [declared, expected] of [
     [{ color: '#00a4dc' }, false],
     [{ outline: '2px solid #52b54b' }, false],
     [{ 'outline-offset': '0' }, false],
+    [{ outline: '2px solid rgb(82 181 0)' }, false],
+    [{ outline: 'none!important' }, true],
 ]) {
     test(`A14 helper: ${JSON.stringify(declared)} ${expected ? 'removes' : 'keeps'} the focus outline`, () => {
         assert.equal(removesOutline(declared), expected);

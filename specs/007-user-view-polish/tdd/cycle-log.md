@@ -1093,3 +1093,20 @@ design. T069's check is therefore read as "K1 fails no predicate-based test".
   was applied to a file copy, restored, and checked against `HEAD`
 - review: the list is a reviewed copy, not an approved snapshot. The maintainer should read it once
   against the page. Any later change to the `<style>` block must change this list in the same commit
+
+## Cycle 65: the line predicates pass correct CSS (T069, fourth audit Finding 5, control K1)
+
+- what: a test correction. Control K1 (`outline: 2px solid rgb(82 181 0)` on `:focus-visible`) failed
+  A14's focus test on correct CSS: `removesOutline` split a colour function on whitespace and read its
+  `0` channel as a zero width. `removesUnderline` did the same for `rgb(255 0 0)`. The two predicates
+  also drifted: only `removesUnderline` read `none!important`. The behaviour A14 is unchanged
+- red: 4 rows added to the `A14 helper` tables. Keeps the underline: `text-decoration-color: rgb(255 0 0)`,
+  `text-decoration: underline hsl(0 0% 50%)`. Keeps the focus outline: `outline: 2px solid rgb(82 181 0)`.
+  Removes the focus outline: `outline: none!important`. `node --test tests/web/styles.test.js` -> all
+  4 fail, e.g. `not ok 123 - A14 helper: {"outline":"2px solid rgb(82 181 0)"} keeps the focus outline` (4 failed)
+- green: both predicates call one new reader, `hidesLine(declared, properties)`. It reads a colour
+  function as one token and sets `!` aside, then finds `none`, `transparent` or a zero length.
+  File -> 125 passed
+- strength: K1 now fails U67 only, which is the closed world working as decided. R13a, R13b, N9, Q4,
+  Q5 and M2 each fail A14 as well as U67. Each was applied to a file copy, restored, and checked
+  against `HEAD`
