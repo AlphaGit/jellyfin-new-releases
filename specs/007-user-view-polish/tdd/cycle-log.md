@@ -1228,3 +1228,18 @@ maintainer's reply: "Confirmed. Go ahead. Agreed with option A."
 | Cycle 67: U67 reads every style source | `8edb9c0` |
 | Cycle 68: U68 closed world over the markup | `3af8788` |
 | Refactor: one block parser | `2a7c0c0` |
+
+## Maintainer decisions on the sixth TDD audit, 2026-10-04 (T079, T083)
+
+Driven from `tdd/verification.md` (verdict FAIL, audited at `dbab71c`) and its Phase 13 tasks. The
+maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
+
+- **T079 — review of U68's lists: reviewed (maintainer, 2026-10-04).** `STATIC` and `WRITTEN` in
+  `tests/web/markup.test.js` as committed in `3af8788`, unchanged up to `eeedea7`. T080 replaces
+  `WRITTEN` with ordered lists for each template. Those new lists need their own review
+- **T083 — survivors in behaviours that predate 007: fixed in 007 (maintainer, 2026-10-04).** Y4
+  (`once` on the filters' `change` listeners), Y8 (the action handler's row lookup) and Y9 (the source
+  links' `href`) get characterization tests here. They test code that 007 did not write, so they go on
+  the list in state `BASELINE`. Y8 needs `closest` in the fake DOM, which the profile lists as not
+  modelled; the fake DOM gains a minimal `closest`, driven by its own tests
+- **T080–T082, T084, T085: go ahead**
