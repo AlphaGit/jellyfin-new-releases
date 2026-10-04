@@ -126,3 +126,18 @@ failed before the implementation.
   322 passed, 0 failed
 - refactor: none
 - commit: see the commit that carries this entry
+
+## Cycle 9: U9 a release address naming another tag is rejected
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs::ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected`,
+  new case `("1.2.3.1", ExampleSiteRoot + "v1.2.3/new-releases.zip")` — the other side of `U8`'s boundary
+- red: none on the first run; cycle 8's rule already rejects it.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~RepositoryManifestTests.ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Passed!  - Failed:     0, Passed:     4`
+- mutant: the tag-to-version line `Assert.Equal(number, InFourParts(…))` deleted from
+  `AssertSourceUrlNamesItsOwnVersion`. Same command ->
+  `ASourceUrlOffTheSiteOrNamingAnotherVersion_IsRejected(number: "1.2.3.1", …) [FAIL]` (1 failed,
+  3 passed): this case alone catches it. Restored from a file copy, verified with `cmp -s`
+- green: no rule change. Suite -> 323 passed, 0 failed
+- refactor: none
+- commit: see the commit that carries this entry
