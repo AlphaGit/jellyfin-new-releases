@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { documentFor, FakeElement, actionRow } = require('./fake-dom.js');
+const { documentFor, FakeElement, actionRow, keepsListening } = require('./fake-dom.js');
 
 // The stand-in specified by specs/005-page-json-casing/contracts/page-sandbox.md. Its own contract
 // is tested here because FR-017 and FR-018 make it a deliverable with stated limits, not a private
@@ -86,3 +86,20 @@ for (const [selector, expected] of [
 test('closest refuses a selector it does not model, rather than answering it wrongly', () => {
     assert.throws(() => actionRow().button.closest('.nr-row .nr-actions'), /not modelled/);
 });
+
+// keepsListening reads the options the stand-in records. U71 and U57 rely on it.
+for (const [options, expected] of [
+    [undefined, true],
+    [null, true],
+    [true, true],
+    [false, true],
+    [{ capture: true }, true],
+    [{ passive: true, once: false }, true],
+    [{ once: true }, false],
+    [{ capture: true, once: true }, false],
+    [{ signal: {} }, false],
+]) {
+    test(`keepsListening(${JSON.stringify(options)}) ${expected ? 'keeps' : 'stops'} listening (U71, U57)`, () => {
+        assert.equal(keepsListening(options), expected);
+    });
+}

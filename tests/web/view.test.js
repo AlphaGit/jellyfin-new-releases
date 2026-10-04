@@ -5,7 +5,7 @@ const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPageDom, settled } = require('./load-page.js');
-const { declaredIds, keepsListening } = require('./fake-dom.js');
+const { declaredIds, keepsListening, actionRow } = require('./fake-dom.js');
 
 // The New Releases view's own controls: what its static markup declares and how its controls are
 // wired. 007 T091 characterizes the parts that predate 007 (BASELINE), so a change to them fails here.
@@ -67,22 +67,6 @@ test('U87: From and To are date fields', () => {
 // stops after its first event (`once`) or can be cut off (`signal`) sends no request the next time.
 // The stand-in records options but ignores them, so they are read here.
 
-for (const [options, expected] of [
-    [undefined, true],
-    [null, true],
-    [true, true],
-    [false, true],
-    [{ capture: true }, true],
-    [{ passive: true, once: false }, true],
-    [{ once: true }, false],
-    [{ capture: true, once: true }, false],
-    [{ signal: {} }, false],
-]) {
-    test(`U71 helper: ${JSON.stringify(options)} ${expected ? 'keeps' : 'stops'} listening`, () => {
-        assert.equal(keepsListening(options), expected);
-    });
-}
-
 test('U71: every listener the New Releases view registers keeps listening', () => {
     const { document } = loadPageDom('user-view.html', { ApiClient: { ajax: () => Promise.resolve({ items: [], hasStoredReleases: false }) } });
     const stopping = [...declaredIds('user-view.html')].flatMap(id => Object.entries(document.getElementById(id).listenerOptions)
@@ -90,3 +74,16 @@ test('U71: every listener the New Releases view registers keeps listening', () =
 
     assert.deepEqual(stopping, []);
 });
+
+// 007 T091 group B, characterization (BASELINE): the status line a screen reader announces after an action.
+for (const [action, said] of [['Ignore', 'Ignored Kill for Love'], ['HaveIt', 'Marked Kill for Love as Have it'], ['Restore', 'Restored Kill for Love']]) {
+    test(`U84: after ${action} the status line says "${said}"`, async () => {
+        const { document } = loadPageDom('user-view.html', { ApiClient: { ajax: () => Promise.resolve({ items: [], hasStoredReleases: true }) } });
+        await settled();
+
+        document.getElementById('nr-panel').listeners.click[0]({ target: actionRow({ id: '102', title: 'Kill for Love', action }).button });
+        await settled();
+
+        assert.equal(document.getElementById('nr-announce').textContent, said);
+    });
+}

@@ -1623,3 +1623,13 @@ as it should. H5 and J3 now lie outside A15 and U68 as narrowed (T099).
   missing Upcoming badge now gives a diff, not a `TypeError`
 - U87 becomes two tests: each label belongs to its own field, and From and To are date fields
 - no behaviour change. B81a, B81b, B87a and B87b each now fail exactly one test, which names what broke
+
+## Tidy: two tests move to the files about their subjects (T102, eighth audit Finding 5)
+
+- U84 (the status line after an action) moves from `requests.test.js`, which is about the paths the
+  page sends, to `view.test.js`, which is about the view's controls. It loads the page with
+  `loadPageDom` there
+- the `keepsListening` table moves from `view.test.js` to `fake-dom.test.js`, next to the stand-in
+  where the helper lives since T094. Its rows are named for the helper, and they say U71 and U57 rely
+  on it
+- no behaviour change. Suite -> node 358 passed. B84, Y4 and E2 still fail their tests
