@@ -1329,3 +1329,16 @@ maintainer's reply: "1. Looks okay 2. No, let's fix them here. 3. Go ahead."
 - red: none, by definition: a characterization test passes against untouched code. It passed on its
   first run. Evidence instead: Y9 (each `href` set to the source name) fails it. The mutant was applied
   to a file copy, restored, and checked against `HEAD`. File -> 29 passed
+
+## Cycle 74: U71 every listener keeps listening (T083, characterization of Y4)
+
+- list: U71 appended to the characterization section, state `BASELINE`
+- helper (new, in `tests/web/requests.test.js`): `keepsListening(options)`, pinned by a table of 8
+  rows. It accepts no options, a capture flag and an options object with neither `once` nor `signal`
+- red (helper): `keepsListening` declared as `return true`. `node --test tests/web/requests.test.js` ->
+  the 3 rejecting rows fail, e.g. `not ok 8 - U71 helper: {"once":true} stops listening` (3 failed).
+  Green: the predicate as written. File -> 11 passed
+- test: `U71: every listener the New Releases view registers keeps listening` (new) reads the options
+  the stand-in recorded on every declared element. It passed on its first run, as a characterization
+  test does. Evidence: Y4 (`{ once: true }` on the filters' `change` listeners) fails it. E2 still
+  fails U57. Each mutant was applied to a file copy, restored, and checked against `HEAD`
