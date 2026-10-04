@@ -58,8 +58,8 @@ the release hosting is restated and reworked on a green suite.
 U25 red against `0.1.0.0` and `0.1.1.0`.
 
 - [X] T002 [U4] Change `PublishedVersionsToday` from `2` to `0` in `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestTests.cs`, and its doc comment to say the review releases were cleared on 2026-10-04 and `0.2.0` is the first published version. Observe it red: `repo/manifest.json lists 2 version(s), expected 0`
-- [ ] T027 [U5] Write failing `tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs::Plugin_DisplayName_MatchesTheNameTheCatalogueLists` — the `name` of `repo/manifest.json`'s single entry, read through `RepositoryFiles`, equals `new Plugin(…).Name`. It sits in `PluginSanityTests` because constructing `Plugin` sets the static `Plugin.Instance`. Observe it red: `Jellyfin New Releases` against `New Releases`
-- [ ] T003 [U4] [U5] In `repo/manifest.json`, remove both entries from `versions` (leaving `[]`) and set the plugin entry's `name` to `"New Releases"`. Keep `guid` and every other field. The one hand edit this file ever gets; from here on only the release workflow writes it. T002 and T027 go green; `003`'s U21 (this feature's `U6`) still finds exactly one plugin
+- [X] T027 [U5] Write failing `tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs::Plugin_DisplayName_MatchesTheNameTheCatalogueLists` — the `name` of `repo/manifest.json`'s single entry, read through `RepositoryFiles`, equals `new Plugin(…).Name`. It sits in `PluginSanityTests` because constructing `Plugin` sets the static `Plugin.Instance`. Observe it red: `Jellyfin New Releases` against `New Releases`
+- [X] T003 [U4] [U5] In `repo/manifest.json`, remove both entries from `versions` (leaving `[]`) and set the plugin entry's `name` to `"New Releases"`. Keep `guid` and every other field. The one hand edit this file ever gets; from here on only the release workflow writes it. T002 and T027 go green; `003`'s U21 (this feature's `U6`) still finds exactly one plugin
 
 **Checkpoint**: the catalogue lists the plugin and no version. `003`'s U25 and U23 now bind synthetic entries only.
 

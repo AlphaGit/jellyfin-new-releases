@@ -23,3 +23,14 @@ failed before the implementation.
 - refactor: the class comment said the catalogue is "never hand-edited"; it now records the one
   hand edit. Suite re-run -> 318 passed
 - commit: see the commit that carries this entry
+
+## Cycle 2: U5 the catalogue's plugin entry carries the name the plugin reports
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/PluginSanityTests.cs::Plugin_DisplayName_MatchesTheNameTheCatalogueLists` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~PluginSanityTests.Plugin_DisplayName_MatchesTheNameTheCatalogueLists" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Expected: "New Releases"` / `Actual: "Jellyfin New Releases"` (1 failed)
+- green: `repo/manifest.json` entry `name` set to `New Releases`. Build 0 warnings. Suite
+  `dotnet test --configuration Release` -> 319 passed, 0 failed
+- refactor: none. Every test in the class builds its own `Plugin` from two substitutes; the new one
+  follows the file rather than extracting a helper the other tests would then need to adopt
+- commit: see the commit that carries this entry

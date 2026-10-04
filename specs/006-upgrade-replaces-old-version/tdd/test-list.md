@@ -69,7 +69,7 @@ Hosted by `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/RepositoryManifestT
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U4 | The catalogue lists no published version | FR-009, INV-1 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_EveryVersionCarriesItsDownloadChecksumTimestampAndJellyfin12` (`PublishedVersionsToday` = 0) |
-| U5 | The catalogue's plugin entry carries the name the plugin reports | FR-004 | example | PENDING | |
+| U5 | The catalogue's plugin entry carries the name the plugin reports | FR-004 | example | DONE | `PluginSanityTests.cs::Plugin_DisplayName_MatchesTheNameTheCatalogueLists` |
 | U6 | The catalogue is an array of exactly one plugin carrying the frozen GUID | INV-1 | example | DONE | `Packaging/RepositoryManifestTests.cs::Manifest_IsAnArrayOfOnePlugin_CarryingTheFrozenGuid` |
 
 `U4` is `003`'s `PublishedVersionsToday` restated from 2 to 0. `U6` must stay green through the hand

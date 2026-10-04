@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Serialization;
 using Jellyfin.Plugin.NewReleases.Tests.Support;
@@ -18,6 +19,22 @@ public class PluginSanityTests
         var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
 
         Assert.Equal(new Guid("b8a15db8-e368-42c4-9048-390faf0094db"), plugin.Id);
+    }
+
+    /// <summary>
+    /// 006 U5: the catalogue states the plugin's name too, and an operator's server files a copy
+    /// under the name it was installed with. A catalogue entry under another name is the condition
+    /// that let two copies load side by side.
+    /// </summary>
+    [Fact]
+    public void Plugin_DisplayName_MatchesTheNameTheCatalogueLists()
+    {
+        var plugin = new Plugin(Substitute.For<IApplicationPaths>(), Substitute.For<IXmlSerializer>());
+        using var catalogue = JsonDocument.Parse(RepositoryFiles.ReadAllText("repo/manifest.json"));
+
+        var entry = Assert.Single(catalogue.RootElement.EnumerateArray().ToList());
+
+        Assert.Equal(plugin.Name, entry.GetProperty("name").GetString());
     }
 
     /// <summary>
