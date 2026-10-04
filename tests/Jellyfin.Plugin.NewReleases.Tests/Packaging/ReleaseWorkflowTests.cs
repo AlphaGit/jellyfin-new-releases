@@ -59,6 +59,19 @@ public class ReleaseWorkflowTests
     }
 
     /// <summary>
+    /// 006 U17: with no Pages deployment the job needs only `contents: write`, to create the
+    /// release and push the catalogue. A token that can still publish a site or mint an identity
+    /// token is a wider grant than the release uses.
+    /// </summary>
+    [Theory]
+    [InlineData("pages")]
+    [InlineData("id-token")]
+    public void ReleaseWorkflow_GrantsNoPagesPermission(string permission)
+    {
+        Assert.DoesNotMatch($@"(?m)^\s*{Regex.Escape(permission)}\s*:", Steps);
+    }
+
+    /// <summary>
     /// U28: JPRM rewrites TargetFramework in the project file while packaging and is expected to
     /// put it back. Contract statement 6 is about that element specifically, and a local dry run
     /// confirmed JPRM restores it — while leaving the rewritten &lt;Version&gt; behind. A whole-file

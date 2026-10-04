@@ -9,8 +9,6 @@ on:
 # release both writes back to the branch and deploys the site.
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: package

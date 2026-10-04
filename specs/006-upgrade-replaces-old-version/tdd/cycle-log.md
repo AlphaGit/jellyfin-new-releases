@@ -268,3 +268,14 @@ failed before the implementation.
 - refactor: none in this cycle; the Pages wording in the workflow's comments is cleared once the
   permissions are settled
 - commit: see the commit that carries this entry
+
+## Cycle 17: U17 the workflow's permissions grant neither `pages` nor `id-token`
+
+- test: `tests/Jellyfin.Plugin.NewReleases.Tests/Packaging/ReleaseWorkflowTests.cs::ReleaseWorkflow_GrantsNoPagesPermission`
+  (new theory: `pages`, `id-token`; a key at any indent over the non-comment lines)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ReleaseWorkflowTests.ReleaseWorkflow_GrantsNoPagesPermission" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.DoesNotMatch() Failure: Match found`, twice (2 failed)
+- green: the `permissions` block keeps only `contents: write`. Suite -> 331 passed, 0 failed
+- refactor: the workflow's comments still describe Pages; rewritten in its own structural commit
+  after this one
+- commit: see the commit that carries this entry
