@@ -10,8 +10,9 @@ namespace Jellyfin.Plugin.NewReleases.Tests.Packaging;
 /// hand-edited exactly once, to clear the review releases (006 U4). Contract:
 /// <c>specs/003-jellyfin-12-compat/contracts/plugin-repository-manifest.md</c>.
 /// <para>
-/// The version checks pass vacuously while <c>versions</c> is empty, which is correct until the
-/// first tag, and bite the moment the release chain adds one.
+/// The version checks bind every published entry; <c>PublishedVersionsToday</c> pins how many there
+/// are, so they can never pass over an empty list unnoticed. The synthetic entries below pin both
+/// sides of each rule whatever the catalogue holds.
 /// </para>
 /// </summary>
 public class RepositoryManifestTests
@@ -38,7 +39,7 @@ public class RepositoryManifestTests
     /// The package slug JPRM derives from the plugin's name. Read from <c>build.yaml</c> rather
     /// than written down, so a fork that renames the plugin still passes.
     /// </summary>
-    private static readonly string Slug =
+    private static string Slug =>
         RepositoryFiles.Scalar(RepositoryFiles.ReadAllText("build.yaml"), "name")!
             .ToLowerInvariant()
             .Replace(' ', '-');
@@ -47,14 +48,14 @@ public class RepositoryManifestTests
     /// The workflow line that moves the package JPRM wrote, `{slug}_{four-part version}.zip`,
     /// up to the end of its source argument.
     /// </summary>
-    private static readonly string MovesJprmsPackage =
+    private static string MovesJprmsPackage =>
         $@"(?m)^\s*mv\s+""?\./artifacts/{Regex.Escape(Slug)}_\$\{{\{{ steps\.ver\.outputs\.version4 }}}}\.zip""?";
 
     /// <summary>
     /// A well-formed entry, shaped exactly as `jprm repo add --plugin-url` writes one: its package
-    /// is the asset of the version's own GitHub Release (006 FR-010). The published manifest lists
-    /// no versions until the first tag, so without this the helpers below would only ever run over
-    /// an empty list and could reject everything without a test noticing.
+    /// is the asset of the version's own GitHub Release (006 FR-010). The published manifest holds
+    /// one version today, so without this the rules below would be pinned by a single real entry
+    /// and could reject every other well-formed one without a test noticing.
     /// </summary>
     private static JsonDocument WellFormedEntry(
         string version = "1.2.3.0",
@@ -227,8 +228,8 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
-    /// U23, the accepting side. Without this the rule below could reject every entry ever
-    /// written and no test would fail, because the published list is empty until the first tag.
+    /// U23, the accepting side. Without this the rule below could reject every entry but the ones
+    /// already published, and no test would fail.
     /// </summary>
     [Fact]
     public void AWellFormedEntry_IsAccepted()
@@ -286,8 +287,8 @@ public class RepositoryManifestTests
     }
 
     /// <summary>
-    /// U24: the check above runs over an empty list until the first tag, so on its own it proves
-    /// nothing. This is its other side: the same check, applied to entries that must fail.
+    /// U24: the check above runs over the published entries only, so on its own it proves nothing
+    /// about what it rejects. This is its other side: the same check, applied to entries that must fail.
     /// </summary>
     [Theory]
     [InlineData(@"{""sourceUrl"":""u"",""checksum"":""c"",""timestamp"":""t"",""targetAbi"":""12.0.0.0""}")]
@@ -318,7 +319,10 @@ public class RepositoryManifestTests
 
         // No branch: the root is read only when an entry exists, so an empty catalogue asserts the
         // count alone. The rule binds once a release raises PublishedVersionsToday with its entry;
-        // until then the count above fails first (006 audit, findings 3 and 25).
+        // until then the count above fails first (006 audit, findings 3 and 25). With one entry
+        // the "one root" half compares that entry with itself and pins nothing; it starts binding
+        // with the second published version. EntriesFromTwoDifferentSites_AreRejected pins it on
+        // synthetic entries meanwhile (006 third audit, finding 35).
         Assert.All(versions, entry => AssertSourceUrlNamesItsOwnVersion(entry, ReleaseRootOf(versions[0])));
     }
 
@@ -345,8 +349,12 @@ public class RepositoryManifestTests
     /// The rejecting rows, built from <see cref="Slug"/> so a fork that renames the plugin keeps
     /// rejecting each row for its stated reason (006 audit, findings 6, 13 and 26). Each row
     /// differs from a valid address in its stated reason only, so each is the row that fails when
-    /// the check for that reason is removed.
+    /// the check for that reason is removed. That holds for any slug that does not start with `v`:
+    /// for one that does, the no-tag row reads its own slug as a tag (006 third audit, finding 31).
     /// </summary>
+    /// <summary>An asset name as long as <see cref="Slug"/> that differs in its first letter.</summary>
+    private static string SameLengthOtherAsset => (Slug[0] == 'x' ? "y" : "x") + Slug[1..];
+
     public static TheoryData<string, string> RejectedSourceUrls => new()
     {
         // Another release root, of the same length, so only the root check can reject it.
@@ -371,7 +379,7 @@ public class RepositoryManifestTests
         { "1.0.0.0", $"{ExampleReleaseRoot}v1.0.0.0/{Slug}_1.0.0.0.zip" },
 
         // Another asset of the same length, so only the asset-name check can reject it.
-        { "1.0.0.0", $"{ExampleReleaseRoot}v1.0.0.0/{(Slug[0] == 'x' ? 'y' : 'x')}{Slug[1..]}.zip" },
+        { "1.0.0.0", $"{ExampleReleaseRoot}v1.0.0.0/{SameLengthOtherAsset}.zip" },
     };
 
     private static void AssertInstallable(JsonElement version)

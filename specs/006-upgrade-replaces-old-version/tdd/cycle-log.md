@@ -833,3 +833,25 @@ code or text that existed when the third audit found it unpinned, so no red was 
   fails the suite, through `Plugin_DisplayName_IsStable`, `…MatchesTheNameThePackageDeclares` and
   `…MatchesTheNameTheCatalogueLists`. Restored, checked with `cmp -s`. The suite went from 353 to
   352 passed.
+
+## `/speckit-implement`: T056, the third audit's LOW findings
+
+- **Fixed, finding 31.** The comment over `RejectedSourceUrls` now says the one-reason-per-row
+  property holds for any slug that does not start with `v`. The ternary moved out of the row
+  data into `SameLengthOtherAsset`.
+- **Fixed, finding 32.** `Slug` and `MovesJprmsPackage` are read on use. The type initializer no
+  longer reads `build.yaml`.
+- **Fixed, finding 33.** The spawn test:
+  - uses top-level `require`s, as the file's exemplar does;
+  - gives `spawnSync` a 10 s timeout;
+  - asserts that the temp folder ends with exactly `CHANGELOG.md` and `notes.md`.
+  - Mutant: the `--notes` mode also writes a `build.yaml` -> `not ok 7 - with --notes…`.
+    Restored, checked with `cmp -s`.
+- **Waived, finding 34.** The raw catalogue address is written once per suite. The C# and node
+  suites share no constants, and each assertion names the value the spec fixes (`FR-012`).
+- **Fixed, finding 35.** The comments that said the catalogue is empty until the first tag
+  describe today's one published entry. The comment on the catalogue-wide check says its "one
+  root" half binds only from the second published version, and that
+  `EntriesFromTwoDifferentSites_AreRejected` pins it until then. That half is waived until a
+  second release exists.
+- Suite: build 0 warnings; dotnet -> 352 passed; node -> 363 passed.

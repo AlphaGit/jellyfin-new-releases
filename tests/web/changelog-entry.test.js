@@ -3,7 +3,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 const { entryFor, withChangelog } = require('../../.github/scripts/changelog-entry.js');
 
 // 003 T064: the catalogue text JPRM publishes is generated at release from CHANGELOG.md, so the
@@ -71,17 +73,16 @@ test('a build.yaml with no changelog line is an error, so the committed text is 
 // directory holding a CHANGELOG.md and no build.yaml, so the order of its arguments is what is
 // tested and the build.yaml path is not touched.
 test('with --notes, the tagged version\'s section is written to the named file and build.yaml is not read', () => {
-    const os = require('node:os');
-    const { spawnSync } = require('node:child_process');
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'changelog-notes-'));
     try {
         fs.writeFileSync(path.join(dir, 'CHANGELOG.md'), CHANGELOG);
         const script = path.join(__dirname, '..', '..', '.github', 'scripts', 'changelog-entry.js');
 
-        const run = spawnSync(process.execPath, [script, '0.1.1', '--notes', 'notes.md'], { cwd: dir, encoding: 'utf8' });
+        const run = spawnSync(process.execPath, [script, '0.1.1', '--notes', 'notes.md'], { cwd: dir, encoding: 'utf8', timeout: 10000 });
 
         assert.equal(run.status, 0, run.stderr);
         assert.equal(fs.readFileSync(path.join(dir, 'notes.md'), 'utf8'), '### Fixed\n\n- One.');
+        assert.deepEqual(fs.readdirSync(dir).sort(), ['CHANGELOG.md', 'notes.md']);
     } finally {
         fs.rmSync(dir, { recursive: true, force: true });
     }
