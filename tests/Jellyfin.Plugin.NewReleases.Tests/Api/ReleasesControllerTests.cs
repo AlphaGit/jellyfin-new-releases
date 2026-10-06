@@ -283,6 +283,26 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.NotNull(await _db.Archive.GetAsync("name:daft punk", "homework", CancellationToken.None));
     }
 
+    [Theory]
+    [InlineData("Ignore")]
+    [InlineData("HaveIt")]
+    [InlineData("Restore")]
+    public async Task EveryDecision_ForACallerWithoutAUser_Is401(string decision)
+    {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var id = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.Single().Id;
+        var controller = ControllerWithoutUser();
+
+        var result = decision switch
+        {
+            "Ignore" => await controller.IgnoreAsync(id, CancellationToken.None),
+            "HaveIt" => await controller.HaveItAsync(id, CancellationToken.None),
+            _ => await controller.RestoreAsync(id, CancellationToken.None),
+        };
+
+        Assert.IsType<UnauthorizedResult>(result);
+    }
+
     private static readonly Guid Bob = Guid.Parse("bbbbbbbb-2222-2222-2222-222222222222");
 
     [Fact]

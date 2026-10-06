@@ -125,7 +125,7 @@ public sealed class ReleasesController : ControllerBase
     /// <summary>Ignore / Have it (upsert) or Restore (delete) on the release's natural key with the caller's id (FR-005b, FR-016). Visibility is checked before writing (FR-007).</summary>
     private async Task<ActionResult> DecideAsync(long id, DecisionKind? kind, CancellationToken ct)
     {
-        if (CallerId() is not { } userId || AccessOf(userId) is not { } access)
+        if (CallerId() is not { } userId || userId == Guid.Empty || AccessOf(userId) is not { } access)
         {
             return Unauthorized();
         }
