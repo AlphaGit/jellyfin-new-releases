@@ -253,7 +253,14 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
         Assert.Equal(["Daft Punk"], limited.Value!.Items.Select(a => a.Name));
         Assert.Equal(["Daft Punk", "Justice"], all.Value!.Items.Select(a => a.Name));
-        Assert.IsType<UnauthorizedResult>((await Controller(null).GetArtistsAsync(CancellationToken.None)).Result);
+    }
+
+    [Fact]
+    public async Task GetArtists_ForACallerWithoutAUser_Is401()
+    {
+        var result = await ControllerWithoutUser().GetArtistsAsync(CancellationToken.None);
+
+        Assert.IsType<UnauthorizedResult>(result.Result);
     }
 
     [Fact]

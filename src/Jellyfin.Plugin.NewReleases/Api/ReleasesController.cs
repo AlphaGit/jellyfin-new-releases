@@ -101,7 +101,7 @@ public sealed class ReleasesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ArtistsResponse>> GetArtistsAsync(CancellationToken cancellationToken = default)
     {
-        if (CallerId() is not { } userId || AccessOf(userId) is not { } access)
+        if (CallerId() is not { } userId || userId == Guid.Empty || AccessOf(userId) is not { } access)
         {
             return Unauthorized();
         }
