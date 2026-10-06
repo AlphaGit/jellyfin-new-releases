@@ -74,6 +74,8 @@ Response `200`:
 - Order: undated last, then `date_sort` descending, then title. No paging; hard cap 5 000 rows.
 - Rows whose artist is in no library the caller may access are omitted; if the caller can
   access no music library the response is an empty list, not an error.
+- `401` when the caller has no user: an API key, or a deleted user's token (added by
+  `004-non-user-api-callers`).
 
 ### GET `/Artists`
 
@@ -82,6 +84,9 @@ Library artists visible to the caller, for the artist filter.
 ```json
 { "items": [ { "jellyfinId": "b2c3…", "name": "Daft Punk" } ] }
 ```
+
+`401` when the caller has no user: an API key, or a deleted user's token (added by
+`004-non-user-api-callers`).
 
 ### POST `/Releases/{id}/Ignore` · POST `/Releases/{id}/HaveIt` · POST `/Releases/{id}/Restore`
 
@@ -93,7 +98,7 @@ the release's natural key with the caller's user id; `restore` deletes it.
 | done | `204 No Content` |
 | unknown release id | `404` |
 | release not visible to the caller (library access) | `403` |
-| no user id claim | `401` |
+| no user (an API key, or a deleted user's token) | `401` |
 
 ### GET `/Status`
 
