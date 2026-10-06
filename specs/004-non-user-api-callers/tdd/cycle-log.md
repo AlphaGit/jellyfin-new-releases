@@ -108,3 +108,33 @@ failed before the implementation.
   0 warnings; `node --test "tests/web/*.test.js"` 363 passed. `tasks.md` T012 is left open: its run belongs after
   T010, whose contract edit `HttpSurfaceTests` scans.
 - The fix landed in three per-action steps and was then consolidated (cycle 5 refactor), so each endpoint got its own red.
+
+## Cycle 10: A3 remediation, the status answers a caller with no user exactly as a signed-in one (T022, audit finding 1)
+
+- test: `Api/ReleasesControllerTests.cs::GetStatus_ForACallerWithoutAUser_Answers` (strengthened). Before: `Assert.NotNull(result.Value)` on an
+  empty database. After: a seeded release and a completed fetch, then `Assert.Equal(signedIn, result.Value)`, where `signedIn` is the
+  status a signed-in caller gets (FR-004, "exactly as they do today")
+- red: against the audit's surviving mutant M6 (`GetStatusAsync` returning `new StatusResponse(false, null, 0, false)` when
+  `CallerId()` is null), applied before the test was changed.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~GetStatus_ForACallerWithoutAUser_Answers" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ` / `Expected: StatusResponse { HasStoredReleases = True, … RefreshIntervalHours = 24 … }` /
+  `Actual: StatusResponse { HasStoredReleases = False, ReleasesLastCheckedAt = , RefreshIntervalHours = 0 … }` (1 failed)
+- green: mutant removed, source restored from a file copy (`cmp -s` identical); no production change. Suite -> 360 passed, 0 failed
+- refactor: none. The three seed-and-fetch lines repeat `GetReleases_ListAndStatusReportTheSameInstant:148-150`; extracting them
+  would edit a test outside this cycle, so it is reported, not done
+- commit: `378fe1d`
+- note: the red is against a mutant, not against missing behaviour. The behaviour already held; the remediation is the test's strength
+
+## Cycle 11: A5 remediation, the claim name is pinned to the host's literal (T024, audit finding 3)
+
+- test: `Support/ControllerContextFactoryTests.cs::ACallerWithoutAUser_CarriesTheEmptyUserIdTheHostSends` (strengthened). Before: the
+  claim was found by `ReleasesController.UserIdClaim`, the plugin's own constant. After: by `HostUserIdClaim = "Jellyfin-UserId"`,
+  stated in the test from the host's `InternalClaimTypes.UserId`
+- red: against a mutant renaming the plugin's constant to `"Jellyfin-User-Id"` (`ReleasesController.cs:27`), applied before the test
+  was changed.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~ACallerWithoutAUser_CarriesTheEmptyUserIdTheHostSends" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Single() Failure: The collection was empty` (1 failed)
+- green: mutant removed, source restored from a file copy (`cmp -s` identical); no production change. Suite -> 360 passed, 0 failed
+- refactor: none
+- commit: `caa281c`
+- note: as cycle 10, the red is against a mutant
