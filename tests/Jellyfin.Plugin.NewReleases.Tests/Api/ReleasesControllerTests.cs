@@ -27,7 +27,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
     public async Task DisposeAsync() => await _db.DisposeAsync();
 
-    private ReleasesController Controller(Guid? caller, params Jellyfin.Database.Implementations.Entities.User[] users)
+    private ReleasesController Controller(Guid caller, params Jellyfin.Database.Implementations.Entities.User[] users)
         => new(_db.Releases, _db.Artists, _db.Archive, _db.SourceState, ControllerContextFactory.UserManager(users), _tasks, _clock, NullLogger<ReleasesController>.Instance, () => _configuration)
         {
             ControllerContext = ControllerContextFactory.ForUser(caller),

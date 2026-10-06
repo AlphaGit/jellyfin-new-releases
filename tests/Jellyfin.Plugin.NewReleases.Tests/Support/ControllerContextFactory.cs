@@ -17,9 +17,9 @@ namespace Jellyfin.Plugin.NewReleases.Tests.Support;
 /// </summary>
 internal static class ControllerContextFactory
 {
-    public static ControllerContext ForUser(Guid? userId)
+    public static ControllerContext ForUser(Guid userId)
     {
-        var identity = new ClaimsIdentity(userId is { } id ? [new Claim(ReleasesController.UserIdClaim, id.ToString("N"))] : [], "Test");
+        var identity = new ClaimsIdentity([new Claim(ReleasesController.UserIdClaim, userId.ToString("N"))], "Test");
         return new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) } };
     }
 
