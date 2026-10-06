@@ -85,8 +85,9 @@ src/Jellyfin.Plugin.NewReleases/Api/
 
 tests/Jellyfin.Plugin.NewReleases.Tests/
 ├── Support/
-│   └── ControllerContextFactory.cs   # ForUser(Guid); ForCallerWithoutUser() = claim of Guid.Empty "N";
-│                                     # UserManager throws ArgumentException for Guid.Empty
+│   ├── ControllerContextFactory.cs   # ForUser(Guid); ForCallerWithoutUser() = claim of Guid.Empty "N";
+│   │                                 # UserManager throws ArgumentException for Guid.Empty
+│   └── ControllerContextFactoryTests.cs  # NEW: pins both, so the double cannot drift from the host
 ├── Api/
 │   └── ReleasesControllerTests.cs    # no-user caller -> 401 without throwing, for each of the five
 │                                     #   per-user actions (SC-005)
@@ -99,7 +100,8 @@ specs/001-track-new-releases/contracts/http-api.md   # 401 row reworded, added t
 CHANGELOG.md                                         # Unreleased -> Fixed
 ```
 
-**Structure Decision**: no new file. The fix sits in the one method that reads the identity. The
+**Structure Decision**: no new source file, and one new test file. The new test file,
+`Support/ControllerContextFactoryTests.cs`, sits beside the helper it tests. The fix sits in the one method that reads the identity. The
 test helper keeps its home, so a future per-user controller builds its no-user caller through the
 same method (FR-007).
 
