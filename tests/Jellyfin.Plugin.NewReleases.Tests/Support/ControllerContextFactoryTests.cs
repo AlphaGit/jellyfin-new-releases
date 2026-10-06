@@ -1,4 +1,3 @@
-using Jellyfin.Plugin.NewReleases.Api;
 using Xunit;
 
 namespace Jellyfin.Plugin.NewReleases.Tests.Support;
@@ -10,12 +9,15 @@ namespace Jellyfin.Plugin.NewReleases.Tests.Support;
 /// </summary>
 public class ControllerContextFactoryTests
 {
+    /// <summary>The claim type the host writes (`InternalClaimTypes.UserId`), stated here rather than read from the plugin, so a wrong constant cannot agree with itself.</summary>
+    private const string HostUserIdClaim = "Jellyfin-UserId";
+
     [Fact]
     public void ACallerWithoutAUser_CarriesTheEmptyUserIdTheHostSends()
     {
         var principal = ControllerContextFactory.ForCallerWithoutUser().HttpContext.User;
 
-        var claim = Assert.Single(principal.FindAll(ReleasesController.UserIdClaim));
+        var claim = Assert.Single(principal.FindAll(HostUserIdClaim));
         Assert.Equal("00000000000000000000000000000000", claim.Value);
     }
 
