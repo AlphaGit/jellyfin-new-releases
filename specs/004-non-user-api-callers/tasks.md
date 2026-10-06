@@ -40,7 +40,7 @@ rejected.
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirm the baseline is green before changing anything: `dotnet build --configuration Release` with zero warnings, `dotnet test --configuration Release`, `node --test "tests/web/*.test.js"`. Record the counts. A red baseline means no later red can be attributed to this feature
+- [X] T001 Confirm the baseline is green before changing anything: `dotnet build --configuration Release` with zero warnings, `dotnet test --configuration Release`, `node --test "tests/web/*.test.js"`. Record the counts. A red baseline means no later red can be attributed to this feature
 
 ---
 
@@ -113,9 +113,9 @@ suite fails when the plugin's handling is removed.
 
 ## Phase 5: Polish & cross-cutting
 
-- [ ] T010 [P] In `specs/001-track-new-releases/contracts/http-api.md`, reword the decision endpoints' `no user id claim` → `401` row to `no user (an API key, or a deleted user's token)` → `401`, and add the same row to `GET /Releases` and `GET /Artists` (research R6). Name no route the plugin does not serve: `HttpSurfaceTests.NoContractDocument_NamesARouteThePluginDoesNotServe` scans this file
-- [ ] T011 [P] In `CHANGELOG.md`, add an `## Unreleased` section above `## 0.2.0` with a `### Fixed` entry: a caller authenticated by API key now gets `401` from the release list, the artist list and the decision endpoints, instead of `400` and an error in the server log
-- [ ] T012 [A4] Run `quickstart.md` step 4: `dotnet build --configuration Release` with zero warnings, `dotnet test --configuration Release`, `node --test "tests/web/*.test.js"`. Counts equal T001's plus the tests this feature added, and no `001` or `002` acceptance test was edited (SC-003)
+- [X] T010 [P] In `specs/001-track-new-releases/contracts/http-api.md`, reword the decision endpoints' `no user id claim` → `401` row to `no user (an API key, or a deleted user's token)` → `401`, and add the same row to `GET /Releases` and `GET /Artists` (research R6). Name no route the plugin does not serve: `HttpSurfaceTests.NoContractDocument_NamesARouteThePluginDoesNotServe` scans this file
+- [X] T011 [P] In `CHANGELOG.md`, add an `## Unreleased` section above `## 0.2.0` with a `### Fixed` entry: a caller authenticated by API key now gets `401` from the release list, the artist list and the decision endpoints, instead of `400` and an error in the server log
+- [X] T012 [A4] Run `quickstart.md` step 4: `dotnet build --configuration Release` with zero warnings, `dotnet test --configuration Release`, `node --test "tests/web/*.test.js"`. Counts equal T001's plus the tests this feature added, and no `001` or `002` acceptance test was edited (SC-003)
 - [ ] T013 When JD asks for the push: push `main` and verify the CI run green with `gh run watch` (constitution, Development Workflow). The feature is not done before that
 
 ---
