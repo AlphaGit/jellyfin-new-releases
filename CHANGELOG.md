@@ -3,6 +3,15 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- **A caller authenticated by API key gets a clean `401`.** The release list, the artist list and
+  the Ignore, Have it and Restore actions need a signed-in user. Called with an API key, they
+  answered `400` and wrote an error to the server log; they now refuse the request as
+  unauthenticated and log nothing. Signed-in users see no change.
+
 ## 0.2.0 — 2026-10-04
 
 ### Upgrading from 0.1.x — once
