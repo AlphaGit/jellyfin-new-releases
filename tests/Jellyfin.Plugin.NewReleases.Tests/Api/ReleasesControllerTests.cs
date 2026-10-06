@@ -283,6 +283,15 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.NotNull(await _db.Archive.GetAsync("name:daft punk", "homework", CancellationToken.None));
     }
 
+    /// <summary>A non-empty id the host no longer knows: only possible when the user is deleted while the request is in flight (004 session 2026-10-04).</summary>
+    [Fact]
+    public async Task GetReleases_ForAUserDeletedMidRequest_Is401()
+    {
+        var result = await Controller(Bob, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(cancellationToken: CancellationToken.None);
+
+        Assert.IsType<UnauthorizedResult>(result.Result);
+    }
+
     [Fact]
     public async Task GetStatus_ForACallerWithoutAUser_Answers()
     {
