@@ -33,10 +33,17 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
             ControllerContext = ControllerContextFactory.ForUser(caller),
         };
 
+    /// <summary>A caller authenticated with no user behind it: an API key, or a deleted user's token (004 research R1).</summary>
+    private ReleasesController ControllerWithoutUser(params Jellyfin.Database.Implementations.Entities.User[] users)
+        => new(_db.Releases, _db.Artists, _db.Archive, _db.SourceState, ControllerContextFactory.UserManager(users), _tasks, _clock, NullLogger<ReleasesController>.Instance, () => _configuration)
+        {
+            ControllerContext = ControllerContextFactory.ForCallerWithoutUser(),
+        };
+
     [Fact]
-    public async Task GetReleases_WithoutTheUserIdClaim_Is401()
+    public async Task GetReleases_ForACallerWithoutAUser_Is401()
     {
-        var result = await Controller(caller: null).GetReleasesAsync(cancellationToken: CancellationToken.None);
+        var result = await ControllerWithoutUser().GetReleasesAsync(cancellationToken: CancellationToken.None);
 
         Assert.IsType<UnauthorizedResult>(result.Result);
     }

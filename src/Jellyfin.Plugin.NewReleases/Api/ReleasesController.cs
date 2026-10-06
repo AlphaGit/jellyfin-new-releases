@@ -66,7 +66,7 @@ public sealed class ReleasesController : ControllerBase
         [FromQuery] bool archived = false,
         CancellationToken cancellationToken = default)
     {
-        if (CallerId() is not { } userId)
+        if (CallerId() is not { } userId || userId == Guid.Empty)
         {
             return Unauthorized();
         }
