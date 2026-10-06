@@ -19,6 +19,9 @@ internal static class ControllerContextFactory
         return new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) } };
     }
 
+    /// <summary>A caller with no user, as the host presents an API key or a deleted user's token: the claim holds `Guid.Empty` (`CustomAuthenticationHandler.cs:64`).</summary>
+    public static ControllerContext ForCallerWithoutUser() => ForUser(Guid.Empty);
+
     /// <summary>An in-memory Jellyfin user with either access to every library or to the given folders only.</summary>
     public static User User(Guid id, bool allFolders, params Guid[] enabledFolders)
     {
