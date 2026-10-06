@@ -292,12 +292,18 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.IsType<UnauthorizedResult>(result.Result);
     }
 
+    /// <summary>FR-004: an endpoint that does not read the caller answers a caller with no user exactly as it answers a signed-in one.</summary>
     [Fact]
     public async Task GetStatus_ForACallerWithoutAUser_Answers()
     {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
+        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), CancellationToken.None);
+        var signedIn = (await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetStatusAsync(CancellationToken.None)).Value;
+
         var result = await ControllerWithoutUser().GetStatusAsync(CancellationToken.None);
 
-        Assert.NotNull(result.Value);
+        Assert.Equal(signedIn, result.Value);
     }
 
     [Theory]
