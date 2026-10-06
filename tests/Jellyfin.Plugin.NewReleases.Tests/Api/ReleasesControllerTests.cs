@@ -283,6 +283,14 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.NotNull(await _db.Archive.GetAsync("name:daft punk", "homework", CancellationToken.None));
     }
 
+    [Fact]
+    public async Task GetStatus_ForACallerWithoutAUser_Answers()
+    {
+        var result = await ControllerWithoutUser().GetStatusAsync(CancellationToken.None);
+
+        Assert.NotNull(result.Value);
+    }
+
     [Theory]
     [InlineData("Ignore")]
     [InlineData("HaveIt")]
