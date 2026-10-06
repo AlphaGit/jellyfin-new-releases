@@ -37,6 +37,14 @@ and does not.
   situation that cannot occur, and misses the one that can, so the safety net has a hole in it that
   the next per-user endpoint would inherit.
 
+### Session 2026-10-04
+
+- Q: How is a caller whose user identity names a user that no longer exists answered? → A: The
+  same as a caller with no user, a clean refusal as unauthenticated, and the edge case is reworded.
+  The host itself does not tell the two apart: it gives a token whose user was deleted the same
+  empty user identity it gives an API key. A present identity naming a missing user can only arise
+  when the user is deleted while a request is in flight, and that is already refused cleanly.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - An operator scripting against the plugin gets a usable answer (Priority: P1)
@@ -96,9 +104,10 @@ that case.
 
 ### Edge Cases
 
-- **A caller whose user identity is present but names a user that no longer exists.** Distinct
-  from having no user at all; the plugin must not present it as the same thing, and must not fail
-  with an internal error either.
+- **A caller whose user was deleted.** The host presents a deleted user's token with the same
+  empty user identity as an API key, so the plugin answers it as a caller with no user. A present
+  identity naming a missing user remains possible only while a deletion races a request; it is
+  refused as unauthenticated, never with an internal error.
 - **The endpoints that do not read a user.** The administrative status endpoint and the plain
   status endpoint answered normally to an API key during the install pass. They must keep doing
   so; this feature must not make them stricter.
