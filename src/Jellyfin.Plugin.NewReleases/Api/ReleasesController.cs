@@ -66,7 +66,7 @@ public sealed class ReleasesController : ControllerBase
         [FromQuery] bool archived = false,
         CancellationToken cancellationToken = default)
     {
-        if (CallerId() is not { } userId || userId == Guid.Empty)
+        if (CallerId() is not { } userId)
         {
             return Unauthorized();
         }
@@ -101,7 +101,7 @@ public sealed class ReleasesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ArtistsResponse>> GetArtistsAsync(CancellationToken cancellationToken = default)
     {
-        if (CallerId() is not { } userId || userId == Guid.Empty || AccessOf(userId) is not { } access)
+        if (CallerId() is not { } userId || AccessOf(userId) is not { } access)
         {
             return Unauthorized();
         }
@@ -125,7 +125,7 @@ public sealed class ReleasesController : ControllerBase
     /// <summary>Ignore / Have it (upsert) or Restore (delete) on the release's natural key with the caller's id (FR-005b, FR-016). Visibility is checked before writing (FR-007).</summary>
     private async Task<ActionResult> DecideAsync(long id, DecisionKind? kind, CancellationToken ct)
     {
-        if (CallerId() is not { } userId || userId == Guid.Empty || AccessOf(userId) is not { } access)
+        if (CallerId() is not { } userId || AccessOf(userId) is not { } access)
         {
             return Unauthorized();
         }
@@ -230,7 +230,10 @@ public sealed class ReleasesController : ControllerBase
             : $"https://coverartarchive.org/release-group/{Uri.EscapeDataString(s.SourceReleaseId)}/front-250")
         .ToList();
 
-    /// <summary>The requesting user's id from the `Jellyfin-UserId` claim, or null when the principal carries none (R5).</summary>
+    /// <summary>
+    /// The requesting user's id from the `Jellyfin-UserId` claim (R5), or null when there is no user. The host writes
+    /// `Guid.Empty` there for an API key and for a deleted user's token, and its `GetUserById` throws for it (004 R1).
+    /// </summary>
     private Guid? CallerId()
-        => Guid.TryParse(User.FindFirst(UserIdClaim)?.Value, out var id) ? id : null;
+        => Guid.TryParse(User.FindFirst(UserIdClaim)?.Value, out var id) && id != Guid.Empty ? id : null;
 }
