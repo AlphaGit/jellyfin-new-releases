@@ -10,7 +10,11 @@ using NSubstitute;
 
 namespace Jellyfin.Plugin.NewReleases.Tests.Support;
 
-/// <summary>Builds the request context a controller sees: a principal carrying `Jellyfin-UserId` and an <see cref="IUserManager"/> that knows the in-memory user.</summary>
+/// <summary>
+/// Builds the request context a controller sees, in the host's shape: a principal carrying `Jellyfin-UserId`
+/// (`Guid.Empty` when there is no user, `CustomAuthenticationHandler.cs:64`) and an <see cref="IUserManager"/> that
+/// knows the in-memory user and rejects an empty id (`UserManager.cs:125`).
+/// </summary>
 internal static class ControllerContextFactory
 {
     public static ControllerContext ForUser(Guid? userId)
@@ -34,7 +38,9 @@ internal static class ControllerContextFactory
     public static IUserManager UserManager(params User[] users)
     {
         var manager = Substitute.For<IUserManager>();
-        manager.GetUserById(Arg.Any<Guid>()).Returns(call => users.FirstOrDefault(u => u.Id == call.Arg<Guid>()));
+        manager.GetUserById(Arg.Any<Guid>()).Returns(call => call.Arg<Guid>() == Guid.Empty
+            ? throw new ArgumentException("Guid can't be empty", "id")
+            : users.FirstOrDefault(u => u.Id == call.Arg<Guid>()));
         return manager;
     }
 }
