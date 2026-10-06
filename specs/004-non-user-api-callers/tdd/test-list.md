@@ -4,7 +4,7 @@ loop: outside-in
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 12
 planned_at: 463373e
-updated_at: 463373e
+updated_at: fdaeff5
 suite_baseline: green
 ---
 
@@ -36,14 +36,14 @@ The logged error came from the host's exception middleware, which logs only what
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| A1 | A caller with no user asking for the release list gets `401`, and the action returns without throwing | US1-AS1, SC-001, SC-002, FR-001, FR-002, FR-003 | example | PENDING | `Api/ReleasesControllerTests.cs::GetReleases_ForACallerWithoutAUser_Is401` |
-| A2 | A caller with no user asking for the artist list gets `401`, and the action returns without throwing | US1-AS2, SC-001, SC-002, FR-001, FR-002 | example | PENDING | `Api/ReleasesControllerTests.cs::GetArtists_ForACallerWithoutAUser_Is401` |
-| A3 | A caller with no user asking for the status gets the status, as today | US1-AS3, FR-004 | example | PENDING | `Api/ReleasesControllerTests.cs::GetStatus_ForACallerWithoutAUser_Answers` |
+| A1 | A caller with no user asking for the release list gets `401`, and the action returns without throwing | US1-AS1, SC-001, SC-002, FR-001, FR-002, FR-003 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ForACallerWithoutAUser_Is401` |
+| A2 | A caller with no user asking for the artist list gets `401`, and the action returns without throwing | US1-AS2, SC-001, SC-002, FR-001, FR-002 | example | DONE | `Api/ReleasesControllerTests.cs::GetArtists_ForACallerWithoutAUser_Is401` |
+| A3 | A caller with no user asking for the status gets the status, as today | US1-AS3, FR-004 | example | DONE | `Api/ReleasesControllerTests.cs::GetStatus_ForACallerWithoutAUser_Answers` |
 | A4 | A caller signed in as a person gets exactly today's answers from every per-user endpoint, filtered to their libraries | US1-AS4, SC-003, FR-005 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_FollowsTheCallersLibraryAccess`, `::GetArtists_ReturnsOnlyArtistsInLibrariesTheCallerMayAccess`, `::Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204`, `::Decisions_UnknownReleaseIs404_ReleaseOutsideTheCallersLibrariesIs403WithNothingWritten`, `Acceptance/BrowseReleasesTests.cs` (all) |
-| A5 | The request context the suite builds for a caller with no user agrees with the one the host builds | US2-AS1, FR-006 | example | PENDING | closed by `U1` and `U2` |
-| A6 | Removing the plugin's handling of an empty user identity fails the suite with the host's `ArgumentException` | US2-AS2, SC-004, FR-006 | example | PENDING | deliberate mutant, `tdd/cycle-log.md` |
-| A7 | The suite has one way to build a caller with no user, and no helper builds a principal without the user-id claim | US2-AS3, FR-007 | example | PENDING | recorded search, `tdd/cycle-log.md` |
-| A8 | A caller with no user asking to ignore, mark as owned, or restore a release gets `401` from each, and none throws | SC-005, FR-001, FR-002, FR-008 | example | PENDING | `Api/ReleasesControllerTests.cs::EveryDecision_ForACallerWithoutAUser_Is401` |
+| A5 | The request context the suite builds for a caller with no user agrees with the one the host builds | US2-AS1, FR-006 | example | DONE | closed by `U1` and `U2` |
+| A6 | Removing the plugin's handling of an empty user identity fails the suite with the host's `ArgumentException` | US2-AS2, SC-004, FR-006 | example | DONE | deliberate mutant, cycle 9 of `tdd/cycle-log.md` |
+| A7 | The suite has one way to build a caller with no user, and no helper builds a principal without the user-id claim | US2-AS3, FR-007 | example | DONE | recorded search, cycle 8 of `tdd/cycle-log.md` |
+| A8 | A caller with no user asking to ignore, mark as owned, or restore a release gets `401` from each, and none throws | SC-005, FR-001, FR-002, FR-008 | example | DONE | `Api/ReleasesControllerTests.cs::EveryDecision_ForACallerWithoutAUser_Is401` |
 
 `A4` is already `DONE`: those tests build every signed-in caller with a real id and do not change.
 It stays `DONE` only while they pass unedited, which `tasks.md` T012 confirms at the end.
@@ -65,8 +65,8 @@ Hosted by a new `Support/ControllerContextFactoryTests.cs`, beside its subject.
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U1 | A caller with no user carries exactly one `Jellyfin-UserId` claim, whose value is `Guid.Empty` in `N` format | US2-AS1, FR-006, FR-007 | example | PENDING | `Support/ControllerContextFactoryTests.cs::ACallerWithoutAUser_CarriesTheEmptyUserIdTheHostSends` |
-| U2 | The user manager double throws `ArgumentException` for `Guid.Empty`, as the host's `GetUserById` does | US2-AS1, US2-AS2, FR-006 | example | PENDING | `Support/ControllerContextFactoryTests.cs::TheUserManager_RejectsAnEmptyId_AsTheHostDoes` |
+| U1 | A caller with no user carries exactly one `Jellyfin-UserId` claim, whose value is `Guid.Empty` in `N` format | US2-AS1, FR-006, FR-007 | example | DONE | `Support/ControllerContextFactoryTests.cs::ACallerWithoutAUser_CarriesTheEmptyUserIdTheHostSends` |
+| U2 | The user manager double throws `ArgumentException` for `Guid.Empty`, as the host's `GetUserById` does | US2-AS1, US2-AS2, FR-006 | example | DONE | `Support/ControllerContextFactoryTests.cs::TheUserManager_RejectsAnEmptyId_AsTheHostDoes` |
 
 `U1` is what stops the double drifting back. Without it, a `ForCallerWithoutUser()` that built no
 claim at all would keep `A1`, `A2` and `A8` green: no claim also means no user. `U2` is what makes
@@ -80,7 +80,7 @@ controller by `U3`. A double that threw for it would fail `U3`.
 
 | id | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U3 | A caller whose non-empty user id names no user the host knows gets `401` from the release list, and the action returns without throwing | spec Edge Cases (deleted user, session 2026-10-04), FR-001 | example | PENDING | `Api/ReleasesControllerTests.cs::GetReleases_ForAUserDeletedMidRequest_Is401` |
+| U3 | A caller whose non-empty user id names no user the host knows gets `401` from the release list, and the action returns without throwing | spec Edge Cases (deleted user, session 2026-10-04), FR-001 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_ForAUserDeletedMidRequest_Is401` |
 
 `U3` passes on its first run: `AccessOf` already returns null for an unknown user. It is a pin,
 recorded as test-after with a deliberate mutant (`AccessOf` granting full access to an unknown user)
