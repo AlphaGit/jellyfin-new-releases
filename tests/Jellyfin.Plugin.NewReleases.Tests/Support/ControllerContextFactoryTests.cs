@@ -1,3 +1,5 @@
+using System.Reflection;
+using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
 namespace Jellyfin.Plugin.NewReleases.Tests.Support;
@@ -19,6 +21,18 @@ public class ControllerContextFactoryTests
 
         var claim = Assert.Single(principal.FindAll(HostUserIdClaim));
         Assert.Equal("00000000000000000000000000000000", claim.Value);
+    }
+
+    /// <summary>004 FR-007: one way to build a caller with no user, and one for a caller with a user, so a future per-user endpoint is tested the same way.</summary>
+    [Fact]
+    public void TheFactory_HasOneBuilderForEachKindOfCaller()
+    {
+        var builders = typeof(ControllerContextFactory).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(m => m.ReturnType == typeof(ControllerContext))
+            .Select(m => m.Name)
+            .Order();
+
+        Assert.Equal(["ForCallerWithoutUser", "ForUser"], builders);
     }
 
     /// <summary>The host's `UserManager.GetUserById` throws for an empty id (`UserManager.cs:125`); a double that returned null would hide a missing guard.</summary>
