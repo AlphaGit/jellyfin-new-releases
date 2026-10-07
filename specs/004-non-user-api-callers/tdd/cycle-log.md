@@ -162,3 +162,32 @@ It does not. Jellyfin 12 registers one authentication scheme, the default author
 it, and that scheme writes the `Jellyfin-UserId` claim on every request it accepts (research R1,
 re-checked against the host source on 2026-10-07). `spec.md` FR-003 now names only the empty
 identity (session 2026-10-07). No test was added; audit mutant M8 is out of scope.
+
+## Cycle 12: A3 remediation, the status a caller with no user gets is stated as a literal (T030, second audit finding 1)
+
+- test: `Api/ReleasesControllerTests.cs::GetStatus_ForACallerWithoutAUser_Answers`. Added before the signed-in comparison:
+  `Assert.Equal(new StatusResponse(true, _clock.GetUtcNow(), 24, false), result.Value)` for the seeded release and fetch. The
+  signed-in comparison stays as the second assertion
+- red: against the second audit's mutant M11 (`GetStatusAsync` returning `Unauthorized()` to every caller), applied before the test
+  was changed.
+  `dotnet test --configuration Release --filter "FullyQualifiedName~GetStatus_ForACallerWithoutAUser_Answers" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ` / `Expected: StatusResponse { HasStoredReleases = True, … RefreshIntervalHours = 24 … }` /
+  `Actual: null` (1 failed)
+- green: mutant removed, source restored from a file copy (`cmp -s` identical); no production change. Suite -> 360 passed, 0 failed
+- refactor: none
+- commit: `341b4d8`
+- note: red against a mutant, as cycles 10 and 11
+
+## Cycle 13: A7 the test factory has one way to build each kind of caller (T031, second audit finding 2)
+
+- test: `Support/ControllerContextFactoryTests.cs::TheFactory_HasOneBuilderForEachKindOfCaller` (new): the factory's public static
+  members that return a `ControllerContext` are exactly `ForCallerWithoutUser` and `ForUser`
+- red: none. **Test-after**, under the maintainer's acceptance of A7 on 2026-10-07: the factory already had one builder of each kind
+  (`Passed: 1`). Deliberate mutant: a second no-user builder, `public static ControllerContext ForApiKey() => ForUser(Guid.Empty);`
+  -> `Assert.Equal() Failure: Collections differ` / `Actual: … ["ForApiKey", "ForCallerWithoutUser", "ForUser"]` (1 failed).
+  Restored from a file copy, `cmp -s` identical
+- green: no change. Suite -> 361 passed, 0 failed
+- refactor: none
+- commit: `3c927c7`
+- note: A7's other half, "no helper builds a principal without the claim", stays pinned by `U1` (mutant M4) and by every
+  signed-in test (mutant M10, second audit)
