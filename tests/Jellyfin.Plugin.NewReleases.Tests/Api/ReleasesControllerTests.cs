@@ -17,6 +17,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 {
     private static readonly Guid Library = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
     private static readonly Guid Alice = Guid.Parse("aaaaaaaa-1111-1111-1111-111111111111");
+    private static readonly Guid Bob = Guid.Parse("bbbbbbbb-2222-2222-2222-222222222222");
 
     private readonly TimeProviderStub _clock = new(new DateTimeOffset(2026, 9, 6, 12, 0, 0, TimeSpan.Zero));
     private readonly PluginConfiguration _configuration = new();
@@ -325,8 +326,6 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
         Assert.IsType<UnauthorizedResult>(result);
     }
-
-    private static readonly Guid Bob = Guid.Parse("bbbbbbbb-2222-2222-2222-222222222222");
 
     [Fact]
     public async Task Decisions_UnknownReleaseIs404_ReleaseOutsideTheCallersLibrariesIs403WithNothingWritten()
