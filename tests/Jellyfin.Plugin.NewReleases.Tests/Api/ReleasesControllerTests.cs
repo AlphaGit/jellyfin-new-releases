@@ -320,7 +320,8 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         {
             "Ignore" => await controller.IgnoreAsync(id, CancellationToken.None),
             "HaveIt" => await controller.HaveItAsync(id, CancellationToken.None),
-            _ => await controller.RestoreAsync(id, CancellationToken.None),
+            "Restore" => await controller.RestoreAsync(id, CancellationToken.None),
+            _ => throw new ArgumentOutOfRangeException(nameof(decision), decision, "not a decision action"),
         };
 
         Assert.IsType<UnauthorizedResult>(result);
