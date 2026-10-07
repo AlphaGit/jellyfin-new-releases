@@ -303,6 +303,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
         var result = await ControllerWithoutUser().GetStatusAsync(CancellationToken.None);
 
+        Assert.Equal(new StatusResponse(true, _clock.GetUtcNow(), 24, false), result.Value);
         Assert.Equal(signedIn, result.Value);
     }
 
