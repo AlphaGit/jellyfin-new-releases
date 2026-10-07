@@ -175,3 +175,19 @@ named, then made green. The single-test command is
 - [X] T027 Finding 6 (LOW): remove the duplicated controller construction between `Controller` and `ControllerWithoutUser` (`ReleasesControllerTests.cs:30-41`), and drop `ControllerWithoutUser`'s unused `users` parameter. Structural commit, suite count unchanged
 - [X] T028 Finding 7 (LOW): declare `Bob` (`ReleasesControllerTests.cs:323`) beside `Alice`, before its first use at `:290`. Structural commit, suite count unchanged
 - [ ] T029 Re-run `/speckit-tdd-verify` after T022–T028. Done when the verdict is `PASS` or `PASS_WITH_GAPS`
+
+---
+
+## Phase 7: TDD remediation, second audit
+
+From [`tdd/verification.md`](./tdd/verification.md), verdict **FAIL** at `1ba5365`. **The feature
+is not done until T030 and T031 are cleared.** T030 and T031 go through `/speckit-tdd-run`. The
+single-test command is
+`dotnet test --configuration Release --filter "FullyQualifiedName~{name}" -- RunConfiguration.TreatNoTestsAsError=true`.
+
+- [ ] T030 [A3] Finding 1 (HIGH): in `GetStatus_ForACallerWithoutAUser_Answers` (`tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs:306`), assert the expected status as a literal, `new StatusResponse(true, _clock.GetUtcNow(), 24, false)`, for the seeded release and fetch. The signed-in comparison may stay as a second assertion. Done when the audit's mutant M11 (`GetStatusAsync` returning `Unauthorized()` to every caller) fails this test on its own
+- [ ] T031 [A7] Finding 2 (HIGH): add a test in `tests/Jellyfin.Plugin.NewReleases.Tests/Support/ControllerContextFactoryTests.cs` that pins FR-007's "one way": the factory's only members that build a `ControllerContext` are `ForUser` and `ForCallerWithoutUser`, and each builds exactly one `Jellyfin-UserId` claim. Record it in `tdd/cycle-log.md` as test-after under the maintainer's 2026-10-07 acceptance, with a mutant it catches (a second no-user builder added to the factory, or M10). Done when `/speckit-tdd-verify` classes A7 `TEST_AFTER_ACCEPTED`
+- [ ] T032 Finding 3 (LOW): extract a `SignedInController()` and a `SeedCheckedArtistAsync()` in `ReleasesControllerTests.cs`, and use them at `:148-150`, `:164-166`, `:299-302` and wherever `Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true))` appears. Structural commit, suite count unchanged
+- [ ] T033 Finding 4 (LOW): rename `GetStatus_ForACallerWithoutAUser_Answers` (`ReleasesControllerTests.cs:297`) to say it answers as for a signed-in caller, and update the test name in `tdd/test-list.md` A3. Structural commit, suite count unchanged
+- [ ] T034 Finding 5 (LOW): in `EveryDecision_ForACallerWithoutAUser_Is401` (`ReleasesControllerTests.cs:315`), read the seeded release id from `_db.Releases` instead of through `GetReleasesAsync`. Structural commit, suite count unchanged
+- [ ] T035 Re-run `/speckit-tdd-verify` after T030–T034. Done when the verdict is `PASS` or `PASS_WITH_GAPS`

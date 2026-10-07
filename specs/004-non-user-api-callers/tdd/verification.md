@@ -3,162 +3,152 @@ feature: 004-non-user-api-callers
 verdict: FAIL
 standard: .specify/templates/overrides/tdd-test-quality-rubric.md # project override of the extension rubric (TEST_AFTER_ACCEPTED row)
 profile: .specify/memory/tdd-profile.md
-verified_at: 0edb1d5
+verified_at: 1ba5365
+previous_audit: 8cc88b6 (FAIL)
 behaviors: 11
 proven: 6 # U1, U2, A1, A2, A8; A5 through U1 and U2
 likely: 0
-test_after: 3 # A3, U3, A6
-test_after_accepted: 0
-no_test: 1 # A7
+test_after: 0
+test_after_accepted: 3 # A3, U3, A6, accepted 2026-10-07
+no_test: 1 # A7: its "no claimless helper" half is pinned (M4, M10); its "one way" half is not
 not_applicable: 1 # A4: tests that predate 004
-high_smells: 3
+high_smells: 1
 criteria_total: 12
-criteria_covered: 11 # US2-AS3 rests on a recorded search, no test
+criteria_covered: 11 # US2-AS3 partly: the "one way" half has no test
 mutation_score: unmeasured # profile records mutation: null; deliberate mutants only
-deliberate_mutants: 8 run in this audit, 6 caught, 2 survived (M6 inside DONE behaviour A3; M8 on FR-003's no-claim half)
-suite: 360 passed, 0 failed (dotnet, 10 s) + 363 passed, 0 failed (node)
+deliberate_mutants: 10 run in this audit, 10 caught by the suite; 1 (M11) passes A3's own test and is caught only by two other tests
+suite: 360 passed, 0 failed (dotnet, 13 s with the build) + 363 passed, 0 failed (node)
 independent: no # this session wrote the tests; the smell pass came from a fresh-context subagent, and every cited line was re-read here
 ---
 
 # TDD Verification: Answer a caller that has no user
 
-**Verdict: FAIL.** The decisive reason: a mutant survives inside `DONE` behaviour `A3`. The status
-endpoint can give a caller with no user a different, empty status, and
-`GetStatus_ForACallerWithoutAUser_Answers` stays green, because it asserts only that a value exists
-(M6, finding 1). FR-004 says "exactly as they do today".
+**Verdict: FAIL.** The decisive reason: A3's strengthened test takes its expected value from the same
+code path as its actual value. `GetStatus_ForACallerWithoutAUser_Answers` compares the no-user
+status with the signed-in status. If `GetStatusAsync` refuses every caller, both sides are null and
+the test passes (M11, finding 1). Two other tests catch that mutant, but A3's own test does not.
 
-Three more items block the feature:
+A7 still has no test for its "one way" half. The maintainer accepted the recorded search, but the
+rubric admits acceptance only for a test-after behaviour whose test catches a mutant. The previous
+audit's T025 offered "amend the test list" as a way to clear A7, and that path cannot clear
+`NO_TEST` (finding 2).
 
-- No test covers FR-003's "no user identity" half. The old claimless test was re-pointed, and
-  nothing replaced it (M8, finding 2).
-- No test pins the claim name the host sends (finding 3).
-- Three behaviours are test-after and one has no test, and none has the maintainer's acceptance
-  (finding 4).
+Everything the previous audit blocked on is cleared:
 
-The core fix holds. Each of the five refusals has a recorded red, the history confirms the order,
-and removing the fix fails all five with the real server's error.
+- A3's empty-status survivor M6 is now caught.
+- The claim name is pinned to the host's literal (M9 caught).
+- FR-003 was narrowed to the empty identity Jellyfin sends, with the source cited.
+- A3, U3 and A6 meet all three `TEST_AFTER_ACCEPTED` conditions.
 
 ## Test-first evidence
 
 | Behavior | Class | Evidence |
 | --- | --- | --- |
-| U1 | PROVEN | Cycle 1 red recorded (`Assert.Single() Failure: The collection was empty`, after a CS0117 stub step); `ae9effa` adds the test and the helper change together |
-| U2 | PROVEN | Cycle 2 red recorded (`Assert.Throws() Failure: No exception was thrown`); `cf0b263` adds test and double together |
-| A1 | PROVEN | Cycle 3 red recorded (`ArgumentException : Guid can't be empty`); `aeb98cf` holds the re-pointed test and the guard |
-| A2 | PROVEN | Cycle 4 red recorded, same error; `595533b` |
-| A8 | PROVEN | Cycle 5 red recorded for all three decisions; `dd08c8c` |
-| A5 | PROVEN | Closed by U1 and U2. Finding 3 limits what it proves: the claim name is not checked |
-| A3 | TEST_AFTER | Cycle 6 labels it test-after with a mutant; no maintainer acceptance recorded. Its own mutant M6 survives (finding 1) |
-| U3 | TEST_AFTER | Cycle 7 labels it test-after with a mutant, caught today (M7); no maintainer acceptance recorded |
-| A6 | TEST_AFTER | Cycle 9 records a mutant (re-run here as M2, caught); a suite property with no red-green cycle of its own. `006`'s A5/A6 were classed the same way |
-| A7 | NO_TEST | Cycle 8 records a `grep`; no test pins "one way to build a caller with no user" |
-| A4 | NOT_APPLICABLE | Tests predating 004; `git diff 463373e -- tests/…/Acceptance` is empty and no signed-in assertion changed |
+| U1 | PROVEN | Cycle 1 red; `ae9effa`. Strengthened in cycle 11 (`caa281c`), red against mutant M9 (claim constant renamed), caught again in this audit |
+| U2 | PROVEN | Cycle 2 red; `cf0b263`. M5 caught |
+| A1 | PROVEN | Cycle 3 red (`ArgumentException : Guid can't be empty`); `aeb98cf` |
+| A2 | PROVEN | Cycle 4 red; `595533b` |
+| A8 | PROVEN | Cycle 5 red for all three decisions; `dd08c8c`. Since `ab8b024`, a mistyped decision name throws instead of testing Restore |
+| A5 | PROVEN | Closed by U1 and U2; the claim name is now checked against the host's literal |
+| A3 | TEST_AFTER_ACCEPTED | Labelled test-after in cycles 6 and 10. Accepted 2026-10-07. M6 caught today. Carries finding 1 |
+| U3 | TEST_AFTER_ACCEPTED | Labelled test-after in cycle 7. Accepted 2026-10-07. M7 caught today |
+| A6 | TEST_AFTER_ACCEPTED | Cycle 9 mutant. Accepted 2026-10-07. M2 caught today: all five no-user tests fail |
+| A7 | NO_TEST | "No helper builds a principal without the claim" is pinned: M4 by U1, M10 by every signed-in test. "One way to build a caller with no user" is pinned by nothing; its evidence is the cycle 8 search. Finding 2 |
+| A4 | NOT_APPLICABLE | Tests predating 004; `git diff 463373e -- tests/…/Acceptance` is empty |
 
-**The history agrees with the cycle log.** Every behaviour commit holds its test and its source
-together, in the cycle order. The two refactor commits (`f4aa12b` production, `7ef5fa9` tests) change
-no assertion, and the suite count stays at 358 across them.
+**History against the log.** The remediation commits since `8cc88b6` (`378fe1d`, `caa281c`,
+`ab8b024`, `9da871d`, `818470b`) change test files only. That matches the log's claim that cycles
+10 and 11 were red against mutants with no production change. The two refactor commits keep the
+suite count at 360.
 
-**Existing tests changed by the feature:**
+**Existing tests changed by the feature, re-checked:**
 
-- `ReleasesControllerTests.cs`, `GetReleases_WithoutTheUserIdClaim_Is401` became
-  `GetReleases_ForACallerWithoutAUser_Is401`. Before: `Controller(caller: null)`, a principal with
-  no claim. After: `ControllerWithoutUser()`, a claim holding `Guid.Empty`. The assertion is still
-  `UnauthorizedResult`. The case it covered, a principal with no claim, is now covered by nothing.
-  This is finding 2.
-- `ReleasesControllerTests.cs`, `GetArtists_ReturnsOnlyArtistsInLibrariesTheCallerMayAccess` lost
-  its last line, `Assert.IsType<UnauthorizedResult>((await Controller(null).GetArtistsAsync(…)).Result)`.
-  The same assertion now lives in `GetArtists_ForACallerWithoutAUser_Is401`, against the host's
-  shape. That fixes an eager test, and no signed-in assertion was loosened. The no-claim case it
-  carried is again finding 2.
+- `GetStatus_ForACallerWithoutAUser_Answers` (`ReleasesControllerTests.cs:297-307`): before,
+  `Assert.NotNull(result.Value)`; after, `Assert.Equal(signedIn, result.Value)`. The new check is
+  stronger in the normal case. It is weaker in one: when both calls return no value, it passes where
+  the old one failed. This is finding 1.
+- `ACallerWithoutAUser_CarriesTheEmptyUserIdTheHostSends`: the claim is found by the host's literal
+  instead of the plugin's constant. Stronger.
+- The old claimless assertions removed by the feature now match FR-003 as narrowed on 2026-10-07.
+  The previous audit's M8 is out of scope.
 - No test was skipped, excluded, or filtered. No threshold changed.
 
-**`tasks.md` against the list:** every ticked behavioural task names behaviours that are `DONE`, and
-no behavioural task is left open. `A3`, `A6`, `A7` and `U3` are `DONE` on the list but not proven
-here. Their tasks (T006, T007, T008, T009, T017, T020, T021) are ticked on the list's say-so.
+**`tasks.md` against the list:** every task ticked with a behaviour marker names `DONE` behaviours.
+T025 has no marker. It is ticked, but its done condition ("classes none of them `TEST_AFTER` or
+`NO_TEST`") is not met for A7 (finding 2).
 
 ## Findings
 
-Ordered by severity. The smell pass came from a fresh-context subagent; each cited line was re-read
-before it was entered.
-
 | # | Severity | Finding | Evidence |
 | --- | --- | --- | --- |
-| 1 | HIGH | **Vacuous assertion in `DONE` behaviour A3.** `GetStatus_ForACallerWithoutAUser_Answers` asserts `Assert.NotNull(result.Value)` on an empty database. FR-004 requires "exactly as they do today". It should seed a release and a completed fetch, and assert the status equals the one a signed-in caller gets (`StatusResponse` is a record). | `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs:300`; mutant M6 survives |
-| 2 | HIGH | **FR-003's "no user identity" half is untested, and the feature removed the test that covered it.** FR-003 requires a request with no identity and one with an empty identity to be treated the same. Before 004, the old 401 tests used a claimless principal. Both now use the empty claim, and A7 bans a claimless helper. `CallerId()` can throw on a missing claim and the whole suite stays green. The test list's Out of Scope drops this case on the host's behaviour (research R1); the spec does not. | `ReleasesControllerTests.cs:43-49` (re-pointed), old `:249` (removed); mutant M8 survives the full suite |
-| 3 | HIGH | **Re-implemented expectation: the claim name.** U1 reads the claim type from `ReleasesController.UserIdClaim`, the same constant the helper and the production code use. If the constant were wrong, all three would agree and U1 would pass. No test pins the literal `"Jellyfin-UserId"` that `CustomAuthenticationHandler` writes, so US2-AS1 ("agrees with the host") checks the value only. | `tests/Jellyfin.Plugin.NewReleases.Tests/Support/ControllerContextFactoryTests.cs:18`; `grep '"Jellyfin-UserId"'` finds only `ReleasesController.cs:27` |
-| 4 | HIGH | **Test-after and no-test behaviours without the maintainer's acceptance.** A3, U3 and A6 are `TEST_AFTER`, and A7 is `NO_TEST`. The override's `TEST_AFTER_ACCEPTED` needs a dated maintainer decision in the cycle log, plus a mutant caught by the behaviour's own test. U3 and A6 meet the mutant condition today. A3 does not (finding 1). A7 cannot, because a search is not a test. | `tdd/cycle-log.md` cycles 6–9; no acceptance entry |
-| 5 | MED | **Fragile theory dispatch.** `EveryDecision_ForACallerWithoutAUser_Is401` maps a string to an action, and its default arm calls `RestoreAsync`. A mistyped `InlineData` such as `"Ignor"` would test Restore twice and Ignore never, and stay green. Each run still asserts, so this is not the catalogue's HIGH "conditional logic" smell. | `ReleasesControllerTests.cs:313-318` |
-| 6 | LOW | **Duplicated setup.** `ControllerWithoutUser` repeats `Controller`'s eight-argument construction, and no test passes its `users` parameter. | `ReleasesControllerTests.cs:30-41` |
-| 7 | LOW | **Constant declared after first use.** `GetReleases_ForAUserDeletedMidRequest_Is401` uses `Bob`, which is declared further down the file. | `ReleasesControllerTests.cs:290` uses it, `:323` declares it |
+| 1 | HIGH | **Re-implemented expectation in A3.** The expected value, `signedIn`, comes from the same `GetStatusAsync` as the actual value. If the endpoint returns no value to every caller, both sides are null and the test passes. The test should state the expected status as a literal, `new StatusResponse(true, _clock.GetUtcNow(), 24, false)`, for the seeded release and fetch. The signed-in comparison may stay as a second assertion. | `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs:302,306`; mutant M11 passes this test alone and fails only `:154` and `:172` |
+| 2 | HIGH | **A7 has no test for "one way to build a caller with no user", and T025 is ticked against an unmet done condition.** The override's `TEST_AFTER_ACCEPTED` needs a test that catches a mutant; a search is not one. A small test would close it, for example: the factory's only members that build a `ControllerContext` are `ForUser` and `ForCallerWithoutUser`, and each carries exactly one `Jellyfin-UserId` claim. It would be test-after, and the maintainer's acceptance already covers A7. | `tdd/test-list.md` A7 row; `tdd/cycle-log.md` cycle 8 and the 2026-10-07 decision; `tasks.md` T025 |
+| 3 | LOW | **Duplicated setup.** The seed-and-fetch block repeats an existing one, and the signed-in controller construction appears 17 times in the file, 2 of them added by 004. One `SignedInController()` and one `SeedCheckedArtistAsync()` would serve all of them. | `ReleasesControllerTests.cs:299-301` repeats `:148-150` and `:164-166`; new construction at `:302`, `:315` |
+| 4 | LOW | **Unclear name.** `GetStatus_ForACallerWithoutAUser_Answers` asserts the same status as a signed-in caller gets, which the name does not say. | `ReleasesControllerTests.cs:297` |
+| 5 | LOW | **Isolation.** `EveryDecision_ForACallerWithoutAUser_Is401` gets the release id through Alice's `GetReleasesAsync`, so a list regression also fails all three decision cases. Read the id from `_db.Releases`. | `ReleasesControllerTests.cs:315` |
 
-**Raised by the subagent and rejected after re-reading:**
+**Judged not to be smells** (raised or checked by the subagent, re-read here):
 
-- **"Tautological assertion" in `TheUserManager_RejectsAnEmptyId_AsTheHostDoes`.** The test does not
-  configure the double; the helper does, and FR-006 makes the helper the subject. Mutant M5 removes
-  the throw from the helper, and this test catches it. A tautology cannot catch a change to its
-  subject.
-- **"Foreign style" in the two names in `ControllerContextFactoryTests.cs`.** The suite already uses
-  sentence-style names: `TheReleaseWorkflow_…` five times, `AWellFormedEntry_…`, `TheDerivedSlug_…`
-  and others.
-
-**Judged not to be smells:**
-
-- The three refusal tests are not redundant. Removing one endpoint's guard fails only that
-  endpoint's test (cycles 3–5).
-- The 32-zero literal is the host's format, explained in the class doc. It is not a magic value.
-- `EveryDecision` seeds and lists as Alice so that a 404 cannot hide a missing 401.
-- Doubles cover only `IUserManager` and `ITaskManager`, and the database is real.
-- The tests are deterministic: `TimeProviderStub`, no network, no sleep.
-- FR-002 ("no logged error") is observed as "the action returns without throwing". That is sound:
-  the host middleware logs only an exception that escapes the action (research R5).
+- `TheUserManager_RejectsAnEmptyId_AsTheHostDoes` is not tautological. Its subject is the helper,
+  and M5 shows it catches a change to that helper.
+- The claim test is not a re-implemented expectation. The claim type and the 32-zero value are both
+  independent literals from the host.
+- The `switch` in `EveryDecision` picks the call, not the assertion, and its default arm throws.
+  T026 checked this (`ab8b024`): `"Restor"` fails with `ArgumentOutOfRangeException`.
+- The per-endpoint refusal tests and `GetReleases_ForAUserDeletedMidRequest_Is401` are not
+  redundant. Each catches a defect the others miss (M2 per endpoint, M7).
+- The decision test does not assert that the archive is unwritten. No requirement asks for it, and
+  the refusal returns before any write.
+- Style: sentence-style names match the suite. The only doubles are the host services the profile
+  names. The tests are deterministic.
 
 ## Mutation results
 
-No mutation tool (`mutation: null`). Eight deliberate mutants, run one at a time in the two files
-the feature changed. Each was restored from a copy and verified with `cmp`, and the suite was re-run
+No mutation tool (`mutation: null`). Ten deliberate mutants, run one at a time in the two files the
+feature changed. Each was restored from a copy and verified with `cmp`, and the suite was re-run
 green afterwards (360 passed).
 
 | Mutant | Behavior | Survived | Judgment |
 | --- | --- | --- | --- |
-| M1 `CallerId()` `!= Guid.Empty` → `== Guid.Empty` | A4, A1, A8 | No | Every signed-in test and the no-user tests fail |
-| M2 `CallerId()` condition `&& id != Guid.Empty` dropped | A1, A2, A8, A6 | No | All five no-user tests fail with `ArgumentException : Guid can't be empty` |
-| M3 `ForCallerWithoutUser()` sends `Guid.NewGuid()` | U1 | No | Caught by U1 |
-| M4 `ForCallerWithoutUser()` sends no claim (the old shape) | U1 | No | Caught by U1 only, as intended. A1, A2 and A8 alone would not catch the double drifting back |
-| M5 `UserManager` double stops throwing on `Guid.Empty` | U2 | No | Caught by U2 |
-| M6 `GetStatusAsync` answers a no-user caller with an empty status | A3 | **Yes** | **Finding 1.** A3 does not test what it claims |
-| M7 `GetReleasesAsync` answers an unknown user with an empty list | U3 | No | Caught by U3 |
-| M8 `CallerId()` throws on a missing claim | FR-003 (no behaviour) | **Yes** | **Finding 2.** Survives the full suite, not only the feature's tests |
+| M1 `CallerId()` `!=` → `==` | A4, A1, A8 | No | Signed-in and no-user tests fail |
+| M2 `&& id != Guid.Empty` dropped | A1, A2, A8, A6 | No | All five no-user tests fail with the host's error |
+| M3 no-user helper sends a random id | U1 | No | Caught by U1 |
+| M4 no-user helper sends no claim | U1, A7 | No | Caught by U1 |
+| M5 user manager double stops throwing | U2 | No | Caught by U2 |
+| M6 no-user caller given an empty status | A3 | No | Caught by A3 (previous audit's survivor) |
+| M7 unknown user given an empty list | U3 | No | Caught by U3 |
+| M9 plugin claim constant renamed | U1, A5 | No | Caught by U1 (previous audit's finding 3) |
+| M10 `ForUser` builds no claim | A7 | No | Caught by every signed-in test |
+| M11 `GetStatusAsync` refuses every caller | A3 | **Passes A3's own test** | Caught by `:154`, `:172`. Finding 1 |
 
-Sampled: every behaviour with production or helper code behind it (A1–A4, A6, A8, U1–U3), plus
-FR-003. Not sampled: A5 and A7, which have no code of their own.
+M8 (`CallerId()` throwing on a missing claim) was not re-run. FR-003 no longer covers that case
+(spec session 2026-10-07).
 
 ## Traceability
 
 | Criterion | Tests | End to end |
 | --- | --- | --- |
-| US1-AS1 | A1 `GetReleases_ForACallerWithoutAUser_Is401` | Yes, controller |
-| US1-AS2 | A2 `GetArtists_ForACallerWithoutAUser_Is401` | Yes, controller |
-| US1-AS3 | A3 `GetStatus_ForACallerWithoutAUser_Answers` | Yes, controller, but the assertion is vacuous (finding 1) |
-| US1-AS4, SC-003 | A4: existing `ReleasesControllerTests` and `Acceptance/BrowseReleasesTests.cs` | Yes |
-| US2-AS1 | A5 through U1, U2 | Helper level by nature; the claim name is unchecked (finding 3) |
-| US2-AS2, SC-004 | A6: mutant M2 (cycle 9) | Suite property, evidenced by mutant |
-| US2-AS3 | A7: recorded search only | **No test** |
-| SC-001, SC-002 | A1, A2, A8 | Yes, controller |
-| SC-005 | A1, A2, A8 | Yes, controller |
-| FR-003 | A1, A2, A8 cover the empty identity; **nothing covers the missing identity** | Half (finding 2) |
+| US1-AS1 | A1 | Yes, controller |
+| US1-AS2 | A2 | Yes, controller |
+| US1-AS3 | A3 | Yes, controller; finding 1 |
+| US1-AS4, SC-003 | A4 | Yes |
+| US2-AS1 | A5 through U1, U2 | Helper level by nature; claim name and value both pinned to the host |
+| US2-AS2, SC-004 | A6, mutant M2 | Suite property, evidenced by mutant |
+| US2-AS3 | A7 | **Partly**: the claimless-helper half by U1 and the signed-in tests; the "one way" half by no test |
+| SC-001, SC-002, SC-005 | A1, A2, A8 | Yes, controller |
+| FR-003 (narrowed) | A1, A2, A8 | Yes, controller |
 
-Untested criteria: US2-AS3 (by test), and FR-003's missing-identity half. Tests tracing to nothing:
-none.
+Untested criteria: US2-AS3's "one way" half. Tests tracing to nothing: none.
 
 ## What was not audited
 
-- No mutation tool: strength rests on 8 deliberate mutants, not an exhaustive run.
+- No mutation tool: strength rests on 10 deliberate mutants, not an exhaustive run.
 - No coverage tool (`coverage: null`).
-- The real server: the 401 and the quiet log were not observed on Jellyfin. This is out of scope by
-  the spec's Assumptions; `quickstart.md` step 5 is the manual check.
-- The ASP.NET pipeline: routing and `[Authorize]` are not in the loop. The tests call actions
-  directly, as the existing suite does.
-- `AdminController` and `UserViewController`: they never read the identity (research R2), so nothing
-  was graded there.
+- The real server: out of scope by the spec's Assumptions; `quickstart.md` step 5 is the manual
+  check.
+- The ASP.NET pipeline: routing and `[Authorize]` are not in the loop; the host behaviour they
+  depend on is cited from source (research R1), not exercised.
+- `AdminController` and `UserViewController`: they never read the identity (research R2).
 - Independence: the session that wrote the tests ran this audit. The smell pass was delegated to a
-  fresh-context subagent, and its findings were checked line by line.
+  fresh-context subagent, and its findings were checked line by line, with M11 run to confirm
+  finding 1.
