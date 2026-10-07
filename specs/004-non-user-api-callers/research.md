@@ -25,6 +25,11 @@ no user.
 - A request with no token gets `AuthenticateResult.NoResult()`, so `[Authorize]` refuses it before
   the plugin runs. **A principal with no `Jellyfin-UserId` claim never reaches the plugin.** The
   current test double builds exactly that principal.
+- `Jellyfin.Server/Extensions/ApiServiceCollectionExtensions.cs` registers one scheme,
+  `AddAuthentication(CustomAuthentication).AddScheme<…, CustomAuthenticationHandler>` (`:100-101`), and
+  the default policy that a bare `[Authorize]` uses names only that scheme (`:65-68`). The handler
+  returns `NoResult` or `Fail` without a principal, or `Success` with the claim. Re-checked
+  2026-10-07 for spec session 2026-10-07.
 
 **Consequence**: an API key and a deleted user's token look the same to the plugin (spec session
 2026-10-04). A present, non-empty id that names a missing user occurs only when the user is deleted

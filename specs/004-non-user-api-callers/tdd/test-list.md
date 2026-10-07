@@ -42,7 +42,7 @@ The logged error came from the host's exception middleware, which logs only what
 | A4 | A caller signed in as a person gets exactly today's answers from every per-user endpoint, filtered to their libraries | US1-AS4, SC-003, FR-005 | example | DONE | `Api/ReleasesControllerTests.cs::GetReleases_FollowsTheCallersLibraryAccess`, `::GetArtists_ReturnsOnlyArtistsInLibrariesTheCallerMayAccess`, `::Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204`, `::Decisions_UnknownReleaseIs404_ReleaseOutsideTheCallersLibrariesIs403WithNothingWritten`, `Acceptance/BrowseReleasesTests.cs` (all) |
 | A5 | The request context the suite builds for a caller with no user agrees with the one the host builds | US2-AS1, FR-006 | example | DONE | closed by `U1` and `U2` |
 | A6 | Removing the plugin's handling of an empty user identity fails the suite with the host's `ArgumentException` | US2-AS2, SC-004, FR-006 | example | DONE | deliberate mutant, cycle 9 of `tdd/cycle-log.md` |
-| A7 | The suite has one way to build a caller with no user, and no helper builds a principal without the user-id claim | US2-AS3, FR-007 | example | DONE | recorded search, cycle 8 of `tdd/cycle-log.md` |
+| A7 | The suite has one way to build a caller with no user, and no helper builds a principal without the user-id claim | US2-AS3, FR-007 | example | DONE | recorded search, cycle 8 of `tdd/cycle-log.md`; accepted by the maintainer as its evidence, 2026-10-07 |
 | A8 | A caller with no user asking to ignore, mark as owned, or restore a release gets `401` from each, and none throws | SC-005, FR-001, FR-002, FR-008 | example | DONE | `Api/ReleasesControllerTests.cs::EveryDecision_ForACallerWithoutAUser_Is401` |
 
 `A4` is already `DONE`: those tests build every signed-in caller with a real id and do not change.
@@ -101,7 +101,8 @@ None.
 - A claim that does not parse as a GUID: the host always writes one in `N` format, so this is not
   a situation the plugin meets. `CallerId()` already answers it with null.
 - A principal with no `Jellyfin-UserId` claim at all: the host never sends it behind `[Authorize]`
-  (research R1). `A7` removes the helper that built it.
+  (research R1). `A7` removes the helper that built it. FR-003 was narrowed to the empty identity
+  in spec session 2026-10-07, after the TDD audit's finding 2 (mutant M8).
 - The `Jellyfin-IsApiKey` claim: the plugin does not read it, and must not (research R3, R4).
 - Verification on a running server: spec Assumptions. `quickstart.md` step 5 is the optional check.
 

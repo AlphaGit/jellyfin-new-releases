@@ -138,3 +138,27 @@ failed before the implementation.
 - refactor: none
 - commit: `caa281c`
 - note: as cycle 10, the red is against a mutant
+
+## Maintainer decision, 2026-10-07: test-after behaviours accepted
+
+The maintainer accepted, on 2026-10-07, the following behaviours as **test-after** (task T025,
+`tdd/verification.md` finding 4). Each had no red before its code, because the behaviour already
+held when its test was written. Each is labelled here with that evidence and the recorded mutant its
+test catches today:
+
+| Behaviour | Cycle | Why no red was possible | Recorded mutant caught |
+| --- | --- | --- | --- |
+| A3 | 6, 10 | `GetStatusAsync` never read the user | M6, a no-user caller given `new StatusResponse(false, null, 0, false)` (cycle 10, after T022) |
+| U3 | 7 | `AccessOf` already returned null for an unknown user | M7, the release list answering an unknown user with an empty list |
+| A6 | 9 | a property of the suite, closed by cycles 2–5 | M2, `&& id != Guid.Empty` dropped from `CallerId()`: all five no-user tests fail |
+
+`A7` has no test. The maintainer accepted the recorded search of cycle 8 as its evidence, on the
+same date.
+
+## Maintainer decision, 2026-10-07: FR-003 narrowed, no claimless test (T023)
+
+The maintainer asked for a test of a request with no user identity only if Jellyfin really sends one.
+It does not. Jellyfin 12 registers one authentication scheme, the default authorization policy uses
+it, and that scheme writes the `Jellyfin-UserId` claim on every request it accepts (research R1,
+re-checked against the host source on 2026-10-07). `spec.md` FR-003 now names only the empty
+identity (session 2026-10-07). No test was added; audit mutant M8 is out of scope.

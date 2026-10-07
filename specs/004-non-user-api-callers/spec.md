@@ -45,6 +45,15 @@ and does not.
   empty user identity it gives an API key. A present identity naming a missing user can only arise
   when the user is deleted while a request is in flight, and that is already refused cleanly.
 
+### Session 2026-10-07
+
+- Q: Must the plugin also handle a request that carries no user identity at all? → A: No, because
+  Jellyfin never sends one to the plugin. Jellyfin 12 registers one authentication scheme, and the
+  default authorization policy uses it. That scheme either writes the user identity on every request
+  it accepts, empty when there is no user, or does not accept the request. A request it does not
+  accept is refused before the plugin runs. FR-003 is narrowed to the empty identity, and no test
+  builds a request the host never sends.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - An operator scripting against the plugin gets a usable answer (Priority: P1)
@@ -122,9 +131,9 @@ that case.
   no user, as an unauthenticated request.
 - **FR-002**: Such a refusal MUST NOT write an error or a stack trace to the server log. A request
   that the plugin knows how to answer is not a fault.
-- **FR-003**: The plugin MUST treat "the request carries no user identity" and "the request
-  carries an empty user identity" as the same situation, because the host uses the second to mean
-  the first.
+- **FR-003**: The plugin MUST treat a request that carries an empty user identity as a caller with
+  no user, because the host uses the empty identity to mean exactly that. A request with no user
+  identity at all never reaches the plugin (session 2026-10-07).
 - **FR-004**: Endpoints that do not depend on the caller's identity MUST keep answering an
   API-key caller exactly as they do today.
 - **FR-005**: For a caller signed in as a person, every one of these endpoints MUST behave exactly
