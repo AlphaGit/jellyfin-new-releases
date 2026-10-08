@@ -301,7 +301,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
     /// <summary>FR-004: an endpoint that does not read the caller answers a caller with no user exactly as it answers a signed-in one.</summary>
     [Fact]
-    public async Task GetStatus_ForACallerWithoutAUser_Answers()
+    public async Task GetStatus_ForACallerWithoutAUser_AnswersAsForASignedInCaller()
     {
         await SeedCheckedArtistAsync();
         var signedIn = (await SignedInController().GetStatusAsync(CancellationToken.None)).Value;
