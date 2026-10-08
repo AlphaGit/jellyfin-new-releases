@@ -31,6 +31,9 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     private ReleasesController Controller(Guid caller, params Jellyfin.Database.Implementations.Entities.User[] users)
         => Build(ControllerContextFactory.ForUser(caller), users);
 
+    /// <summary>Alice, signed in, with access to every library.</summary>
+    private ReleasesController SignedInController() => Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+
     /// <summary>A caller authenticated with no user behind it: an API key, or a deleted user's token (004 research R1).</summary>
     private ReleasesController ControllerWithoutUser() => Build(ControllerContextFactory.ForCallerWithoutUser());
 
@@ -50,6 +53,14 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
     private static readonly Guid OtherLibrary = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000002");
     private static readonly DateTimeOffset Seeded = new(2026, 9, 1, 0, 0, 0, TimeSpan.Zero);
+
+    /// <summary>Daft Punk with one release, fetched completely from MusicBrainz at the clock's current instant.</summary>
+    private async Task SeedCheckedArtistAsync()
+    {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
+        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), CancellationToken.None);
+    }
 
     /// <summary>Stores one artist in the given library with one Missing release per title (via the real repositories).</summary>
     private async Task<Guid> SeedArtistAsync(string name, Guid library, params (string Title, string? Date)[] releases)
@@ -73,7 +84,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
         await SeedArtistAsync("Justice", OtherLibrary, ("Cross", "2007-06-11"));
 
-        var everything = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(cancellationToken: CancellationToken.None));
+        var everything = Ok(await SignedInController().GetReleasesAsync(cancellationToken: CancellationToken.None));
         var none = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: false, OtherLibrary)).GetReleasesAsync(cancellationToken: CancellationToken.None));
         var some = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: false, Library)).GetReleasesAsync(cancellationToken: CancellationToken.None));
 
@@ -89,7 +100,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         var daftPunk = await SeedArtistAsync("Daft Punk", Library, ("On The Day", "2020-01-01"), ("Day Before", "2019-12-31"), ("Future One", "2027-01-01"));
         await SeedArtistAsync("Justice", Library, ("Cross", "2007-06-11"));
         await _db.ExecuteAsync("UPDATE release SET primary_type = 'EP' WHERE title = 'Cross'");
-        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        var controller = SignedInController();
 
         Assert.Equal(["Future One", "On The Day"], Ok(await controller.GetReleasesAsync(from: "2020-01-01", cancellationToken: CancellationToken.None)).Items.Select(i => i.Title));
         Assert.Equal(["Cross"], Ok(await controller.GetReleasesAsync(type: "EP", cancellationToken: CancellationToken.None)).Items.Select(i => i.Title));
@@ -109,7 +120,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     [Fact]
     public async Task GetReleases_ReportsTheNewestCompletedFetch_NotTheLastRunsStartOrEnd()
     {
-        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        var controller = SignedInController();
         await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
         var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
         var fetchedAt = _clock.GetUtcNow();
@@ -129,7 +140,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     [Fact]
     public async Task GetReleases_RefreshIntervalFollowsTheTrigger()
     {
-        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        var controller = SignedInController();
 
         TriggersAre(new TaskTriggerInfo { Type = TaskTriggerInfoType.DailyTrigger, TimeOfDayTicks = TimeSpan.FromHours(3).Ticks });
         Assert.Equal(24, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).RefreshIntervalHours);
@@ -145,10 +156,8 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     [Fact]
     public async Task GetReleases_ListAndStatusReportTheSameInstant()
     {
-        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
-        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
-        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), CancellationToken.None);
-        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        await SeedCheckedArtistAsync();
+        var controller = SignedInController();
 
         var list = Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None));
         var status = (await controller.GetStatusAsync(CancellationToken.None)).Value!;
@@ -161,12 +170,10 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     [Fact]
     public async Task GetReleases_AfterAPurge_ListAndStatusBothReportNoInstant()
     {
-        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
-        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
-        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), CancellationToken.None);
+        await SeedCheckedArtistAsync();
         await _db.Releases.PurgeAsync(CancellationToken.None);
         Assert.NotNull(await _db.Artists.GetReleasesLastCheckedAtAsync(_configuration.EnabledSourceIds(), CancellationToken.None));
-        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        var controller = SignedInController();
 
         var list = Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None));
         var status = (await controller.GetStatusAsync(CancellationToken.None)).Value!;
@@ -178,7 +185,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     [Fact]
     public async Task GetReleases_StoredReleasesFlagFollowsTheRows_NotWhetherARunCompleted()
     {
-        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        var controller = SignedInController();
         var run = await _db.SourceState.StartRunAsync(CancellationToken.None);
         await _db.SourceState.FinishRunAsync(run, 1, 0, 0, 0, "Completed", CancellationToken.None);
 
@@ -201,7 +208,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         var fetchedAt = _clock.GetUtcNow();
         await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, fetchedAt, CancellationToken.None);
 
-        var list = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(type: "EP", cancellationToken: CancellationToken.None));
+        var list = Ok(await SignedInController().GetReleasesAsync(type: "EP", cancellationToken: CancellationToken.None));
 
         Assert.Equal((0, true, (DateTimeOffset?)fetchedAt), (list.Items.Count, list.HasStoredReleases, list.ReleasesLastCheckedAt));
     }
@@ -214,7 +221,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         var run = await _db.SourceState.StartRunAsync(CancellationToken.None);
         await _db.SourceState.FinishRunAsync(run, 1, 1, 0, 0, "Completed", CancellationToken.None);
 
-        var list = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(cancellationToken: CancellationToken.None));
+        var list = Ok(await SignedInController().GetReleasesAsync(cancellationToken: CancellationToken.None));
 
         Assert.Equal(["Discovery"], list.Items.Select(i => i.Title));
         Assert.True(list.HasStoredReleases);
@@ -231,7 +238,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
         await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, older, CancellationToken.None);
         await _db.Artists.SetFetchOutcomeAsync(artist.Id, "deezer", FetchOutcome.Complete, 0, null, newer, CancellationToken.None);
-        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        var controller = SignedInController();
 
         Assert.Equal(newer, Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).ReleasesLastCheckedAt);
 
@@ -249,7 +256,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         await SeedArtistAsync("Justice", OtherLibrary);
 
         var limited = await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: false, Library)).GetArtistsAsync(CancellationToken.None);
-        var all = await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetArtistsAsync(CancellationToken.None);
+        var all = await SignedInController().GetArtistsAsync(CancellationToken.None);
 
         Assert.Equal(["Daft Punk"], limited.Value!.Items.Select(a => a.Name));
         Assert.Equal(["Daft Punk", "Justice"], all.Value!.Items.Select(a => a.Name));
@@ -267,7 +274,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     public async Task Decisions_IgnoreAndHaveItStoreTheCallerAndClock_RestoreDeletes_EachReturns204()
     {
         await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"), ("Homework", "1997-01-20"));
-        var controller = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        var controller = SignedInController();
         var ids = Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.ToDictionary(i => i.Title, i => i.Id);
 
         Assert.IsType<NoContentResult>(await controller.IgnoreAsync(ids["Discovery"], CancellationToken.None));
@@ -296,10 +303,8 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     [Fact]
     public async Task GetStatus_ForACallerWithoutAUser_Answers()
     {
-        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
-        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
-        await _db.Artists.SetFetchOutcomeAsync(artist.Id, "musicbrainz", FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), CancellationToken.None);
-        var signedIn = (await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetStatusAsync(CancellationToken.None)).Value;
+        await SeedCheckedArtistAsync();
+        var signedIn = (await SignedInController().GetStatusAsync(CancellationToken.None)).Value;
 
         var result = await ControllerWithoutUser().GetStatusAsync(CancellationToken.None);
 
@@ -314,7 +319,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     public async Task EveryDecision_ForACallerWithoutAUser_Is401(string decision)
     {
         await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
-        var id = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.Single().Id;
+        var id = Ok(await SignedInController().GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.Single().Id;
         var controller = ControllerWithoutUser();
 
         var result = decision switch
@@ -332,7 +337,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     public async Task Decisions_UnknownReleaseIs404_ReleaseOutsideTheCallersLibrariesIs403WithNothingWritten()
     {
         await SeedArtistAsync("Justice", OtherLibrary, ("Cross", "2007-06-11"));
-        var crossId = Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.Single().Id;
+        var crossId = Ok(await SignedInController().GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.Single().Id;
         var limited = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: false, Library));
 
         Assert.IsType<NotFoundResult>(await limited.IgnoreAsync(999_999, CancellationToken.None));
@@ -345,7 +350,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     public async Task Decisions_AreSharedServerWide_ASecondUserSeesTheFirstUsersDecisionInTheArchive()
     {
         await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
-        var alice = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true));
+        var alice = SignedInController();
         var id = Ok(await alice.GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.Single().Id;
         await alice.HaveItAsync(id, CancellationToken.None);
 
@@ -367,7 +372,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
             await _db.Releases.UpsertFromSourceAsync(artist, source, new CatalogueItem(id, "Discovery", "https://example.org/" + id, ReleaseType.Album, [], "2001-03-12"), 1, Seeded, CancellationToken.None);
         }
 
-        return Assert.Single(Ok(await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true)).GetReleasesAsync(cancellationToken: CancellationToken.None)).Items);
+        return Assert.Single(Ok(await SignedInController().GetReleasesAsync(cancellationToken: CancellationToken.None)).Items);
     }
 
     /// <summary>007 FR-006a: Deezer's cover first, then the Cover Art Archive's.</summary>
