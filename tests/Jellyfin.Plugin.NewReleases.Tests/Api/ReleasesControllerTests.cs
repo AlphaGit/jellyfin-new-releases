@@ -319,7 +319,8 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     public async Task EveryDecision_ForACallerWithoutAUser_Is401(string decision)
     {
         await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
-        var id = Ok(await SignedInController().GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.Single().Id;
+        var artist = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single();
+        var id = (await _db.Releases.GetByArtistAsync(artist.Id, CancellationToken.None)).Single().Id;
         var controller = ControllerWithoutUser();
 
         var result = decision switch
