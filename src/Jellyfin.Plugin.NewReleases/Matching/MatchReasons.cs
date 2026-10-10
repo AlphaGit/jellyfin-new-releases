@@ -64,7 +64,7 @@ public static partial class MatchReasons
         return order.Select((name, i) => new MatchStep(
             name,
             i > at ? StepState.NotReached : i == at || name == "Id" ? StepState.Failed : StepState.Passed,
-            [])).ToArray();
+            i == at ? failed.Values : [])).ToArray();
     }
 
     private static int Number(Match match, int group) => int.Parse(match.Groups[group].Value, CultureInfo.InvariantCulture);

@@ -99,4 +99,14 @@ public class MatchReasonsTests
             [("Id", StepState.Failed), ("Search", StepState.Failed), ("Score", StepState.NotReached), ("Unique", StepState.NotReached)],
             steps.Select(s => (s.Name, s.State)));
     }
+
+    [Fact]
+    public void Steps_MusicBrainzFailedAtScore_CarriesTheScoreOnTheScoreStepOnly()
+    {
+        var steps = MatchReasons.Steps(SourceLimits.MusicBrainz, new FailedStep("Score", [70]));
+
+        Assert.Equal(
+            [("Id", StepState.Failed, ""), ("Search", StepState.Passed, ""), ("Score", StepState.Failed, "70"), ("Unique", StepState.NotReached, "")],
+            steps.Select(s => (s.Name, s.State, string.Join(' ', s.Values))));
+    }
 }
