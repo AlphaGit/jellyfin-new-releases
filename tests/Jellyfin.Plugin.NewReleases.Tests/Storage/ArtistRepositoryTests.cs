@@ -150,6 +150,20 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
             Assert.Single(counts.Unmatched).Sources.Select(s => (s.Source, s.Status)));
     }
 
+    /// <summary>008 FR-002: an enabled source that never ran for the artist is still listed, as not checked (Pending).</summary>
+    [Fact]
+    public async Task GetCountsAsync_AnEnabledSourceWithNoRow_IsListedAsPending()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz", "deezer"], CancellationToken.None);
+
+        Assert.Equal(
+            [("musicbrainz", MatchStatus.Unmatched), ("deezer", MatchStatus.Pending)],
+            Assert.Single(counts.Unmatched).Sources.Select(s => (s.Source, s.Status)));
+    }
+
     /// <summary>008 FR-014: an artist is listed only for a failure at a source that is switched on.</summary>
     [Fact]
     public async Task GetCountsAsync_AnArtistUnmatchedOnlyAtADisabledSource_IsNotListed()
