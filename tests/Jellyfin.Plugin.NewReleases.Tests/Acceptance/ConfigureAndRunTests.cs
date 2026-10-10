@@ -204,8 +204,7 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
     private const string DaftPunkMbid = "056e4f3e-d505-4dad-8ec1-d04f521cbb56";
 
     /// <summary>The admin status as the page reads it: serialized under the endpoint's declared naming.</summary>
-    private async Task<System.Text.Json.JsonElement> AdminStatusJsonAsync()
-        => System.Text.Json.JsonSerializer.SerializeToElement(await _rig.AdminStatusAsync(), Jellyfin.Extensions.Json.JsonDefaults.CamelCaseOptions);
+    private async Task<System.Text.Json.JsonElement> AdminStatusJsonAsync() => PageJson.Of(await _rig.AdminStatusAsync());
 
     private static string[] UnmatchedNames(System.Text.Json.JsonElement status)
         => status.GetProperty("unmatched").EnumerateArray().Select(u => u.GetProperty("name").GetString()!).ToArray();
@@ -253,7 +252,7 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
 
     /// <summary>008 US2-AS1 through the real refresh: a MusicBrainz score below 85 reaches the status as its trail.</summary>
     [Fact]
-    public async Task Spec008_U51_AfterARefreshWhoseMusicBrainzSearchScoresBelow85_TheStatusGivesTheScoreTrail()
+    public async Task Spec008_AfterARefreshWhoseMusicBrainzSearchScoresBelow85_TheStatusGivesTheScoreTrail()
     {
         _rig.Harness.Configuration.DeezerEnabled = false;
         _rig.Library_.Artist("Blur");
@@ -270,7 +269,7 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
 
     /// <summary>008 US1-AS2, US1-AS4 through the real refresh: a Deezer album miss reaches the status with its counts, beside a MusicBrainz match.</summary>
     [Fact]
-    public async Task Spec008_U50_AfterARefreshWhereDeezerFindsNoAlbumInCommon_TheStatusGivesTheAlbumFailureWithItsCounts()
+    public async Task Spec008_AfterARefreshWhereDeezerFindsNoAlbumInCommon_TheStatusGivesTheAlbumFailureWithItsCounts()
     {
         _rig.Library_.Artist("Daft Punk", DaftPunkMbid);
         _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);

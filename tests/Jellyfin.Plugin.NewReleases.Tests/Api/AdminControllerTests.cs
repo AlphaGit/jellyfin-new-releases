@@ -68,7 +68,7 @@ public sealed class AdminControllerTests : IAsyncLifetime
         _configuration.DeezerEnabled = false;
         var blurId = Guid.NewGuid();
         var daft = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("mbid-1", Guid.NewGuid(), "Daft Punk", "mbid-1", [Library], []), CancellationToken.None);
-        var blur = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", blurId, "Blur", null, [Library], []), CancellationToken.None);
+        var blur = await UpsertBlurAsync(blurId);
         await _db.Artists.SetMatchAsync(daft, "musicbrainz", ArtistMatch.Matched("mbid-1"), CancellationToken.None);
         await _db.Artists.SetMatchAsync(blur, "musicbrainz", ArtistMatch.Unmatched("ambiguous (score 100 vs 97)"), CancellationToken.None);
         for (var i = 0; i < 3; i++)
@@ -104,13 +104,17 @@ public sealed class AdminControllerTests : IAsyncLifetime
 
     /// <summary>The admin status as the page receives it, serialized under the endpoint's declared naming.</summary>
     private async Task<System.Text.Json.JsonElement> StatusJsonAsync()
-        => System.Text.Json.JsonSerializer.SerializeToElement((await Controller().GetStatusAsync(CancellationToken.None)).Value!, Jellyfin.Extensions.Json.JsonDefaults.CamelCaseOptions);
+        => PageJson.Of((await Controller().GetStatusAsync(CancellationToken.None)).Value!);
+
+    /// <summary>The library artist "Blur", stored with no MusicBrainz ID; returns its id.</summary>
+    private Task<long> UpsertBlurAsync(Guid? jellyfinId = null)
+        => _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", jellyfinId ?? Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
 
     /// <summary>008 FR-013: each unmatched artist carries its per-source reasons as data, and no fixed hint.</summary>
     [Fact]
     public async Task Status_EachUnmatchedArtist_CarriesReasons_AndNoSourcesOrHint()
     {
-        var blur = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
+        var blur = await UpsertBlurAsync();
         await _db.Artists.SetMatchAsync(blur, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
 
         var unmatched = Assert.Single((await StatusJsonAsync()).GetProperty("unmatched").EnumerateArray());
@@ -122,7 +126,7 @@ public sealed class AdminControllerTests : IAsyncLifetime
     [Fact]
     public async Task Status_Reasons_ListMusicBrainzThenDeezer_OnePerEnabledSource()
     {
-        var blur = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
+        var blur = await UpsertBlurAsync();
         await _db.Artists.SetMatchAsync(blur, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
         await _db.Artists.SetMatchAsync(blur, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
 
@@ -136,7 +140,7 @@ public sealed class AdminControllerTests : IAsyncLifetime
     {
         _configuration.MusicBrainzEnabled = source == "musicbrainz";
         _configuration.DeezerEnabled = source == "deezer";
-        var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
+        var artist = await UpsertBlurAsync();
         await _db.Artists.SetMatchAsync(artist, source, match, CancellationToken.None);
         return Assert.Single(Assert.Single((await Controller().GetStatusAsync(CancellationToken.None)).Value!.Unmatched).Reasons);
     }
@@ -156,7 +160,7 @@ public sealed class AdminControllerTests : IAsyncLifetime
     /// <summary>Blur, Unmatched at MusicBrainz, with Deezer in the given state; returns Deezer's reason.</summary>
     private async Task<ReasonDto> DeezerReasonBesideAMusicBrainzFailureAsync(ArtistMatch? deezer)
     {
-        var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
+        var artist = await UpsertBlurAsync();
         await _db.Artists.SetMatchAsync(artist, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
         if (deezer is not null)
         {
@@ -198,7 +202,7 @@ public sealed class AdminControllerTests : IAsyncLifetime
     public async Task Status_WithDeezerDisabled_AnArtistOnlyDeezerFailed_IsNotListed()
     {
         _configuration.DeezerEnabled = false;
-        var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
+        var artist = await UpsertBlurAsync();
         await _db.Artists.SetMatchAsync(artist, "musicbrainz", ArtistMatch.Matched("mb-1"), CancellationToken.None);
         await _db.Artists.SetMatchAsync(artist, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
 
