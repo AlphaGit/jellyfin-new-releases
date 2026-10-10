@@ -808,3 +808,30 @@ commit. Each had its own red first:
 - green: no production change. Suite -> dotnet 417 passed
 - refactor: none needed
 - commit: `e116064`
+
+## Cycle 85: remediation of audit finding 2 — the two source tests pin the whole record again (T047)
+
+- tests: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_NoResults_IsUnmatchedAsNoResult` and
+  `Sources/DeezerSourceTests.cs::MatchArtistAsync_ExactNameWithoutACorroboratingAlbum_IsUnmatchedWithReason`
+  (existing, loosened in cycles 41 and 46). Each now compares the whole record with
+  `ArtistMatch.Unmatched(reason) with { Detail = match.Detail }`: every field but the detail,
+  which U19 and U26 pin on their own. This restores the `SourceArtistId == null` check
+- red: none possible, the behaviour exists; both passed (2 passed). The audit's surviving mutant,
+  `… with { SourceArtistId = "stale" }` on each source's Unmatched result, now fails each test:
+  `Assert.Equal() Failure: Values differ` Actual `ArtistMatch { …, SourceArtistId = stale, … }` (1 failed each). Sources restored exactly from a copy
+- green: no production change. Suite -> dotnet 417 passed
+- refactor: none needed
+- commit: `cf5526e`
+
+## Cycle 86: remediation of audit finding 3 — the Artist cell is pinned again (T048)
+
+- test: `tests/web/render-status.test.js::each unmatched row's Artist cell links the artist's page with the name escaped`
+  (new): an artist named `Tom & <Jerry>` renders as `<a … href="#/details?id=…&serverId=…">Tom &amp; &lt;Jerry&gt;</a>`
+- first run: `not ok 1 - tests/web/render-status.test.js`, a file-level failure: the test name's
+  apostrophes closed its single-quoted string. Not a red; the name was re-quoted
+- red: none possible, the behaviour exists; passed (44 passed). The audit's surviving mutant (the
+  name written unescaped) now fails it: `not ok 41` (1 failed). A second mutant (the name dropped)
+  also fails it: `not ok 41` (1 failed). Page restored exactly from a copy each time
+- green: no production change. Suite -> node 404 passed
+- refactor: none needed
+- commit: `5ab2c94`
