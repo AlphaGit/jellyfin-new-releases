@@ -121,7 +121,7 @@ MusicBrainz artist ID fix, and "Tracked through MusicBrainz."
   - The requests sent are the same as before (FR-015: nothing new to a source). [U24] [U25] [U26] [U27] [U28] [U29]
 - [X] T015 [P] [US1] Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ArtistRepositoryTests.cs`: `SetMatchAsync` with an Unmatched result and detail is read back by `GetCountsAsync` with the same candidates and counts; a later `Matched` result for the same pair leaves `match_detail` null. [U36] [U37] [U38]
 - [X] T016 [US1] Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Api/AdminControllerTests.cs`: stored detail appears as `Candidates` (Deezer with null `Score` and `Id`), `ExactNameCount` and `AlbumsCompared`; a row without detail keeps them null. [U47] [U48]
-- [ ] T017 [US1] Add failing cases to `tests/web/render-status.test.js` for How to fix, per [contracts/admin-page.md](./contracts/admin-page.md):
+- [X] T017 [US1] Add failing cases to `tests/web/render-status.test.js` for How to fix, per [contracts/admin-page.md](./contracts/admin-page.md):
   - MusicBrainz `Search`: the artist-ID sentence only.
   - MusicBrainz `Unique` with candidates: the sentence, then each `{name} ({score})` and its ID inside a `<code>`; the stylesheet gives that `<code>` `user-select: all`.
   - Deezer `Name` with names: the names, comma-separated, and "Deezer matches by name only"; with empty or null candidates: "Deezer may not list this artist."
@@ -139,14 +139,14 @@ MusicBrainz artist ID fix, and "Tracked through MusicBrainz."
 - [X] T022 [US1] In `src/Jellyfin.Plugin.NewReleases/Sources/DeezerSource.cs`, attach the first 3 search results' names, and for `no corroborating album` the exact-name count and the albums compared (research R3). T014 passes. [U24] [U25] [U26] [U27] [U28] [U29]
 - [X] T023 [US1] In `src/Jellyfin.Plugin.NewReleases/Storage/ArtistRepository.cs`, write `match_detail` as JSON in `SetMatchAsync` (null for a match) and read it into `UnmatchedAt.Detail` in `GetCountsAsync`; add `Detail` to `UnmatchedAt` in `src/Jellyfin.Plugin.NewReleases/Model/StoredRecords.cs`. T015 passes. [U36] [U37] [U38]
 - [X] T024 [US1] In `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, map `Detail` to `Candidates`, `ExactNameCount` and `AlbumsCompared`. T016 and T018 pass. [U47] [U48] [U50]
-- [ ] T025 [US1] In `src/Jellyfin.Plugin.NewReleases/Web/admin.html`, write the How to fix paragraphs, the candidate `<code>` with `user-select: all`, and the tracking line per [contracts/admin-page.md](./contracts/admin-page.md). T017 passes. [U68] [U69] [U70] [U71] [U72] [U73] [U74] [U75] [U76] [U77] [U78] [U79] [U80] [U81] [U82] [U83] [A1] [A2] [A3] [A4] [A5] [A6]
+- [X] T025 [US1] In `src/Jellyfin.Plugin.NewReleases/Web/admin.html`, write the How to fix paragraphs, the candidate `<code>` with `user-select: all`, and the tracking line per [contracts/admin-page.md](./contracts/admin-page.md). T017 passes. [U68] [U69] [U70] [U71] [U72] [U73] [U74] [U75] [U76] [U77] [U78] [U79] [U80] [U81] [U82] [U83] [A1] [A2] [A3] [A4] [A5] [A6]
 
-- [ ] T034 [US1] Confirm that the acceptance test for US1-AS1 is green in the full suite before US1 counts as complete. [A1]
-- [ ] T035 [US1] Confirm that the acceptance test for US1-AS2 is green in the full suite before US1 counts as complete. [A2]
-- [ ] T036 [US1] Confirm that the acceptance test for US1-AS3 is green in the full suite before US1 counts as complete. [A3]
-- [ ] T037 [US1] Confirm that the acceptance test for US1-AS4 is green in the full suite before US1 counts as complete. [A4]
-- [ ] T038 [US1] Confirm that the acceptance test for US1-AS5 is green in the full suite before US1 counts as complete. [A5]
-- [ ] T039 [US1] Confirm that the acceptance test for US1-AS6 is green in the full suite before US1 counts as complete. [A6]
+- [X] T034 [US1] Confirm that the acceptance test for US1-AS1 is green in the full suite before US1 counts as complete. [A1]
+- [X] T035 [US1] Confirm that the acceptance test for US1-AS2 is green in the full suite before US1 counts as complete. [A2]
+- [X] T036 [US1] Confirm that the acceptance test for US1-AS3 is green in the full suite before US1 counts as complete. [A3]
+- [X] T037 [US1] Confirm that the acceptance test for US1-AS4 is green in the full suite before US1 counts as complete. [A4]
+- [X] T038 [US1] Confirm that the acceptance test for US1-AS5 is green in the full suite before US1 counts as complete. [A5]
+- [X] T039 [US1] Confirm that the acceptance test for US1-AS6 is green in the full suite before US1 counts as complete. [A6]
 
 **Checkpoint**: US1 complete. Every fix on the page acts on a failed step.
 

@@ -29,12 +29,12 @@ through `AcceptanceRig`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| A1  | A MusicBrainz `ambiguous` row's fix tells the administrator to set the MusicBrainz artist ID and lists its 3 candidates with name, score and ID | US1-AS1 | example | PENDING | |
-| A2  | A Deezer `no corroborating album` row's fix gives both counts and does not mention the MusicBrainz artist ID | US1-AS2 | example | PENDING | |
-| A3  | A Deezer `no result` row with near names lists them and says Deezer matches by name only | US1-AS3 | example | PENDING | |
-| A4  | A row Unmatched at one source and Matched at the other ends with "Tracked through" the matched source | US1-AS4 | example | PENDING | |
-| A5  | A row Unmatched at every enabled source ends with "Not tracked." | US1-AS5 | example | PENDING | |
-| A6  | A row Unmatched at both sources has one fix per failed source and no fix twice | US1-AS6 | example | PENDING | |
+| A1 | A MusicBrainz `ambiguous` row's fix tells the administrator to set the MusicBrainz artist ID and lists its 3 candidates with name, score and ID | US1-AS1 | example | DONE | `tests/web/unmatched-acceptance.test.js::A1 (US1-AS1)` |
+| A2 | A Deezer `no corroborating album` row's fix gives both counts and does not mention the MusicBrainz artist ID | US1-AS2 | example | DONE | `tests/web/unmatched-acceptance.test.js::A2 (US1-AS2)` |
+| A3 | A Deezer `no result` row with near names lists them and says Deezer matches by name only | US1-AS3 | example | DONE | `tests/web/unmatched-acceptance.test.js::A3 (US1-AS3)` |
+| A4 | A row Unmatched at one source and Matched at the other ends with "Tracked through" the matched source | US1-AS4 | example | DONE | `tests/web/unmatched-acceptance.test.js::A4 (US1-AS4)` |
+| A5 | A row Unmatched at every enabled source ends with "Not tracked." | US1-AS5 | example | DONE | `tests/web/unmatched-acceptance.test.js::A5 (US1-AS5)` |
+| A6 | A row Unmatched at both sources has one fix per failed source and no fix twice | US1-AS6 | example | DONE | `tests/web/unmatched-acceptance.test.js::A6 (US1-AS6)` |
 | A7  | A MusicBrainz `low score (70)` row's Reason line reads ID failed, Search passed, Score failed with 70, Unique not reached | US2-AS1 | example | PENDING | |
 | A8  | A Deezer `no corroborating album` row's Reason line reads Name passed, Album failed | US2-AS2 | example | PENDING | |
 | A9 | A Matched source's Reason line reads "<Source>: Matched" with no trail | US2-AS3 | example | DONE | `tests/web/render-status.test.js::a matched source reads "<Source>: Matched" and nothing else` |
@@ -160,22 +160,22 @@ through `AcceptanceRig`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U68 | A MusicBrainz `Search` failure gives the artist-ID sentence and no candidates | FR-008 | example | PENDING | |
-| U69 | A MusicBrainz `Unique` failure with candidates gives the sentence, then each `{name} ({score})` with its ID in a `<code>` | FR-008, FR-016 | example | PENDING | |
-| U70 | The candidate ID `<code>` has `user-select: all` | FR-016 | example | PENDING | |
-| U71 | A MusicBrainz `Score` failure with null candidates gives the sentence only | FR-016, EC-old | example | PENDING | |
-| U72 | A Deezer `Name` failure with names lists them comma-separated and says Deezer matches by name only | FR-008 | example | PENDING | |
-| U73 | A Deezer `Name` failure with an empty candidate list says Deezer may not list this artist | FR-008 | example | PENDING | |
-| U74 | A Deezer `Name` failure with null candidates says Deezer may not list this artist | FR-008, EC-old | example | PENDING | |
-| U75 | A Deezer `Album` failure with detail gives both counts | FR-008 | example | PENDING | |
-| U76 | A Deezer `Album` failure without detail starts at "No Deezer album has the same title" | FR-008, EC-old | example | PENDING | |
-| U77 | A row whose only failure is at Deezer never contains "MusicBrainz artist ID" | SC-001, FR-006 | example | PENDING | |
-| U78 | A row failing at both sources gives two different paragraphs | FR-007 | example | PENDING | |
-| U79 | A row with a `Matched` entry ends with `Tracked through {displayName}.` | FR-009 | example | PENDING | |
-| U80 | A row with no `Matched` entry ends with `Not tracked.` | FR-009 | example | PENDING | |
-| U81 | Candidate names and IDs are escaped | INV-esc | example | PENDING | |
-| U82 | A `Matched` or `NotChecked` entry gives no fix paragraph | FR-006 | example | PENDING | |
-| U83 | An entry with no failed step gives no fix paragraph | EC-unknown, FR-006 | example | PENDING | |
+| U68 | A MusicBrainz `Search` failure gives the artist-ID sentence and no candidates | FR-008 | example | DONE | `tests/web/render-status.test.js::a MusicBrainz Search failure gives the artist-ID sentence and no candidates` |
+| U69 | A MusicBrainz `Unique` failure with candidates gives the sentence, then each `{name} ({score})` with its ID in a `<code>` | FR-008, FR-016 | example | DONE | `tests/web/render-status.test.js::a MusicBrainz Unique failure with candidates gives the sentence, then each name (score) with its ID in a <code>` |
+| U70 | The candidate ID `<code>` has `user-select: all` | FR-016 | example | DONE | `tests/web/render-status.test.js::a candidate ID selects as a whole` |
+| U71 | A MusicBrainz `Score` failure with null candidates gives the sentence only | FR-016, EC-old | example | DONE | `tests/web/render-status.test.js::a MusicBrainz Score failure without stored candidates gives the sentence only` |
+| U72 | A Deezer `Name` failure with names lists them comma-separated and says Deezer matches by name only | FR-008 | example | DONE | `tests/web/render-status.test.js::a Deezer Name failure with names lists them comma-separated and says Deezer matches by name only` |
+| U73 | A Deezer `Name` failure with an empty candidate list says Deezer may not list this artist | FR-008 | example | DONE | `tests/web/render-status.test.js::a Deezer Name failure with an empty candidate list says Deezer may not list this artist` |
+| U74 | A Deezer `Name` failure with null candidates says Deezer may not list this artist | FR-008, EC-old | example | DONE | `tests/web/render-status.test.js::a Deezer Name failure with no stored candidates says Deezer may not list this artist` |
+| U75 | A Deezer `Album` failure with detail gives both counts | FR-008 | example | DONE | `tests/web/render-status.test.js::a Deezer Album failure with detail gives both counts` |
+| U76 | A Deezer `Album` failure without detail starts at "No Deezer album has the same title" | FR-008, EC-old | example | DONE | `tests/web/render-status.test.js::a Deezer Album failure without detail starts at "No Deezer album has the same title"` |
+| U77 | A row whose only failure is at Deezer never contains "MusicBrainz artist ID" | SC-001, FR-006 | example | DONE | `tests/web/render-status.test.js::a row whose only failure is at Deezer never mentions the MusicBrainz artist ID` |
+| U78 | A row failing at both sources gives two different paragraphs | FR-007 | example | DONE | `tests/web/render-status.test.js::a row failing at both sources gives two different fix paragraphs` |
+| U79 | A row with a `Matched` entry ends with `Tracked through {displayName}.` | FR-009 | example | DONE | `tests/web/render-status.test.js::a row with a matched source ends with "Tracked through" that source` |
+| U80 | A row with no `Matched` entry ends with `Not tracked.` | FR-009 | example | DONE | `tests/web/render-status.test.js::a row with no matched source ends with "Not tracked."` |
+| U81 | Candidate names and IDs are escaped | INV-esc | example | DONE | `tests/web/render-status.test.js::candidate names and IDs are written escaped` |
+| U82 | A `Matched` or `NotChecked` entry gives no fix paragraph | FR-006 | example | DONE | `tests/web/render-status.test.js::a matched or not-checked source gives no fix paragraph` |
+| U83 | An entry with no failed step gives no fix paragraph | EC-unknown, FR-006 | example | DONE | `tests/web/render-status.test.js::an entry with no failed step gives no fix paragraph` |
 
 ## Invariants and edge cases still to place
 

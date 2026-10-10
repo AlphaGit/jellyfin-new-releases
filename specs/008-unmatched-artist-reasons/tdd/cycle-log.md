@@ -537,3 +537,161 @@ commit. Each had its own red first:
 - refactor: none needed
 - notes: test-after, as U51: it composes units each driven by its own red (U26, U27, U36, U42, U47); the mutant shows it can fail
 - commit: `4647380`
+
+## Cycle 56: U68 a MusicBrainz `Search` failure gives the artist-ID sentence and no candidates
+
+- test: `tests/web/render-status.test.js::a MusicBrainz Search failure gives the artist-ID sentence and no candidates` (new, with `withReason` and `fixes` helpers)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 15` actual `[]` expected `["Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin uses it on the next refresh."]` (1 failed)
+- green: the page writes one `<p class="nr-fix">` per reasons entry through `fixFor`, which answers the artist-ID sentence for any MusicBrainz failed step. Suite -> node 369 passed, 6 failed (A1–A6 held open)
+- refactor: none needed
+- commit: `6e9d2da`
+
+## Cycle 57: U69 a MusicBrainz `Unique` failure with candidates gives the sentence, then each `{name} ({score})` with its ID in a `<code>`
+
+- test: `tests/web/render-status.test.js::a MusicBrainz Unique failure with candidates gives the sentence, then each name (score) with its ID in a <code>` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 16` actual the sentence alone, expected the sentence plus ` Candidates: Nirvana (100) <code class="nr-id">5b11f4ce-…</code>, …` (1 failed)
+- green: after the sentence, `fixFor` writes ` Candidates: ` and each candidate as `name (score) <code class="nr-id">id</code>`, comma-separated; not escaped yet (U81 drives that). Suite -> node 371 passed, 5 failed (A2–A6 held open; A1 now passes)
+- refactor: none needed
+- notes: first run of the new test expected the apostrophe as `&#39;`; the page writes that sentence as a literal, so the expectation was wrong. Corrected before any implementation, and the red above is the corrected test's
+- commit: `59f08f0`
+
+## Cycle 58: U70 the candidate ID `<code>` has `user-select: all`
+
+- test: `tests/web/render-status.test.js::a candidate ID selects as a whole` (new, reads the page's `<style>`)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 17 - a candidate ID selects as a whole` (actual `undefined`: the page had no `<style>`) (1 failed)
+- green: a `<style>` block inside `#newreleasesConfigPage` declares `#newreleasesConfigPage .nr-id { user-select: all; }`. Suite -> node 372 passed, 5 failed (A2–A6 held open)
+- refactor: none needed
+- commit: `64f3db0`
+
+## Cycle 59: U71 a MusicBrainz `Score` failure with null candidates gives the sentence only
+
+- test: `tests/web/render-status.test.js::a MusicBrainz Score failure without stored candidates gives the sentence only` (new, fixture row 2)
+- red: `node --test tests/web/render-status.test.js`
+  -> passed on first run (21 passed): U69 adds the candidate list only when there is one. Deliberate mutant: ` Candidates: ` written unconditionally -> `not ok 18` (and U68's `not ok 15`) (2 failed). Page restored exactly from a copy
+- green: no production change. Suite -> node 373 passed, 5 failed (A2–A6 held open)
+- refactor: none needed
+- commit: `2a2850b`
+
+## Cycle 60: U72 a Deezer `Name` failure with names lists them comma-separated and says Deezer matches by name only
+
+- test: `tests/web/render-status.test.js::a Deezer Name failure with names lists them comma-separated and says Deezer matches by name only` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 19` actual `undefined` (no second fix paragraph) expected `"Deezer lists Nirvana (UK), Approaching Nirvana. If one is this artist, …"` (1 failed)
+- green: `fixFor` answers a Deezer `Name` failure with the names it carries. Not escaped yet (U81). Suite -> node 376 passed, 3 failed (A2, A4, A5 held open; A3 and A6 now pass)
+- refactor: none needed
+- commit: `d5b944d`
+
+## Cycle 61: U73 a Deezer `Name` failure with an empty candidate list says Deezer may not list this artist
+
+- test: `tests/web/render-status.test.js::a Deezer Name failure with an empty candidate list says Deezer may not list this artist` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 20` actual `'Deezer lists . If one is this artist, …'` expected `'Deezer may not list this artist.'` (1 failed)
+- green: with no names, `fixFor` says Deezer may not list the artist. Suite -> node 377 passed, 3 failed (A2, A4, A5 held open)
+- refactor: none needed
+- commit: `a543aab`
+
+## Cycle 62: U74 a Deezer `Name` failure with null candidates says Deezer may not list this artist
+
+- test: `tests/web/render-status.test.js::a Deezer Name failure with no stored candidates says Deezer may not list this artist` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> passed on first run (24 passed): U73 treats no candidates like none. Deliberate mutant: a missing candidate list is written as a placeholder name -> `not ok 21` (1 failed). Page restored exactly from a copy
+- green: no production change. Suite -> node 378 passed, 3 failed (A2, A4, A5 held open)
+- refactor: none needed
+- commit: `a0da171`
+
+## Cycle 63: U75 a Deezer `Album` failure with detail gives both counts
+
+- test: `tests/web/render-status.test.js::a Deezer Album failure with detail gives both counts` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 22` actual `[]` expected `["Checked 2 Deezer artists with this name and 37 of their albums. None has the same title …"]` (1 failed)
+- green: `fixFor` answers a Deezer `Album` failure with both counts and the title rule. Suite -> node 380 passed, 2 failed (A4, A5 held open; A2 now passes)
+- refactor: none needed
+- commit: `d49ad9c`
+
+## Cycle 64: U76 a Deezer `Album` failure without detail starts at "No Deezer album has the same title"
+
+- test: `tests/web/render-status.test.js::a Deezer Album failure without detail starts at "No Deezer album has the same title"` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 23` actual `'Checked undefined Deezer artists with this name and undefined of their albums. …'` expected `'No Deezer album has the same title …'` (1 failed)
+- green: with no counts, `fixFor` starts the sentence at the rule. Suite -> node 381 passed, 2 failed (A4, A5 held open)
+- refactor: none needed
+- commit: `8f2f477`
+
+## Cycle 65: U77 a row whose only failure is at Deezer never contains "MusicBrainz artist ID"
+
+- test: `tests/web/render-status.test.js::a row whose only failure is at Deezer never mentions the MusicBrainz artist ID` (new, fixture row 0)
+- red: `node --test tests/web/render-status.test.js`
+  -> passed on first run (27 passed). Deliberate mutant: the artist-ID sentence for any failed step, whatever the source -> `not ok 24` and five Deezer fix tests (6 failed). Page restored exactly from a copy
+- green: no production change. Suite -> node 382 passed, 2 failed (A4, A5 held open)
+- refactor: none needed
+- commit: `313ef06`
+
+## Cycle 66: U78 a row failing at both sources gives two different paragraphs
+
+- test: `tests/web/render-status.test.js::a row failing at both sources gives two different fix paragraphs` (new, fixture row 1)
+- red: `node --test tests/web/render-status.test.js`
+  -> passed on first run (28 passed): each source answers with its own sentence. Deliberate mutant: every fix written twice -> `not ok 25` and four single-fix tests (5 failed). Page restored exactly from a copy
+- green: no production change. Suite -> node 383 passed, 2 failed (A4, A5 held open)
+- refactor: none needed
+- commit: `721bc1e`
+
+## Cycle 67: U79 a row with a `Matched` entry ends with `Tracked through {displayName}.`
+
+- test: `tests/web/render-status.test.js::a row with a matched source ends with "Tracked through" that source` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 26` actual `undefined` expected `"Tracked through MusicBrainz."` (1 failed)
+- green: How to fix ends with `<p class="nr-tracking">Tracked through {matched display names}.</p>`. Suite -> node 385 passed, 1 failed (A5 held open; A4 now passes)
+- refactor: none needed
+- notes: the test's second assertion expected `</td></tr>` at the end of a row string that `unmatchedRows` already splits at `</tr>`; corrected to `</td>` before the implementation. The red above came from the first assertion, which the correction did not touch
+- commit: `e78a7b6`
+
+## Cycle 68: U80 a row with no `Matched` entry ends with `Not tracked.`
+
+- test: `tests/web/render-status.test.js::a row with no matched source ends with "Not tracked."` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 27` actual `'Tracked through .'` expected `'Not tracked.'` (1 failed)
+- green: with no matched source the line reads `Not tracked.`. Suite -> node 387 passed (A5 now passes; A1–A6 all green)
+- refactor: none needed
+- commit: `ffe1908`
+
+## Cycle 69: U81 candidate names and IDs are escaped
+
+- test: `tests/web/render-status.test.js::candidate names and IDs are written escaped` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 28 - candidate names and IDs are written escaped`: the row holds `Candidates: <b>Blur</b> (90) <code class="nr-id">id<1></code>` and `Deezer lists Tom & <i>Jerry</i>.` (1 failed)
+- green: candidate names, scores and IDs, and Deezer names, go through `esc`. Suite -> node 388 passed
+- refactor: none needed
+- notes: the first draft of the test built its status in an unreadable inline function; rewritten to two plain statements before the implementation, re-run red with the output above
+- commit: `e12d54e`
+
+## Cycle 70: U82 a `Matched` or `NotChecked` entry gives no fix paragraph
+
+- test: `tests/web/render-status.test.js::a matched or not-checked source gives no fix paragraph` (new, fixture rows 0 and 2)
+- red: `node --test tests/web/render-status.test.js`
+  -> passed on first run (32 passed): `fixFor` answers only failed steps. Deliberate mutant: a source with no failed step gets a paragraph naming its state -> `not ok 29` and four single-fix tests (5 failed). Page restored exactly from a copy
+- green: no production change. Suite -> node 389 passed
+- refactor: none needed
+- commit: `faa249b`
+
+## Cycle 71: U83 an entry with no failed step gives no fix paragraph
+
+- test: `tests/web/render-status.test.js::an entry with no failed step gives no fix paragraph` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> passed on first run (33 passed). Deliberate mutant: the MusicBrainz fix keyed on the Unmatched state instead of a failed step -> `not ok 30` (1 failed). Page restored exactly from a copy
+- green: no production change. Suite -> node 390 passed
+- refactor: none needed
+- commit: `e7e7455`
+
+## Cycle 72: A1–A6 close — a fix that applies to each failure (US1)
+
+- tests: `tests/web/unmatched-acceptance.test.js` (new file), one test per US1 acceptance scenario
+  through the page's rendering of the committed admin status; held open (uncommitted) since cycle 38
+  with the red recorded there (6 failed, How to fix empty)
+- green: they closed one by one as the units landed: A1 with U69, A3 and A6 with U72, A2 with U75,
+  A4 with U79, A5 with U80. Each unit cycle's suite reports which held-open test it closed. Suite
+  -> node 390 passed, dotnet 416 passed
+- refactor: none needed
+- commit: `144393a`
