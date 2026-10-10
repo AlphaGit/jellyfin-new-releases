@@ -125,6 +125,17 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
             match.Detail?.Candidates ?? []);
     }
 
+    /// <summary>Spec 008 FR-016: a fix shows at most 3 candidates, so no more than 3 are kept.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_FiveResultsScoringBelow85_KeepsOnlyTheFirstThree()
+    {
+        SearchReturns(("mbid-1", "Blurt", 80), ("mbid-2", "Blurr", 70), ("mbid-3", "Blue", 60), ("mbid-4", "Bluo", 50), ("mbid-5", "Blum", 40));
+
+        var match = await Source().MatchArtistAsync(Artist("Blur"), CancellationToken.None);
+
+        Assert.Equal(["mbid-1", "mbid-2", "mbid-3"], match.Detail?.Candidates.Select(c => c.Id) ?? []);
+    }
+
     /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
     [Theory]
     [InlineData("musicbrainz/artist_search_empty.json", "Search")]

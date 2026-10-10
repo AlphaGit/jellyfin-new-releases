@@ -47,17 +47,17 @@ public sealed class MusicBrainzSource : IReleaseSource
             return ArtistMatch.Unmatched(MatchReasons.NoResult);
         }
 
+        // FR-016: a fix shows at most 3 candidates, so no more are kept.
+        var detail = new MatchDetail(candidates.Take(3).Select(c => new MatchCandidate(c.Name, c.Score, c.Id)).ToArray());
         var top = candidates[0];
         if (top.Score < MinimumScore)
         {
-            return ArtistMatch.Unmatched(MatchReasons.LowScore(top.Score));
+            return ArtistMatch.Unmatched(MatchReasons.LowScore(top.Score), detail);
         }
 
         if (candidates.Count > 1 && top.Score - candidates[1].Score <= 5)
         {
-            return ArtistMatch.Unmatched(
-                MatchReasons.Ambiguous(top.Score, candidates[1].Score),
-                new MatchDetail(candidates.Select(c => new MatchCandidate(c.Name, c.Score, c.Id)).ToArray()));
+            return ArtistMatch.Unmatched(MatchReasons.Ambiguous(top.Score, candidates[1].Score), detail);
         }
 
         return ArtistMatch.Matched(top.Id);
