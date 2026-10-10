@@ -310,6 +310,24 @@ test('an entry with no failed step gives no fix paragraph', () => {
     assert.deepEqual(fixes(row), []);
 });
 
+/** A row's Reason lines as markup. */
+function reasonMarkup(row) {
+    return [...row.matchAll(/<div class="nr-reason">([\s\S]*?)<\/div>/g)].map(m => m[1]);
+}
+
+/** Each step of a trail line as [short name, state class]. */
+function trailSteps(line) {
+    return [...line.matchAll(/<span class="nr-step nr-step-(\w+)">([^ <]+)/g)].map(m => [m[2], m[1]]);
+}
+
+// 008 FR-003: a trail shows every step of the source in its order, by short name, joined by " · ".
+test('a trail shows every step in order by short name, ID for Id, joined by " · "', () => {
+    const [musicBrainz] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[1]);
+
+    assert.deepEqual(trailSteps(musicBrainz).map(([name]) => name), ['ID', 'Search', 'Score', 'Unique']);
+    assert.equal(musicBrainz.split('</span> · <span class="nr-step').length, 4);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 

@@ -167,13 +167,23 @@
                 body.innerHTML = '';
                 status.unmatched.forEach(function (u) {
                     var link = '#/details?id=' + encodeURIComponent(u.jellyfinId) + '&serverId=' + encodeURIComponent(ApiClient.serverId());
-                    var reasons = u.reasons.map(function (r) { return '<div class="nr-reason">' + esc(displayName(r.source)) + ': ' + esc(r.reason || (r.state === 'NotChecked' ? 'Not checked' : r.state)) + '</div>'; }).join('');
+                    var reasons = u.reasons.map(function (r) {
+                        var line = r.failedStep
+                            ? r.steps.map(stepFor).join(' · ')
+                            : esc(r.reason || (r.state === 'NotChecked' ? 'Not checked' : r.state));
+                        return '<div class="nr-reason">' + esc(displayName(r.source)) + ': ' + line + '</div>';
+                    }).join('');
                     var matched = u.reasons.filter(function (r) { return r.state === 'Matched'; }).map(function (r) { return displayName(r.source); });
                     var fixes = u.reasons.map(fixFor).join('') + '<p class="nr-tracking">' + (matched.length ? 'Tracked through ' + matched.join(', ') + '.' : 'Not tracked.') + '</p>';
                     body.insertAdjacentHTML('beforeend', '<tr><td><a is="emby-linkbutton" class="button-link" href="' + link + '">' + esc(u.name) + '</a></td><td>' + reasons + '</td><td>' + fixes + '</td></tr>');
                 });
                 table.hidden = status.unmatched.length === 0;
                 empty.hidden = status.unmatched.length !== 0;
+            }
+
+            /** 008 FR-003: one step of a trail, by its short name. */
+            function stepFor(step) {
+                return '<span class="nr-step nr-step-' + esc(step.state.toLowerCase()) + '">' + (step.name === 'Id' ? 'ID' : esc(step.name)) + '</span>';
             }
 
             /** 008 FR-008: the fix for one source's failed step, as a paragraph; nothing for a source that did not fail. */
