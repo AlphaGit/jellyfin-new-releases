@@ -115,6 +115,13 @@ test('a matched source reads "<Source>: Matched" and nothing else', () => {
     assert.equal(reasonLines(rows[0])[0], 'MusicBrainz: Matched');
 });
 
+// 008 edge case: an enabled source that has not run for the artist reads "Not checked".
+test('a source not yet checked reads "<Source>: Not checked"', () => {
+    const rows = unmatchedRows(fixture('admin-status.json'));
+
+    assert.equal(reasonLines(rows[2])[1], 'Deezer: Not checked');
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
