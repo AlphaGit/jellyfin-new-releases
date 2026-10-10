@@ -835,3 +835,16 @@ commit. Each had its own red first:
 - green: no production change. Suite -> node 404 passed
 - refactor: none needed
 - commit: `5ab2c94`
+
+## Maintainer decision, 2026-10-10: the test-after behaviours are accepted (T049)
+
+The maintainer accepts as test-after, even though each was written after the code that satisfies
+it, the 36 behaviours the audit at `dce5b53` classified `TEST_AFTER` (finding 4): U8, U9, U10, U13,
+U15, U16, U20, U21, U22, U23, U25, U28, U29, U33, U35, U37, U38, U41, U43, U45, U46, U48, U50, U51,
+U54, U56, U57, U62, U67, U71, U74, U77, U78, U82, U83 and A9. Each entry above labels it with its
+evidence (passed on its first run, or an existing test credited) and records a deliberate mutant
+its test catches. No behaviour is re-driven.
+
+The same review cancelled two remediation tasks, T052 (fixture rows by index) and T055 (a frozen
+schema-001 baseline), and chose to drop the duplicate page tests of T050 rather than change their
+level.
