@@ -48,4 +48,13 @@ public class MatchReasonsTests
         Assert.Equal("Unique", failed?.Step);
         Assert.Equal([92, 90], failed!.Values);
     }
+
+    [Fact]
+    public void Parse_DeezerNoResult_FailsAtNameWithNoValues()
+    {
+        var failed = MatchReasons.Parse(SourceLimits.Deezer, "no result");
+
+        Assert.Equal("Name", failed?.Step);
+        Assert.Empty(failed!.Values);
+    }
 }

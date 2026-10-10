@@ -14,7 +14,17 @@ public static partial class MatchReasons
     /// <summary>The step a stored reason says failed, with the numbers it holds; null for a text no released version writes.</summary>
     public static FailedStep? Parse(string source, string? reason)
     {
-        if (source != SourceLimits.MusicBrainz || reason is null)
+        if (reason is null)
+        {
+            return null;
+        }
+
+        if (source == SourceLimits.Deezer)
+        {
+            return reason == "no result" ? new FailedStep("Name", []) : null;
+        }
+
+        if (source != SourceLimits.MusicBrainz)
         {
             return null;
         }
