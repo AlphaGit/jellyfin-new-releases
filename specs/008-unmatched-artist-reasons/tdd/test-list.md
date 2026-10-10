@@ -113,7 +113,7 @@ through `AcceptanceRig`.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U40 | Each `unmatched[]` entry carries `Reasons` and no `Sources` or `Hint` | FR-013 | example | DONE | `Api/AdminControllerTests.cs::Status_EachUnmatchedArtist_CarriesReasons_AndNoSourcesOrHint` |
-| U41 | `Reasons` has one entry per enabled source, in the `Sources` order | FR-002, FR-001 | example | DONE | `Api/AdminControllerTests.cs::Status_Reasons_FollowTheSourcesOrder_OnePerEnabledSource` |
+| U41 | `Reasons` has one entry per enabled source, in the `Sources` order | FR-002, FR-001 | example | DONE | `Api/AdminControllerTests.cs::Status_Reasons_ListMusicBrainzThenDeezer_OnePerEnabledSource` |
 | U42 | An `ambiguous (score 92 vs 90)` MusicBrainz row gives `FailedStep` `Unique`, the four step states, and `Values` `[92, 90]` on `Unique` only | FR-003, FR-004, FR-013 | example | DONE | `Api/AdminControllerTests.cs::Status_AnAmbiguousMusicBrainzReason_GivesTheUniqueTrailWithBothScores` |
 | U43 | A `Matched` entry has null `FailedStep`, empty `Steps` and null `Reason` | US2-AS3 | example | DONE | `Api/AdminControllerTests.cs::Status_AMatchedSource_IsMatched_WithNoFailedStepNoStepsAndNoReason` |
 | U44 | A `NotChecked` entry has null `FailedStep`, empty `Steps` and null `Reason` | EC-notchecked | example | DONE | `Api/AdminControllerTests.cs::Status_ASourceNotYetRun_IsNotChecked_WithNoFailedStepNoStepsAndNoReason` |
@@ -132,8 +132,8 @@ through `AcceptanceRig`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U50 | After a refresh where MusicBrainz matches and Deezer finds exact-name artists with no album in common, the status gives Deezer `Album` with both counts and MusicBrainz `Matched` | US1-AS2, US1-AS4, FR-015 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_U50_AfterARefreshWhereDeezerFindsNoAlbumInCommon_TheStatusGivesTheAlbumFailureWithItsCounts` |
-| U51 | After a refresh where the MusicBrainz search scores below 85, the status gives steps Id Failed, Search Passed, Score Failed with the score, Unique NotReached | US2-AS1, FR-004 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_U51_AfterARefreshWhoseMusicBrainzSearchScoresBelow85_TheStatusGivesTheScoreTrail` |
+| U50 | After a refresh where MusicBrainz matches and Deezer finds exact-name artists with no album in common, the status gives Deezer `Album` with both counts and MusicBrainz `Matched` | US1-AS2, US1-AS4, FR-015 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_AfterARefreshWhereDeezerFindsNoAlbumInCommon_TheStatusGivesTheAlbumFailureWithItsCounts` |
+| U51 | After a refresh where the MusicBrainz search scores below 85, the status gives steps Id Failed, Search Passed, Score Failed with the score, Unique NotReached | US2-AS1, FR-004 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_AfterARefreshWhoseMusicBrainzSearchScoresBelow85_TheStatusGivesTheScoreTrail` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/admin.html`: Reason column
 
@@ -150,10 +150,10 @@ through `AcceptanceRig`.
 | U60 | A failed step shows `✗` and the words `failed` | FR-003, FR-010 | example | DONE | `tests/web/render-status.test.js::a failed step shows ✗ and the words "failed"` |
 | U61 | A not-reached step shows `–`, the words `not reached`, and the dimming class | FR-003, FR-010 | example | DONE | `tests/web/render-status.test.js::a not-reached step shows –, the words "not reached", and the dimming class` |
 | U62 | Each mark is `aria-hidden`, and the words sit in a visually hidden `nr-sr` element | FR-010 | example | DONE | `tests/web/render-status.test.js::every step hides its mark from screen readers and states itself in visually hidden words` |
-| U63 | The stylesheet gives the dimming class an `opacity` below 1 and makes `.nr-sr` visually hidden | FR-010 | example | DONE | `tests/web/render-status.test.js::the stylesheet dims a not-reached step and hides the screen-reader words visually` |
+| U63 | The stylesheet gives the dimming class an `opacity` below 1 and makes `.nr-sr` visually hidden | FR-010 | example | DONE | `tests/web/styles.test.js::the stylesheet dims a not-reached step and hides the screen-reader words visually` |
 | U64 | A failed `Score` step shows its value after the mark: `Score ✗ 70` | FR-004 | example | DONE | `tests/web/render-status.test.js::a failed Score step shows its score after the mark` |
 | U65 | A failed `Unique` step shows both values: `Unique ✗ 92 vs 90` | FR-004 | example | DONE | `tests/web/render-status.test.js::a failed Unique step shows both scores: "Unique ✗ 100 vs 96"` |
-| U66 | The trail line declares `white-space: nowrap` | FR-005, SC-004 | example | DONE | `tests/web/render-status.test.js::a Reason line does not wrap` |
+| U66 | The trail line declares `white-space: nowrap` | FR-005, SC-004 | example | DONE | `tests/web/styles.test.js::a Reason line does not wrap` |
 | U67 | The longest possible trail text is at most 64 characters | FR-005, SC-004 | example | DONE | `tests/web/render-status.test.js::the longest possible trail is at most 64 characters as a reader sees it` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/admin.html`: How to fix column
@@ -162,7 +162,7 @@ through `AcceptanceRig`.
 | --- | --- | --- | --- | --- | --- |
 | U68 | A MusicBrainz `Search` failure gives the artist-ID sentence and no candidates | FR-008 | example | DONE | `tests/web/render-status.test.js::a MusicBrainz Search failure gives the artist-ID sentence and no candidates` |
 | U69 | A MusicBrainz `Unique` failure with candidates gives the sentence, then each `{name} ({score})` with its ID in a `<code>` | FR-008, FR-016 | example | DONE | `tests/web/render-status.test.js::a MusicBrainz Unique failure with candidates gives the sentence, then each name (score) with its ID in a <code>` |
-| U70 | The candidate ID `<code>` has `user-select: all` | FR-016 | example | DONE | `tests/web/render-status.test.js::a candidate ID selects as a whole` |
+| U70 | The candidate ID `<code>` has `user-select: all` | FR-016 | example | DONE | `tests/web/styles.test.js::a candidate ID selects as a whole` |
 | U71 | A MusicBrainz `Score` failure with null candidates gives the sentence only | FR-016, EC-old | example | DONE | `tests/web/render-status.test.js::a MusicBrainz Score failure without stored candidates gives the sentence only` |
 | U72 | A Deezer `Name` failure with names lists them comma-separated and says Deezer matches by name only | FR-008 | example | DONE | `tests/web/render-status.test.js::a Deezer Name failure with names lists them comma-separated and says Deezer matches by name only` |
 | U73 | A Deezer `Name` failure with an empty candidate list says Deezer may not list this artist | FR-008 | example | DONE | `tests/web/render-status.test.js::a Deezer Name failure with an empty candidate list says Deezer may not list this artist` |
@@ -170,9 +170,9 @@ through `AcceptanceRig`.
 | U75 | A Deezer `Album` failure with detail gives both counts | FR-008 | example | DONE | `tests/web/render-status.test.js::a Deezer Album failure with detail gives both counts` |
 | U76 | A Deezer `Album` failure without detail starts at "No Deezer album has the same title" | FR-008, EC-old | example | DONE | `tests/web/render-status.test.js::a Deezer Album failure without detail starts at "No Deezer album has the same title"` |
 | U77 | A row whose only failure is at Deezer never contains "MusicBrainz artist ID" | SC-001, FR-006 | example | DONE | `tests/web/render-status.test.js::a row whose only failure is at Deezer never mentions the MusicBrainz artist ID` |
-| U78 | A row failing at both sources gives two different paragraphs | FR-007 | example | DONE | `tests/web/render-status.test.js::a row failing at both sources gives two different fix paragraphs` |
-| U79 | A row with a `Matched` entry ends with `Tracked through {displayName}.` | FR-009 | example | DONE | `tests/web/render-status.test.js::a row with a matched source ends with "Tracked through" that source` |
-| U80 | A row with no `Matched` entry ends with `Not tracked.` | FR-009 | example | DONE | `tests/web/render-status.test.js::a row with no matched source ends with "Not tracked."` |
+| U78 | A row failing at both sources gives two different paragraphs | FR-007 | example | DROPPED | duplicate of A6 at the same level; dropped by the maintainer (T050, audit finding 5) |
+| U79 | A row with a `Matched` entry ends with `Tracked through {displayName}.` | FR-009 | example | DROPPED | duplicate of A4 at the same level; dropped by the maintainer (T050, audit finding 5) |
+| U80 | A row with no `Matched` entry ends with `Not tracked.` | FR-009 | example | DROPPED | duplicate of A5 at the same level; dropped by the maintainer (T050, audit finding 5) |
 | U81 | Candidate names and IDs are escaped | INV-esc | example | DONE | `tests/web/render-status.test.js::candidate names and IDs are written escaped` |
 | U82 | A `Matched` or `NotChecked` entry gives no fix paragraph | FR-006 | example | DONE | `tests/web/render-status.test.js::a matched or not-checked source gives no fix paragraph` |
 | U83 | An entry with no failed step gives no fix paragraph | EC-unknown, FR-006 | example | DONE | `tests/web/render-status.test.js::an entry with no failed step gives no fix paragraph` |

@@ -848,3 +848,70 @@ its test catches. No behaviour is re-driven.
 The same review cancelled two remediation tasks, T052 (fixture rows by index) and T055 (a frozen
 schema-001 baseline), and chose to drop the duplicate page tests of T050 rather than change their
 level.
+
+## Remediation T050 (audit finding 5): the duplicate page tests are dropped
+
+- removed from `tests/web/render-status.test.js`: U78 "a row failing at both sources gives two
+  different fix paragraphs" (same as A6), U79 "a row with a matched source ends with 'Tracked through'
+  that source" (same as A4) and U80 "a row with no matched source ends with 'Not tracked.'" (same as
+  A5), with their `tracking` helper. Each asserted on the same rendering and fixture row as the
+  acceptance test it repeated. Maintainer decision, 2026-10-10
+- the behaviours stay covered by A4, A5 and A6 in `tests/web/unmatched-acceptance.test.js`;
+  U78–U80 are `DROPPED` on the list
+- suite -> node 401 passed (404 less the three)
+- commit: `021586a`
+
+## Remediation T051 (audit finding 6): U41 pins the literal order
+
+- test: `Api/AdminControllerTests.cs::Status_Reasons_ListMusicBrainzThenDeezer_OnePerEnabledSource`
+  (renamed from `…FollowTheSourcesOrder…`); expects `["musicbrainz", "deezer"]` in place of
+  `status.Sources` from the same response
+- check: passed (1 passed). Mutant, the controller lists Deezer before MusicBrainz in its sources
+  -> `Assert.Equal() Failure: Collections differ` Expected `["musicbrainz", "deezer"]` Actual
+  `["deezer", "musicbrainz"]` (1 failed); the old self-referential test passed this mutant.
+  Code restored exactly from a copy
+- suite -> dotnet 417 passed
+- commit: `0ea046e`
+
+## Remediation T053 (audit finding 8): the stylesheet tests move to `styles.test.js`
+
+- moved, names unchanged: U70 "a candidate ID selects as a whole", U63 "the stylesheet dims a
+  not-reached step and hides the screen-reader words visually", U66 "a Reason line does not wrap",
+  from `render-status.test.js` to `tests/web/styles.test.js`, which now reads `admin.html`'s
+  `<style>` through its existing `rules()` parser (`adminDeclarations`). `render-status.test.js`'s
+  own `declared()` parser is removed
+- check: suite -> node 401 passed (same count). Each moved test still fails its mutant:
+  `.nr-id` `user-select: text` -> `not ok 147`; `.nr-step-notreached` `opacity: 1` -> `not ok 148`;
+  `.nr-reason` `white-space: normal` -> `not ok 149` (1 failed each). Page restored exactly from a copy
+- commit: `87587a0`
+
+## Remediation T054 (audit finding 9): the counts test ties each reason to its artist and source
+
+- test: `Storage/ArtistRepositoryTests.cs::GetCountsAsync_ReportsTotalsMatchedPerSourceAndUnmatchedReasons`;
+  the separate flat list of reasons folds into the rows, now `(artist, name, source, status, reason)`
+- check: passed (1 passed). Mutant, the repository swaps the two reasons of the artist "Neither"
+  (`no result` and `ambiguous (score 90 vs 85)`) -> 1 failed. Code restored exactly from a copy
+- suite -> dotnet 417 passed
+- commit: `eb002f3`
+
+## Remediation T056 (audit findings 11–12): weak, eager and duplicated tests
+
+- `e5e3f30` (structure, C#): `Support/PageJson.cs` holds the one status-to-JSON helper that
+  `AdminControllerTests` and `ConfigureAndRunTests` both used; `AdminControllerTests.UpsertBlurAsync`
+  replaces six copies of the "Blur" seed; U35 no longer asserts U30's hiding in its arrange step (its
+  recorded mutant, deleting a disabled source's rows on read, still fails it: 1 failed); the
+  acceptance tests `Spec008_U50_…` and `Spec008_U51_…` lose the unit ids from their names.
+  Suite -> dotnet 417 passed
+- `31b2185` (structure, page): `tests/web/unmatched-table.js` holds the table readers
+  (`unmatchedRows`, `reasonMarkup`, `fixes`, `visible`) that both page test files had copied.
+  Suite -> node 401 passed
+- `f751c3f` (tests): U53 checks every row's Reason lines, not row 0's; U57 and U77 also assert what
+  is there (every row has its fixes; the Deezer fix is present), so an empty row cannot pass them;
+  U62's assertion loop becomes one `deepEqual`; U82 now gives a matched source and a not-checked
+  source stale reason text and candidates, and asserts that only the failed source gets a fix.
+  Mutants: the MusicBrainz fix keyed on a reason text, not a failed step -> U82 `not ok 25` (and
+  U83); not-checked lines skipped -> U53 `not ok 10` (and U55). Page restored exactly from a copy.
+  Suite -> node 401 passed
+- not changed: A10 and A11 read the serialized response while U50 and U51 read the typed record;
+  the first two pin what the page receives, the second two the refresh-to-status path, so the
+  difference stays
