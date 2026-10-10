@@ -166,17 +166,21 @@ public sealed class ArtistRepository
         await using (var rows = connection.CreateCommand())
         {
             rows.CommandText = """
-                SELECT a.jellyfin_id, a.name, s.source, s.unmatched_reason
-                FROM artist_source s JOIN library_artist a ON a.id = s.library_artist_id
-                WHERE s.status = 'Unmatched' AND s.source IN (SELECT value FROM json_each(@enabled))
-                ORDER BY a.name, a.id, s.source
+                SELECT a.jellyfin_id, a.name, s.source, s.unmatched_reason, s.status
+                FROM artist_source s
+                JOIN library_artist a ON a.id = s.library_artist_id
+                JOIN json_each(@enabled) e ON e.value = s.source
+                WHERE s.library_artist_id IN (
+                    SELECT library_artist_id FROM artist_source
+                    WHERE status = 'Unmatched' AND source IN (SELECT value FROM json_each(@enabled)))
+                ORDER BY a.name, a.id, e.key
                 """;
             rows.Parameters.AddWithValue("@enabled", JsonSerializer.Serialize(enabledSources));
             await using var reader = await rows.ExecuteReaderAsync(ct).ConfigureAwait(false);
             while (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 var jellyfinId = Guid.Parse(reader.GetString(0));
-                var at = new UnmatchedAt(reader.GetString(2), reader.IsDBNull(3) ? string.Empty : reader.GetString(3));
+                var at = new UnmatchedAt(reader.GetString(2), reader.IsDBNull(3) ? string.Empty : reader.GetString(3), Enum.Parse<MatchStatus>(reader.GetString(4)));
                 if (unmatched.Count > 0 && unmatched[^1].JellyfinId == jellyfinId)
                 {
                     unmatched[^1] = unmatched[^1] with { Sources = [.. unmatched[^1].Sources, at] };
