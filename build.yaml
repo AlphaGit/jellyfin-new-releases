@@ -2,7 +2,7 @@
 # https://github.com/oddstr13/jellyfin-plugin-repository-manager
 name: "New Releases"
 guid: "b8a15db8-e368-42c4-9048-390faf0094db"
-version: "0.2.0"
+version: "0.2.1"
 targetAbi: "12.0.0.0"
 framework: "net10.0"
 owner: "Alpha"
