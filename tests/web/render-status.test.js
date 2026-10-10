@@ -371,6 +371,16 @@ test('the stylesheet dims a not-reached step and hides the screen-reader words v
     assert.deepEqual([hidden.position, hidden.width, hidden.height, hidden.overflow], ['absolute', '1px', '1px', 'hidden']);
 });
 
+/** A trail line as a sighted reader sees it: screen-reader words removed, then every tag. */
+const visible = line => line.replace(/<span class="nr-sr">[^<]*<\/span>/g, '').replace(/<[^>]*>/g, '');
+
+// 008 FR-004: a failed Score step shows the best score after its mark.
+test('a failed Score step shows its score after the mark', () => {
+    const [musicBrainz] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[2]);
+
+    assert.match(visible(musicBrainz), / · Score ✗ 70 · /);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 

@@ -190,7 +190,8 @@
             function stepFor(step) {
                 var mark = STEP_MARKS[step.state];
                 return '<span class="nr-step nr-step-' + esc(step.state.toLowerCase()) + '">' + (step.name === 'Id' ? 'ID' : esc(step.name))
-                    + (mark ? ' <span aria-hidden="true">' + mark[0] + '</span><span class="nr-sr">' + mark[1] + '</span>' : '') + '</span>';
+                    + (mark ? ' <span aria-hidden="true">' + mark[0] + '</span><span class="nr-sr">' + mark[1] + '</span>' : '')
+                    + (step.values ? ' ' + esc(step.values[0]) : '') + '</span>';
             }
 
             /** 008 FR-008: the fix for one source's failed step, as a paragraph; nothing for a source that did not fail. */
