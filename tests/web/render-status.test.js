@@ -144,6 +144,29 @@ test('the old fixed hint sentence appears nowhere on the page', () => {
     assert.doesNotMatch(pageSource('admin.html'), /picks it up on the next refresh/);
 });
 
+/** The fixture with one reasons entry replaced: `row` and `source` index into unmatched[] and reasons[]. */
+function withReason(row, source, reason) {
+    const base = fixture('admin-status.json');
+    const unmatched = base.unmatched.map((u, i) => i !== row ? u : { ...u, reasons: u.reasons.map((r, j) => j !== source ? r : reason) });
+    return { ...base, unmatched };
+}
+
+/** A row's fix paragraphs as text, markup removed. */
+function fixes(row) {
+    return [...row.matchAll(/<p class="nr-fix">([\s\S]*?)<\/p>/g)].map(m => m[1].replace(/<[^>]*>/g, ''));
+}
+
+const ARTIST_ID_FIX = "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin uses it on the next refresh.";
+
+// 008 FR-008: a MusicBrainz search that found nobody needs the artist ID, and has no candidates to offer.
+test('a MusicBrainz Search failure gives the artist-ID sentence and no candidates', () => {
+    const search = { source: 'musicbrainz', state: 'Unmatched', failedStep: 'Search', steps: [], reason: 'no result', candidates: [] };
+
+    const row = unmatchedRows(withReason(2, 0, search))[2];
+
+    assert.deepEqual(fixes(row), [ARTIST_ID_FIX]);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 

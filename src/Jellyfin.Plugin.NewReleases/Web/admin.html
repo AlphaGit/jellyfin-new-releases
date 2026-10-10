@@ -165,10 +165,20 @@
                 status.unmatched.forEach(function (u) {
                     var link = '#/details?id=' + encodeURIComponent(u.jellyfinId) + '&serverId=' + encodeURIComponent(ApiClient.serverId());
                     var reasons = u.reasons.map(function (r) { return '<div class="nr-reason">' + esc(displayName(r.source)) + ': ' + esc(r.reason || (r.state === 'NotChecked' ? 'Not checked' : r.state)) + '</div>'; }).join('');
-                    body.insertAdjacentHTML('beforeend', '<tr><td><a is="emby-linkbutton" class="button-link" href="' + link + '">' + esc(u.name) + '</a></td><td>' + reasons + '</td><td></td></tr>');
+                    var fixes = u.reasons.map(fixFor).join('');
+                    body.insertAdjacentHTML('beforeend', '<tr><td><a is="emby-linkbutton" class="button-link" href="' + link + '">' + esc(u.name) + '</a></td><td>' + reasons + '</td><td>' + fixes + '</td></tr>');
                 });
                 table.hidden = status.unmatched.length === 0;
                 empty.hidden = status.unmatched.length !== 0;
+            }
+
+            /** 008 FR-008: the fix for one source's failed step, as a paragraph; nothing for a source that did not fail. */
+            function fixFor(r) {
+                if (r.source === 'musicbrainz' && r.failedStep) {
+                    return '<p class="nr-fix">Set the MusicBrainz artist ID in Jellyfin\'s metadata editor or artist.nfo; the plugin uses it on the next refresh.</p>';
+                }
+
+                return '';
             }
 
             function refreshStatus() {
