@@ -174,7 +174,7 @@ named, then made green. The single-test command is
 - [X] T026 Finding 5 (MED): in `EveryDecision_ForACallerWithoutAUser_Is401` (`ReleasesControllerTests.cs:313-318`), give `"Restore"` its own arm and make the default arm throw, or replace the strings with `MemberData` of action delegates. Done when a mistyped `InlineData` value fails the test instead of testing Restore
 - [X] T027 Finding 6 (LOW): remove the duplicated controller construction between `Controller` and `ControllerWithoutUser` (`ReleasesControllerTests.cs:30-41`), and drop `ControllerWithoutUser`'s unused `users` parameter. Structural commit, suite count unchanged
 - [X] T028 Finding 7 (LOW): declare `Bob` (`ReleasesControllerTests.cs:323`) beside `Alice`, before its first use at `:290`. Structural commit, suite count unchanged
-- [ ] T029 Re-run `/speckit-tdd-verify` after T022–T028. Done when the verdict is `PASS` or `PASS_WITH_GAPS`
+- [X] T029 Re-run `/speckit-tdd-verify` after T022–T028. Done when the verdict is `PASS` or `PASS_WITH_GAPS`
 
 ---
 
@@ -190,4 +190,15 @@ single-test command is
 - [X] T032 Finding 3 (LOW): extract a `SignedInController()` and a `SeedCheckedArtistAsync()` in `ReleasesControllerTests.cs`, and use them at `:148-150`, `:164-166`, `:299-302` and wherever `Controller(Alice, ControllerContextFactory.User(Alice, allFolders: true))` appears. Structural commit, suite count unchanged
 - [X] T033 Finding 4 (LOW): rename `GetStatus_ForACallerWithoutAUser_Answers` (`ReleasesControllerTests.cs:297`) to say it answers as for a signed-in caller, and update the test name in `tdd/test-list.md` A3. Structural commit, suite count unchanged
 - [X] T034 Finding 5 (LOW): in `EveryDecision_ForACallerWithoutAUser_Is401` (`ReleasesControllerTests.cs:315`), read the seeded release id from `_db.Releases` instead of through `GetReleasesAsync`. Structural commit, suite count unchanged
-- [ ] T035 Re-run `/speckit-tdd-verify` after T030–T034. Done when the verdict is `PASS` or `PASS_WITH_GAPS`
+- [X] T035 Re-run `/speckit-tdd-verify` after T030–T034. Done when the verdict is `PASS` or `PASS_WITH_GAPS`
+
+---
+
+## Phase 8: TDD remediation, third audit (optional)
+
+From [`tdd/verification.md`](./tdd/verification.md), verdict **PASS_WITH_GAPS** at `7ffe944`.
+Nothing here blocks the feature.
+
+- [ ] T036 Finding 1 (MED): replace or back `TheFactory_HasOneBuilderForEachKindOfCaller` (`tests/Jellyfin.Plugin.NewReleases.Tests/Support/ControllerContextFactoryTests.cs:28-36`) with a check that no test file outside `Support/` builds a `ClaimsIdentity`, names the `Jellyfin-UserId` claim, or calls `ForUser(Guid.Empty)`, reading files through `Support/RepositoryFiles.cs`. Done when adding `new ClaimsIdentity()` to any test under `Api/` fails the suite
+- [ ] T037 Finding 2 (MED): give `new StatusResponse(true, _clock.GetUtcNow(), 24, false)` (`tests/Jellyfin.Plugin.NewReleases.Tests/Api/ReleasesControllerTests.cs:311`) named arguments, and name the `24` as the fallback refresh interval. Structural commit, suite count unchanged
+- [ ] T038 Finding 3 (LOW): reuse `SeedCheckedArtistAsync`'s seed in `EveryDecision_ForACallerWithoutAUser_Is401` (`ReleasesControllerTests.cs:321-322`), and add a `LimitedController()` for the three limited-library constructions (`:89`, `:258`, `:342`). Structural commit, suite count unchanged
