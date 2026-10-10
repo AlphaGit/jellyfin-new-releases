@@ -250,5 +250,22 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         Assert.Equal(["Nowhere Band"], UnmatchedNames(status));
         Assert.Equal(["musicbrainz"], status.GetProperty("unmatched")[0].GetProperty("reasons").EnumerateArray().Select(r => r.GetProperty("source").GetString()));
     }
+
+    /// <summary>008 US2-AS1 through the real refresh: a MusicBrainz score below 85 reaches the status as its trail.</summary>
+    [Fact]
+    public async Task Spec008_U51_AfterARefreshWhoseMusicBrainzSearchScoresBelow85_TheStatusGivesTheScoreTrail()
+    {
+        _rig.Harness.Configuration.DeezerEnabled = false;
+        _rig.Library_.Artist("Blur");
+        _rig.Library_.Album("Parklife", "Blur", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.Harness.Http.OnUrlPattern(@"musicbrainz\.org/ws/2/artist\?query=", System.Net.HttpStatusCode.OK, SourceJson.MusicBrainz.Search(("mbid-1", "Blurt", 84), ("mbid-2", "Blue", 40)));
+        await _rig.RunAsync();
+
+        var reason = Assert.Single(Assert.Single((await _rig.AdminStatusAsync()).Unmatched).Reasons);
+
+        Assert.Equal(
+            [("Id", "Failed", ""), ("Search", "Passed", ""), ("Score", "Failed", "84"), ("Unique", "NotReached", "")],
+            reason.Steps.Select(s => (s.Name, s.State, string.Join(' ', s.Values ?? []))));
+    }
 }
 
