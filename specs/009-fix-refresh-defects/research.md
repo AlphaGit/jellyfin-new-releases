@@ -33,7 +33,7 @@ Facts were checked against the code at `afb9b69`, the live MusicBrainz and Deeze
   2. After `MatchArtistAsync` (or the stored match) at a source: when the matched source ID is a
      placeholder for that source, the artist is a placeholder. The loop stops for this artist.
   In both cases every enabled source is set to `Unmatched` with the reason
-  `ArtistMatch.PlaceholderReason` (`"placeholder artist"`). The artist counts as attempted at
+  `MatchReasons.Placeholder` (`"placeholder artist"`). The artist counts as attempted at
   every source, so the rotation moves on (`SetLastRefreshedAsync`).
 - **Rationale**: one place decides, and it covers stored matches from earlier runs (the live
   "Various Artists" row is stored `Matched` to `89ad4ac3-…`). Sources are registered MusicBrainz
@@ -42,14 +42,26 @@ Facts were checked against the code at `afb9b69`, the live MusicBrainz and Deeze
 - **Alternatives rejected**: a check inside each source (two copies, and a source cannot set
   the state of the other source).
 
-## R3. The placeholder hint on the administrator page
+## R3. The Placeholder step on the administrator page
 
-- **Decision**: `AdminController` picks the hint per row. A row with any source reason equal to
-  `ArtistMatch.PlaceholderReason` gets `PlaceholderHint`: "Placeholder artist, such as Various
-  Artists. If this is a real artist, correct its MusicBrainz ID in Jellyfin's metadata editor or
-  artist.nfo." Every other row keeps `UnmatchedHint`.
-- **Rationale**: `UnmatchedArtistDto` already carries `Hint` per row, so the wire shape does not
-  change. `admin.html` already renders the row's hint.
+- **Fact**: feature `008` removed the per-row `hint`. `AdminController.ToReason` parses each
+  stored reason with `MatchReasons.Parse(source, reason)` into a failed step, and
+  `MatchReasons.Steps` builds the trail from a fixed step order per source. `admin.html`
+  `fixFor` writes one fix per entry from `source` and `failedStep`, and joins them with no
+  de-duplication. An unknown reason gives `failedStep` null, and the page prints the raw text.
+- **Decision**:
+  - `MatchReasons.Placeholder = "placeholder artist"`, beside `NoResult` and
+    `NoCorroboratingAlbum`. R2 writes it.
+  - `Parse` maps it to `FailedStep("Placeholder", [])` for both sources.
+  - `Steps` returns the single step `Placeholder` `Failed` for it, outside each source's step
+    order (Clarifications: one step only).
+  - The placeholder row stores no `match_detail`, so `candidates` is null.
+  - `admin.html` `fixFor` gains one branch, `failedStep === 'Placeholder'`, with the placeholder
+    fix: "Placeholder artist, such as Various Artists. If this is a real artist, correct its
+    MusicBrainz ID in Jellyfin's metadata editor or artist.nfo." The row's fixes are
+    de-duplicated, so the fix shows once (`008` FR-007).
+- **Rationale**: the wire shape of `008` is unchanged. Only a new value of `failedStep` and of
+  `steps[].name` appears. The trail and fix wording stay in the page, as `008` research R5 set.
 
 ## R4. Joint artists: identifiers and the catalogue
 

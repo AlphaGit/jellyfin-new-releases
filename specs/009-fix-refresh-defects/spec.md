@@ -50,7 +50,8 @@ separate defects contributed.
   a fact about the library artist, not about one source.
 - Q: How does the administrator page show a placeholder artist? → A: In the unmatched list, with a
   hint written for placeholders instead of the general "set the MusicBrainz ID" hint, so a real
-  artist wrongly tagged with a placeholder identifier stays visible.
+  artist wrongly tagged with a placeholder identifier stays visible. (The hint part is replaced
+  by the last answer of this session.)
 - Q: What happens to releases already stored for placeholder artists? → A: The plugin has no code
   for them. The maintainer's server is the only install that holds such rows, and they are
   deleted there once, by hand. The plugin only prevents new ones.
@@ -75,6 +76,12 @@ separate defects contributed.
   Completed, Cancelled and Failed? → A: A new outcome, "Interrupted". The schema script allows it
   for new installs, with no migration. The maintainer's server, the only existing install, gets
   the wider outcome rule once, by hand, before the fixed version starts.
+- Q: Feature `008` replaced the per-row hint with a step trail and a fix per failed source. How
+  does a placeholder show there? → A: As a new failed step, "Placeholder", whose fix is the
+  placeholder message. (Replaces the earlier answer in this session about a placeholder hint.)
+- Q: Which trail does a placeholder show for each source? → A: One step only, "Placeholder"
+  failed, on every enabled source, however the placeholder was found. No step that did not run
+  is shown as passed.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -103,10 +110,11 @@ release list has no rows for the placeholder.
    that source's placeholder, **When** a refresh runs, **Then** the artist is a placeholder and
    no catalogue request is sent for it to any source.
 3. **Given** a placeholder artist, **When** the administrator opens the plugin's status, **Then**
-   the artist is listed as unmatched with a reason that names it as a placeholder, and its hint
-   says: "Placeholder artist, such as Various Artists. If this is a real artist, correct its
+   the artist is listed as unmatched, the trail of every enabled source is the single failed step
+   "Placeholder", and How to fix says:
+   "Placeholder artist, such as Various Artists. If this is a real artist, correct its
    MusicBrainz ID in Jellyfin's metadata editor or artist.nfo." Other unmatched artists keep the
-   current hint.
+   trails and fixes of feature `008`.
 4. **Given** a library of real artists and placeholders, **When** a refresh runs, **Then** every
    real artist is refreshed exactly as before.
 
@@ -228,8 +236,10 @@ run now has an end time and an interrupted outcome while finished runs are uncha
   artist a placeholder at every source, recorded as unmatched with a reason stating the artist is
   a placeholder.
 - **FR-003a**: The administrator page MUST list a placeholder among the unmatched artists with
-  the placeholder hint from User Story 1 scenario 3. Every other unmatched artist keeps the current
-  hint.
+  the placeholder fix from User Story 1 scenario 3. Each enabled source's trail MUST be the single
+  failed step "Placeholder", however the placeholder was found. The fix
+  appears once per row, though every enabled source fails at that step (`008` FR-007). Every other
+  unmatched artist keeps the trails and fixes of feature `008`.
 - **FR-004**: The refresh MUST NOT store releases for a placeholder. The plugin has no clean-up
   for releases stored by earlier versions (Clarifications, session 2026-10-10).
 - **FR-005**: A library artist carrying several MusicBrainz identifiers MUST be fetched with one
@@ -269,7 +279,7 @@ run now has an end time and an interrupted outcome while finished runs are uncha
   that attempt.
 - **SC-005**: After a restart during a run, zero runs remain without an end time once the plugin
   has started.
-- **SC-006**: 100% of the acceptance scenarios already specified for `001` to `007` still pass,
+- **SC-006**: 100% of the acceptance scenarios already specified for `001` to `008` still pass,
   unchanged.
 
 ## Assumptions

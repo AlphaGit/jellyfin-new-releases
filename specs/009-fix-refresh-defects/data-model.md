@@ -31,7 +31,7 @@ State transitions:
 
 ### `artist_source.unmatched_reason`
 
-New value: `placeholder artist` (`ArtistMatch.PlaceholderReason`). Written for every enabled source
+New value: `placeholder artist` (`MatchReasons.Placeholder`). Written for every enabled source
 of a placeholder artist. `status` is `Unmatched`. `source_artist_id` is null.
 
 ## In memory
@@ -41,7 +41,6 @@ of a placeholder artist. `status` is `Unmatched`. `source_artist_id` is null.
 | `CatalogueItem` | + `Credit`: `IReadOnlyList<CreditedArtist>` |
 | `CreditedArtist` | new: `(string? Mbid, string Name)` |
 | `Release` (read model) | + `Credit`: the union of its entries' credits |
-| `ArtistMatch` | + `PlaceholderReason` constant |
 
 ## Derived rules
 

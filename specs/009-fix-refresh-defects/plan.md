@@ -11,7 +11,7 @@ Four fixes in the refresh, plus the ownership rule the joint-artist fix needs:
 1. **Placeholders**: a fixed set of 13 MusicBrainz special-purpose MBIDs and Deezer `5080` (R1).
    The refresh task checks the snapshot MBIDs before any request, and each source match after
    it. A placeholder is `Unmatched("placeholder artist")` at every enabled source and gets no
-   catalogue request (R2). The admin page gives it its own hint (R3).
+   catalogue request (R2). The admin page shows it as the single failed step "Placeholder", with its own fix (R3).
 2. **Joint artists**: one parser splits `a;b` (R4). The MusicBrainz browse uses the first ID with
    `inc=artist-credits` and keeps only releases credited to every ID. The credit is stored per
    source entry (migration `003`, R5). Ownership also compares the albums of credited library
@@ -22,7 +22,7 @@ Four fixes in the refresh, plus the ownership rule the joint-artist fix needs:
 
 ## Technical Context
 
-**Language/Version**: C# on `net10.0`. No page JavaScript change.
+**Language/Version**: C# on `net10.0`. One page JavaScript change: the Placeholder fix in `admin.html` (R3).
 
 **Primary Dependencies**: `Jellyfin.*` 12.0.0 (`ExcludeAssets=runtime`), `Microsoft.Data.Sqlite`
 10.0.11. **No new direct dependency.**
@@ -46,7 +46,7 @@ about 2,830 catalogue pages per full pass. A joint artist costs its first member
 
 **Scale/Scope**: 2 new small types (`PlaceholderArtists`, `MusicBrainzIds`), 1 hosted service,
 1 migration, changes in `MusicBrainzSource`, `SourceHttpClient`, `RefreshNewReleasesTask`,
-`ReleaseRepository`, `SourceStateRepository`, `AdminController`, `001_initial.sql`.
+`ReleaseRepository`, `SourceStateRepository`, `MatchReasons`, `admin.html`, `001_initial.sql`.
 
 ## Constitution Check
 
@@ -77,7 +77,7 @@ specs/009-fix-refresh-defects/
 ├── quickstart.md        # Phase 1: suite gate + real-server pass
 ├── contracts/
 │   ├── release-source.md   # amends 001: joint IDs, credit, retry table
-│   └── http-api.md         # amends 001: per-row hint, Interrupted outcome
+│   └── http-api.md         # amends 001 and 008: Placeholder step, Interrupted outcome
 ├── checklists/
 └── tasks.md             # Phase 2: NOT created by /speckit-plan
 ```
@@ -92,7 +92,7 @@ src/Jellyfin.Plugin.NewReleases/
 │   ├── MusicBrainzSource.cs      # joint match, browse inc + filter, credit (R4, R5)
 │   └── SourceHttpClient.cs       # max(hint, backoff) (R7)
 ├── Model/
-│   ├── SourceRecords.cs          # CatalogueItem.Credit, CreditedArtist, PlaceholderReason
+│   ├── SourceRecords.cs          # CatalogueItem.Credit, CreditedArtist
 │   └── StoredRecords.cs          # Release.Credit
 ├── Storage/
 │   ├── Migrations/001_initial.sql              # outcome check + 'Interrupted'
@@ -102,15 +102,18 @@ src/Jellyfin.Plugin.NewReleases/
 ├── ScheduledTasks/
 │   ├── RefreshNewReleasesTask.cs # placeholder rule (R2), credited albums (R6)
 │   └── InterruptedRunCloser.cs   # NEW: hosted service (R8)
-├── Api/AdminController.cs        # per-row hint (R3)
+├── Matching/MatchReasons.cs      # Placeholder reason, step and trail (R3)
+├── Web/admin.html                # Placeholder fix, fixes de-duplicated per row (R3)
 └── PluginServiceRegistrator.cs   # AddHostedService<InterruptedRunCloser>
 
 tests/Jellyfin.Plugin.NewReleases.Tests/
 ├── Sources/                      # MusicBrainzIds, joint browse, credit parse, retry delays
 ├── ScheduledTasks/               # placeholder rule, credited ownership, run closer
-├── Storage/                      # 002 migration, credit round-trip, CloseOpenRunsAsync
-├── Api/                          # placeholder hint
+├── Storage/                      # 003 migration, credit round-trip, CloseOpenRunsAsync
+├── Matching/                     # Placeholder parse and trail
 └── Acceptance/                   # US1, US2 through the real task and controller
+
+tests/web/                                              # Placeholder fix shown once per row
 
 tests/fixtures/musicbrainz/releases_joint_artist.json   # NEW (R9)
 ```

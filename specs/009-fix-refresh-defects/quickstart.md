@@ -9,13 +9,13 @@ node --test tests/web/
 ```
 
 Each scenario below has at least one test that goes through the real entry point (the refresh
-task, `AdminController`, or `SourceHttpClient`), with stubbed HTTP and recorded fixtures.
+task, `AdminController`, `admin.html`, or `SourceHttpClient`), with stubbed HTTP and recorded fixtures.
 
 | Spec item | What the test proves |
 | --- | --- |
 | US1-1 | A snapshot artist with MBID `89ad4ac3-…`: zero requests to either source; both sources `Unmatched("placeholder artist")`. |
 | US1-2 | An artist with no MBID whose MusicBrainz search returns Various Artists: no catalogue request, no Deezer request. Same for a Deezer match to `5080` with MusicBrainz disabled. |
-| US1-3 | Admin status: the placeholder row has the placeholder hint; another unmatched row keeps the old hint. |
+| US1-3 | Admin status: each enabled source of the placeholder row has `failedStep` `Placeholder` and the one-step trail. Page (`node --test`): the placeholder fix shows once; another unmatched row keeps its `008` trail and fixes. |
 | US1-4, FR-009 | A real artist next to a placeholder is fetched with the same requests as before, plus `artist-credits` in the browse. |
 | US2-1..3 | A `a;b` artist with `releases_joint_artist.json`: one ID per request; only releases credited to both are stored; outcome `Complete`. |
 | US2-5, US2-6 | Ownership: a release found for the joint artist is `Owned` by a library album filed under a credited member; a same-title album of an uncredited artist is not compared. |
@@ -34,6 +34,6 @@ widened by hand. The task's daily trigger is removed until the new version is in
 3. Run "Refresh new releases" by hand.
 4. Server log: no catalogue page for Various Artists or Soundtrack; no `answered 400` for
    "Seven Lions + Kill the Noise"; no `retrying in 00:00:00`.
-5. Admin page: "Various Artists" and "Soundtrack" listed as unmatched with the placeholder hint.
+5. Admin page: "Various Artists" and "Soundtrack" listed as unmatched, trail `Placeholder ✗` per source, with the placeholder fix once.
 6. Release list, artist "Seven Lions + Kill the Noise": only releases credited to both.
 7. Add the daily trigger back.
