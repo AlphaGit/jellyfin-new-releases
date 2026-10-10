@@ -381,6 +381,13 @@ test('a failed Score step shows its score after the mark', () => {
     assert.match(visible(musicBrainz), / · Score ✗ 70 · /);
 });
 
+// 008 FR-004: a failed Unique step shows the two closest scores.
+test('a failed Unique step shows both scores: "Unique ✗ 100 vs 96"', () => {
+    const [musicBrainz] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[1]);
+
+    assert.match(visible(musicBrainz), / · Unique ✗ 100 vs 96$/);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
