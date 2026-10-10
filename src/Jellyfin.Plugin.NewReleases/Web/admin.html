@@ -180,14 +180,14 @@
             function fixFor(r) {
                 if (r.source === 'musicbrainz' && r.failedStep) {
                     var candidates = (r.candidates || []).map(function (c) {
-                        return c.name + ' (' + c.score + ') <code class="nr-id">' + c.id + '</code>';
+                        return esc(c.name) + ' (' + esc(c.score) + ') <code class="nr-id">' + esc(c.id) + '</code>';
                     });
                     return '<p class="nr-fix">Set the MusicBrainz artist ID in Jellyfin\'s metadata editor or artist.nfo; the plugin uses it on the next refresh.'
                         + (candidates.length ? ' Candidates: ' + candidates.join(', ') : '') + '</p>';
                 }
 
                 if (r.source === 'deezer' && r.failedStep === 'Name') {
-                    var names = (r.candidates || []).map(function (c) { return c.name; });
+                    var names = (r.candidates || []).map(function (c) { return esc(c.name); });
                     if (!names.length) {
                         return '<p class="nr-fix">Deezer may not list this artist.</p>';
                     }

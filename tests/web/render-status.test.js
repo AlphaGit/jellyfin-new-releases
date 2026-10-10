@@ -280,6 +280,21 @@ test('a row with no matched source ends with "Not tracked."', () => {
     assert.equal(tracking(row), 'Not tracked.');
 });
 
+// Every value the page writes passes through esc: candidate names and IDs come from a third-party search.
+test('candidate names and IDs are written escaped', () => {
+    const musicBrainz = { source: 'musicbrainz', state: 'Unmatched', failedStep: 'Unique', steps: [], reason: 'ambiguous (score 90 vs 88)', candidates: [{ name: '<b>Blur</b>', score: 90, id: 'id<1>' }] };
+    const deezer = { source: 'deezer', state: 'Unmatched', failedStep: 'Name', steps: [], reason: 'no result', candidates: [{ name: 'Tom & <i>Jerry</i>' }] };
+
+    const status = withReason(1, 1, deezer);
+    status.unmatched[1].reasons[0] = musicBrainz;
+
+    const row = unmatchedRows(status)[1];
+
+    assert.doesNotMatch(row, /<b>|<i>|id<1>/);
+    assert.match(row, /&lt;b&gt;Blur&lt;\/b&gt; \(90\) <code class="nr-id">id&lt;1&gt;<\/code>/);
+    assert.match(row, /Deezer lists Tom &amp; &lt;i&gt;Jerry&lt;\/i&gt;\./);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
