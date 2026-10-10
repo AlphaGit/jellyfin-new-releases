@@ -88,7 +88,7 @@ sources only, and the page shows one Reason line per source. Both stories build 
 - [X] T008 Change `UnmatchedAt` in `src/Jellyfin.Plugin.NewReleases/Model/StoredRecords.cs` to `(Source, Status, Reason)`. Rewrite `GetCountsAsync` in `src/Jellyfin.Plugin.NewReleases/Storage/ArtistRepository.cs` to take the enabled source IDs and list per research R4. T003 passes. [U30] [U31] [U32] [U33] [U34] [U35] [A10] [A11]
 - [X] T009 In `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs`, replace `UnmatchedArtistDto.Sources` and `Hint` with `Reasons` (`ReasonDto`: `Source`, `State`, `FailedStep`, `Steps`, `Reason`, `Candidates`, `ExactNameCount`, `AlbumsCompared`; `StepDto`: `Name`, `State`, `Values`; `CandidateDto`: `Name`, `Score`, `Id`), and remove `UnmatchedSourceDto`. In `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, pass `configuration.EnabledSourceIds()` in the `sources` order, build `Reasons` through `MatchReasons`, and remove `UnmatchedHint`. T004 and T005 pass. [U40] [U41] [U42] [U43] [U44] [U45] [U46] [U49] [U51]
 - [X] T010 In `src/Jellyfin.Plugin.NewReleases/Web/admin.html`, rename the header to Artist / Reason / How to fix and render one Reason line per `reasons` entry as T006 states. Leave How to fix empty for now. T006 passes; the existing `render-status.test.js` cases that read the old shape are updated in the same step. [U52] [U53] [U54] [U55] [U56] [U57] [A9]
-- [ ] T011 Amend the admin status example and the `admin.html` table description in `specs/001-track-new-releases/contracts/http-api.md` per [contracts/http-api.md](./contracts/http-api.md).
+- [X] T011 Amend the admin status example and the `admin.html` table description in `specs/001-track-new-releases/contracts/http-api.md` per [contracts/http-api.md](./contracts/http-api.md).
 
 **Checkpoint**: Both suites green. The page lists the right artists with a per-source state line.
 
@@ -187,10 +187,10 @@ carries its state in words.
 
 ## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T029 [P] Add an Unreleased entry to `CHANGELOG.md`: the Unmatched artists table shows per-step reasons and specific fixes; a disabled source no longer lists its artists; the admin status response replaces `sources` and `hint` with `reasons`.
-- [ ] T030 Run `PATH=/opt/homebrew/opt/dotnet/bin:$PATH dotnet build --configuration Release`. The build has zero warnings (`TreatWarningsAsErrors`).
-- [ ] T031 Run the full `dotnet test --configuration Release` and `node --test "tests/web/*.test.js"`. Both are green.
-- [ ] T032 [P] Confirm that `HttpSurfaceTests.NoContractDocument_NamesARouteThePluginDoesNotServe` in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/HttpSurfaceTests.cs` passes with the amended `001` contract and this feature's `contracts/http-api.md`.
+- [X] T029 [P] Add an Unreleased entry to `CHANGELOG.md`: the Unmatched artists table shows per-step reasons and specific fixes; a disabled source no longer lists its artists; the admin status response replaces `sources` and `hint` with `reasons`.
+- [X] T030 Run `PATH=/opt/homebrew/opt/dotnet/bin:$PATH dotnet build --configuration Release`. The build has zero warnings (`TreatWarningsAsErrors`).
+- [X] T031 Run the full `dotnet test --configuration Release` and `node --test "tests/web/*.test.js"`. Both are green.
+- [X] T032 [P] Confirm that `HttpSurfaceTests.NoContractDocument_NamesARouteThePluginDoesNotServe` in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/HttpSurfaceTests.cs` passes with the amended `001` contract and this feature's `contracts/http-api.md`.
 - [ ] T033 Commit to `main`. Push only when the maintainer asks, then verify that the CI run for the push is green (`gh run list --branch main`).
 
 The real-server pass in [quickstart.md](./quickstart.md) §2 is the maintainer's own pass after
