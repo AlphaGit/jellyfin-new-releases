@@ -44,18 +44,18 @@ public sealed class MusicBrainzSource : IReleaseSource
             .ToList();
         if (candidates.Count == 0)
         {
-            return ArtistMatch.Unmatched("no result");
+            return ArtistMatch.Unmatched(MatchReasons.NoResult);
         }
 
         var top = candidates[0];
         if (top.Score < MinimumScore)
         {
-            return ArtistMatch.Unmatched($"low score ({top.Score})");
+            return ArtistMatch.Unmatched(MatchReasons.LowScore(top.Score));
         }
 
         if (candidates.Count > 1 && top.Score - candidates[1].Score <= 5)
         {
-            return ArtistMatch.Unmatched($"ambiguous (score {top.Score} vs {candidates[1].Score})");
+            return ArtistMatch.Unmatched(MatchReasons.Ambiguous(top.Score, candidates[1].Score));
         }
 
         return ArtistMatch.Matched(top.Id);
