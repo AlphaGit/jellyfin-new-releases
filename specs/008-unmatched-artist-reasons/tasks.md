@@ -232,3 +232,23 @@ T012 DatabaseTests.cs   T013 MusicBrainzSourceTests.cs   T014 DeezerSourceTests.
 2. **Increment**: US2 adds the step trail.
 3. Ship both in one release: the response reshape lands in Foundational, so a release with only
    part of the page would show a Reason column without its trail.
+
+---
+
+## Phase 6: TDD remediation (audit at `dce5b53`, verdict FAIL)
+
+From [`tdd/verification.md`](./tdd/verification.md). **The feature is not done until T046–T049
+are cleared** and a re-audit no longer reports them. Each fix is its own cycle with its red
+recorded in `tdd/cycle-log.md`. T050–T056 can follow in any order.
+
+- [ ] T046 Finding 1 (HIGH): in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/AdminControllerTests.cs:210`, also store a MusicBrainz candidate with a score and an ID and assert both come back in `CandidateDto`. Done when the mutant `new CandidateDto(c.Name, null, null)` in `AdminController.ToReason` fails `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_StoredDetail" -- RunConfiguration.TreatNoTestsAsError=true`.
+- [ ] T047 Finding 2 (HIGH): restore the `SourceArtistId` check in `Sources/MusicBrainzSourceTests.cs:107` and `Sources/DeezerSourceTests.cs:47` (assert `(Status, SourceArtistId, Reason)`, or compare with `ArtistMatch.Unmatched(reason, match.Detail)`). Done when the mutant `… with { SourceArtistId = "stale" }` on each source's Unmatched result fails its test.
+- [ ] T048 Finding 3 (HIGH): add a page test to `tests/web/render-status.test.js` asserting that each unmatched row's Artist cell holds the artist name, escaped, inside its details link. Done when writing `u.name` unescaped in `admin.html` fails `node --test tests/web/render-status.test.js`.
+- [ ] T049 Finding 4 (HIGH, evidence): the maintainer decides, with a date in `tdd/cycle-log.md`, whether to accept the 36 test-after behaviours listed in `verification.md` (as 007's T099 did), or names the ones to re-drive. Done when the decision is recorded and a re-audit classifies each one `TEST_AFTER_ACCEPTED` or `PROVEN`.
+- [ ] T050 Finding 5 (MED): make the page acceptance tests in `tests/web/unmatched-acceptance.test.js` differ in level from the unit tests (for example, render a response built from a server-produced status), or drop the duplicate of each pair A4/U79, A5/U80, A6/U78. Done when no A test and U test assert the same thing on the same input.
+- [ ] T051 Finding 6 (MED): in `Api/AdminControllerTests.cs:123` (U41), assert the literal order `["musicbrainz", "deezer"]` against a response with a reason at each source. Done when reversing the controller's `sources` list fails the test.
+- [ ] T052 Finding 7 (MED): replace fixture row indexes in `tests/web/render-status.test.js` with a named accessor (for example `row(status, 'Nirvana')`). Done when no page test indexes `unmatchedRows(…)` by number.
+- [ ] T053 Finding 8 (MED): move the four stylesheet tests (U52 header aside) from `render-status.test.js:190,368,392` into `tests/web/styles.test.js`, reusing its `rules()` parser, and remove `declared()`. Done when `node --test "tests/web/*.test.js"` is green and `render-status.test.js` no longer reads a `<style>` block.
+- [ ] T054 Finding 9 (MED): in `Storage/ArtistRepositoryTests.cs:103`, assert each reason together with its artist and source again (for example `(artist, source, status, reason)` tuples). Done when swapping two artists' reasons fails the test.
+- [ ] T055 Finding 10 (MED): give U39 a frozen schema-001 script under `tests/fixtures/` in `Storage/DatabaseTests.cs:95`, not the embedded current `001_initial.sql`. Done when editing `001_initial.sql` in place leaves the baseline unchanged.
+- [ ] T056 Findings 11–12 (MED, LOW): make U82 (`render-status.test.js:299`) assert that a matched or not-checked source gets no fix where it otherwise would; split U35's arrange-step assertion (`Storage/ArtistRepositoryTests.cs:210`); de-duplicate the page helpers and the `LibraryArtistSnapshot("name:blur", …)` setup; give U57 and U77 a positive guard; rename `Spec008_U50`/`Spec008_U51`. Done when the suites stay green and each item is gone from a re-audit.
