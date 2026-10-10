@@ -86,6 +86,19 @@ public sealed class DeezerSourceTests : IAsyncLifetime
             match.Detail?.Candidates ?? []);
     }
 
+    /// <summary>Spec 008 FR-015: a search that found nobody records that, as an empty candidate list.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_NoSearchResults_RecordsAnEmptyCandidateList()
+    {
+        _h.Fixture(Search, "deezer/search_artist_empty.json");
+
+        var match = await Source().MatchArtistAsync(Artist("zzqxjv nonexistent artist qqq", "Anything"), CancellationToken.None);
+
+        Assert.Equal("no result", match.Reason);
+        Assert.NotNull(match.Detail);
+        Assert.Empty(match.Detail.Candidates);
+    }
+
     /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
     [Theory]
     [InlineData("deezer/search_artist_empty.json", "Daft Punk", "Name")]       // no artist at all
