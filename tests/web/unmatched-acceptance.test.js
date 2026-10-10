@@ -62,3 +62,35 @@ test('A6 (US1-AS6): a row failing at both sources has one fix per failed source 
     assert.equal(fixes.length, 2);
     assert.notEqual(fixes[0], fixes[1]);
 });
+
+/** A row's Reason lines as markup, one per source. */
+function reasonLines(status, row) {
+    const { internals, document } = loadPageDom('admin.html');
+    internals.renderStatus(status);
+    const body = document.getElementById('nr-unmatched').querySelector('tbody').innerHTML;
+    const markup = body.split('</tr>').filter(r => r.includes('<tr>'))[row];
+    return [...markup.matchAll(/<div class="nr-reason">([\s\S]*?)<\/div>/g)].map(m => m[1]);
+}
+
+/** What a sighted reader sees on a line: the screen-reader words removed, then every tag. */
+const visible = line => line.replace(/<span class="nr-sr">[^<]*<\/span>/g, '').replace(/<[^>]*>/g, '');
+
+test('A7 (US2-AS1): a MusicBrainz low-score line reads ID failed, Search passed, Score failed with 70, Unique not reached', () => {
+    const [musicBrainz] = reasonLines(fixture('admin-status.json'), 2);
+
+    assert.equal(visible(musicBrainz), 'MusicBrainz: ID ✗ · Search ✓ · Score ✗ 70 · Unique –');
+});
+
+test('A8 (US2-AS2): a Deezer album line reads Name passed, Album failed', () => {
+    const [, deezer] = reasonLines(fixture('admin-status.json'), 0);
+
+    assert.equal(visible(deezer), 'Deezer: Name ✓ · Album ✗');
+});
+
+test('A12 (US2-AS6): every step carries its state in words for a screen reader, apart from its mark', () => {
+    const [musicBrainz] = reasonLines(fixture('admin-status.json'), 2);
+
+    assert.deepEqual(
+        [...musicBrainz.matchAll(/<span aria-hidden="true">([^<]*)<\/span><span class="nr-sr">([^<]*)<\/span>/g)].map(m => [m[1], m[2]]),
+        [['✗', 'failed'], ['✓', 'passed'], ['✗', 'failed'], ['–', 'not reached']]);
+});
