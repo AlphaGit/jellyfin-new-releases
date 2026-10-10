@@ -44,6 +44,14 @@ public enum MatchStatus
     Unmatched,
 }
 
+/// <summary>State of one matching step in an Unmatched artist's trail (spec 008 FR-003).</summary>
+public enum StepState
+{
+    Passed,
+    Failed,
+    NotReached,
+}
+
 /// <summary>State a listed release shows to users (FR-007, FR-008). <c>Owned</c> releases are never listed.</summary>
 public enum ListState
 {

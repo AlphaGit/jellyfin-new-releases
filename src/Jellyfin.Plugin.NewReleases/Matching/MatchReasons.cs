@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.Sources;
 
 namespace Jellyfin.Plugin.NewReleases.Matching;
@@ -55,6 +56,17 @@ public static partial class MatchReasons
             : null;
     }
 
+    /// <summary>Every step of the source in its matching order, marked against the failed one (spec 008 FR-003).</summary>
+    public static IReadOnlyList<MatchStep> Steps(string source, FailedStep failed)
+    {
+        string[] order = ["Id", "Search", "Score", "Unique"];
+        var at = Array.IndexOf(order, failed.Step);
+        return order.Select((name, i) => new MatchStep(
+            name,
+            i > at ? StepState.NotReached : i == at || name == "Id" ? StepState.Failed : StepState.Passed,
+            [])).ToArray();
+    }
+
     private static int Number(Match match, int group) => int.Parse(match.Groups[group].Value, CultureInfo.InvariantCulture);
 
     [GeneratedRegex(@"^low score \((\d+)\)$")]
@@ -66,3 +78,6 @@ public static partial class MatchReasons
 
 /// <summary>The matching step a reason names as failed (spec 008 FR-003) and the values that decided it (FR-004).</summary>
 public sealed record FailedStep(string Step, IReadOnlyList<int> Values);
+
+/// <summary>One matching step as the trail shows it: its name, its state, and the failed step's values.</summary>
+public sealed record MatchStep(string Name, StepState State, IReadOnlyList<int> Values);

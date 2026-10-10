@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.NewReleases.Matching;
+using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.Sources;
 using Xunit;
 
@@ -87,5 +88,15 @@ public class MatchReasonsTests
     public void Parse_AMusicBrainzOnlyTextUnderDeezer_IsNull()
     {
         Assert.Null(MatchReasons.Parse(SourceLimits.Deezer, "low score (70)"));
+    }
+
+    [Fact]
+    public void Steps_MusicBrainzFailedAtSearch_IdAndSearchFailed_TheRestNotReached()
+    {
+        var steps = MatchReasons.Steps(SourceLimits.MusicBrainz, new FailedStep("Search", []));
+
+        Assert.Equal(
+            [("Id", StepState.Failed), ("Search", StepState.Failed), ("Score", StepState.NotReached), ("Unique", StepState.NotReached)],
+            steps.Select(s => (s.Name, s.State)));
     }
 }
