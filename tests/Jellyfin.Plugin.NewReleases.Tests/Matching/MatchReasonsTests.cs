@@ -119,4 +119,12 @@ public class MatchReasonsTests
             [("Id", StepState.Failed, ""), ("Search", StepState.Passed, ""), ("Score", StepState.Passed, ""), ("Unique", StepState.Failed, "92 90")],
             steps.Select(s => (s.Name, s.State, string.Join(' ', s.Values))));
     }
+
+    [Fact]
+    public void Steps_DeezerFailedAtName_NameFailed_AlbumNotReached()
+    {
+        var steps = MatchReasons.Steps(SourceLimits.Deezer, new FailedStep("Name", []));
+
+        Assert.Equal([("Name", StepState.Failed), ("Album", StepState.NotReached)], steps.Select(s => (s.Name, s.State)));
+    }
 }

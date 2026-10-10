@@ -59,7 +59,7 @@ public static partial class MatchReasons
     /// <summary>Every step of the source in its matching order, marked against the failed one (spec 008 FR-003).</summary>
     public static IReadOnlyList<MatchStep> Steps(string source, FailedStep failed)
     {
-        string[] order = ["Id", "Search", "Score", "Unique"];
+        string[] order = source == SourceLimits.Deezer ? ["Name", "Album"] : ["Id", "Search", "Score", "Unique"];
         var at = Array.IndexOf(order, failed.Step);
         return order.Select((name, i) => new MatchStep(
             name,
