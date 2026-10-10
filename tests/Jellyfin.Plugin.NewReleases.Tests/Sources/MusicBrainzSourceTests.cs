@@ -105,8 +105,8 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
 
         var match = await Source().MatchArtistAsync(Artist("zzqxjv nonexistent artist qqq"), CancellationToken.None);
 
-        // 008 FR-015 adds the attempt detail to an Unmatched result, so the whole record no longer equals a bare one.
-        Assert.Equal((MatchStatus.Unmatched, "no result"), (match.Status, match.Reason));
+        // 008 FR-015 adds the attempt detail, compared in its own test; everything else is the record a bare Unmatched has.
+        Assert.Equal(ArtistMatch.Unmatched("no result") with { Detail = match.Detail }, match);
     }
 
     /// <summary>Spec 008 FR-015: an ambiguous result keeps the candidates the search returned, best first, with score and ID.</summary>

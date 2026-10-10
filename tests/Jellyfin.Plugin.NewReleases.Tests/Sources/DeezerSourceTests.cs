@@ -45,8 +45,8 @@ public sealed class DeezerSourceTests : IAsyncLifetime
 
         var match = await Source().MatchArtistAsync(Artist("Daft Punk", "Some Album The Library Made Up"), CancellationToken.None);
 
-        // 008 FR-015 adds the attempt detail to an Unmatched result, so the whole record no longer equals a bare one.
-        Assert.Equal((MatchStatus.Unmatched, "no corroborating album"), (match.Status, match.Reason));
+        // 008 FR-015 adds the attempt detail, compared in its own test; everything else is the record a bare Unmatched has.
+        Assert.Equal(ArtistMatch.Unmatched("no corroborating album") with { Detail = match.Detail }, match);
     }
 
     [Fact]
