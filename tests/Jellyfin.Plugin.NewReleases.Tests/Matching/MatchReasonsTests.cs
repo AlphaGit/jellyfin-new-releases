@@ -66,4 +66,12 @@ public class MatchReasonsTests
         Assert.Equal("Album", failed?.Step);
         Assert.Empty(failed!.Values);
     }
+
+    [Theory]
+    [InlineData(SourceLimits.MusicBrainz)]
+    [InlineData(SourceLimits.Deezer)]
+    public void Parse_ATextNoReleasedVersionWrites_IsNull(string source)
+    {
+        Assert.Null(MatchReasons.Parse(source, "rate limited"));
+    }
 }
