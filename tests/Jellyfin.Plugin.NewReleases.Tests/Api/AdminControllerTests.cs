@@ -118,9 +118,9 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal(["jellyfinId", "name", "reasons"], unmatched.EnumerateObject().Select(p => p.Name));
     }
 
-    /// <summary>008 FR-001, FR-002: one reason per enabled source, in the order the response lists its sources.</summary>
+    /// <summary>008 FR-001, FR-002: one reason per enabled source, in the order the response lists its sources: MusicBrainz, then Deezer.</summary>
     [Fact]
-    public async Task Status_Reasons_FollowTheSourcesOrder_OnePerEnabledSource()
+    public async Task Status_Reasons_ListMusicBrainzThenDeezer_OnePerEnabledSource()
     {
         var blur = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
         await _db.Artists.SetMatchAsync(blur, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
@@ -128,7 +128,7 @@ public sealed class AdminControllerTests : IAsyncLifetime
 
         var status = (await Controller().GetStatusAsync(CancellationToken.None)).Value!;
 
-        Assert.Equal(status.Sources.Select(s => s.Id), Assert.Single(status.Unmatched).Reasons.Select(r => r.Source));
+        Assert.Equal(["musicbrainz", "deezer"], Assert.Single(status.Unmatched).Reasons.Select(r => r.Source));
     }
 
     /// <summary>The single unmatched artist's reason at <paramref name="source"/>, with only that source enabled.</summary>
