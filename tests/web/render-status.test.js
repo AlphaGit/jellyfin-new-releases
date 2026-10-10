@@ -103,6 +103,18 @@ test('each unmatched artist has one Reason line per reasons entry, led by the so
     assert.deepEqual(reasonLineSources(rows[0]), ['MusicBrainz', 'Deezer']);
 });
 
+/** A row's Reason lines as text, markup removed. */
+function reasonLines(row) {
+    return [...row.matchAll(/<div class="nr-reason">([\s\S]*?)<\/div>/g)].map(m => m[1].replace(/<[^>]*>/g, ''));
+}
+
+// 008 US2-AS3 (A9, U54): a matched source reads "<Source>: Matched", with no trail.
+test('a matched source reads "<Source>: Matched" and nothing else', () => {
+    const rows = unmatchedRows(fixture('admin-status.json'));
+
+    assert.equal(reasonLines(rows[0])[0], 'MusicBrainz: Matched');
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
