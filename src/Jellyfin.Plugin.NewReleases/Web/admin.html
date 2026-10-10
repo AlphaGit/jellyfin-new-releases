@@ -169,7 +169,7 @@
                     var link = '#/details?id=' + encodeURIComponent(u.jellyfinId) + '&serverId=' + encodeURIComponent(ApiClient.serverId());
                     var reasons = u.reasons.map(function (r) { return '<div class="nr-reason">' + esc(displayName(r.source)) + ': ' + esc(r.reason || (r.state === 'NotChecked' ? 'Not checked' : r.state)) + '</div>'; }).join('');
                     var matched = u.reasons.filter(function (r) { return r.state === 'Matched'; }).map(function (r) { return displayName(r.source); });
-                    var fixes = u.reasons.map(fixFor).join('') + '<p class="nr-tracking">Tracked through ' + matched.join(', ') + '.</p>';
+                    var fixes = u.reasons.map(fixFor).join('') + '<p class="nr-tracking">' + (matched.length ? 'Tracked through ' + matched.join(', ') + '.' : 'Not tracked.') + '</p>';
                     body.insertAdjacentHTML('beforeend', '<tr><td><a is="emby-linkbutton" class="button-link" href="' + link + '">' + esc(u.name) + '</a></td><td>' + reasons + '</td><td>' + fixes + '</td></tr>');
                 });
                 table.hidden = status.unmatched.length === 0;

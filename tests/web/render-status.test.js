@@ -273,6 +273,13 @@ test('a row with a matched source ends with "Tracked through" that source', () =
     assert.match(row, /<p class="nr-tracking">[^<]*<\/p><\/td>$/); // the last line of How to fix
 });
 
+// 008 FR-009: a row no enabled source matched says the artist is not tracked.
+test('a row with no matched source ends with "Not tracked."', () => {
+    const row = unmatchedRows(fixture('admin-status.json'))[1];
+
+    assert.equal(tracking(row), 'Not tracked.');
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
