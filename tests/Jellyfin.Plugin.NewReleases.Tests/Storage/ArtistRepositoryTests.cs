@@ -164,6 +164,19 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
             Assert.Single(counts.Unmatched).Sources.Select(s => (s.Source, s.Status)));
     }
 
+    /// <summary>008 FR-002: a source whose stored state is still Pending reads as not checked, like one with no row.</summary>
+    [Fact]
+    public async Task GetCountsAsync_AnEnabledSourceWithAPendingRow_IsListedAsPending()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", new ArtistMatch(MatchStatus.Pending, null, null), CancellationToken.None);
+
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz", "deezer"], CancellationToken.None);
+
+        Assert.Equal(MatchStatus.Pending, Assert.Single(counts.Unmatched).Sources.Single(s => s.Source == "deezer").Status);
+    }
+
     /// <summary>008 FR-014: an artist is listed only for a failure at a source that is switched on.</summary>
     [Fact]
     public async Task GetCountsAsync_AnArtistUnmatchedOnlyAtADisabledSource_IsNotListed()
