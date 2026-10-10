@@ -3,6 +3,22 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Changed
+
+- **The Unmatched artists table explains each failure.** The columns are now Artist, Reason and
+  How to fix. Reason shows each enabled source's matching steps, each marked passed (✓), failed
+  (✗) or not reached (–), with the scores that decided it. How to fix gives one fix for each
+  source that failed, for the step that failed, and then says whether the artist is still
+  tracked through another source. The fix for a Deezer failure no longer tells you to set the
+  MusicBrainz artist ID, which Deezer does not use. After the next refresh, a fix also lists the
+  candidates the search found, with their MusicBrainz IDs ready to copy.
+- **A disabled source no longer lists its artists.** An artist that only a disabled source failed
+  leaves the table. The stored result returns when you enable the source again.
+- **The administrator status response changed.** Each `unmatched` entry has `reasons` in place of
+  `sources` and `hint`. A script that reads `hint` stops finding it.
+
 ## 0.2.1 — 2026-10-10
 
 ### Fixed

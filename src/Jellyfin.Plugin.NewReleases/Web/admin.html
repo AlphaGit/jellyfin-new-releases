@@ -9,6 +9,12 @@
      data-role="page"
      class="page type-interior pluginConfigurationPage"
      data-require="emby-input,emby-button,emby-checkbox">
+    <style>
+        #newreleasesConfigPage .nr-id { user-select: all; }
+        #newreleasesConfigPage .nr-reason { white-space: nowrap; }
+        #newreleasesConfigPage .nr-step-notreached { opacity: 0.5; }
+        #newreleasesConfigPage .nr-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    </style>
 
     <div data-role="content">
         <div class="content-primary">
@@ -70,7 +76,7 @@
             <h2>Unmatched artists</h2>
             <p id="nr-unmatched-empty" hidden>Every library artist is matched at every enabled source.</p>
             <table class="detailTable" id="nr-unmatched" hidden>
-                <thead><tr><th>Artist</th><th>Sources</th><th>How to fix</th></tr></thead>
+                <thead><tr><th>Artist</th><th>Reason</th><th>How to fix</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -155,16 +161,68 @@
                 page.querySelector('#nr-artists-processed').textContent = run ? run.artistsProcessed + ' of ' + status.libraryArtists : '–';
                 page.querySelector('#nr-releases-found').textContent = run ? String(run.releasesFound) : '–';
 
+                var displayName = function (id) {
+                    var source = status.sources.filter(function (s) { return s.id === id; })[0];
+                    return source ? source.displayName : id;
+                };
                 var table = page.querySelector('#nr-unmatched'), empty = page.querySelector('#nr-unmatched-empty');
                 var body = table.querySelector('tbody');
                 body.innerHTML = '';
                 status.unmatched.forEach(function (u) {
                     var link = '#/details?id=' + encodeURIComponent(u.jellyfinId) + '&serverId=' + encodeURIComponent(ApiClient.serverId());
-                    var sources = u.sources.map(function (s) { return esc(s.source) + ': ' + esc(s.reason); }).join('<br>');
-                    body.insertAdjacentHTML('beforeend', '<tr><td><a is="emby-linkbutton" class="button-link" href="' + link + '">' + esc(u.name) + '</a></td><td>' + sources + '</td><td>' + esc(u.hint) + '</td></tr>');
+                    var reasons = u.reasons.map(function (r) {
+                        var line = r.failedStep
+                            ? r.steps.map(stepFor).join(' · ')
+                            : esc(r.reason || (r.state === 'NotChecked' ? 'Not checked' : r.state));
+                        return '<div class="nr-reason">' + esc(displayName(r.source)) + ': ' + line + '</div>';
+                    }).join('');
+                    var matched = u.reasons.filter(function (r) { return r.state === 'Matched'; }).map(function (r) { return displayName(r.source); });
+                    var fixes = u.reasons.map(fixFor).join('') + '<p class="nr-tracking">' + (matched.length ? 'Tracked through ' + matched.join(', ') + '.' : 'Not tracked.') + '</p>';
+                    body.insertAdjacentHTML('beforeend', '<tr><td><a is="emby-linkbutton" class="button-link" href="' + link + '">' + esc(u.name) + '</a></td><td>' + reasons + '</td><td>' + fixes + '</td></tr>');
                 });
                 table.hidden = status.unmatched.length === 0;
                 empty.hidden = status.unmatched.length !== 0;
+            }
+
+            /** 008 FR-003, FR-010: each step state's mark, and the words a screen reader says for it. */
+            var STEP_MARKS = { Passed: ['✓', 'passed'], Failed: ['✗', 'failed'], NotReached: ['–', 'not reached'] };
+
+            /** 008 FR-003: one step of a trail, by its short name, then its mark. */
+            function stepFor(step) {
+                var mark = STEP_MARKS[step.state];
+                return '<span class="nr-step nr-step-' + esc(step.state.toLowerCase()) + '">' + (step.name === 'Id' ? 'ID' : esc(step.name))
+                    + (mark ? ' <span aria-hidden="true">' + mark[0] + '</span><span class="nr-sr">' + mark[1] + '</span>' : '')
+                    + (step.values ? ' ' + step.values.map(esc).join(' vs ') : '') + '</span>';
+            }
+
+            /** 008 FR-008: the fix for one source's failed step, as a paragraph; nothing for a source that did not fail. */
+            function fixFor(r) {
+                if (r.source === 'musicbrainz' && r.failedStep) {
+                    var candidates = (r.candidates || []).map(function (c) {
+                        return esc(c.name) + ' (' + esc(c.score) + ') <code class="nr-id">' + esc(c.id) + '</code>';
+                    });
+                    return '<p class="nr-fix">Set the MusicBrainz artist ID in Jellyfin\'s metadata editor or artist.nfo; the plugin uses it on the next refresh.'
+                        + (candidates.length ? ' Candidates: ' + candidates.join(', ') : '') + '</p>';
+                }
+
+                if (r.source === 'deezer' && r.failedStep === 'Name') {
+                    var names = (r.candidates || []).map(function (c) { return esc(c.name); });
+                    if (!names.length) {
+                        return '<p class="nr-fix">Deezer may not list this artist.</p>';
+                    }
+
+                    return '<p class="nr-fix">Deezer lists ' + names.join(', ') + '. If one is this artist, its name on Deezer differs from the name in Jellyfin; Deezer matches by name only.</p>';
+                }
+
+                if (r.source === 'deezer' && r.failedStep === 'Album') {
+                    var rule = 'the same title as an album in the library, ignoring case, punctuation, accents and one trailing edition tag such as (Deluxe Edition). '
+                        + 'Only the first 100 albums of each artist are compared.';
+                    return '<p class="nr-fix">' + (r.exactNameCount == null
+                        ? 'No Deezer album has ' + rule
+                        : 'Checked ' + r.exactNameCount + ' Deezer artists with this name and ' + r.albumsCompared + ' of their albums. None has ' + rule) + '</p>';
+                }
+
+                return '';
             }
 
             function refreshStatus() {

@@ -60,14 +60,15 @@ public class ResponseNamingTests
 
     /// <summary>
     /// An <see cref="AdminStatusResponse"/> covering every name the administrator page reads: a
-    /// healthy source and a cooling-down one, a completed run, and two unmatched artists with their
-    /// per-source reasons. `matchedArtists` is a dictionary, so its keys are data rather than
-    /// contract names; the fixture uses the same two source ids so the comparison stays exact.
+    /// healthy source and a cooling-down one, a completed run, and unmatched artists whose reasons
+    /// carry every field at least once (008 contracts/http-api.md). Fields the serializer omits when
+    /// null therefore appear somewhere, which keeps the union of names complete. `matchedArtists`
+    /// is a dictionary, so its keys are data rather than contract names; the fixture uses the same
+    /// two source ids so the comparison stays exact.
     /// </summary>
     private static AdminStatusResponse PopulatedAdminStatusResponse()
     {
         var checkedAt = DateTimeOffset.UnixEpoch;
-        var hint = AdminController.UnmatchedHint;
 
         return new AdminStatusResponse(
             new[]
@@ -83,8 +84,11 @@ public class ResponseNamingTests
             new Dictionary<string, int> { ["musicbrainz"] = 41, ["deezer"] = 38 },
             new[]
             {
-                new UnmatchedArtistDto(Guid.NewGuid(), "Various Artists", new[] { new UnmatchedSourceDto("musicbrainz", "NoConfidentMatch"), new UnmatchedSourceDto("deezer", "NoResults") }, hint),
-                new UnmatchedArtistDto(Guid.NewGuid(), "The Blue Nile", new[] { new UnmatchedSourceDto("musicbrainz", "AmbiguousMatch") }, hint),
+                new UnmatchedArtistDto(Guid.NewGuid(), "Nirvana", new[]
+                {
+                    new ReasonDto("musicbrainz", "Unmatched", "Unique", new[] { new StepDto("Id", "Failed", null), new StepDto("Unique", "Failed", new[] { 100, 96 }) }, "ambiguous (score 100 vs 96)", new[] { new CandidateDto("Nirvana", 100, "5b11f4ce-a62d-471e-81fc-a69a8278c7da") }, null, null),
+                    new ReasonDto("deezer", "Unmatched", "Album", new[] { new StepDto("Name", "Passed", null) }, "no corroborating album", new[] { new CandidateDto("Nirvana", null, null) }, 2, 37),
+                }),
             });
     }
 

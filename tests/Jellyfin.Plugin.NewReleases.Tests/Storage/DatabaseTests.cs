@@ -29,6 +29,9 @@ public sealed class DatabaseTests : IDisposable
         Assert.True(Directory.Exists(Path.Combine(_dataPath, "newreleases")));
     }
 
+    /// <summary>The newest embedded migration: 002_match_detail (spec 008). A fresh database ends at it.</summary>
+    private const long LatestSchema = 2;
+
     private static readonly string[] SchemaTables =
         ["library_artist", "artist_source", "release", "source_entry", "edition", "decision", "source_state", "refresh_run", "schema_version"];
 
@@ -52,7 +55,7 @@ public sealed class DatabaseTests : IDisposable
 
         await using var version = connection.CreateCommand();
         version.CommandText = "SELECT MAX(version) FROM schema_version";
-        Assert.Equal(1L, await version.ExecuteScalarAsync());
+        Assert.Equal(LatestSchema, await version.ExecuteScalarAsync());
     }
 
     [Fact]
@@ -64,7 +67,7 @@ public sealed class DatabaseTests : IDisposable
 
         await using var connection = await NewDatabase().OpenAsync(CancellationToken.None);
 
-        Assert.Equal(1L, await CountAsync(connection, "schema_version"));
+        Assert.Equal(LatestSchema, await CountAsync(connection, "schema_version"));
     }
 
     [Fact]
@@ -77,11 +80,43 @@ public sealed class DatabaseTests : IDisposable
             Enumerable.Range(0, 4).Select(_ => Task.Run(() => db.OpenAsync(CancellationToken.None))));
 
         Assert.Equal(1, db.MigrationRuns);
-        Assert.Equal(1L, await CountAsync(connections[0], "schema_version"));
+        Assert.Equal(LatestSchema, await CountAsync(connections[0], "schema_version"));
         foreach (var connection in connections)
         {
             await connection.DisposeAsync();
         }
+    }
+
+    /// <summary>
+    /// 008 / constitution IV: a database left by a released version (schema 001, every release so far)
+    /// migrates forward, keeping its rows; the new column starts empty.
+    /// </summary>
+    [Fact]
+    public async Task OpenAsync_ADatabaseAtSchema001_MigratesTo002_KeepingItsArtistSourceRows()
+    {
+        var db = NewDatabase();
+        Directory.CreateDirectory(Path.GetDirectoryName(db.DatabasePath)!);
+        await using (var old = new Microsoft.Data.Sqlite.SqliteConnection(db.ConnectionString))
+        {
+            await old.OpenAsync();
+            using var reader = new StreamReader(typeof(PluginDatabase).Assembly.GetManifestResourceStream("Jellyfin.Plugin.NewReleases.Storage.Migrations.001_initial.sql")!);
+            await using var setup = old.CreateCommand();
+            setup.CommandText = await reader.ReadToEndAsync() + """
+                CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL);
+                INSERT INTO schema_version VALUES (1, '2026-09-06T00:00:00Z');
+                INSERT INTO library_artist (id, artist_key, jellyfin_id, name, library_ids, album_count) VALUES (1, 'name:blur', '00000000-0000-0000-0000-000000000001', 'Blur', '[]', 1);
+                INSERT INTO artist_source (library_artist_id, source, status, unmatched_reason) VALUES (1, 'musicbrainz', 'Unmatched', 'low score (70)');
+                """;
+            await setup.ExecuteNonQueryAsync();
+        }
+
+        await using var connection = await db.OpenAsync(CancellationToken.None);
+        await using var row = connection.CreateCommand();
+        row.CommandText = "SELECT unmatched_reason, match_detail IS NULL, (SELECT MAX(version) FROM schema_version) FROM artist_source";
+        await using var read = await row.ExecuteReaderAsync();
+        Assert.True(await read.ReadAsync());
+
+        Assert.Equal(("low score (70)", 1L, LatestSchema), (read.GetString(0), read.GetInt64(1), read.GetInt64(2)));
     }
 
     private static async Task<long> CountAsync(Microsoft.Data.Sqlite.SqliteConnection connection, string table)

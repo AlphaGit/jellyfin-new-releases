@@ -58,6 +58,19 @@ public sealed record SourceStatusDto(string Id, string DisplayName, bool Enabled
 
 public sealed record RunDto(DateTimeOffset StartedAt, DateTimeOffset? EndedAt, string? Outcome, int ArtistsProcessed, int ReleasesFound, int EditionsFetched, int Errors);
 
-public sealed record UnmatchedArtistDto(Guid JellyfinId, string Name, IReadOnlyList<UnmatchedSourceDto> Sources, string Hint);
+public sealed record UnmatchedArtistDto(Guid JellyfinId, string Name, IReadOnlyList<ReasonDto> Reasons);
 
-public sealed record UnmatchedSourceDto(string Source, string Reason);
+/// <summary>One enabled source's result for an unmatched artist (008 contracts/http-api.md): state, step trail, and the attempt detail.</summary>
+public sealed record ReasonDto(
+    string Source,
+    string State,
+    string? FailedStep,
+    IReadOnlyList<StepDto> Steps,
+    string? Reason,
+    IReadOnlyList<CandidateDto>? Candidates,
+    int? ExactNameCount,
+    int? AlbumsCompared);
+
+public sealed record StepDto(string Name, string State, IReadOnlyList<int>? Values);
+
+public sealed record CandidateDto(string Name, int? Score, string? Id);

@@ -128,8 +128,13 @@ Small status for the fragment header (also embedded in the list response; kept f
   "matchedArtists": { "musicbrainz": 488, "deezer": 470 },
   "unmatched": [
     { "jellyfinId": "…", "name": "Blur",
-      "sources": [ { "source": "musicbrainz", "reason": "ambiguous (score 100 vs 97)" } ],
-      "hint": "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin picks it up on the next refresh." }
+      "reasons": [
+        { "source": "musicbrainz", "state": "Unmatched", "failedStep": "Unique",
+          "steps": [ { "name": "Id", "state": "Failed" }, { "name": "Search", "state": "Passed" },
+                     { "name": "Score", "state": "Passed" }, { "name": "Unique", "state": "Failed", "values": [100, 97] } ],
+          "reason": "ambiguous (score 100 vs 97)",
+          "candidates": [ { "name": "Blur", "score": 100, "id": "…" }, { "name": "Blur", "score": 97, "id": "…" } ] },
+        { "source": "deezer", "state": "Matched", "steps": [] } ] }
   ]
 }
 ```
@@ -138,6 +143,11 @@ Small status for the fragment header (also embedded in the list response; kept f
 triggers (server local time, as Jellyfin fires them) and is `null` when no trigger is set.
 `releasesLastCheckedAt` is the same instant the user page reports, so an administrator can see the
 last run and the age of the data diverge.
+
+`unmatched` (amended by `specs/008-unmatched-artist-reasons/contracts/http-api.md`, which holds the
+field rules): an artist is listed when it is `Unmatched` at an enabled source. `reasons` has one
+entry per enabled source, in the order of `sources`; `state` ∈ `Matched` | `Unmatched` |
+`NotChecked`. A field whose value is `null` is left out of the response.
 
 Field names and the meaning of `releasesLastCheckedAt` are settled by
 `specs/002-report-data-age/contracts/http-api.md`.
@@ -191,5 +201,7 @@ Deletes all `decision` rows. `204`.
   (`<input type="text">`), Save.
 - **Status**: last refresh, next refresh, artists processed, releases found; buttons **Run now**,
   **Purge release data**, **Clear Archive** (each with `Dashboard.confirm`).
-- **Unmatched artists** table: name (link to the artist's Jellyfin page), sources and reasons,
-  the fix hint sentence.
+- **Unmatched artists** table: columns Artist (link to the artist's Jellyfin page), Reason (one
+  line per enabled source: its step trail, `Matched` or `Not checked`) and How to fix (one fix per
+  failed source, then whether the artist is still tracked). Wording and markup:
+  `specs/008-unmatched-artist-reasons/contracts/admin-page.md`.
