@@ -57,4 +57,13 @@ public class MatchReasonsTests
         Assert.Equal("Name", failed?.Step);
         Assert.Empty(failed!.Values);
     }
+
+    [Fact]
+    public void Parse_DeezerNoCorroboratingAlbum_FailsAtAlbumWithNoValues()
+    {
+        var failed = MatchReasons.Parse(SourceLimits.Deezer, "no corroborating album");
+
+        Assert.Equal("Album", failed?.Step);
+        Assert.Empty(failed!.Values);
+    }
 }

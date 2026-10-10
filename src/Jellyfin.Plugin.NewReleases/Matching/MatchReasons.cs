@@ -21,7 +21,12 @@ public static partial class MatchReasons
 
         if (source == SourceLimits.Deezer)
         {
-            return reason == "no result" ? new FailedStep("Name", []) : null;
+            return reason switch
+            {
+                "no result" => new FailedStep("Name", []),
+                "no corroborating album" => new FailedStep("Album", []),
+                _ => null,
+            };
         }
 
         if (source != SourceLimits.MusicBrainz)
