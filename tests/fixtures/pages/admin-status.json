@@ -35,24 +35,163 @@
   "nextRunAt": "2026-09-21T03:00:00+00:00",
   "isRunning": false,
   "libraryArtists": 83,
-  "matchedArtists": { "musicbrainz": 41, "deezer": 38 },
+  "matchedArtists": {
+    "musicbrainz": 41,
+    "deezer": 38
+  },
   "unmatched": [
     {
+      "jellyfinId": "5f2a9c1e7b3d4e8fa6c0d9b14e72a3c8",
+      "name": "Daft Punk",
+      "reasons": [
+        {
+          "source": "musicbrainz",
+          "state": "Matched",
+          "steps": []
+        },
+        {
+          "source": "deezer",
+          "state": "Unmatched",
+          "failedStep": "Album",
+          "steps": [
+            {
+              "name": "Name",
+              "state": "Passed"
+            },
+            {
+              "name": "Album",
+              "state": "Failed"
+            }
+          ],
+          "reason": "no corroborating album",
+          "candidates": [
+            {
+              "name": "Daft Punk"
+            },
+            {
+              "name": "Daft Punk"
+            },
+            {
+              "name": "Daft Punk - Stardust"
+            }
+          ],
+          "exactNameCount": 2,
+          "albumsCompared": 37
+        }
+      ]
+    },
+    {
       "jellyfinId": "9c4e1a08d2b7436f85a3c6e0f1d7b25a",
-      "name": "Various Artists",
-      "sources": [
-        { "source": "musicbrainz", "reason": "NoConfidentMatch" },
-        { "source": "deezer", "reason": "NoResults" }
-      ],
-      "hint": "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin picks it up on the next refresh."
+      "name": "Nirvana",
+      "reasons": [
+        {
+          "source": "musicbrainz",
+          "state": "Unmatched",
+          "failedStep": "Unique",
+          "steps": [
+            {
+              "name": "Id",
+              "state": "Failed"
+            },
+            {
+              "name": "Search",
+              "state": "Passed"
+            },
+            {
+              "name": "Score",
+              "state": "Passed"
+            },
+            {
+              "name": "Unique",
+              "state": "Failed",
+              "values": [
+                100,
+                96
+              ]
+            }
+          ],
+          "reason": "ambiguous (score 100 vs 96)",
+          "candidates": [
+            {
+              "name": "Nirvana",
+              "score": 100,
+              "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+            },
+            {
+              "name": "Nirvana",
+              "score": 96,
+              "id": "9282c8b4-ca0b-4c6b-b7e3-4f7762dfc4d6"
+            },
+            {
+              "name": "Approaching Nirvana",
+              "score": 74,
+              "id": "c3a64a25-251b-4d03-afba-1471440245b8"
+            }
+          ]
+        },
+        {
+          "source": "deezer",
+          "state": "Unmatched",
+          "failedStep": "Name",
+          "steps": [
+            {
+              "name": "Name",
+              "state": "Failed"
+            },
+            {
+              "name": "Album",
+              "state": "NotReached"
+            }
+          ],
+          "reason": "no result",
+          "candidates": [
+            {
+              "name": "Nirvana (UK)"
+            },
+            {
+              "name": "Approaching Nirvana"
+            }
+          ]
+        }
+      ]
     },
     {
       "jellyfinId": "3ad8f05b6c1e49279be4a7d0c82f16e3",
       "name": "The Blue Nile",
-      "sources": [
-        { "source": "musicbrainz", "reason": "AmbiguousMatch" }
-      ],
-      "hint": "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin picks it up on the next refresh."
+      "reasons": [
+        {
+          "source": "musicbrainz",
+          "state": "Unmatched",
+          "failedStep": "Score",
+          "steps": [
+            {
+              "name": "Id",
+              "state": "Failed"
+            },
+            {
+              "name": "Search",
+              "state": "Passed"
+            },
+            {
+              "name": "Score",
+              "state": "Failed",
+              "values": [
+                70
+              ]
+            },
+            {
+              "name": "Unique",
+              "state": "NotReached"
+            }
+          ],
+          "reason": "low score (70)"
+        },
+        {
+          "source": "deezer",
+          "state": "NotChecked",
+          "steps": []
+        }
+      ]
     }
   ]
 }

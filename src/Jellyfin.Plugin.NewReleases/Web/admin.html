@@ -155,13 +155,17 @@
                 page.querySelector('#nr-artists-processed').textContent = run ? run.artistsProcessed + ' of ' + status.libraryArtists : '–';
                 page.querySelector('#nr-releases-found').textContent = run ? String(run.releasesFound) : '–';
 
+                var displayName = function (id) {
+                    var source = status.sources.filter(function (s) { return s.id === id; })[0];
+                    return source ? source.displayName : id;
+                };
                 var table = page.querySelector('#nr-unmatched'), empty = page.querySelector('#nr-unmatched-empty');
                 var body = table.querySelector('tbody');
                 body.innerHTML = '';
                 status.unmatched.forEach(function (u) {
                     var link = '#/details?id=' + encodeURIComponent(u.jellyfinId) + '&serverId=' + encodeURIComponent(ApiClient.serverId());
-                    var sources = u.sources.map(function (s) { return esc(s.source) + ': ' + esc(s.reason); }).join('<br>');
-                    body.insertAdjacentHTML('beforeend', '<tr><td><a is="emby-linkbutton" class="button-link" href="' + link + '">' + esc(u.name) + '</a></td><td>' + sources + '</td><td>' + esc(u.hint) + '</td></tr>');
+                    var reasons = u.reasons.map(function (r) { return '<div class="nr-reason">' + esc(displayName(r.source)) + ': ' + esc(r.reason || r.state) + '</div>'; }).join('');
+                    body.insertAdjacentHTML('beforeend', '<tr><td><a is="emby-linkbutton" class="button-link" href="' + link + '">' + esc(u.name) + '</a></td><td>' + reasons + '</td><td></td></tr>');
                 });
                 table.hidden = status.unmatched.length === 0;
                 empty.hidden = status.unmatched.length !== 0;

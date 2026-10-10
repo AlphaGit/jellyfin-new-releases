@@ -61,10 +61,9 @@ public sealed class AdminControllerTests : IAsyncLifetime
     }
 
     private static readonly Guid Library = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
-    private const string Hint = "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin picks it up on the next refresh.";
 
     [Fact]
-    public async Task Status_ReportsSourceHealthRunTriggerArtistCountsAndUnmatchedArtistsWithHint()
+    public async Task Status_ReportsSourceHealthRunTriggerArtistCountsAndUnmatchedArtistsWithReasons()
     {
         _configuration.DeezerEnabled = false;
         var blurId = Guid.NewGuid();
@@ -99,8 +98,24 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.False(status.IsRunning);
         Assert.Equal((2, 1), (status.LibraryArtists, status.MatchedArtists["musicbrainz"]));
         var unmatched = Assert.Single(status.Unmatched);
-        Assert.Equal((blurId, "Blur", Hint), (unmatched.JellyfinId, unmatched.Name, unmatched.Hint));
-        Assert.Equal([("musicbrainz", "ambiguous (score 100 vs 97)")], unmatched.Sources.Select(s => (s.Source, s.Reason)));
+        Assert.Equal((blurId, "Blur"), (unmatched.JellyfinId, unmatched.Name));
+        Assert.Equal([("musicbrainz", "ambiguous (score 100 vs 97)")], unmatched.Reasons.Select(s => (s.Source, s.Reason)));
+    }
+
+    /// <summary>The admin status as the page receives it, serialized under the endpoint's declared naming.</summary>
+    private async Task<System.Text.Json.JsonElement> StatusJsonAsync()
+        => System.Text.Json.JsonSerializer.SerializeToElement((await Controller().GetStatusAsync(CancellationToken.None)).Value!, Jellyfin.Extensions.Json.JsonDefaults.CamelCaseOptions);
+
+    /// <summary>008 FR-013: each unmatched artist carries its per-source reasons as data, and no fixed hint.</summary>
+    [Fact]
+    public async Task Status_EachUnmatchedArtist_CarriesReasons_AndNoSourcesOrHint()
+    {
+        var blur = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(blur, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var unmatched = Assert.Single((await StatusJsonAsync()).GetProperty("unmatched").EnumerateArray());
+
+        Assert.Equal(["jellyfinId", "name", "reasons"], unmatched.EnumerateObject().Select(p => p.Name));
     }
 
     /// <summary>002 FR-009/SC-005: an operator sees the run and the data age side by side, and sees them diverge.</summary>

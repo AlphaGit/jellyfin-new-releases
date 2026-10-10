@@ -77,14 +77,23 @@ test('a healthy source hides its last error', () => {
     assert.doesNotMatch(text('nr-health-musicbrainz'), /503/);
 });
 
-test('every artist no source matched is listed with its reasons and the hint', () => {
-    const { document } = rendered(fixture('admin-status.json'));
-    const rows = document.getElementById('nr-unmatched').querySelector('tbody').innerHTML;
+/** The unmatched table's rows, one string of cell markup per row. */
+function unmatchedRows(status) {
+    const { document } = rendered(status);
+    return document.getElementById('nr-unmatched').querySelector('tbody').innerHTML.split('</tr>').filter(r => r.includes('<tr>'));
+}
 
-    assert.equal(rows.match(/<tr>/g).length, 2);
-    assert.match(rows, /Various Artists/);
-    assert.match(rows, /musicbrainz: NoConfidentMatch<br>deezer: NoResults/);
-    assert.match(rows, /metadata editor or artist\.nfo/);
+/** The source each Reason line of a row starts with. */
+function reasonLineSources(row) {
+    return [...row.matchAll(/<div class="nr-reason">([^:<]+): /g)].map(m => m[1]);
+}
+
+// 008 FR-001, FR-002: one Reason line per enabled source, led by the name the Sources section shows.
+test('each unmatched artist has one Reason line per reasons entry, led by the source display name', () => {
+    const rows = unmatchedRows(fixture('admin-status.json'));
+
+    assert.equal(rows.length, 3);
+    assert.deepEqual(reasonLineSources(rows[0]), ['MusicBrainz', 'Deezer']);
 });
 
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {

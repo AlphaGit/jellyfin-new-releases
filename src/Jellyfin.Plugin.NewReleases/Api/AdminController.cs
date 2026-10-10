@@ -100,7 +100,7 @@ public sealed class AdminController : ControllerBase
             worker is { State: TaskState.Running },
             counts.LibraryArtists,
             counts.MatchedBySource,
-            counts.Unmatched.Select(u => new UnmatchedArtistDto(u.JellyfinId, u.Name, u.Sources.Select(s => new UnmatchedSourceDto(s.Source, s.Reason ?? string.Empty)).ToList(), UnmatchedHint)).ToList());
+            counts.Unmatched.Select(u => new UnmatchedArtistDto(u.JellyfinId, u.Name, u.Sources.Select(s => new ReasonDto(s.Source, s.Status.ToString(), null, [], s.Reason, null, null, null)).ToList())).ToList());
     }
 
     /// <summary>Purge release data (FR-013): releases, entries, editions and ownership go; decisions, artists and match state stay; paging passes restart.</summary>
@@ -123,9 +123,6 @@ public sealed class AdminController : ControllerBase
         _logger.LogWarning("Archive cleared by an administrator.");
         return NoContent();
     }
-
-    /// <summary>FR-012: the fix is made in Jellyfin, never in the plugin.</summary>
-    public const string UnmatchedHint = "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin picks it up on the next refresh.";
 
     /// <summary>Next start from the task's first trigger, as Jellyfin fires them (server local time); null when no trigger is set.</summary>
     private static DateTimeOffset? NextRunAt(IScheduledTaskWorker? worker, DateTimeOffset now)
