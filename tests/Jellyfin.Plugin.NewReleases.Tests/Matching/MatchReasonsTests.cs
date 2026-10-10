@@ -82,4 +82,10 @@ public class MatchReasonsTests
     {
         Assert.Null(MatchReasons.Parse(source, string.Empty));
     }
+
+    [Fact]
+    public void Parse_AMusicBrainzOnlyTextUnderDeezer_IsNull()
+    {
+        Assert.Null(MatchReasons.Parse(SourceLimits.Deezer, "low score (70)"));
+    }
 }
