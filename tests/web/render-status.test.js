@@ -243,6 +243,13 @@ test('a Deezer Album failure without detail starts at "No Deezer album has the s
     assert.deepEqual(fixes(row), [ALBUM_RULE.replace('None has', 'No Deezer album has')]);
 });
 
+// 008 SC-001, FR-006: a row whose only failure is at Deezer never points at the MusicBrainz artist ID.
+test('a row whose only failure is at Deezer never mentions the MusicBrainz artist ID', () => {
+    const row = unmatchedRows(fixture('admin-status.json'))[0];
+
+    assert.doesNotMatch(row, /MusicBrainz artist ID/);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
