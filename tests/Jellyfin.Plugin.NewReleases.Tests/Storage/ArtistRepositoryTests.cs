@@ -177,6 +177,21 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
         Assert.Equal(MatchStatus.Pending, Assert.Single(counts.Unmatched).Sources.Single(s => s.Source == "deezer").Status);
     }
 
+    /// <summary>008: only an Unmatched entry has a reason; a match and a source not checked have none.</summary>
+    [Fact]
+    public async Task GetCountsAsync_MatchedAndNotCheckedEntries_HaveNoReason()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Matched("mb-1"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz", "deezer", "other"], CancellationToken.None);
+
+        Assert.Equal(
+            [("musicbrainz", null), ("deezer", "no result"), ("other", null)],
+            Assert.Single(counts.Unmatched).Sources.Select(s => (s.Source, s.Reason)));
+    }
+
     /// <summary>008 FR-014: an artist is listed only for a failure at a source that is switched on.</summary>
     [Fact]
     public async Task GetCountsAsync_AnArtistUnmatchedOnlyAtADisabledSource_IsNotListed()

@@ -179,7 +179,7 @@ public sealed class ArtistRepository
             while (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 var jellyfinId = Guid.Parse(reader.GetString(0));
-                var at = new UnmatchedAt(reader.GetString(2), Enum.Parse<MatchStatus>(reader.GetString(4)), reader.IsDBNull(3) ? string.Empty : reader.GetString(3));
+                var at = new UnmatchedAt(reader.GetString(2), Enum.Parse<MatchStatus>(reader.GetString(4)), reader.IsDBNull(3) ? null : reader.GetString(3));
                 if (listed.Count == 0 || listed[^1].JellyfinId != jellyfinId)
                 {
                     listed.Add((jellyfinId, reader.GetString(1), new Dictionary<string, UnmatchedAt>(StringComparer.Ordinal)));
@@ -191,7 +191,7 @@ public sealed class ArtistRepository
 
         // An enabled source with no row never ran for the artist: listed as not checked (Pending).
         var unmatched = listed
-            .Select(a => new UnmatchedArtist(a.JellyfinId, a.Name, enabledSources.Select(source => a.At.GetValueOrDefault(source) ?? new UnmatchedAt(source, MatchStatus.Pending, string.Empty)).ToArray()))
+            .Select(a => new UnmatchedArtist(a.JellyfinId, a.Name, enabledSources.Select(source => a.At.GetValueOrDefault(source) ?? new UnmatchedAt(source, MatchStatus.Pending, null)).ToArray()))
             .ToList();
 
         return new ArtistCounts(libraryArtists, matched, unmatched);

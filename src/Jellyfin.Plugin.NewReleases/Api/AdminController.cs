@@ -100,7 +100,7 @@ public sealed class AdminController : ControllerBase
             worker is { State: TaskState.Running },
             counts.LibraryArtists,
             counts.MatchedBySource,
-            counts.Unmatched.Select(u => new UnmatchedArtistDto(u.JellyfinId, u.Name, u.Sources.Select(s => new UnmatchedSourceDto(s.Source, s.Reason)).ToList(), UnmatchedHint)).ToList());
+            counts.Unmatched.Select(u => new UnmatchedArtistDto(u.JellyfinId, u.Name, u.Sources.Select(s => new UnmatchedSourceDto(s.Source, s.Reason ?? string.Empty)).ToList(), UnmatchedHint)).ToList());
     }
 
     /// <summary>Purge release data (FR-013): releases, entries, editions and ownership go; decisions, artists and match state stay; paging passes restart.</summary>
