@@ -191,7 +191,7 @@ carries its state in words.
 - [X] T030 Run `PATH=/opt/homebrew/opt/dotnet/bin:$PATH dotnet build --configuration Release`. The build has zero warnings (`TreatWarningsAsErrors`).
 - [X] T031 Run the full `dotnet test --configuration Release` and `node --test "tests/web/*.test.js"`. Both are green.
 - [X] T032 [P] Confirm that `HttpSurfaceTests.NoContractDocument_NamesARouteThePluginDoesNotServe` in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/HttpSurfaceTests.cs` passes with the amended `001` contract and this feature's `contracts/http-api.md`.
-- [ ] T033 Commit to `main`. Push only when the maintainer asks, then verify that the CI run for the push is green (`gh run list --branch main`).
+- [X] T033 Commit to `main`. Push only when the maintainer asks, then verify that the CI run for the push is green (`gh run list --branch main`).
 
 The real-server pass in [quickstart.md](./quickstart.md) §2 is the maintainer's own pass after
 release. A defect found there becomes a new spec.
