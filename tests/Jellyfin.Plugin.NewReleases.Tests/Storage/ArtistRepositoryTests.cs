@@ -205,6 +205,19 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
         Assert.Empty(counts.Unmatched);
     }
 
+    /// <summary>008 FR-014: hiding a disabled source keeps its stored result, so enabling it again lists the artist as before.</summary>
+    [Fact]
+    public async Task GetCountsAsync_ADisabledSourcesResultIsKept_AndListsAgainOnceEnabled()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+        Assert.Empty((await _db.Artists.GetCountsAsync(["musicbrainz"], CancellationToken.None)).Unmatched);
+
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz", "deezer"], CancellationToken.None);
+
+        Assert.Equal("no result", Assert.Single(counts.Unmatched).Sources.Single(s => s.Source == "deezer").Reason);
+    }
+
     private static readonly HashSet<string> BothSources = ["musicbrainz", "deezer"];
 
     private async Task CompleteFetchAsync(long artistId, string source, DateTimeOffset at)
