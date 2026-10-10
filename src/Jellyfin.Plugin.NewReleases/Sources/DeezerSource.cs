@@ -36,6 +36,11 @@ public sealed class DeezerSource : IReleaseSource
         var wanted = TitleNormalizer.NormalizeName(artist.Name);
         var libraryTitles = artist.Albums.Select(a => a.NormalizedTitle).ToHashSet(StringComparer.Ordinal);
         using var search = await GetJsonAsync($"{Base}search/artist?q={Uri.EscapeDataString(artist.Name)}&limit=25", ct).ConfigureAwait(false);
+        // FR-015, FR-016: the first three artists Deezer returned, whatever their names, kept for the fix.
+        var returned = search.RootElement.GetProperty("data").EnumerateArray()
+            .Take(3)
+            .Select(a => new MatchCandidate(a.GetProperty("name").GetString() ?? string.Empty))
+            .ToArray();
         var candidates = search.RootElement.GetProperty("data").EnumerateArray()
             .Where(a => TitleNormalizer.NormalizeName(a.GetProperty("name").GetString() ?? string.Empty) == wanted)
             .Select(a => a.GetProperty("id").GetInt64().ToString(CultureInfo.InvariantCulture))
@@ -50,7 +55,9 @@ public sealed class DeezerSource : IReleaseSource
             }
         }
 
-        return ArtistMatch.Unmatched(candidates.Count == 0 ? MatchReasons.NoResult : MatchReasons.NoCorroboratingAlbum);
+        return candidates.Count == 0
+            ? ArtistMatch.Unmatched(MatchReasons.NoResult, new MatchDetail(returned))
+            : ArtistMatch.Unmatched(MatchReasons.NoCorroboratingAlbum);
     }
 
     public async Task<CataloguePage> FetchCataloguePageAsync(string sourceArtistId, int offset, CancellationToken ct)

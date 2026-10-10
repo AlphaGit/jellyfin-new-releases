@@ -72,6 +72,20 @@ public sealed class DeezerSourceTests : IAsyncLifetime
         Assert.DoesNotContain(_h.RequestedUrls, u => u.Contains("/albums", StringComparison.Ordinal));
     }
 
+    /// <summary>Spec 008 FR-015, FR-016: with no exact name, the first three artists Deezer returned are kept by name, in its order.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_NoExactName_KeepsTheFirstThreeNamesInResponseOrder()
+    {
+        _h.Fixture(Search, "deezer/search_artist_exact.json"); // five artists, none named "Daft Punk Live"
+
+        var match = await Source().MatchArtistAsync(Artist("Daft Punk Live", "Anything"), CancellationToken.None);
+
+        Assert.Equal("no result", match.Reason);
+        Assert.Equal(
+            [new MatchCandidate("Daft Punk"), new MatchCandidate("Daft Punk - Stardust"), new MatchCandidate("Daft Punk")],
+            match.Detail?.Candidates ?? []);
+    }
+
     /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
     [Theory]
     [InlineData("deezer/search_artist_empty.json", "Daft Punk", "Name")]       // no artist at all
