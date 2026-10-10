@@ -225,6 +225,15 @@ test('a Deezer Name failure with no stored candidates says Deezer may not list t
     assert.equal(fixes(row)[1], 'Deezer may not list this artist.');
 });
 
+const ALBUM_RULE = 'None has the same title as an album in the library, ignoring case, punctuation, accents and one trailing edition tag such as (Deluxe Edition). Only the first 100 albums of each artist are compared.';
+
+// 008 FR-008: an album check that found nothing in common says what it compared.
+test('a Deezer Album failure with detail gives both counts', () => {
+    const row = unmatchedRows(fixture('admin-status.json'))[0];
+
+    assert.deepEqual(fixes(row), ['Checked 2 Deezer artists with this name and 37 of their albums. ' + ALBUM_RULE]);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 

@@ -194,6 +194,12 @@
                     return '<p class="nr-fix">Deezer lists ' + names.join(', ') + '. If one is this artist, its name on Deezer differs from the name in Jellyfin; Deezer matches by name only.</p>';
                 }
 
+                if (r.source === 'deezer' && r.failedStep === 'Album') {
+                    return '<p class="nr-fix">Checked ' + r.exactNameCount + ' Deezer artists with this name and ' + r.albumsCompared + ' of their albums. '
+                        + 'None has the same title as an album in the library, ignoring case, punctuation, accents and one trailing edition tag such as (Deluxe Edition). '
+                        + 'Only the first 100 albums of each artist are compared.</p>';
+                }
+
                 return '';
             }
 
