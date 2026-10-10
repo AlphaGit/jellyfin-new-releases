@@ -88,7 +88,7 @@ public sealed class AdminController : ControllerBase
         }
 
         var lastRun = await _sourceState.GetLatestRunAsync(cancellationToken).ConfigureAwait(false);
-        var counts = await _artists.GetCountsAsync(cancellationToken).ConfigureAwait(false);
+        var counts = await _artists.GetCountsAsync([.. configuration.EnabledSourceIds()], cancellationToken).ConfigureAwait(false);
         var worker = RefreshWorker();
         return new AdminStatusResponse(
             sources,

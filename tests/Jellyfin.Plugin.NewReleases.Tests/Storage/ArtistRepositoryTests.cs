@@ -115,7 +115,7 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
         await _db.Artists.SetMatchAsync(neitherId, "musicbrainz", ArtistMatch.Unmatched("ambiguous (score 90 vs 85)"), CancellationToken.None);
         await _db.Artists.SetMatchAsync(neitherId, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
 
-        var counts = await _db.Artists.GetCountsAsync(CancellationToken.None);
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz", "deezer"], CancellationToken.None);
 
         Assert.Equal(3, counts.LibraryArtists);
         Assert.Equal(2, counts.MatchedBySource["musicbrainz"]);
@@ -128,6 +128,19 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
                 (neither.JellyfinId, "Neither", "musicbrainz", "ambiguous (score 90 vs 85)"),
             ],
             counts.Unmatched.SelectMany(u => u.Sources.OrderBy(s => s.Source).Select(s => (u.JellyfinId, u.Name, s.Source, s.Reason))));
+    }
+
+    /// <summary>008 FR-014: an artist is listed only for a failure at a source that is switched on.</summary>
+    [Fact]
+    public async Task GetCountsAsync_AnArtistUnmatchedOnlyAtADisabledSource_IsNotListed()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Matched("mb-1"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz"], CancellationToken.None);
+
+        Assert.Empty(counts.Unmatched);
     }
 
     private static readonly HashSet<string> BothSources = ["musicbrainz", "deezer"];

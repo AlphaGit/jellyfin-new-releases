@@ -143,7 +143,7 @@ public sealed class ArtistRepository
         reader.IsDBNull(8) ? null : reader.GetString(8));
 
     /// <summary>Admin counts: total artists, Matched per source, and every artist Unmatched at at least one source with the reasons (FR-012).</summary>
-    public async Task<ArtistCounts> GetCountsAsync(CancellationToken ct)
+    public async Task<ArtistCounts> GetCountsAsync(IReadOnlyList<string> enabledSources, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
 
@@ -168,9 +168,10 @@ public sealed class ArtistRepository
             rows.CommandText = """
                 SELECT a.jellyfin_id, a.name, s.source, s.unmatched_reason
                 FROM artist_source s JOIN library_artist a ON a.id = s.library_artist_id
-                WHERE s.status = 'Unmatched'
+                WHERE s.status = 'Unmatched' AND s.source IN (SELECT value FROM json_each(@enabled))
                 ORDER BY a.name, a.id, s.source
                 """;
+            rows.Parameters.AddWithValue("@enabled", JsonSerializer.Serialize(enabledSources));
             await using var reader = await rows.ExecuteReaderAsync(ct).ConfigureAwait(false);
             while (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
