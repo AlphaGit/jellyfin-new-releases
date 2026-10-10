@@ -295,6 +295,14 @@ test('candidate names and IDs are written escaped', () => {
     assert.match(row, /Deezer lists Tom &amp; &lt;i&gt;Jerry&lt;\/i&gt;\./);
 });
 
+// 008 FR-006: only a failed step gets a fix; a match or a source not yet checked gets none.
+test('a matched or not-checked source gives no fix paragraph', () => {
+    const rows = unmatchedRows(fixture('admin-status.json'));
+
+    assert.equal(fixes(rows[0]).length, 1); // MusicBrainz matched, Deezer Album failed
+    assert.equal(fixes(rows[2]).length, 1); // MusicBrainz Score failed, Deezer not checked
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
