@@ -119,7 +119,7 @@ through `AcceptanceRig`.
 | U44 | A `NotChecked` entry has null `FailedStep`, empty `Steps` and null `Reason` | EC-notchecked | example | DONE | `Api/AdminControllerTests.cs::Status_ASourceNotYetRun_IsNotChecked_WithNoFailedStepNoStepsAndNoReason` |
 | U45 | An unrecognized reason gives `Unmatched`, null `FailedStep`, empty `Steps`, and the stored text in `Reason` | EC-unknown | example | DONE | `Api/AdminControllerTests.cs::Status_AnUnrecognizedReason_IsUnmatched_WithNoFailedStepNoSteps_AndKeepsItsText` |
 | U46 | With Deezer disabled in the configuration, an artist Unmatched only at Deezer is absent | FR-014 | example | DONE | `Api/AdminControllerTests.cs::Status_WithDeezerDisabled_AnArtistOnlyDeezerFailed_IsNotListed` |
-| U47 | Stored detail appears as `Candidates` (Deezer with null `Score` and `Id`), `ExactNameCount` and `AlbumsCompared` | FR-015, FR-013 | example | DONE | `Api/AdminControllerTests.cs::Status_StoredDetail_AppearsAsCandidatesAndCounts` |
+| U47 | Stored detail appears as `Candidates` (Deezer with null `Score` and `Id`), `ExactNameCount` and `AlbumsCompared` | FR-015, FR-013 | example | DONE | `Api/AdminControllerTests.cs::Status_StoredDetail_AppearsAsCandidatesAndCounts`, `Api/AdminControllerTests.cs::Status_StoredMusicBrainzCandidates_KeepTheirScoreAndId` |
 | U48 | A row without detail gives null `Candidates`, `ExactNameCount` and `AlbumsCompared` | EC-old, FR-016 | example | DONE | `Api/AdminControllerTests.cs::Status_ARowWithoutDetail_HasNoCandidatesAndNoCounts` |
 
 ### `tests/fixtures/pages/admin-status.json` against the records (`ResponseNamingTests`)

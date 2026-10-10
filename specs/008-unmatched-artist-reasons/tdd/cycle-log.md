@@ -796,3 +796,15 @@ commit. Each had its own red first:
   and A11 closed earlier (cycles 34 and 25). Suite -> node 403 passed, dotnet 416 passed
 - refactor: none needed
 - commit: `91346a1`
+
+## Cycle 84: remediation of audit finding 1 — U47 also pins a MusicBrainz candidate's score and ID (T046)
+
+- test: `Api/AdminControllerTests.cs::Status_StoredMusicBrainzCandidates_KeepTheirScoreAndId` (new).
+  The existing U47 test kept its Deezer case, where score and ID are null by rule
+- red: none possible, the behaviour exists; passed on first run (1 passed). The audit's surviving
+  mutant, `new CandidateDto(c.Name, null, null)` in `AdminController.ToReason`, now fails it:
+  `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_StoredMusicBrainzCandidates" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Actual `[CandidateDto { Name = Blur, Score = , Id =  }, …]` (1 failed). Code restored exactly from a copy
+- green: no production change. Suite -> dotnet 417 passed
+- refactor: none needed
+- commit: `e116064`
