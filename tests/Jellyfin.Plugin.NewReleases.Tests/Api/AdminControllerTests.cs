@@ -118,6 +118,19 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal(["jellyfinId", "name", "reasons"], unmatched.EnumerateObject().Select(p => p.Name));
     }
 
+    /// <summary>008 FR-001, FR-002: one reason per enabled source, in the order the response lists its sources.</summary>
+    [Fact]
+    public async Task Status_Reasons_FollowTheSourcesOrder_OnePerEnabledSource()
+    {
+        var blur = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(blur, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(blur, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var status = (await Controller().GetStatusAsync(CancellationToken.None)).Value!;
+
+        Assert.Equal(status.Sources.Select(s => s.Id), Assert.Single(status.Unmatched).Reasons.Select(r => r.Source));
+    }
+
     /// <summary>002 FR-009/SC-005: an operator sees the run and the data age side by side, and sees them diverge.</summary>
     [Fact]
     public async Task Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch()
