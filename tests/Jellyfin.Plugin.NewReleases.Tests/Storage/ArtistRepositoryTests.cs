@@ -218,6 +218,20 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
         Assert.Equal("no result", Assert.Single(counts.Unmatched).Sources.Single(s => s.Source == "deezer").Reason);
     }
 
+    /// <summary>008 FR-015: a failed match's candidates and counts are stored with it and read back unchanged.</summary>
+    [Fact]
+    public async Task GetCountsAsync_ReadsBackTheDetailStoredWithAnUnmatchedResult()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        var detail = new MatchDetail([new MatchCandidate("Nirvana", 100, "mbid-1"), new MatchCandidate("Nirvana (UK)")], 2, 37);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Unmatched("no corroborating album", detail), CancellationToken.None);
+
+        var read = Assert.Single(Assert.Single((await _db.Artists.GetCountsAsync(["deezer"], CancellationToken.None)).Unmatched).Sources).Detail;
+
+        Assert.Equal(detail.Candidates, read?.Candidates ?? []);
+        Assert.Equal((2, 37), (read?.ExactNameCount, read?.AlbumsCompared));
+    }
+
     private static readonly HashSet<string> BothSources = ["musicbrainz", "deezer"];
 
     private async Task CompleteFetchAsync(long artistId, string source, DateTimeOffset at)
