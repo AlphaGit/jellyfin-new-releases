@@ -232,6 +232,20 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
         Assert.Equal((2, 37), (read?.ExactNameCount, read?.AlbumsCompared));
     }
 
+    /// <summary>008 data-model: a match replaces the failed attempt, its detail included.</summary>
+    [Fact]
+    public async Task SetMatchAsync_AMatchAfterAFailedAttempt_LeavesNoDetail()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Unmatched("no result", new MatchDetail([new MatchCandidate("B")])), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Matched("27"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var deezer = Assert.Single((await _db.Artists.GetCountsAsync(["musicbrainz", "deezer"], CancellationToken.None)).Unmatched).Sources.Single(s => s.Source == "deezer");
+
+        Assert.Null(deezer.Detail);
+    }
+
     private static readonly HashSet<string> BothSources = ["musicbrainz", "deezer"];
 
     private async Task CompleteFetchAsync(long artistId, string source, DateTimeOffset at)
