@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.NewReleases.Matching;
+using Jellyfin.Plugin.NewReleases.Sources;
 using Xunit;
 
 namespace Jellyfin.Plugin.NewReleases.Tests.Matching;
@@ -19,5 +20,14 @@ public class MatchReasonsTests
     public void Ambiguous_WritesTheBestScoreThenTheRunnerUp()
     {
         Assert.Equal("ambiguous (score 92 vs 90)", MatchReasons.Ambiguous(92, 90));
+    }
+
+    [Fact]
+    public void Parse_MusicBrainzNoResult_FailsAtSearchWithNoValues()
+    {
+        var failed = MatchReasons.Parse(SourceLimits.MusicBrainz, "no result");
+
+        Assert.Equal("Search", failed?.Step);
+        Assert.Empty(failed!.Values);
     }
 }
