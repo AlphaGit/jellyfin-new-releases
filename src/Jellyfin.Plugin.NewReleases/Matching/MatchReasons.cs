@@ -27,14 +27,16 @@ public static partial class MatchReasons
         var lowScore = LowScorePattern().Match(reason);
         if (lowScore.Success)
         {
-            return new FailedStep("Score", [int.Parse(lowScore.Groups[1].Value, CultureInfo.InvariantCulture)]);
+            return new FailedStep("Score", [Number(lowScore, 1)]);
         }
 
         var ambiguous = AmbiguousPattern().Match(reason);
         return ambiguous.Success
-            ? new FailedStep("Unique", [int.Parse(ambiguous.Groups[1].Value, CultureInfo.InvariantCulture), int.Parse(ambiguous.Groups[2].Value, CultureInfo.InvariantCulture)])
+            ? new FailedStep("Unique", [Number(ambiguous, 1), Number(ambiguous, 2)])
             : null;
     }
+
+    private static int Number(Match match, int group) => int.Parse(match.Groups[group].Value, CultureInfo.InvariantCulture);
 
     [GeneratedRegex(@"^low score \((\d+)\)$")]
     private static partial Regex LowScorePattern();
