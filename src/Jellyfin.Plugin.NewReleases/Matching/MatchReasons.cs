@@ -25,11 +25,22 @@ public static partial class MatchReasons
         }
 
         var lowScore = LowScorePattern().Match(reason);
-        return lowScore.Success ? new FailedStep("Score", [int.Parse(lowScore.Groups[1].Value, CultureInfo.InvariantCulture)]) : null;
+        if (lowScore.Success)
+        {
+            return new FailedStep("Score", [int.Parse(lowScore.Groups[1].Value, CultureInfo.InvariantCulture)]);
+        }
+
+        var ambiguous = AmbiguousPattern().Match(reason);
+        return ambiguous.Success
+            ? new FailedStep("Unique", [int.Parse(ambiguous.Groups[1].Value, CultureInfo.InvariantCulture), int.Parse(ambiguous.Groups[2].Value, CultureInfo.InvariantCulture)])
+            : null;
     }
 
     [GeneratedRegex(@"^low score \((\d+)\)$")]
     private static partial Regex LowScorePattern();
+
+    [GeneratedRegex(@"^ambiguous \(score (\d+) vs (\d+)\)$")]
+    private static partial Regex AmbiguousPattern();
 }
 
 /// <summary>The matching step a reason names as failed (spec 008 FR-003) and the values that decided it (FR-004).</summary>

@@ -39,4 +39,13 @@ public class MatchReasonsTests
         Assert.Equal("Score", failed?.Step);
         Assert.Equal([70], failed!.Values);
     }
+
+    [Fact]
+    public void Parse_MusicBrainzAmbiguous_FailsAtUniqueWithBothScores()
+    {
+        var failed = MatchReasons.Parse(SourceLimits.MusicBrainz, "ambiguous (score 92 vs 90)");
+
+        Assert.Equal("Unique", failed?.Step);
+        Assert.Equal([92, 90], failed!.Values);
+    }
 }
