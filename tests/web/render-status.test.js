@@ -122,6 +122,20 @@ test('a source not yet checked reads "<Source>: Not checked"', () => {
     assert.equal(reasonLines(rows[2])[1], 'Deezer: Not checked');
 });
 
+/** The fixture with one more artist whose only reason is a text no released version writes. */
+function withUnrecognizedReason(text) {
+    const base = fixture('admin-status.json');
+    const odd = { jellyfinId: '0b8f0e7c2d4a4f6e9a1c3e5f7a9b1d3f', name: 'Odd', reasons: [{ source: 'musicbrainz', state: 'Unmatched', steps: [], reason: text }] };
+    return { ...base, unmatched: [...base.unmatched, odd] };
+}
+
+// 008 edge case: a reason with no known failed step shows its stored text, escaped.
+test('an entry with no failed step shows its stored reason text, escaped', () => {
+    const rows = unmatchedRows(withUnrecognizedReason('rate <limited> & retried'));
+
+    assert.match(rows[3], /<div class="nr-reason">MusicBrainz: rate &lt;limited&gt; &amp; retried<\/div>/);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
