@@ -216,6 +216,15 @@ test('a Deezer Name failure with an empty candidate list says Deezer may not lis
     assert.equal(fixes(row)[1], 'Deezer may not list this artist.');
 });
 
+// 008 FR-008, edge case: a Deezer Name failure from before the upgrade has no candidates recorded.
+test('a Deezer Name failure with no stored candidates says Deezer may not list this artist', () => {
+    const old = { source: 'deezer', state: 'Unmatched', failedStep: 'Name', steps: [], reason: 'no result' };
+
+    const row = unmatchedRows(withReason(1, 1, old))[1];
+
+    assert.equal(fixes(row)[1], 'Deezer may not list this artist.');
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
