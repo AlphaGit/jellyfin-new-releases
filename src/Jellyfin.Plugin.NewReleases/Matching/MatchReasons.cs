@@ -12,6 +12,10 @@ public static partial class MatchReasons
 
     public const string NoCorroboratingAlbum = "no corroborating album";
 
+    private static readonly string[] MusicBrainzSteps = ["Id", "Search", "Score", "Unique"];
+
+    private static readonly string[] DeezerSteps = ["Name", "Album"];
+
     public static string LowScore(int score) => $"low score ({score})";
 
     public static string Ambiguous(int best, int runnerUp) => $"ambiguous (score {best} vs {runnerUp})";
@@ -59,7 +63,7 @@ public static partial class MatchReasons
     /// <summary>Every step of the source in its matching order, marked against the failed one (spec 008 FR-003).</summary>
     public static IReadOnlyList<MatchStep> Steps(string source, FailedStep failed)
     {
-        string[] order = source == SourceLimits.Deezer ? ["Name", "Album"] : ["Id", "Search", "Score", "Unique"];
+        var order = source == SourceLimits.Deezer ? DeezerSteps : MusicBrainzSteps;
         var at = Array.IndexOf(order, failed.Step);
         return order.Select((name, i) => new MatchStep(
             name,
