@@ -1,0 +1,17 @@
+using Jellyfin.Plugin.NewReleases.Matching;
+using Xunit;
+
+namespace Jellyfin.Plugin.NewReleases.Tests.Matching;
+
+/// <summary>
+/// The reason texts a source writes when it leaves an artist Unmatched, and the matching steps they
+/// stand for (spec 008, "The matching steps today"). Every text a released version wrote must parse.
+/// </summary>
+public class MatchReasonsTests
+{
+    [Fact]
+    public void LowScore_WritesTheBestScoreInParentheses()
+    {
+        Assert.Equal("low score (70)", MatchReasons.LowScore(70));
+    }
+}
