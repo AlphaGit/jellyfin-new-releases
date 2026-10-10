@@ -217,6 +217,15 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal((2, 37), (reason.ExactNameCount, reason.AlbumsCompared));
     }
 
+    /// <summary>008 edge case, FR-016: a row from before the upgrade has no detail, so the page shows the fix without candidates or counts.</summary>
+    [Fact]
+    public async Task Status_ARowWithoutDetail_HasNoCandidatesAndNoCounts()
+    {
+        var reason = await OnlyReasonAsync("musicbrainz", ArtistMatch.Unmatched("low score (70)"));
+
+        Assert.Equal((null, null, null), (reason.Candidates, reason.ExactNameCount, reason.AlbumsCompared));
+    }
+
     /// <summary>002 FR-009/SC-005: an operator sees the run and the data age side by side, and sees them diverge.</summary>
     [Fact]
     public async Task Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch()
