@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { loadPageDom } = require('./load-page.js');
+const { loadPageDom, pageSource } = require('./load-page.js');
 const { fixture } = require('./fixtures.js');
 const { HOUR, DAY, ago } = require('./fixed-clock.js');
 
@@ -87,6 +87,13 @@ function unmatchedRows(status) {
 function reasonLineSources(row) {
     return [...row.matchAll(/<div class="nr-reason">([^:<]+): /g)].map(m => m[1]);
 }
+
+// 008 FR-001: the table's columns are Artist, Reason, How to fix.
+test('the unmatched table is headed Artist, Reason, How to fix', () => {
+    const head = pageSource('admin.html').match(/<table[^>]*id="nr-unmatched"[\s\S]*?<thead>([\s\S]*?)<\/thead>/)[1];
+
+    assert.deepEqual([...head.matchAll(/<th>([^<]*)<\/th>/g)].map(m => m[1]), ['Artist', 'Reason', 'How to fix']);
+});
 
 // 008 FR-001, FR-002: one Reason line per enabled source, led by the name the Sources section shows.
 test('each unmatched artist has one Reason line per reasons entry, led by the source display name', () => {
