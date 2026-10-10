@@ -355,6 +355,15 @@ test('a not-reached step shows –, the words "not reached", and the dimming cla
     assert.deepEqual(trailSteps(musicBrainz)[3], ['Unique', 'notreached']);
 });
 
+// 008 FR-010: a screen reader skips the mark and reads the words; the state is never in the mark or colour alone.
+test('every step hides its mark from screen readers and states itself in visually hidden words', () => {
+    const [musicBrainz] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[1]);
+    const steps = musicBrainz.split(' · ');
+
+    assert.equal(steps.length, 4);
+    for (const step of steps) assert.match(step, /<span aria-hidden="true">[✓✗–]<\/span><span class="nr-sr">(passed|failed|not reached)<\/span>/);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
