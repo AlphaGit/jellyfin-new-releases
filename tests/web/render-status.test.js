@@ -388,6 +388,11 @@ test('a failed Unique step shows both scores: "Unique ✗ 100 vs 96"', () => {
     assert.match(visible(musicBrainz), / · Unique ✗ 100 vs 96$/);
 });
 
+// 008 FR-005, SC-004: a Reason line stays on one line.
+test('a Reason line does not wrap', () => {
+    assert.equal(declared('#newreleasesConfigPage .nr-reason')['white-space'], 'nowrap');
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
