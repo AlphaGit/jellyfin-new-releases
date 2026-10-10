@@ -259,6 +259,20 @@ test('a row failing at both sources gives two different fix paragraphs', () => {
     assert.notEqual(found[0], found[1]);
 });
 
+/** A row's tracking line, the last paragraph of How to fix. */
+function tracking(row) {
+    const found = /<p class="nr-tracking">([\s\S]*?)<\/p>/.exec(row);
+    return found ? found[1] : undefined;
+}
+
+// 008 FR-009: the row says through which source the artist is still tracked.
+test('a row with a matched source ends with "Tracked through" that source', () => {
+    const row = unmatchedRows(fixture('admin-status.json'))[0];
+
+    assert.equal(tracking(row), 'Tracked through MusicBrainz.');
+    assert.match(row, /<p class="nr-tracking">[^<]*<\/p><\/td>$/); // the last line of How to fix
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
