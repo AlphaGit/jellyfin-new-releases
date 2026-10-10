@@ -167,6 +167,18 @@ test('a MusicBrainz Search failure gives the artist-ID sentence and no candidate
     assert.deepEqual(fixes(row), [ARTIST_ID_FIX]);
 });
 
+// 008 FR-008, FR-016: an ambiguous MusicBrainz failure lists its candidates, each with its score and a copyable ID.
+test('a MusicBrainz Unique failure with candidates gives the sentence, then each name (score) with its ID in a <code>', () => {
+    const row = unmatchedRows(fixture('admin-status.json'))[1];
+    const markup = row.match(/<p class="nr-fix">([\s\S]*?)<\/p>/)[1];
+
+    assert.equal(
+        markup,
+        ARTIST_ID_FIX + ' Candidates: Nirvana (100) <code class="nr-id">5b11f4ce-a62d-471e-81fc-a69a8278c7da</code>, ' +
+            'Nirvana (96) <code class="nr-id">9282c8b4-ca0b-4c6b-b7e3-4f7762dfc4d6</code>, ' +
+            'Approaching Nirvana (74) <code class="nr-id">c3a64a25-251b-4d03-afba-1471440245b8</code>');
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 

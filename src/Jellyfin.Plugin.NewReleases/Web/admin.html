@@ -175,7 +175,11 @@
             /** 008 FR-008: the fix for one source's failed step, as a paragraph; nothing for a source that did not fail. */
             function fixFor(r) {
                 if (r.source === 'musicbrainz' && r.failedStep) {
-                    return '<p class="nr-fix">Set the MusicBrainz artist ID in Jellyfin\'s metadata editor or artist.nfo; the plugin uses it on the next refresh.</p>';
+                    var candidates = (r.candidates || []).map(function (c) {
+                        return c.name + ' (' + c.score + ') <code class="nr-id">' + c.id + '</code>';
+                    });
+                    return '<p class="nr-fix">Set the MusicBrainz artist ID in Jellyfin\'s metadata editor or artist.nfo; the plugin uses it on the next refresh.'
+                        + (candidates.length ? ' Candidates: ' + candidates.join(', ') : '') + '</p>';
                 }
 
                 return '';
