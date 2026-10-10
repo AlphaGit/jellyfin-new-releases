@@ -217,6 +217,17 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal((2, 37), (reason.ExactNameCount, reason.AlbumsCompared));
     }
 
+    /// <summary>008 FR-016: a MusicBrainz candidate reaches the page with the score and ID the fix shows.</summary>
+    [Fact]
+    public async Task Status_StoredMusicBrainzCandidates_KeepTheirScoreAndId()
+    {
+        var detail = new MatchDetail([new MatchCandidate("Blur", 92, "mbid-1"), new MatchCandidate("Blur", 90, "mbid-2")]);
+
+        var reason = await OnlyReasonAsync("musicbrainz", ArtistMatch.Unmatched("ambiguous (score 92 vs 90)", detail));
+
+        Assert.Equal([new CandidateDto("Blur", 92, "mbid-1"), new CandidateDto("Blur", 90, "mbid-2")], reason.Candidates ?? []);
+    }
+
     /// <summary>008 edge case, FR-016: a row from before the upgrade has no detail, so the page shows the fix without candidates or counts.</summary>
     [Fact]
     public async Task Status_ARowWithoutDetail_HasNoCandidatesAndNoCounts()
