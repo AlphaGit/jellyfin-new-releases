@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.NewReleases.Library;
+using Jellyfin.Plugin.NewReleases.Matching;
 using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.Sources;
 using Jellyfin.Plugin.NewReleases.Tests.Support;
@@ -105,6 +106,20 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
         var match = await Source().MatchArtistAsync(Artist("zzqxjv nonexistent artist qqq"), CancellationToken.None);
 
         Assert.Equal(ArtistMatch.Unmatched("no result"), match);
+    }
+
+    /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
+    [Theory]
+    [InlineData("musicbrainz/artist_search_empty.json", "Search")]
+    [InlineData("musicbrainz/artist_search_low_score.json", "Score")]
+    [InlineData("musicbrainz/artist_search_ambiguous.json", "Unique")]
+    public async Task MatchArtistAsync_EveryUnmatchedReason_ParsesToItsFailedStep(string fixture, string step)
+    {
+        _h.Fixture(ArtistSearch, fixture);
+
+        var match = await Source().MatchArtistAsync(Artist("Nirvana"), CancellationToken.None);
+
+        Assert.Equal(step, MatchReasons.Parse(Source().Id, match.Reason)?.Step);
     }
 
     private const string ReleaseBrowse = @"musicbrainz\.org/ws/2/release\?artist=";
