@@ -14,4 +14,10 @@ public class MatchReasonsTests
     {
         Assert.Equal("low score (70)", MatchReasons.LowScore(70));
     }
+
+    [Fact]
+    public void Ambiguous_WritesTheBestScoreThenTheRunnerUp()
+    {
+        Assert.Equal("ambiguous (score 92 vs 90)", MatchReasons.Ambiguous(92, 90));
+    }
 }

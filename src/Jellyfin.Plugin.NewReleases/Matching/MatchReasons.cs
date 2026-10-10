@@ -4,4 +4,6 @@ namespace Jellyfin.Plugin.NewReleases.Matching;
 public static class MatchReasons
 {
     public static string LowScore(int score) => $"low score ({score})";
+
+    public static string Ambiguous(int best, int runnerUp) => $"ambiguous (score {best} vs {runnerUp})";
 }
