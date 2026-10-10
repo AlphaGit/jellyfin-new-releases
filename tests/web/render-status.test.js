@@ -393,6 +393,21 @@ test('a Reason line does not wrap', () => {
     assert.equal(declared('#newreleasesConfigPage .nr-reason')['white-space'], 'nowrap');
 });
 
+// 008 FR-005, SC-004 (research R7): the longest trail any source can write fits the one-line budget of 64 characters.
+const ONE_LINE_BUDGET = 64;
+
+test('the longest possible trail is at most 64 characters as a reader sees it', () => {
+    const longest = {
+        source: 'musicbrainz', state: 'Unmatched', failedStep: 'Unique', reason: 'ambiguous (score 100 vs 95)',
+        steps: [{ name: 'Id', state: 'Failed' }, { name: 'Search', state: 'Passed' }, { name: 'Score', state: 'Passed' }, { name: 'Unique', state: 'Failed', values: [100, 95] }],
+    };
+
+    const [line] = reasonMarkup(unmatchedRows(withReason(1, 0, longest))[1]);
+
+    assert.equal(visible(line), 'MusicBrainz: ID ✗ · Search ✓ · Score ✓ · Unique ✗ 100 vs 95');
+    assert.ok(visible(line).length <= ONE_LINE_BUDGET, `${visible(line).length} characters`);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
