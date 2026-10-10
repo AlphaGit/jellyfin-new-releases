@@ -325,3 +325,48 @@ commit. Each had its own red first:
 - refactor: none needed
 - notes: test-after: tasks.md placed this test (T027) before the controller work, but it was written after U42, so it never saw the behaviour missing. It composes units each driven by its own red (U4, U12, U16, U42); the mutant shows it can fail
 - commit: `d0c020c`
+
+## Cycle 33: U52 the table header reads Artist, Reason, How to fix
+
+- test: `tests/web/render-status.test.js::the unmatched table is headed Artist, Reason, How to fix` (new, reads the page source)
+- red: `node --test tests/web/render-status.test.js`
+  -> `AssertionError` actual `'Sources'` expected `'Reason'` (1 failed)
+- green: `<th>Sources</th>` becomes `<th>Reason</th>`. Suite -> node 364 passed
+- refactor: none needed
+- commit: `b984856`
+
+## Cycle 34: A9 and U54 a matched source reads "<Source>: Matched", with no trail
+
+- test: `tests/web/render-status.test.js::a matched source reads "<Source>: Matched" and nothing else` (new). One test serves both: the outer behaviour (A9) and the page unit (U54) assert the same line
+- red: `node --test tests/web/render-status.test.js`
+  -> passed on first run (14 passed): cycle 24 writes the state when there is no reason. Deliberate mutant: the page appends a mark to a state line -> `not ok 11 - a matched source reads "<Source>: Matched" and nothing else` (actual `'MusicBrainz: Matched ✓'`). Page restored exactly from a copy
+- green: no production change. Suite -> node 365 passed
+- refactor: none needed
+- commit: `a74d9b7`
+
+## Cycle 35: U55 a not-checked entry reads `Not checked`
+
+- test: `tests/web/render-status.test.js::a source not yet checked reads "<Source>: Not checked"` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 12` actual `'Deezer: NotChecked'` expected `'Deezer: Not checked'` (1 failed)
+- green: the page writes `Not checked` for the `NotChecked` state. Suite -> node 366 passed
+- refactor: none needed
+- commit: `09172c5`
+
+## Cycle 36: U56 an entry with no failed step shows its stored reason text, escaped
+
+- test: `tests/web/render-status.test.js::an entry with no failed step shows its stored reason text, escaped` (new, a fixture copy with a fourth artist)
+- red: `node --test tests/web/render-status.test.js`
+  -> passed on first run (16 passed): cycle 24 writes the reason through `esc`. Deliberate mutant: the reason written without `esc` -> `not ok 13 - an entry with no failed step shows its stored reason text, escaped` (1 failed). Page restored exactly from a copy
+- green: no production change. Suite -> node 367 passed
+- refactor: none needed
+- commit: `3c3f126`
+
+## Cycle 37: U57 the old fixed hint sentence appears nowhere on the page
+
+- test: `tests/web/render-status.test.js::the old fixed hint sentence appears nowhere on the page` (new, rendered rows and page source)
+- red: `node --test tests/web/render-status.test.js`
+  -> passed on first run (17 passed): cycle 24 removed the hint. Deliberate mutant: the page writes a fixed "…picks it up on the next refresh." in How to fix -> `not ok 14 - the old fixed hint sentence appears nowhere on the page` (1 failed). Page restored exactly from a copy
+- green: no production change. Suite -> node 368 passed
+- refactor: none needed
+- commit: `4e82078`

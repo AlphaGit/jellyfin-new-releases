@@ -37,7 +37,7 @@ through `AcceptanceRig`.
 | A6  | A row Unmatched at both sources has one fix per failed source and no fix twice | US1-AS6 | example | PENDING | |
 | A7  | A MusicBrainz `low score (70)` row's Reason line reads ID failed, Search passed, Score failed with 70, Unique not reached | US2-AS1 | example | PENDING | |
 | A8  | A Deezer `no corroborating album` row's Reason line reads Name passed, Album failed | US2-AS2 | example | PENDING | |
-| A9  | A Matched source's Reason line reads "<Source>: Matched" with no trail | US2-AS3 | example | PENDING | |
+| A9 | A Matched source's Reason line reads "<Source>: Matched" with no trail | US2-AS3 | example | DONE | `tests/web/render-status.test.js::a matched source reads "<Source>: Matched" and nothing else` |
 | A10 | With Deezer disabled, no listed artist has a Deezer entry in the admin status | US2-AS4 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_A10_WithDeezerDisabled_NoListedArtistHasADeezerReason` |
 | A11 | An artist Unmatched only at disabled Deezer is absent from the admin status, and is listed with its stored reason once Deezer is enabled again, with no refresh between | US2-AS5 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_A11_AnArtistUnmatchedOnlyAtDisabledDeezer_IsHidden_AndReturnsWhenDeezerIsEnabledAgain` |
 | A12 | Every rendered step carries its state in words for a screen reader, separate from its mark and dimming | US2-AS6 | example | PENDING | |
@@ -139,12 +139,12 @@ through `AcceptanceRig`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U52 | The table header reads Artist, Reason, How to fix | FR-001 | example | PENDING | |
+| U52 | The table header reads Artist, Reason, How to fix | FR-001 | example | DONE | `tests/web/render-status.test.js::the unmatched table is headed Artist, Reason, How to fix` |
 | U53 | The Reason cell has one line per `reasons` entry, led by the source's `displayName` | FR-001, FR-002 | example | DONE | `tests/web/render-status.test.js::each unmatched artist has one Reason line per reasons entry, led by the source display name` |
-| U54 | A `Matched` entry's line reads `Matched` | US2-AS3 | example | PENDING | |
-| U55 | A `NotChecked` entry's line reads `Not checked` | EC-notchecked | example | PENDING | |
-| U56 | An entry with no failed step shows its stored reason text, escaped | EC-unknown, INV-esc | example | PENDING | |
-| U57 | The old fixed hint sentence appears nowhere on the page | SC-001 | example | PENDING | |
+| U54 | A `Matched` entry's line reads `Matched` | US2-AS3 | example | DONE | `tests/web/render-status.test.js::a matched source reads "<Source>: Matched" and nothing else` |
+| U55 | A `NotChecked` entry's line reads `Not checked` | EC-notchecked | example | DONE | `tests/web/render-status.test.js::a source not yet checked reads "<Source>: Not checked"` |
+| U56 | An entry with no failed step shows its stored reason text, escaped | EC-unknown, INV-esc | example | DONE | `tests/web/render-status.test.js::an entry with no failed step shows its stored reason text, escaped` |
+| U57 | The old fixed hint sentence appears nowhere on the page | SC-001 | example | DONE | `tests/web/render-status.test.js::the old fixed hint sentence appears nowhere on the page` |
 | U58 | A trail shows every step as short name and mark, joined by ` · `, with `Id` written `ID` | FR-003 | example | PENDING | |
 | U59 | A passed step shows `✓` and the words `passed` | FR-003, FR-010 | example | PENDING | |
 | U60 | A failed step shows `✗` and the words `failed` | FR-003, FR-010 | example | PENDING | |
