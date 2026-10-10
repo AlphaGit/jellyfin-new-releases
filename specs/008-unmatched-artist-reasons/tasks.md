@@ -163,7 +163,7 @@ carries its state in words.
 
 ### Tests for User Story 2 (write first, observe red)
 
-- [ ] T026 [US2] Add failing cases to `tests/web/render-status.test.js`, per [contracts/admin-page.md](./contracts/admin-page.md) "Reason column":
+- [X] T026 [US2] Add failing cases to `tests/web/render-status.test.js`, per [contracts/admin-page.md](./contracts/admin-page.md) "Reason column":
   - An Unmatched entry with a `failedStep` renders every step as `<short name> <mark>`, joined by ` · `, with `Id` shown as `ID`.
   - Marks: `✓` passed, `✗` failed, `–` not reached; each mark is `aria-hidden="true"` and is followed by visually hidden words (`passed`, `failed`, `not reached`) in an `nr-sr` element.
   - A not-reached step carries the class that the stylesheet dims; the stylesheet declares that class with an `opacity` below 1 and `.nr-sr` as visually hidden.
@@ -172,14 +172,14 @@ carries its state in words.
 
 ### Implementation for User Story 2
 
-- [ ] T028 [US2] In `src/Jellyfin.Plugin.NewReleases/Web/admin.html`, render the trail spans of research R6 and add the CSS for `.nr-sr`, the dimmed not-reached step, and `white-space: nowrap` on the line. T026 passes. [U58] [U59] [U60] [U61] [U62] [U63] [U64] [U65] [U66] [U67] [A7] [A8] [A12]
+- [X] T028 [US2] In `src/Jellyfin.Plugin.NewReleases/Web/admin.html`, render the trail spans of research R6 and add the CSS for `.nr-sr`, the dimmed not-reached step, and `white-space: nowrap` on the line. T026 passes. [U58] [U59] [U60] [U61] [U62] [U63] [U64] [U65] [U66] [U67] [A7] [A8] [A12]
 
-- [ ] T040 [US2] Confirm that the acceptance test for US2-AS1 is green in the full suite before US2 counts as complete. [A7]
-- [ ] T041 [US2] Confirm that the acceptance test for US2-AS2 is green in the full suite before US2 counts as complete. [A8]
+- [X] T040 [US2] Confirm that the acceptance test for US2-AS1 is green in the full suite before US2 counts as complete. [A7]
+- [X] T041 [US2] Confirm that the acceptance test for US2-AS2 is green in the full suite before US2 counts as complete. [A8]
 - [X] T042 [US2] Confirm that the acceptance test for US2-AS3 is green in the full suite before US2 counts as complete. [A9]
 - [X] T043 [US2] Confirm that the acceptance test for US2-AS4 is green in the full suite before US2 counts as complete. [A10]
 - [X] T044 [US2] Confirm that the acceptance test for US2-AS5 is green in the full suite before US2 counts as complete. [A11]
-- [ ] T045 [US2] Confirm that the acceptance test for US2-AS6 is green in the full suite before US2 counts as complete. [A12]
+- [X] T045 [US2] Confirm that the acceptance test for US2-AS6 is green in the full suite before US2 counts as complete. [A12]
 
 **Checkpoint**: US1 and US2 complete. Both suites green.
 

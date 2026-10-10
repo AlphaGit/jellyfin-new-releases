@@ -4,7 +4,7 @@ loop: outside-in
 profile: .specify/memory/tdd-profile.md
 spec_criteria: 12
 planned_at: 09033f8
-updated_at: 09033f8
+updated_at: 91346a1
 suite_baseline: green
 ---
 
@@ -35,12 +35,12 @@ through `AcceptanceRig`.
 | A4 | A row Unmatched at one source and Matched at the other ends with "Tracked through" the matched source | US1-AS4 | example | DONE | `tests/web/unmatched-acceptance.test.js::A4 (US1-AS4)` |
 | A5 | A row Unmatched at every enabled source ends with "Not tracked." | US1-AS5 | example | DONE | `tests/web/unmatched-acceptance.test.js::A5 (US1-AS5)` |
 | A6 | A row Unmatched at both sources has one fix per failed source and no fix twice | US1-AS6 | example | DONE | `tests/web/unmatched-acceptance.test.js::A6 (US1-AS6)` |
-| A7  | A MusicBrainz `low score (70)` row's Reason line reads ID failed, Search passed, Score failed with 70, Unique not reached | US2-AS1 | example | PENDING | |
-| A8  | A Deezer `no corroborating album` row's Reason line reads Name passed, Album failed | US2-AS2 | example | PENDING | |
+| A7 | A MusicBrainz `low score (70)` row's Reason line reads ID failed, Search passed, Score failed with 70, Unique not reached | US2-AS1 | example | DONE | `tests/web/unmatched-acceptance.test.js::A7 (US2-AS1)` |
+| A8 | A Deezer `no corroborating album` row's Reason line reads Name passed, Album failed | US2-AS2 | example | DONE | `tests/web/unmatched-acceptance.test.js::A8 (US2-AS2)` |
 | A9 | A Matched source's Reason line reads "<Source>: Matched" with no trail | US2-AS3 | example | DONE | `tests/web/render-status.test.js::a matched source reads "<Source>: Matched" and nothing else` |
 | A10 | With Deezer disabled, no listed artist has a Deezer entry in the admin status | US2-AS4 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_A10_WithDeezerDisabled_NoListedArtistHasADeezerReason` |
 | A11 | An artist Unmatched only at disabled Deezer is absent from the admin status, and is listed with its stored reason once Deezer is enabled again, with no refresh between | US2-AS5 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_A11_AnArtistUnmatchedOnlyAtDisabledDeezer_IsHidden_AndReturnsWhenDeezerIsEnabledAgain` |
-| A12 | Every rendered step carries its state in words for a screen reader, separate from its mark and dimming | US2-AS6 | example | PENDING | |
+| A12 | Every rendered step carries its state in words for a screen reader, separate from its mark and dimming | US2-AS6 | example | DONE | `tests/web/unmatched-acceptance.test.js::A12 (US2-AS6)` |
 
 ## Inner loop: unit behaviors
 
@@ -145,16 +145,16 @@ through `AcceptanceRig`.
 | U55 | A `NotChecked` entry's line reads `Not checked` | EC-notchecked | example | DONE | `tests/web/render-status.test.js::a source not yet checked reads "<Source>: Not checked"` |
 | U56 | An entry with no failed step shows its stored reason text, escaped | EC-unknown, INV-esc | example | DONE | `tests/web/render-status.test.js::an entry with no failed step shows its stored reason text, escaped` |
 | U57 | The old fixed hint sentence appears nowhere on the page | SC-001 | example | DONE | `tests/web/render-status.test.js::the old fixed hint sentence appears nowhere on the page` |
-| U58 | A trail shows every step as short name and mark, joined by ` · `, with `Id` written `ID` | FR-003 | example | PENDING | |
-| U59 | A passed step shows `✓` and the words `passed` | FR-003, FR-010 | example | PENDING | |
-| U60 | A failed step shows `✗` and the words `failed` | FR-003, FR-010 | example | PENDING | |
-| U61 | A not-reached step shows `–`, the words `not reached`, and the dimming class | FR-003, FR-010 | example | PENDING | |
-| U62 | Each mark is `aria-hidden`, and the words sit in a visually hidden `nr-sr` element | FR-010 | example | PENDING | |
-| U63 | The stylesheet gives the dimming class an `opacity` below 1 and makes `.nr-sr` visually hidden | FR-010 | example | PENDING | |
-| U64 | A failed `Score` step shows its value after the mark: `Score ✗ 70` | FR-004 | example | PENDING | |
-| U65 | A failed `Unique` step shows both values: `Unique ✗ 92 vs 90` | FR-004 | example | PENDING | |
-| U66 | The trail line declares `white-space: nowrap` | FR-005, SC-004 | example | PENDING | |
-| U67 | The longest possible trail text is at most 64 characters | FR-005, SC-004 | example | PENDING | |
+| U58 | A trail shows every step as short name and mark, joined by ` · `, with `Id` written `ID` | FR-003 | example | DONE | `tests/web/render-status.test.js::a trail shows every step in order by short name, ID for Id, joined by " · "` |
+| U59 | A passed step shows `✓` and the words `passed` | FR-003, FR-010 | example | DONE | `tests/web/render-status.test.js::a passed step shows ✓ and the words "passed"` |
+| U60 | A failed step shows `✗` and the words `failed` | FR-003, FR-010 | example | DONE | `tests/web/render-status.test.js::a failed step shows ✗ and the words "failed"` |
+| U61 | A not-reached step shows `–`, the words `not reached`, and the dimming class | FR-003, FR-010 | example | DONE | `tests/web/render-status.test.js::a not-reached step shows –, the words "not reached", and the dimming class` |
+| U62 | Each mark is `aria-hidden`, and the words sit in a visually hidden `nr-sr` element | FR-010 | example | DONE | `tests/web/render-status.test.js::every step hides its mark from screen readers and states itself in visually hidden words` |
+| U63 | The stylesheet gives the dimming class an `opacity` below 1 and makes `.nr-sr` visually hidden | FR-010 | example | DONE | `tests/web/render-status.test.js::the stylesheet dims a not-reached step and hides the screen-reader words visually` |
+| U64 | A failed `Score` step shows its value after the mark: `Score ✗ 70` | FR-004 | example | DONE | `tests/web/render-status.test.js::a failed Score step shows its score after the mark` |
+| U65 | A failed `Unique` step shows both values: `Unique ✗ 92 vs 90` | FR-004 | example | DONE | `tests/web/render-status.test.js::a failed Unique step shows both scores: "Unique ✗ 100 vs 96"` |
+| U66 | The trail line declares `white-space: nowrap` | FR-005, SC-004 | example | DONE | `tests/web/render-status.test.js::a Reason line does not wrap` |
+| U67 | The longest possible trail text is at most 64 characters | FR-005, SC-004 | example | DONE | `tests/web/render-status.test.js::the longest possible trail is at most 64 characters as a reader sees it` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/admin.html`: How to fix column
 

@@ -695,3 +695,104 @@ commit. Each had its own red first:
   -> node 390 passed, dotnet 416 passed
 - refactor: none needed
 - commit: `144393a`
+
+## Cycle 73: U58 a trail shows every step as short name, joined by ` · `, with `Id` written `ID`
+
+- test: `tests/web/render-status.test.js::a trail shows every step in order by short name, ID for Id, joined by " · "` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 31` actual `[]` expected `["ID", "Search", "Score", "Unique"]` (1 failed)
+- green: a line with a failed step writes each step as `<span class="nr-step nr-step-{state}">{short name}</span>`, joined by ` · `; marks come next. Suite -> node 391 passed, 3 failed (A7, A8, A12 held open)
+- refactor: none needed
+- notes: A7, A8 and A12 (`tests/web/unmatched-acceptance.test.js`, uncommitted additions) opened US2’s outer loop before this cycle: red `node --test tests/web/unmatched-acceptance.test.js` -> A7 actual `MusicBrainz: low score (70)`, A8 actual `Deezer: no corroborating album`, A12 actual `[]` (3 failed)
+- commit: `8105609`
+
+## Cycle 74: U59 a passed step shows `✓` and the words `passed`
+
+- test: `tests/web/render-status.test.js::a passed step shows ✓ and the words "passed"` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 32` actual `undefined` expected `["✓", "passed"]` (1 failed)
+- green: a `STEP_MARKS` table gives `Passed` its mark and words; the step writes ` <span aria-hidden="true">✓</span><span class="nr-sr">passed</span>`. Suite -> node 392 passed, 3 failed (A7, A8, A12 held open)
+- refactor: none needed
+- commit: `d2bc3d9`
+
+## Cycle 75: U60 a failed step shows `✗` and the words `failed`
+
+- test: `tests/web/render-status.test.js::a failed step shows ✗ and the words "failed"` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 33` actual `undefined` expected `["✗", "failed"]` (1 failed)
+- green: `STEP_MARKS` gains `Failed`. Suite -> node 394 passed, 2 failed (A7, A12 held open; A8 now passes)
+- refactor: none needed
+- commit: `a57dc2c`
+
+## Cycle 76: U61 a not-reached step shows `–`, the words `not reached`, and the dimming class
+
+- test: `tests/web/render-status.test.js::a not-reached step shows –, the words "not reached", and the dimming class` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 34` actual `undefined` expected `["–", "not reached"]` (1 failed)
+- green: `STEP_MARKS` gains `NotReached`; the step class `nr-step-notreached` (from U58) is the one the stylesheet dims (U63). Suite -> node 396 passed, 1 failed (A7 held open; A12 now passes)
+- refactor: none needed
+- commit: `6b19b87`
+
+## Cycle 77: U62 each mark is `aria-hidden`, and the words sit in a visually hidden `nr-sr` element
+
+- test: `tests/web/render-status.test.js::every step hides its mark from screen readers and states itself in visually hidden words` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> passed on first run (38 passed): U59–U61 already write that pair. Deliberate mutant: the mark span loses `aria-hidden` -> `not ok 35` and U59–U61 (4 failed). Page restored exactly from a copy
+- green: no production change. Suite -> node 397 passed, 1 failed (A7 held open)
+- refactor: none needed
+- commit: `5970285`
+
+## Cycle 78: U63 the stylesheet dims a not-reached step and makes `.nr-sr` visually hidden
+
+- test: `tests/web/render-status.test.js::the stylesheet dims a not-reached step and hides the screen-reader words visually` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 36` — `assert.ok` falsy: no `.nr-step-notreached` rule, so its opacity reads as `NaN` (1 failed)
+- green: `.nr-step-notreached { opacity: 0.5; }` and the usual visually-hidden rule for `.nr-sr` (absolute, 1px × 1px, overflow hidden, clipped, no wrap). Suite -> node 398 passed, 1 failed (A7 held open)
+- refactor: none needed
+- commit: `a9ec639`
+
+## Cycle 79: U64 a failed `Score` step shows its value after the mark: `Score ✗ 70`
+
+- test: `tests/web/render-status.test.js::a failed Score step shows its score after the mark` (new, with a `visible` helper)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 37` actual `'MusicBrainz: ID ✗ · Search ✓ · Score ✗ · Unique –'` (1 failed)
+- green: a step with values writes the first one after its mark. Suite -> node 400 passed (A7 now passes; A7, A8, A12 all green)
+- refactor: none needed
+- commit: `00f1ce5`
+
+## Cycle 80: U65 a failed `Unique` step shows both values: `Unique ✗ 100 vs 96`
+
+- test: `tests/web/render-status.test.js::a failed Unique step shows both scores: "Unique ✗ 100 vs 96"` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 38` actual `'MusicBrainz: ID ✗ · Search ✓ · Score ✓ · Unique ✗ 100'` (1 failed)
+- green: the step writes every value, joined by ` vs `. Suite -> node 401 passed
+- refactor: none needed
+- commit: `c254754`
+
+## Cycle 81: U66 the trail line declares `white-space: nowrap`
+
+- test: `tests/web/render-status.test.js::a Reason line does not wrap` (new)
+- red: `node --test tests/web/render-status.test.js`
+  -> `not ok 39` actual `undefined` expected `"nowrap"` (1 failed)
+- green: `#newreleasesConfigPage .nr-reason { white-space: nowrap; }`. Suite -> node 402 passed
+- refactor: none needed
+- commit: `7f0f6e2`
+
+## Cycle 82: U67 the longest possible trail text is at most 64 characters
+
+- test: `tests/web/render-status.test.js::the longest possible trail is at most 64 characters as a reader sees it` (new: MusicBrainz failed at Unique with 100 vs 95)
+- red: `node --test tests/web/render-status.test.js`
+  -> passed on first run (43 passed): the line is 59 characters. Deliberate mutant: the trail also appends the stored reason text -> `not ok 40` and U65's `not ok 38` (2 failed). Page restored exactly from a copy
+- green: no production change. Suite -> node 403 passed
+- refactor: none needed
+- notes: the test pins the exact text as well as the bound, so any mutant that lengthens the line fails the equality first; the bound states the budget research R7 sets. Pixel width at 1280 px stays with the maintainer’s real-server pass
+- commit: `2324e7a`
+
+## Cycle 83: A7, A8 and A12 close — which steps passed and which failed (US2)
+
+- tests: `tests/web/unmatched-acceptance.test.js` A7, A8, A12 (new), held open (uncommitted) since
+  cycle 73 with the reds recorded there
+- green: A8 closed with U60, A12 with U61, A7 with U64; each unit cycle's suite names it. A9, A10
+  and A11 closed earlier (cycles 34 and 25). Suite -> node 403 passed, dotnet 416 passed
+- refactor: none needed
+- commit: `91346a1`
