@@ -57,7 +57,7 @@ public sealed class DeezerSource : IReleaseSource
 
         return candidates.Count == 0
             ? ArtistMatch.Unmatched(MatchReasons.NoResult, new MatchDetail(returned))
-            : ArtistMatch.Unmatched(MatchReasons.NoCorroboratingAlbum);
+            : ArtistMatch.Unmatched(MatchReasons.NoCorroboratingAlbum, new MatchDetail(returned, candidates.Count));
     }
 
     public async Task<CataloguePage> FetchCataloguePageAsync(string sourceArtistId, int offset, CancellationToken ct)

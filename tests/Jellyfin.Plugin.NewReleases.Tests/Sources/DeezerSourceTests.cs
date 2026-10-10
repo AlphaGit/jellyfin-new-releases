@@ -45,7 +45,8 @@ public sealed class DeezerSourceTests : IAsyncLifetime
 
         var match = await Source().MatchArtistAsync(Artist("Daft Punk", "Some Album The Library Made Up"), CancellationToken.None);
 
-        Assert.Equal(ArtistMatch.Unmatched("no corroborating album"), match);
+        // 008 FR-015 adds the attempt detail to an Unmatched result, so the whole record no longer equals a bare one.
+        Assert.Equal((MatchStatus.Unmatched, "no corroborating album"), (match.Status, match.Reason));
     }
 
     [Fact]
@@ -97,6 +98,18 @@ public sealed class DeezerSourceTests : IAsyncLifetime
         Assert.Equal("no result", match.Reason);
         Assert.NotNull(match.Detail);
         Assert.Empty(match.Detail.Candidates);
+    }
+
+    /// <summary>Spec 008 FR-015: an album check that found nothing in common records how many same-name artists it checked.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_NoCorroboratingAlbum_RecordsHowManyExactNameArtistsWereChecked()
+    {
+        _h.Fixture(Search, "deezer/search_artist_homonyms.json"); // exact "Nirvana": 415 then 278793911
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/\d+/albums\?", System.Net.HttpStatusCode.OK, EmptyPage);
+
+        var match = await Source().MatchArtistAsync(Artist("Nirvana", "Nevermind"), CancellationToken.None);
+
+        Assert.Equal(("no corroborating album", 2), (match.Reason, match.Detail?.ExactNameCount));
     }
 
     /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
