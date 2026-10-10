@@ -193,6 +193,18 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal(("Unmatched", null, 0, "rate limited"), (reason.State, reason.FailedStep, reason.Steps.Count, reason.Reason));
     }
 
+    /// <summary>008 FR-014: with Deezer switched off, an artist only Deezer failed is not listed.</summary>
+    [Fact]
+    public async Task Status_WithDeezerDisabled_AnArtistOnlyDeezerFailed_IsNotListed()
+    {
+        _configuration.DeezerEnabled = false;
+        var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(artist, "musicbrainz", ArtistMatch.Matched("mb-1"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(artist, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        Assert.Empty((await Controller().GetStatusAsync(CancellationToken.None)).Value!.Unmatched);
+    }
+
     /// <summary>002 FR-009/SC-005: an operator sees the run and the data age side by side, and sees them diverge.</summary>
     [Fact]
     public async Task Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch()
