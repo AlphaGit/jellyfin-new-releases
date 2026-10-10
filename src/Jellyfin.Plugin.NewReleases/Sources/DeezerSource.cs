@@ -46,9 +46,11 @@ public sealed class DeezerSource : IReleaseSource
             .Select(a => a.GetProperty("id").GetInt64().ToString(CultureInfo.InvariantCulture))
             .ToList();
 
+        var albumsCompared = 0;
         foreach (var candidate in candidates)
         {
             var page = await FetchCataloguePageAsync(candidate, 0, ct).ConfigureAwait(false);
+            albumsCompared += page.Items.Count;
             if (page.Items.Any(item => libraryTitles.Contains(TitleNormalizer.NormalizeAlbum(item.Title))))
             {
                 return ArtistMatch.Matched(candidate);
@@ -57,7 +59,7 @@ public sealed class DeezerSource : IReleaseSource
 
         return candidates.Count == 0
             ? ArtistMatch.Unmatched(MatchReasons.NoResult, new MatchDetail(returned))
-            : ArtistMatch.Unmatched(MatchReasons.NoCorroboratingAlbum, new MatchDetail(returned, candidates.Count));
+            : ArtistMatch.Unmatched(MatchReasons.NoCorroboratingAlbum, new MatchDetail(returned, candidates.Count, albumsCompared));
     }
 
     public async Task<CataloguePage> FetchCataloguePageAsync(string sourceArtistId, int offset, CancellationToken ct)
