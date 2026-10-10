@@ -340,6 +340,13 @@ test('a passed step shows ✓ and the words "passed"', () => {
     assert.deepEqual(marks(deezer)[0], ['✓', 'passed']);
 });
 
+// 008 FR-003, FR-010: a failed step shows ✗, and says "failed" in words.
+test('a failed step shows ✗ and the words "failed"', () => {
+    const [, deezer] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[0]); // Name passed, Album failed
+
+    assert.deepEqual(marks(deezer)[1], ['✗', 'failed']);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
