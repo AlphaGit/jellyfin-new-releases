@@ -246,6 +246,16 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
         Assert.Null(deezer.Detail);
     }
 
+    /// <summary>008 edge case: a result written without detail, as every release before 008 wrote it, reads back with none.</summary>
+    [Fact]
+    public async Task GetCountsAsync_AResultWrittenWithoutDetail_ReadsBackWithNone()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Unmatched("low score (70)"), CancellationToken.None);
+
+        Assert.Null(Assert.Single(Assert.Single((await _db.Artists.GetCountsAsync(["musicbrainz"], CancellationToken.None)).Unmatched).Sources).Detail);
+    }
+
     private static readonly HashSet<string> BothSources = ["musicbrainz", "deezer"];
 
     private async Task CompleteFetchAsync(long artistId, string source, DateTimeOffset at)
