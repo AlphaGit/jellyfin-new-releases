@@ -198,4 +198,57 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         Assert.Equal("Completed", status.LastRun!.Outcome);
         Assert.Equal(1, status.LastRun.Errors);
     }
+
+    // ── 008: the unmatched artists the admin page explains ────────────────────
+
+    private const string DaftPunkMbid = "056e4f3e-d505-4dad-8ec1-d04f521cbb56";
+
+    /// <summary>The admin status as the page reads it: serialized under the endpoint's declared naming.</summary>
+    private async Task<System.Text.Json.JsonElement> AdminStatusJsonAsync()
+        => System.Text.Json.JsonSerializer.SerializeToElement(await _rig.AdminStatusAsync(), Jellyfin.Extensions.Json.JsonDefaults.CamelCaseOptions);
+
+    private static string[] UnmatchedNames(System.Text.Json.JsonElement status)
+        => status.GetProperty("unmatched").EnumerateArray().Select(u => u.GetProperty("name").GetString()!).ToArray();
+
+    /// <summary>Deezer finds nobody of that name; nothing else is served for it.</summary>
+    private void DeezerFindsNobody(string name)
+        => _rig.Harness.Http.OnUrlPattern(@"api\.deezer\.com/search/artist\?q=" + System.Text.RegularExpressions.Regex.Escape(name) + "&", System.Net.HttpStatusCode.OK, SourceJson.Deezer.Search());
+
+    /// <summary>008 US2-AS5 / FR-014: a disabled source's stored result is hidden, and shows again once the source is back.</summary>
+    [Fact]
+    public async Task Spec008_A11_AnArtistUnmatchedOnlyAtDisabledDeezer_IsHidden_AndReturnsWhenDeezerIsEnabledAgain()
+    {
+        _rig.Library_.Artist("Daft Punk", DaftPunkMbid);
+        _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.MusicBrainzCatalogue(DaftPunkMbid);
+        DeezerFindsNobody("Daft Punk");
+        await _rig.RunAsync();
+        Assert.Equal(["Daft Punk"], UnmatchedNames(await AdminStatusJsonAsync()));
+
+        _rig.Harness.Configuration.DeezerEnabled = false;
+        Assert.Empty(UnmatchedNames(await AdminStatusJsonAsync()));
+
+        _rig.Harness.Configuration.DeezerEnabled = true; // no refresh between
+        var deezer = (await AdminStatusJsonAsync()).GetProperty("unmatched")[0].GetProperty("reasons").EnumerateArray()
+            .Single(r => r.GetProperty("source").GetString() == "deezer");
+        Assert.Equal("no result", deezer.GetProperty("reason").GetString());
+    }
+
+    /// <summary>008 US2-AS4 / FR-002: a disabled source has no line on any listed artist.</summary>
+    [Fact]
+    public async Task Spec008_A10_WithDeezerDisabled_NoListedArtistHasADeezerReason()
+    {
+        _rig.Library_.Artist("Nowhere Band");
+        _rig.Library_.Album("Nothing", "Nowhere Band", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.Harness.Http.OnUrlPattern(@"musicbrainz\.org/ws/2/artist\?query=", System.Net.HttpStatusCode.OK, SourceJson.MusicBrainz.Search());
+        DeezerFindsNobody("Nowhere Band");
+        await _rig.RunAsync();
+
+        _rig.Harness.Configuration.DeezerEnabled = false;
+        var status = await AdminStatusJsonAsync();
+
+        Assert.Equal(["Nowhere Band"], UnmatchedNames(status));
+        Assert.Equal(["musicbrainz"], status.GetProperty("unmatched")[0].GetProperty("reasons").EnumerateArray().Select(r => r.GetProperty("source").GetString()));
+    }
 }
+
