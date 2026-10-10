@@ -370,3 +370,115 @@ commit. Each had its own red first:
 - green: no production change. Suite -> node 368 passed
 - refactor: none needed
 - commit: `4e82078`
+
+## Cycle 38: U39 a `001` database with an `artist_source` row migrates to `002`, keeping the row, with `match_detail` null
+
+- test: `Storage/DatabaseTests.cs::OpenAsync_ADatabaseAtSchema001_MigratesTo002_KeepingItsArtistSourceRows` (new): builds the file from the embedded `001_initial.sql` with one row, then opens it
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DatabaseTests.OpenAsync_ADatabaseAtSchema001" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Microsoft.Data.Sqlite.SqliteException : SQLite Error 1: 'no such column: match_detail'.` (1 failed)
+- green: `Storage/Migrations/002_match_detail.sql` adds the nullable column. Suite -> dotnet 401 passed; node 368 passed, 6 failed (A1–A6, held open, see below)
+- refactor: none needed
+- notes: existing tests changed with this behaviour: `OpenAsync_FirstOpenAppliesTheInitialMigration`, `OpenAsync_SecondOpenFromAFreshInstanceAppliesNothing` and `OpenAsync_TwoConcurrentFirstOpensRunTheMigrationOnce` pinned the schema at version 1 / one `schema_version` row; plan R1 adds migration 002, so they failed on the new file (3 failed) and now assert a `LatestSchema = 2` constant. A1–A6 (`tests/web/unmatched-acceptance.test.js`, new, uncommitted) opened US1’s outer loop before this cycle: red `node --test tests/web/unmatched-acceptance.test.js` -> 6 failed, `actual: ''` (the How to fix cell is empty)
+- commit: `61efe6b`
+
+## Cycle 39: U17 `artist_search_ambiguous.json` gives 3 candidates in score order with name, score and ID
+
+- test: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_Ambiguous_KeepsTheCandidatesInScoreOrderWithScoreAndId` (new), with `MatchDetail`, `MatchCandidate` and an optional `ArtistMatch.Detail` declared so it compiles
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests.MatchArtistAsync_Ambiguous_KeepsTheCandidates" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected the three `MatchCandidate`s Actual `MatchCandidate[] []` (1 failed)
+- green: the search rows also read `name`, and the ambiguous result carries every sorted candidate. No cap yet (U18). Suite -> dotnet 402 passed
+- refactor: none needed
+- commit: `731e283`
+
+## Cycle 40: U18 a search returning 4 or more results keeps only the first 3 candidates
+
+- test: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_FiveResultsScoringBelow85_KeepsOnlyTheFirstThree` (new, five rows through `SourceJson.MusicBrainz.Search`)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests.MatchArtistAsync_FiveResultsScoringBelow85" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected `["mbid-1", "mbid-2", "mbid-3"]` Actual `[]` (1 failed)
+- green: one `detail` of the first 3 sorted candidates serves the low-score and the ambiguous results. Suite -> dotnet 403 passed
+- refactor: none needed
+- commit: `8ac89d3`
+
+## Cycle 41: U19 `artist_search_empty.json` gives an empty candidate list
+
+- test: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_NoResults_RecordsAnEmptyCandidateList` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests.MatchArtistAsync_NoResults_RecordsAnEmptyCandidateList" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.NotNull() Failure: Value is null` (1 failed)
+- green: a `no result` carries `new MatchDetail([])`. Suite -> dotnet 404 passed
+- refactor: none needed
+- notes: existing test changed with this behaviour: `MatchArtistAsync_NoResults_IsUnmatchedAsNoResult` compared the whole record with `ArtistMatch.Unmatched("no result")`, which has no detail; it failed after the change (1 failed) and now compares status and reason, which is what it names
+- commit: `422c4c6`
+
+## Cycle 42: U20 and U21 — a MusicBrainz match carries no detail (existing tests credited)
+
+- tests: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_SnapshotWithMbid_IsMatchedWithoutAnyRequest` (U20)
+  and `::MatchArtistAsync_ConfidentTopResult_IsMatched` (U21), both existing. Each compares the whole
+  result with `ArtistMatch.Matched(id)`, whose `Detail` is null, so each already asserts no detail.
+- check: deliberate mutant, a match by stored ID and a confident match both carry a `MatchDetail`
+  -> `dotnet test … --filter "…SnapshotWithMbid_IsMatchedWithoutAnyRequest|…ConfidentTopResult_IsMatched"`
+  -> `Assert.Equal() Failure: Values differ` Actual `… Detail = MatchDetail { … } }` (2 failed). Source restored exactly from a copy
+- no new test, no production change, no commit
+
+## Cycle 43: U22 an Unmatched MusicBrainz attempt sends the same requests as before
+
+- test: `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_Ambiguous_SendsOnlyTheSearch` (new); a lookup stub answers any extra artist request so a change that adds one fails on the assertion, not on a missing stub
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~MusicBrainzSourceTests.MatchArtistAsync_Ambiguous_SendsOnlyTheSearch" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed). Deliberate mutant: the match looks up its top candidate before deciding -> first without the lookup stub it failed on the unstubbed request (not the assertion), so the stub was added; then `Assert.Equal() Failure: Collections differ` Actual adds `https://musicbrainz.org/ws/2/artist/5b11f4ce-…` (1 failed). Source restored exactly from a copy
+- green: no production change. Suite -> dotnet 405 passed
+- refactor: none needed
+- commit: `f8d01f2`
+
+## Cycle 44: U24 `search_artist_exact.json` for `Daft Punk Live` gives `no result` and the first 3 of the 5 names, with no score or ID
+
+- test: `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoExactName_KeepsTheFirstThreeNamesInResponseOrder` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DeezerSourceTests.MatchArtistAsync_NoExactName_KeepsTheFirstThreeNames" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected `[MatchCandidate { Name = Daft Punk, … }, { Name = Daft Punk - Stardust, … }, { Name = Daft Punk, … }]` Actual `[]` (1 failed)
+- green: the match keeps the first 3 search rows by name and attaches them to `no result`. Suite -> dotnet 406 passed
+- refactor: none needed
+- commit: `e9b3a75`
+
+## Cycle 45: U25 `search_artist_empty.json` gives `no result` and an empty candidate list
+
+- test: `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoSearchResults_RecordsAnEmptyCandidateList` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DeezerSourceTests.MatchArtistAsync_NoSearchResults_RecordsAnEmptyCandidateList" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed): U24 attaches whatever the search returned, nothing included. Deliberate mutant: no detail when the search returned nobody -> `Assert.NotNull() Failure: Value is null` (1 failed). Source restored exactly from a copy
+- green: no production change. Suite -> dotnet 407 passed
+- refactor: none needed
+- commit: `8569591`
+
+## Cycle 46: U26 `search_artist_homonyms.json` with no album in common gives `ExactNameCount` 2
+
+- test: `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoCorroboratingAlbum_RecordsHowManyExactNameArtistsWereChecked` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DeezerSourceTests.MatchArtistAsync_NoCorroboratingAlbum_RecordsHowMany" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ` Expected `("no corroborating album", 2)` Actual `("no corroborating album", null)` (1 failed)
+- green: `no corroborating album` carries the returned names and the exact-name count. Suite -> dotnet 408 passed
+- refactor: none needed
+- notes: existing test changed with this behaviour: `MatchArtistAsync_ExactNameWithoutACorroboratingAlbum_IsUnmatchedWithReason` compared the whole record with a bare `Unmatched`; it failed after the change (1 failed) and now compares status and reason, which is what it names
+- commit: `7bce8b3`
+
+## Cycle 47: U27 the album check records `AlbumsCompared` across both same-name artists
+
+- test: `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoCorroboratingAlbum_RecordsTheAlbumsComparedAcrossBothArtists` (new; 2 and 3 first-page albums served)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DeezerSourceTests.MatchArtistAsync_NoCorroboratingAlbum_RecordsTheAlbumsCompared" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ` Expected `5` Actual `null` (1 failed)
+- green: the match sums the first-page items it already reads for each candidate. Suite -> dotnet 409 passed
+- refactor: none needed
+- commit: `de1e98a`
+
+## Cycle 48: U28 — a corroborated Deezer match carries no detail (existing tests credited)
+
+- tests: `Sources/DeezerSourceTests.cs::MatchArtistAsync_ExactNameWhoseFirstAlbumsPageContainsALibraryAlbum_IsMatched`
+  and `::MatchArtistAsync_TwoExactNameHomonyms_OnlyTheSecondCorroborated_MatchesTheSecond`, both existing;
+  each compares the whole result with `ArtistMatch.Matched(id)`, whose `Detail` is null
+- check: deliberate mutant, a corroborated match carries the returned names -> `Assert.Equal() Failure: Values differ`
+  Actual `… Detail = MatchDetail { … } }` (2 failed). Source restored exactly from a copy
+- no new test, no production change, no commit
+
+## Cycle 49: U29 an Unmatched Deezer attempt sends the same requests as before
+
+- test: `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoCorroboratingAlbum_SendsOnlyTheSearchAndEachFirstAlbumPage` (new; a stub answers any added artist request)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~DeezerSourceTests.MatchArtistAsync_NoCorroboratingAlbum_SendsOnlyTheSearch" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed). Deliberate mutant: the check also looks up each candidate -> `Assert.Equal() Failure: Collections differ` Actual adds `https://api.deezer.com/artist/415?fmt=json` and `…/278793911?fmt=json` (1 failed). Source restored exactly from a copy
+- green: no production change. Suite -> dotnet 410 passed
+- refactor: none needed
+- commit: `42a864d`

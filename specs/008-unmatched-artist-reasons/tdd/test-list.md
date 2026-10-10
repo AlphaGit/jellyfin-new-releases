@@ -69,24 +69,24 @@ through `AcceptanceRig`.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U16 | Every Unmatched reason the source writes (empty, low-score and ambiguous fixtures) parses to its expected failed step | FR-011, FR-013 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_EveryUnmatchedReason_ParsesToItsFailedStep` |
-| U17 | `artist_search_ambiguous.json` gives 3 candidates in score order, each with name, score and MusicBrainz ID | FR-015 | example | PENDING | |
-| U18 | A search returning 4 or more results keeps only the first 3 candidates | FR-016 | example | PENDING | |
-| U19 | `artist_search_empty.json` gives an empty candidate list | FR-015 | example | PENDING | |
-| U20 | A match by the stored MusicBrainz ID carries no detail | FR-015 | example | PENDING | |
-| U21 | A confident name match carries no detail | FR-015 | example | PENDING | |
-| U22 | An Unmatched attempt sends the same requests as before the feature | FR-015, FR-012 | example | PENDING | |
+| U17 | `artist_search_ambiguous.json` gives 3 candidates in score order, each with name, score and MusicBrainz ID | FR-015 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_Ambiguous_KeepsTheCandidatesInScoreOrderWithScoreAndId` |
+| U18 | A search returning 4 or more results keeps only the first 3 candidates | FR-016 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_FiveResultsScoringBelow85_KeepsOnlyTheFirstThree` |
+| U19 | `artist_search_empty.json` gives an empty candidate list | FR-015 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_NoResults_RecordsAnEmptyCandidateList` |
+| U20 | A match by the stored MusicBrainz ID carries no detail | FR-015 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_SnapshotWithMbid_IsMatchedWithoutAnyRequest` |
+| U21 | A confident name match carries no detail | FR-015 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_ConfidentTopResult_IsMatched` |
+| U22 | An Unmatched attempt sends the same requests as before the feature | FR-015, FR-012 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_Ambiguous_SendsOnlyTheSearch` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Sources/DeezerSource.cs`
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U23 | Every Unmatched reason the source writes (empty, near-name and homonym fixtures) parses to its expected failed step | FR-011, FR-013 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_EveryUnmatchedReason_ParsesToItsFailedStep` |
-| U24 | `search_artist_exact.json` for library artist `Daft Punk Live` gives `no result` and the first 3 of the 5 names in response order, with no score or ID | FR-015, FR-016 | example | PENDING | |
-| U25 | `search_artist_empty.json` gives `no result` and an empty candidate list | FR-015 | example | PENDING | |
-| U26 | `search_artist_homonyms.json` with no album in common gives `ExactNameCount` 2 | FR-015 | example | PENDING | |
-| U27 | The same case gives `AlbumsCompared` equal to the first-page items served for both candidates | FR-015 | example | PENDING | |
-| U28 | A corroborated match carries no detail | FR-015 | example | PENDING | |
-| U29 | An Unmatched attempt sends the same requests as before the feature | FR-015, FR-012 | example | PENDING | |
+| U24 | `search_artist_exact.json` for library artist `Daft Punk Live` gives `no result` and the first 3 of the 5 names in response order, with no score or ID | FR-015, FR-016 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoExactName_KeepsTheFirstThreeNamesInResponseOrder` |
+| U25 | `search_artist_empty.json` gives `no result` and an empty candidate list | FR-015 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoSearchResults_RecordsAnEmptyCandidateList` |
+| U26 | `search_artist_homonyms.json` with no album in common gives `ExactNameCount` 2 | FR-015 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoCorroboratingAlbum_RecordsHowManyExactNameArtistsWereChecked` |
+| U27 | The same case gives `AlbumsCompared` equal to the first-page items served for both candidates | FR-015 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoCorroboratingAlbum_RecordsTheAlbumsComparedAcrossBothArtists` |
+| U28 | A corroborated match carries no detail | FR-015 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_ExactNameWhoseFirstAlbumsPageContainsALibraryAlbum_IsMatched` |
+| U29 | An Unmatched attempt sends the same requests as before the feature | FR-015, FR-012 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_NoCorroboratingAlbum_SendsOnlyTheSearchAndEachFirstAlbumPage` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Storage/ArtistRepository.cs`
 
@@ -106,7 +106,7 @@ through `AcceptanceRig`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U39 | A `001` database holding an `artist_source` row migrates to `002`: the row survives, its `match_detail` is null, and `schema_version` records 2 | INV-migrate, EC-old | example | PENDING | |
+| U39 | A `001` database holding an `artist_source` row migrates to `002`: the row survives, its `match_detail` is null, and `schema_version` records 2 | INV-migrate, EC-old | example | DONE | `Storage/DatabaseTests.cs::OpenAsync_ADatabaseAtSchema001_MigratesTo002_KeepingItsArtistSourceRows` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs` and `Api/Dtos.cs`
 
