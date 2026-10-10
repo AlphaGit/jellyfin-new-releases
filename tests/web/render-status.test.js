@@ -191,6 +191,13 @@ test('a candidate ID selects as a whole', () => {
     assert.equal(declared('#newreleasesConfigPage .nr-id')['user-select'], 'all');
 });
 
+// 008 FR-016, edge case: a row from before the upgrade has no candidates, so the fix is the sentence alone.
+test('a MusicBrainz Score failure without stored candidates gives the sentence only', () => {
+    const row = unmatchedRows(fixture('admin-status.json'))[2];
+
+    assert.deepEqual(fixes(row), [ARTIST_ID_FIX]);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
