@@ -149,6 +149,18 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
         Assert.Empty(match.Detail.Candidates);
     }
 
+    /// <summary>Spec 008 FR-015: keeping the candidates sends nothing new: an unmatched attempt is still the one search.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_Ambiguous_SendsOnlyTheSearch()
+    {
+        _h.Fixture(ArtistSearch, "musicbrainz/artist_search_ambiguous.json");
+        _h.Http.OnUrlPattern(@"musicbrainz\.org/ws/2/artist/", System.Net.HttpStatusCode.OK, "{}"); // answers any lookup a change might add
+
+        await Source().MatchArtistAsync(Artist("Nirvana"), CancellationToken.None);
+
+        Assert.Equal(["https://musicbrainz.org/ws/2/artist?query=artist:%22Nirvana%22&limit=5&fmt=json"], _h.RequestedUrls);
+    }
+
     /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
     [Theory]
     [InlineData("musicbrainz/artist_search_empty.json", "Search")]
