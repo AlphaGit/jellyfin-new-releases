@@ -267,5 +267,22 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
             [("Id", "Failed", ""), ("Search", "Passed", ""), ("Score", "Failed", "84"), ("Unique", "NotReached", "")],
             reason.Steps.Select(s => (s.Name, s.State, string.Join(' ', s.Values ?? []))));
     }
+
+    /// <summary>008 US1-AS2, US1-AS4 through the real refresh: a Deezer album miss reaches the status with its counts, beside a MusicBrainz match.</summary>
+    [Fact]
+    public async Task Spec008_U50_AfterARefreshWhereDeezerFindsNoAlbumInCommon_TheStatusGivesTheAlbumFailureWithItsCounts()
+    {
+        _rig.Library_.Artist("Daft Punk", DaftPunkMbid);
+        _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.MusicBrainzCatalogue(DaftPunkMbid);
+        _rig.DeezerArtist(27, "Daft Punk", (3, "Alive 2007", "album", "2007-11-16"), (4, "Human After All", "album", "2005-03-14"));
+        await _rig.RunAsync();
+
+        var reasons = Assert.Single((await _rig.AdminStatusAsync()).Unmatched).Reasons;
+        var deezer = reasons.Single(r => r.Source == "deezer");
+
+        Assert.Equal("Matched", reasons.Single(r => r.Source == "musicbrainz").State);
+        Assert.Equal(("Album", 1, 2), (deezer.FailedStep, deezer.ExactNameCount, deezer.AlbumsCompared));
+    }
 }
 
