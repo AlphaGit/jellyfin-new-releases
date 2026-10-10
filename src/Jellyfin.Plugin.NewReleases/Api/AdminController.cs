@@ -112,7 +112,7 @@ public sealed class AdminController : ControllerBase
         var steps = failed is null ? [] : MatchReasons.Steps(at.Source, failed)
             .Select(step => new StepDto(step.Name, step.State.ToString(), step.Values.Count > 0 ? step.Values : null))
             .ToList();
-        return new ReasonDto(at.Source, at.Status.ToString(), failed?.Step, steps, at.Reason, null, null, null);
+        return new ReasonDto(at.Source, at.Status == MatchStatus.Pending ? "NotChecked" : at.Status.ToString(), failed?.Step, steps, at.Reason, null, null, null);
     }
 
     /// <summary>Purge release data (FR-013): releases, entries, editions and ownership go; decisions, artists and match state stay; paging passes restart.</summary>

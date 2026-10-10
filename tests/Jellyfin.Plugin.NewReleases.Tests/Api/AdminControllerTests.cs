@@ -175,6 +175,15 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal(("Matched", null, 0, null), (reason.State, reason.FailedStep, reason.Steps.Count, reason.Reason));
     }
 
+    /// <summary>008 FR-002: an enabled source that has not run for the artist is stated as NotChecked, with no trail and no reason.</summary>
+    [Fact]
+    public async Task Status_ASourceNotYetRun_IsNotChecked_WithNoFailedStepNoStepsAndNoReason()
+    {
+        var reason = await DeezerReasonBesideAMusicBrainzFailureAsync(null);
+
+        Assert.Equal(("NotChecked", null, 0, null), (reason.State, reason.FailedStep, reason.Steps.Count, reason.Reason));
+    }
+
     /// <summary>002 FR-009/SC-005: an operator sees the run and the data age side by side, and sees them diverge.</summary>
     [Fact]
     public async Task Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch()
