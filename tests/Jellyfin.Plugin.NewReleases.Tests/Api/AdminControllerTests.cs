@@ -205,6 +205,18 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Empty((await Controller().GetStatusAsync(CancellationToken.None)).Value!.Unmatched);
     }
 
+    /// <summary>008 FR-015: the stored attempt detail reaches the page as candidates and counts.</summary>
+    [Fact]
+    public async Task Status_StoredDetail_AppearsAsCandidatesAndCounts()
+    {
+        var detail = new MatchDetail([new MatchCandidate("Blur"), new MatchCandidate("Blur Tribute")], 2, 37);
+
+        var reason = await DeezerReasonBesideAMusicBrainzFailureAsync(ArtistMatch.Unmatched("no corroborating album", detail));
+
+        Assert.Equal([new CandidateDto("Blur", null, null), new CandidateDto("Blur Tribute", null, null)], reason.Candidates ?? []);
+        Assert.Equal((2, 37), (reason.ExactNameCount, reason.AlbumsCompared));
+    }
+
     /// <summary>002 FR-009/SC-005: an operator sees the run and the data age side by side, and sees them diverge.</summary>
     [Fact]
     public async Task Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch()
