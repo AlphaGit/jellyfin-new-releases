@@ -59,7 +59,7 @@ sources only, and the page shows one Reason line per source. Both stories build 
   - Any other text, an empty text, and a known text under the wrong source return null.
   - `Steps(source, failedStep)` returns every step of the source in order: before the failed step `Passed`, the failed step `Failed` with its values, after it `NotReached`. For MusicBrainz, `Id` is always `Failed`. [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U14] [U15]
 - [X] T002 [P] Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Sources/MusicBrainzSourceTests.cs` and `tests/Jellyfin.Plugin.NewReleases.Tests/Sources/DeezerSourceTests.cs`: for every existing Unmatched fixture case, `MatchReasons.Parse(source.Id, match.Reason)` returns the expected failed step. Red because `MatchReasons` does not exist. [U16] [U23]
-- [ ] T003 [P] Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ArtistRepositoryTests.cs` for `GetCountsAsync(enabledSourceIds, ct)` (research R4):
+- [X] T003 [P] Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ArtistRepositoryTests.cs` for `GetCountsAsync(enabledSourceIds, ct)` (research R4):
   - An artist Unmatched only at a source outside `enabledSourceIds` is not listed.
   - A listed artist has one `UnmatchedAt` per enabled source, in the order given, with `Status` `Matched`, `Unmatched` or `NotChecked`.
   - An enabled source with no row, or a `Pending` row, is `NotChecked`; `Reason` is null for every status but `Unmatched`.

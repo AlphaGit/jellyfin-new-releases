@@ -92,12 +92,12 @@ through `AcceptanceRig`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U30 | An artist Unmatched only at a source outside the enabled set is not listed | FR-014 | example | PENDING | |
-| U31 | A listed artist has one entry per enabled source, in the order given | FR-002, FR-001 | example | PENDING | |
-| U32 | An enabled source with no row is `NotChecked` | FR-002, EC-notchecked | example | PENDING | |
-| U33 | An enabled source with a `Pending` row is `NotChecked` | FR-002, EC-notchecked | example | PENDING | |
-| U34 | `Reason` is null for `Matched` and `NotChecked` entries | FR-002 | example | PENDING | |
-| U35 | A disabled source's row stays stored, and enabling it again lists the artist with that reason | FR-014 | example | PENDING | |
+| U30 | An artist Unmatched only at a source outside the enabled set is not listed | FR-014 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_AnArtistUnmatchedOnlyAtADisabledSource_IsNotListed` |
+| U31 | A listed artist has one entry per enabled source, in the order given | FR-002, FR-001 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_AListedArtistHasOneEntryPerEnabledSource_InTheOrderGiven` |
+| U32 | An enabled source with no row is `NotChecked` | FR-002, EC-notchecked | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_AnEnabledSourceWithNoRow_IsListedAsPending` |
+| U33 | An enabled source with a `Pending` row is `NotChecked` | FR-002, EC-notchecked | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_AnEnabledSourceWithAPendingRow_IsListedAsPending` |
+| U34 | `Reason` is null for `Matched` and `NotChecked` entries | FR-002 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_MatchedAndNotCheckedEntries_HaveNoReason` |
+| U35 | A disabled source's row stays stored, and enabling it again lists the artist with that reason | FR-014 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_ADisabledSourcesResultIsKept_AndListsAgainOnceEnabled` |
 | U36 | An Unmatched result's detail is read back with the same candidates and counts | FR-015 | example | PENDING | |
 | U37 | A later `Matched` result for the same pair leaves no detail | FR-015 | example | PENDING | |
 | U38 | A row written without detail reads back with null detail | EC-old | example | PENDING | |

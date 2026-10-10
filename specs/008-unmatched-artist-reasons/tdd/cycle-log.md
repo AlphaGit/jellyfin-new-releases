@@ -168,3 +168,59 @@ as in `007`. Cycle-log and test-list updates are committed in `docs:` batches. A
 - green: no production change. Suite -> dotnet 384 passed
 - refactor: the source builds both reasons through `MatchReasons.NoResult` and `NoCorroboratingAlbum`. Suite re-run: 384 passed (structure commit below)
 - commit: `9cf5d2a`
+
+## Cycle 18: U30 an artist Unmatched only at a source outside the enabled set is not listed
+
+- test: `Storage/ArtistRepositoryTests.cs::GetCountsAsync_AnArtistUnmatchedOnlyAtADisabledSource_IsNotListed` (new). `GetCountsAsync` gained an `IReadOnlyList<string> enabledSources` parameter so the test compiles; the parameter was ignored for the red. Its two callers pass the sources mechanically: `AdminController` the configured enabled set, the existing counts test both sources
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.GetCountsAsync_AnArtistUnmatchedOnlyAtADisabledSource" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Empty() Failure: Collection was not empty` (1 failed)
+- green: the unmatched query keeps only rows whose source is in `json_each(@enabled)`. Suite -> dotnet 385 passed, 2 failed (A10, A11, held open)
+- refactor: none needed
+- notes: held open since before this cycle, uncommitted: `Acceptance/ConfigureAndRunTests.cs::Spec008_A11_…` red `Assert.Empty() Failure: Collection was not empty` (the disabled-Deezer artist still listed); `Spec008_A10_…` red `KeyNotFoundException` (no `reasons` field). After this cycle A11 gets past the hiding step and fails on the missing `reasons` field
+- commit: `e27abd4`
+
+## Cycle 19: U31 a listed artist has one entry per enabled source, in the order given
+
+- test: `Storage/ArtistRepositoryTests.cs::GetCountsAsync_AListedArtistHasOneEntryPerEnabledSource_InTheOrderGiven` (new), with `UnmatchedAt.Status` declared (default `Unmatched`) so the test compiles
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.GetCountsAsync_AListedArtistHasOneEntryPerEnabledSource" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected `[("deezer", Unmatched), ("musicbrainz", Matched)]` Actual `[("deezer", Unmatched)]` (1 failed)
+- green: the query lists every row at an enabled source for any artist with an Unmatched row at one, ordered by the source's position in `@enabled` (`json_each` key), and reads the status. Suite -> dotnet 386 passed, 2 failed (A10, A11 held open). Behaviour commit `04d1cbd`
+- refactor: `UnmatchedAt` becomes `(Source, Status, Reason)` with no default. Suite re-run: same counts (structure commit below)
+- notes: existing test changed as part of this behaviour, before the implementation: `GetCountsAsync_ReportsTotalsMatchedPerSourceAndUnmatchedReasons` asserted that a listed artist carries only its Unmatched sources; FR-002 replaces that with every enabled source. Rewritten to the FR-002 rows (MB Only now also carries its MusicBrainz match) plus the three Unmatched reasons; observed red `Assert.Equal() Failure: Collections differ` (Actual lacks the MusicBrainz Matched row) before the query changed
+- commit: `d4aadd6`
+
+## Cycle 20: U32 an enabled source with no row is listed as not checked
+
+- test: `Storage/ArtistRepositoryTests.cs::GetCountsAsync_AnEnabledSourceWithNoRow_IsListedAsPending` (new). "Not checked" is carried as `MatchStatus.Pending` in the read model; the response maps it to `NotChecked` (U44)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.GetCountsAsync_AnEnabledSourceWithNoRow" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected `[("musicbrainz", Unmatched), ("deezer", Pending)]` Actual `[("musicbrainz", Unmatched)]` (1 failed)
+- green: rows are collected per artist by source, then each listed artist gets one entry per enabled source in the given order, a missing one as `Pending`. Suite -> dotnet 387 passed, 2 failed (A10, A11 held open). Behaviour commit `22dad4f`
+- refactor: the SQL no longer joins `json_each` to order sources, since the C# step orders them from the enabled list. Suite re-run: same counts (structure commit below)
+- commit: `8db89a2`
+
+## Cycle 21: U33 an enabled source with a `Pending` row is listed as not checked
+
+- test: `Storage/ArtistRepositoryTests.cs::GetCountsAsync_AnEnabledSourceWithAPendingRow_IsListedAsPending` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.GetCountsAsync_AnEnabledSourceWithAPendingRow" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed): the row status is read as stored. Deliberate mutant: a stored `Pending` read as `Matched` -> `Assert.Equal() Failure: Values differ` Expected `Pending` Actual `Matched` (1 failed). Code restored exactly from a copy
+- green: no production change. Suite -> dotnet 388 passed, 2 failed (A10, A11 held open)
+- refactor: none needed
+- commit: `5bcc90e`
+
+## Cycle 22: U34 `Reason` is null for `Matched` and not-checked entries
+
+- test: `Storage/ArtistRepositoryTests.cs::GetCountsAsync_MatchedAndNotCheckedEntries_HaveNoReason` (new), with `UnmatchedAt.Reason` made `string?`; `AdminController` passes `?? string.Empty` to the old DTO until U40 reshapes it
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.GetCountsAsync_MatchedAndNotCheckedEntries" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected `[("musicbrainz", null), ("deezer", "no result"), ("other", null)]` Actual `[("musicbrainz", ""), …, ("other", "")]` (1 failed)
+- green: the repository keeps a stored null reason null and fills a not-checked entry with null. Suite -> dotnet 389 passed, 2 failed (A10, A11 held open)
+- refactor: none needed
+- commit: `29d3375`
+
+## Cycle 23: U35 a disabled source keeps its row, and enabling it lists the artist with that reason
+
+- test: `Storage/ArtistRepositoryTests.cs::GetCountsAsync_ADisabledSourcesResultIsKept_AndListsAgainOnceEnabled` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.GetCountsAsync_ADisabledSourcesResultIsKept" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed): U30 filters at read time and deletes nothing. Deliberate mutant: `GetCountsAsync` first deletes the rows of sources outside the enabled set -> `Assert.Single() Failure: The collection was empty` (1 failed). Code restored exactly from a copy
+- green: no production change. Suite -> dotnet 390 passed, 2 failed (A10, A11 held open)
+- refactor: none needed
+- commit: `7839d90`
