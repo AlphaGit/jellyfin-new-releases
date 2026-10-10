@@ -1,14 +1,19 @@
 <!--
 Sync Impact Report
-- Version change: 1.3.0 → 1.4.0
-- Modified principles: V. Respectful Sources and Privacy (one exception: the viewer's browser
-  loads release cover images directly from a source's image host)
-- Modified sections: Technical Constraints (the "no external assets" rule for the Web UI gets
-  the same cover-image exception)
-- Reason: feature `007-user-view-polish` (`FR-008`) chose direct cover loading over a server
-  proxy. MINOR, not MAJOR: a scoped exception, no principle removed or redefined.
+- Version change: 1.4.0 → 2.0.0
+- Removed principles: II. Test-Driven Development. The `tdd` Spec Kit extension was
+  uninstalled; its commands, `tdd/cycle-log.md` and `tdd-profile.md` no longer exist.
+- Modified principles: III. Hermetic Tests (the suite-speed rule no longer names the TDD profile
+  or the red-green loop)
+- Modified sections: Development Workflow (Spec Kit order drops `speckit-tdd-plan`,
+  `speckit-tdd-run` and `speckit-tdd-verify`)
+- Principle numbers I and III–VI are kept as they were, so existing references in code and
+  specs ("constitution III", "constitution VI") stay correct.
 - Templates: none need changes; they read the constitution at runtime.
 - Follow-up TODOs: none
+- Previous amendment (1.4.0): V. Respectful Sources and Privacy (one exception: the viewer's
+  browser loads release cover images directly from a source's image host); carried by
+  `007-user-view-polish`
 - Previous amendment (1.3.0): IV. Jellyfin Compatibility (pinned server version becomes
   Jellyfin 12.0.x), Technical Constraints (C# on `net10.0`); carried by `003-jellyfin-12-compat`
 - Previous amendment (1.2.0): Development Workflow (CI on `main` is the final gate: a pushed
@@ -45,26 +50,6 @@ Behaviour exists only when a specification under `specs/` describes it.
 Rationale: the plugin is developed largely by agents. A written spec is the only durable
 statement of intent across sessions.
 
-### II. Test-Driven Development (NON-NEGOTIABLE)
-
-Every behaviour change is driven by a test that failed first.
-
-- A test exists and has been observed failing, for the right reason, before the code that
-  makes it pass. The failure output is recorded in `specs/<feature>/tdd/cycle-log.md`.
-- Test tasks are not optional. `tasks.md` places each behaviour's test task before its
-  implementation task, and the implementation task is not started until the test is red.
-- Tests are never weakened, skipped, deleted, or filtered out to reach green. When a test and
-  the code disagree, `spec.md` decides which is wrong.
-- Every acceptance criterion in `spec.md` has at least one test that exercises the real entry
-  point (controller, scheduled task, or repository), not only a unit with doubles at every
-  boundary.
-- Refactoring happens only on a green suite, and never changes a test in the same commit as a
-  behaviour change.
-- Test strength is verified, not assumed: mutation testing on the changed files where a
-  mutation tool exists, and a deliberate-mutant spot check where it does not.
-- The verified stack commands live in `.specify/memory/tdd-profile.md`. A single-test
-  invocation MUST fail when it matches no test.
-
 ### III. Hermetic Tests
 
 The test suite MUST pass on a machine with no network and no Jellyfin server.
@@ -76,8 +61,7 @@ The test suite MUST pass on a machine with no network and no Jellyfin server.
 - Jellyfin services (`ILibraryManager`, `IApplicationPaths`, `IXmlSerializer`, …) are
   substituted, never real. Persistent state in tests uses temporary files that the test
   removes.
-- The suite is fast enough to run on every red-green cycle. If it stops being so, a fast
-  subset is agreed and recorded in the TDD profile before the loop continues.
+- The suite is fast enough to run after every change.
 
 ### IV. Jellyfin Compatibility
 
@@ -151,9 +135,8 @@ Ship the smallest change that satisfies the spec.
 ## Development Workflow
 
 - Spec Kit order per feature: `/speckit-specify` → `/speckit-grill-me` → `/speckit-plan` →
-  `/speckit-tasks` (accept `speckit-tdd-plan`; accept `speckit-tasks-to-project-publish` to
-  mirror the roadmap) → `speckit-tdd-run` (mandatory pre-implement hook) →
-  `/speckit-implement` → `speckit-tdd-verify` → `speckit-tasks-to-project-sync`.
+  `/speckit-tasks` (accept `speckit-tasks-to-project-publish` to mirror the roadmap) →
+  `/speckit-implement` → `speckit-tasks-to-project-sync`.
 - Single-maintainer project: no feature branches and no pull requests. Finished work is
   committed to `main` and pushed. Parallel work and isolation use Orca worktrees; a worktree's
   scratch branch is fast-forwarded onto `main` and is never pushed on its own. The worktrees
@@ -185,4 +168,4 @@ This constitution supersedes every other practice document in the repository.
 - The constitution is reviewed when the Jellyfin target major version changes, when Spec Kit
   changes its artifact contract, or at the first release, whichever comes first.
 
-**Version**: 1.4.0 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-09-30
+**Version**: 2.0.0 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-10-10
