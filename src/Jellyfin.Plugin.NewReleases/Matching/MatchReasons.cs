@@ -9,6 +9,8 @@ public static partial class MatchReasons
 {
     public static string LowScore(int score) => $"low score ({score})";
 
+    public static string Ambiguous(int best, int runnerUp) => $"ambiguous (score {best} vs {runnerUp})";
+
     /// <summary>The step a stored reason says failed, with the numbers it holds; null for a text no released version writes.</summary>
     public static FailedStep? Parse(string source, string? reason)
     {
@@ -25,8 +27,6 @@ public static partial class MatchReasons
         var lowScore = LowScorePattern().Match(reason);
         return lowScore.Success ? new FailedStep("Score", [int.Parse(lowScore.Groups[1].Value, CultureInfo.InvariantCulture)]) : null;
     }
-
-    public static string Ambiguous(int best, int runnerUp) => $"ambiguous (score {best} vs {runnerUp})";
 
     [GeneratedRegex(@"^low score \((\d+)\)$")]
     private static partial Regex LowScorePattern();
