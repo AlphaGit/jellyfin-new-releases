@@ -50,7 +50,7 @@ public sealed class DeezerSource : IReleaseSource
             }
         }
 
-        return ArtistMatch.Unmatched(candidates.Count == 0 ? "no result" : "no corroborating album");
+        return ArtistMatch.Unmatched(candidates.Count == 0 ? MatchReasons.NoResult : MatchReasons.NoCorroboratingAlbum);
     }
 
     public async Task<CataloguePage> FetchCataloguePageAsync(string sourceArtistId, int offset, CancellationToken ct)
