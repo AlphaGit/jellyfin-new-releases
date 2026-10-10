@@ -303,6 +303,13 @@ test('a matched or not-checked source gives no fix paragraph', () => {
     assert.equal(fixes(rows[2]).length, 1); // MusicBrainz Score failed, Deezer not checked
 });
 
+// 008 edge case, FR-006: a reason with no known failed step gets no fix, since no step is known to fix.
+test('an entry with no failed step gives no fix paragraph', () => {
+    const row = unmatchedRows(withUnrecognizedReason('rate limited'))[3];
+
+    assert.deepEqual(fixes(row), []);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
