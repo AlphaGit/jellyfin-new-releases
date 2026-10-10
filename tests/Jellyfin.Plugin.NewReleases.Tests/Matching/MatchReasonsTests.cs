@@ -127,4 +127,12 @@ public class MatchReasonsTests
 
         Assert.Equal([("Name", StepState.Failed), ("Album", StepState.NotReached)], steps.Select(s => (s.Name, s.State)));
     }
+
+    [Fact]
+    public void Steps_DeezerFailedAtAlbum_NamePassed_AlbumFailed()
+    {
+        var steps = MatchReasons.Steps(SourceLimits.Deezer, new FailedStep("Album", []));
+
+        Assert.Equal([("Name", StepState.Passed), ("Album", StepState.Failed)], steps.Select(s => (s.Name, s.State)));
+    }
 }
