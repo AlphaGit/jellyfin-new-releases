@@ -179,18 +179,6 @@ test('a MusicBrainz Unique failure with candidates gives the sentence, then each
             'Approaching Nirvana (74) <code class="nr-id">c3a64a25-251b-4d03-afba-1471440245b8</code>');
 });
 
-/** The declarations of the admin page's style rule for `selector`, as { property: value }. */
-function declared(selector) {
-    const style = (/<style>([\s\S]*?)<\/style>/.exec(pageSource('admin.html')) || [, ''])[1];
-    const rule = [...style.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(([, selectors]) => selectors.split(',').map(x => x.trim()).includes(selector));
-    return Object.fromEntries((rule ? rule[2] : '').split(';').map(d => d.split(':').map(x => x.trim())).filter(d => d.length === 2));
-}
-
-// 008 FR-016: one click on a candidate's ID selects all of it, to paste into Jellyfin.
-test('a candidate ID selects as a whole', () => {
-    assert.equal(declared('#newreleasesConfigPage .nr-id')['user-select'], 'all');
-});
-
 // 008 FR-016, edge case: a row from before the upgrade has no candidates, so the fix is the sentence alone.
 test('a MusicBrainz Score failure without stored candidates gives the sentence only', () => {
     const row = unmatchedRows(fixture('admin-status.json'))[2];
@@ -334,13 +322,6 @@ test('every step hides its mark from screen readers and states itself in visuall
     for (const step of steps) assert.match(step, /<span aria-hidden="true">[✓✗–]<\/span><span class="nr-sr">(passed|failed|not reached)<\/span>/);
 });
 
-// 008 FR-003, FR-010: a step not reached is dimmed, and the screen-reader words take no space on screen.
-test('the stylesheet dims a not-reached step and hides the screen-reader words visually', () => {
-    assert.ok(Number(declared('#newreleasesConfigPage .nr-step-notreached').opacity) < 1);
-    const hidden = declared('#newreleasesConfigPage .nr-sr');
-    assert.deepEqual([hidden.position, hidden.width, hidden.height, hidden.overflow], ['absolute', '1px', '1px', 'hidden']);
-});
-
 /** A trail line as a sighted reader sees it: screen-reader words removed, then every tag. */
 const visible = line => line.replace(/<span class="nr-sr">[^<]*<\/span>/g, '').replace(/<[^>]*>/g, '');
 
@@ -356,11 +337,6 @@ test('a failed Unique step shows both scores: "Unique ✗ 100 vs 96"', () => {
     const [musicBrainz] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[1]);
 
     assert.match(visible(musicBrainz), / · Unique ✗ 100 vs 96$/);
-});
-
-// 008 FR-005, SC-004: a Reason line stays on one line.
-test('a Reason line does not wrap', () => {
-    assert.equal(declared('#newreleasesConfigPage .nr-reason')['white-space'], 'nowrap');
 });
 
 // 008 FR-005, SC-004 (research R7): the longest trail any source can write fits the one-line budget of 64 characters.

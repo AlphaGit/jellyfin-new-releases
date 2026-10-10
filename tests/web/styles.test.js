@@ -504,3 +504,29 @@ test('A14: a focused source link shows the focus outline', () => {
 
     assert.deepEqual([/solid/.test(declarations(':focus-visible').outline || ''), removed], [true, []]);
 });
+
+// 008: the administrator page's own <style> block, which the Unmatched artists table depends on.
+const ADMIN_STYLE = /<style>([\s\S]*?)<\/style>/.exec(pageSource('admin.html'))[1];
+const ADMIN_SCOPE = '#newreleasesConfigPage ';
+
+/** Every `property: value` the administrator page declares at its top level for `selector`. */
+function adminDeclarations(selector) {
+    return Object.assign({}, ...rules(ADMIN_STYLE).filter(rule => rule.media === '' && rule.selector === ADMIN_SCOPE + selector).map(rule => rule.declared));
+}
+
+// 008 FR-016: one click on a candidate's ID selects all of it, to paste into Jellyfin.
+test('a candidate ID selects as a whole', () => {
+    assert.equal(adminDeclarations('.nr-id')['user-select'], 'all');
+});
+
+// 008 FR-003, FR-010: a step not reached is dimmed, and the screen-reader words take no space on screen.
+test('the stylesheet dims a not-reached step and hides the screen-reader words visually', () => {
+    assert.ok(Number(adminDeclarations('.nr-step-notreached').opacity) < 1);
+    const hidden = adminDeclarations('.nr-sr');
+    assert.deepEqual([hidden.position, hidden.width, hidden.height, hidden.overflow], ['absolute', '1px', '1px', 'hidden']);
+});
+
+// 008 FR-005, SC-004: a Reason line stays on one line.
+test('a Reason line does not wrap', () => {
+    assert.equal(adminDeclarations('.nr-reason')['white-space'], 'nowrap');
+});
