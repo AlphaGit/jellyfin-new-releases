@@ -7,6 +7,10 @@ namespace Jellyfin.Plugin.NewReleases.Matching;
 /// <summary>The reason texts a source writes for an Unmatched artist, and the matching steps they stand for (spec 008).</summary>
 public static partial class MatchReasons
 {
+    public const string NoResult = "no result";
+
+    public const string NoCorroboratingAlbum = "no corroborating album";
+
     public static string LowScore(int score) => $"low score ({score})";
 
     public static string Ambiguous(int best, int runnerUp) => $"ambiguous (score {best} vs {runnerUp})";
@@ -23,8 +27,8 @@ public static partial class MatchReasons
         {
             return reason switch
             {
-                "no result" => new FailedStep("Name", []),
-                "no corroborating album" => new FailedStep("Album", []),
+                NoResult => new FailedStep("Name", []),
+                NoCorroboratingAlbum => new FailedStep("Album", []),
                 _ => null,
             };
         }
@@ -34,7 +38,7 @@ public static partial class MatchReasons
             return null;
         }
 
-        if (reason == "no result")
+        if (reason == NoResult)
         {
             return new FailedStep("Search", []);
         }
