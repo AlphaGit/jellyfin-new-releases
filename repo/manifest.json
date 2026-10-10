@@ -8,6 +8,14 @@
         "category": "General",
         "versions": [
             {
+                "version": "0.2.1.0",
+                "changelog": "### Fixed\n\n- **A caller authenticated by API key gets a clean `401`.** The release list, the artist list and\n  the Ignore, Have it and Restore actions need a signed-in user. Called with an API key, they\n  answered `400` and wrote an error to the server log; they now refuse the request as\n  unauthenticated and log nothing. Signed-in users see no change.",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/AlphaGit/jellyfin-new-releases/releases/download/v0.2.1/new-releases.zip",
+                "checksum": "603f8b213d3de44958d3f72e383deba6",
+                "timestamp": "2026-10-10T17:35:23Z"
+            },
+            {
                 "version": "0.2.0.0",
                 "changelog": "### Upgrading from 0.1.x \u2014 once\n\n- **Remove the copy left under the old name.** The plugin was published as \"Jellyfin New\n  Releases\" and is now \"New Releases\". Jellyfin replaces an older copy only when the names match,\n  so after this update the server's plugin directory holds a folder named\n  `Jellyfin New Releases_<version>` beside the new `New Releases_0.2.0.0`. Stop the server, delete\n  the `Jellyfin New Releases_<version>` folder and nothing else, and start it again. No later\n  upgrade needs this.\n- **Replace the repository address.** The catalogue is no longer served from GitHub Pages. In\n  Dashboard \u2192 Plugins \u2192 Repositories, replace the old `github.io` address with\n  `https://raw.githubusercontent.com/AlphaGit/jellyfin-new-releases/main/repo/manifest.json`.\n  A server left on the old address does not see 0.2.0 or any later version.\n\n### Changed\n\n- **The Artist filter is a text field with suggestions.** Type part of a library artist's name\n  and pick from the browser's own suggestions. The filter applies only to a name that matches a\n  library artist; clearing the field, or Clear, removes it. It stays operable by keyboard.\n- **\"Ignore\", \"Have it\" and \"Restore\" share one button style.** \"Ignore\" and \"Have it\" have the\n  same width and line up on each card.\n- **The source link is readable in the dark theme.** Its text has a contrast of at least 4.5:1\n  against the card, and it still reads as a link.\n\n### Added\n\n- **Each release card shows the record's cover.** The cover comes from Deezer, then from the\n  Cover Art Archive when Deezer has none, and a neutral placeholder of the same size shows when\n  neither loads. Covers load only as cards come into view, directly from those image hosts; the\n  plugin server does not fetch, store or proxy them.",
                 "targetAbi": "12.0.0.0",
