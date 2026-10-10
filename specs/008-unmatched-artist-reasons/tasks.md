@@ -64,7 +64,7 @@ sources only, and the page shows one Reason line per source. Both stories build 
   - A listed artist has one `UnmatchedAt` per enabled source, in the order given, with `Status` `Matched`, `Unmatched` or `NotChecked`.
   - An enabled source with no row, or a `Pending` row, is `NotChecked`; `Reason` is null for every status but `Unmatched`.
   - The disabled source's row is still in `artist_source`; calling again with that source enabled lists the artist with its stored reason. [U30] [U31] [U32] [U33] [U34] [U35]
-- [ ] T004 Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Api/AdminControllerTests.cs` for `GET Admin/Status` ([contracts/http-api.md](./contracts/http-api.md)):
+- [X] T004 Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Api/AdminControllerTests.cs` for `GET Admin/Status` ([contracts/http-api.md](./contracts/http-api.md)):
   - Each `unmatched[]` entry has `Reasons`, one per enabled source in the `Sources` order, and no `Sources` or `Hint` member.
   - An Unmatched MusicBrainz `ambiguous (score 92 vs 90)` row gives `FailedStep` `Unique` and the four steps with states and `Values` `[92, 90]` on `Unique` only.
   - A `Matched` entry and a `NotChecked` entry have `FailedStep` null, empty `Steps`, and null `Reason`.
@@ -78,7 +78,7 @@ sources only, and the page shows one Reason line per source. Both stories build 
   - A `Matched` entry reads `Matched`, a `NotChecked` entry reads `Not checked`, and an entry with `failedStep` null shows its `reason` text, escaped.
   - The old fixed hint text appears nowhere. [U52] [U53] [U54] [U55] [U56] [U57] [A9]
 
-- [ ] T027 Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ConfigureAndRunTests.cs`, using `AcceptanceRig`:
+- [X] T027 Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ConfigureAndRunTests.cs`, using `AcceptanceRig`:
   - After a refresh where the MusicBrainz search returns `artist_search_low_score.json`, `AdminStatusAsync` gives steps `Id` Failed, `Search` Passed, `Score` Failed with `[n]`, `Unique` NotReached.
   - With Deezer disabled, an artist Unmatched only at Deezer is absent; with Deezer enabled again, it is listed with its stored result, with no refresh between. [A10] [A11] [U51]
 
@@ -86,7 +86,7 @@ sources only, and the page shows one Reason line per source. Both stories build 
 
 - [X] T007 Create `src/Jellyfin.Plugin.NewReleases/Matching/MatchReasons.cs` with the constants, `LowScore`, `Ambiguous`, `Parse` and `Steps`. Build every reason in `src/Jellyfin.Plugin.NewReleases/Sources/MusicBrainzSource.cs` and `src/Jellyfin.Plugin.NewReleases/Sources/DeezerSource.cs` through it. T001 and T002 pass; the existing reason-text assertions stay green. [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U14] [U15] [U16] [U23]
 - [X] T008 Change `UnmatchedAt` in `src/Jellyfin.Plugin.NewReleases/Model/StoredRecords.cs` to `(Source, Status, Reason)`. Rewrite `GetCountsAsync` in `src/Jellyfin.Plugin.NewReleases/Storage/ArtistRepository.cs` to take the enabled source IDs and list per research R4. T003 passes. [U30] [U31] [U32] [U33] [U34] [U35] [A10] [A11]
-- [ ] T009 In `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs`, replace `UnmatchedArtistDto.Sources` and `Hint` with `Reasons` (`ReasonDto`: `Source`, `State`, `FailedStep`, `Steps`, `Reason`, `Candidates`, `ExactNameCount`, `AlbumsCompared`; `StepDto`: `Name`, `State`, `Values`; `CandidateDto`: `Name`, `Score`, `Id`), and remove `UnmatchedSourceDto`. In `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, pass `configuration.EnabledSourceIds()` in the `sources` order, build `Reasons` through `MatchReasons`, and remove `UnmatchedHint`. T004 and T005 pass. [U40] [U41] [U42] [U43] [U44] [U45] [U46] [U49] [U51]
+- [X] T009 In `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs`, replace `UnmatchedArtistDto.Sources` and `Hint` with `Reasons` (`ReasonDto`: `Source`, `State`, `FailedStep`, `Steps`, `Reason`, `Candidates`, `ExactNameCount`, `AlbumsCompared`; `StepDto`: `Name`, `State`, `Values`; `CandidateDto`: `Name`, `Score`, `Id`), and remove `UnmatchedSourceDto`. In `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, pass `configuration.EnabledSourceIds()` in the `sources` order, build `Reasons` through `MatchReasons`, and remove `UnmatchedHint`. T004 and T005 pass. [U40] [U41] [U42] [U43] [U44] [U45] [U46] [U49] [U51]
 - [ ] T010 In `src/Jellyfin.Plugin.NewReleases/Web/admin.html`, rename the header to Artist / Reason / How to fix and render one Reason line per `reasons` entry as T006 states. Leave How to fix empty for now. T006 passes; the existing `render-status.test.js` cases that read the old shape are updated in the same step. [U52] [U53] [U54] [U55] [U56] [U57] [A9]
 - [ ] T011 Amend the admin status example and the `admin.html` table description in `specs/001-track-new-releases/contracts/http-api.md` per [contracts/http-api.md](./contracts/http-api.md).
 

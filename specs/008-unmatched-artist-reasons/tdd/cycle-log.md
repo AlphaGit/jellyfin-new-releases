@@ -261,3 +261,67 @@ commit. Each had its own red first:
   held open (uncommitted) since cycle 18 with the reds recorded there
 - green: after U30–U35 and cycle 24 both pass in the full suite with no change to them. Suite -> dotnet 393 passed
 - commit: `ebccd8e`
+
+## Cycle 26: U41 `Reasons` has one entry per enabled source, in the `Sources` order
+
+- test: `Api/AdminControllerTests.cs::Status_Reasons_FollowTheSourcesOrder_OnePerEnabledSource` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_Reasons_FollowTheSourcesOrder" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed): the enabled set is a two-entry `HashSet` that enumerates in insertion order, MusicBrainz then Deezer. Deliberate mutant: the controller reverses that order -> `Assert.Equal() Failure: Collections differ` Expected `["musicbrainz", "deezer"]` Actual `["deezer", "musicbrainz"]` (1 failed). Code restored exactly from a copy. Test commit `c4ab07b`
+- green: no production change. Suite -> dotnet 394 passed
+- refactor: the controller passes the enabled ids of the `sources` list it already built, so the order no longer depends on how a `HashSet` enumerates. Suite re-run: 394 passed (structure commit below)
+- commit: `223b34d`
+
+## Cycle 27: U42 an `ambiguous (score 92 vs 90)` MusicBrainz row gives `FailedStep` `Unique`, the four states, and the values on `Unique` only
+
+- test: `Api/AdminControllerTests.cs::Status_AnAmbiguousMusicBrainzReason_GivesTheUniqueTrailWithBothScores` (new), with a `OnlyReasonAsync` helper that enables one source
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_AnAmbiguousMusicBrainzReason" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Strings differ` Expected `"Unique"` Actual `null` (1 failed)
+- green: `AdminController.ToReason` parses an Unmatched entry through `MatchReasons.Parse`, builds `Steps` from `MatchReasons.Steps`, and writes values only where a step has some. Suites -> dotnet 395 passed, node 363 passed
+- refactor: none needed
+- commit: `aa99222`
+
+## Cycle 28: U43 a `Matched` entry has null `FailedStep`, empty `Steps` and null `Reason`
+
+- test: `Api/AdminControllerTests.cs::Status_AMatchedSource_IsMatched_WithNoFailedStepNoStepsAndNoReason` (new), with a helper that puts Deezer beside a MusicBrainz failure
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_AMatchedSource" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed): U34 and U42 already give a match no reason and no trail. Deliberate mutant: the controller falls back to the state name for a missing reason -> `Assert.Equal() Failure: Values differ` Expected `("Matched", null, 0, null)` Actual `("Matched", null, 0, "Matched")` (1 failed). Code restored exactly from a copy
+- green: no production change. Suite -> dotnet 396 passed
+- refactor: none needed
+- commit: `e8484ac`
+
+## Cycle 29: U44 a not-checked entry has `State` `NotChecked`, null `FailedStep`, empty `Steps` and null `Reason`
+
+- test: `Api/AdminControllerTests.cs::Status_ASourceNotYetRun_IsNotChecked_WithNoFailedStepNoStepsAndNoReason` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_ASourceNotYetRun" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Values differ` Expected `("NotChecked", null, 0, null)` Actual `("Pending", null, 0, null)` (1 failed)
+- green: the controller states `Pending` as `NotChecked`. Suite -> dotnet 397 passed
+- refactor: none needed
+- commit: `82f36d9`
+
+## Cycle 30: U45 an unrecognized reason gives `Unmatched`, null `FailedStep`, empty `Steps`, and the stored text
+
+- test: `Api/AdminControllerTests.cs::Status_AnUnrecognizedReason_IsUnmatched_WithNoFailedStepNoSteps_AndKeepsItsText` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_AnUnrecognizedReason" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed): an unparsed reason already yields no trail. Deliberate mutant: an unparsed Unmatched reason defaults to a `Search` failure -> `Assert.Equal() Failure: Values differ` Actual `("Unmatched", "Search", 4, "rate limited")` (1 failed). Code restored exactly from a copy
+- green: no production change. Suite -> dotnet 398 passed
+- refactor: none needed
+- commit: `7847fe8`
+
+## Cycle 31: U46 with Deezer disabled in the configuration, an artist Unmatched only at Deezer is absent
+
+- test: `Api/AdminControllerTests.cs::Status_WithDeezerDisabled_AnArtistOnlyDeezerFailed_IsNotListed` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_WithDeezerDisabled" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed): U30 and U41 already pass the enabled sources. Deliberate mutant: the controller passes every source, enabled or not -> `Assert.Empty() Failure: Collection was not empty` (1 failed). Code restored exactly from a copy
+- green: no production change. Suite -> dotnet 399 passed
+- refactor: none needed
+- commit: `2e46074`
+
+## Cycle 32: U51 after a refresh whose MusicBrainz search scores below 85, the status gives the Score trail
+
+- test: `Acceptance/ConfigureAndRunTests.cs::Spec008_U51_AfterARefreshWhoseMusicBrainzSearchScoresBelow85_TheStatusGivesTheScoreTrail` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ConfigureAndRunTests.Spec008_U51" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed). Deliberate mutant: the controller drops every step value -> `Assert.Equal() Failure: Collections differ` Actual `("Score", "Failed", "")` (1 failed). Code restored exactly from a copy
+- green: no production change. Suite -> dotnet 400 passed
+- refactor: none needed
+- notes: test-after: tasks.md placed this test (T027) before the controller work, but it was written after U42, so it never saw the behaviour missing. It composes units each driven by its own red (U4, U12, U16, U42); the mutant shows it can fail
+- commit: `d0c020c`

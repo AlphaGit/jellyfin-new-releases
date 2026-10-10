@@ -113,12 +113,12 @@ through `AcceptanceRig`.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U40 | Each `unmatched[]` entry carries `Reasons` and no `Sources` or `Hint` | FR-013 | example | DONE | `Api/AdminControllerTests.cs::Status_EachUnmatchedArtist_CarriesReasons_AndNoSourcesOrHint` |
-| U41 | `Reasons` has one entry per enabled source, in the `Sources` order | FR-002, FR-001 | example | PENDING | |
-| U42 | An `ambiguous (score 92 vs 90)` MusicBrainz row gives `FailedStep` `Unique`, the four step states, and `Values` `[92, 90]` on `Unique` only | FR-003, FR-004, FR-013 | example | PENDING | |
-| U43 | A `Matched` entry has null `FailedStep`, empty `Steps` and null `Reason` | US2-AS3 | example | PENDING | |
-| U44 | A `NotChecked` entry has null `FailedStep`, empty `Steps` and null `Reason` | EC-notchecked | example | PENDING | |
-| U45 | An unrecognized reason gives `Unmatched`, null `FailedStep`, empty `Steps`, and the stored text in `Reason` | EC-unknown | example | PENDING | |
-| U46 | With Deezer disabled in the configuration, an artist Unmatched only at Deezer is absent | FR-014 | example | PENDING | |
+| U41 | `Reasons` has one entry per enabled source, in the `Sources` order | FR-002, FR-001 | example | DONE | `Api/AdminControllerTests.cs::Status_Reasons_FollowTheSourcesOrder_OnePerEnabledSource` |
+| U42 | An `ambiguous (score 92 vs 90)` MusicBrainz row gives `FailedStep` `Unique`, the four step states, and `Values` `[92, 90]` on `Unique` only | FR-003, FR-004, FR-013 | example | DONE | `Api/AdminControllerTests.cs::Status_AnAmbiguousMusicBrainzReason_GivesTheUniqueTrailWithBothScores` |
+| U43 | A `Matched` entry has null `FailedStep`, empty `Steps` and null `Reason` | US2-AS3 | example | DONE | `Api/AdminControllerTests.cs::Status_AMatchedSource_IsMatched_WithNoFailedStepNoStepsAndNoReason` |
+| U44 | A `NotChecked` entry has null `FailedStep`, empty `Steps` and null `Reason` | EC-notchecked | example | DONE | `Api/AdminControllerTests.cs::Status_ASourceNotYetRun_IsNotChecked_WithNoFailedStepNoStepsAndNoReason` |
+| U45 | An unrecognized reason gives `Unmatched`, null `FailedStep`, empty `Steps`, and the stored text in `Reason` | EC-unknown | example | DONE | `Api/AdminControllerTests.cs::Status_AnUnrecognizedReason_IsUnmatched_WithNoFailedStepNoSteps_AndKeepsItsText` |
+| U46 | With Deezer disabled in the configuration, an artist Unmatched only at Deezer is absent | FR-014 | example | DONE | `Api/AdminControllerTests.cs::Status_WithDeezerDisabled_AnArtistOnlyDeezerFailed_IsNotListed` |
 | U47 | Stored detail appears as `Candidates` (Deezer with null `Score` and `Id`), `ExactNameCount` and `AlbumsCompared` | FR-015, FR-013 | example | PENDING | |
 | U48 | A row without detail gives null `Candidates`, `ExactNameCount` and `AlbumsCompared` | EC-old, FR-016 | example | PENDING | |
 
@@ -133,7 +133,7 @@ through `AcceptanceRig`.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U50 | After a refresh where MusicBrainz matches and Deezer finds exact-name artists with no album in common, the status gives Deezer `Album` with both counts and MusicBrainz `Matched` | US1-AS2, US1-AS4, FR-015 | example | PENDING | |
-| U51 | After a refresh where the MusicBrainz search scores below 85, the status gives steps Id Failed, Search Passed, Score Failed with the score, Unique NotReached | US2-AS1, FR-004 | example | PENDING | |
+| U51 | After a refresh where the MusicBrainz search scores below 85, the status gives steps Id Failed, Search Passed, Score Failed with the score, Unique NotReached | US2-AS1, FR-004 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_U51_AfterARefreshWhoseMusicBrainzSearchScoresBelow85_TheStatusGivesTheScoreTrail` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/admin.html`: Reason column
 
