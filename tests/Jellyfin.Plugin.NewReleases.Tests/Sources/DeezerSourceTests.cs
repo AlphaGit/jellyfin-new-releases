@@ -72,6 +72,21 @@ public sealed class DeezerSourceTests : IAsyncLifetime
         Assert.DoesNotContain(_h.RequestedUrls, u => u.Contains("/albums", StringComparison.Ordinal));
     }
 
+    /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
+    [Theory]
+    [InlineData("deezer/search_artist_empty.json", "Daft Punk", "Name")]       // no artist at all
+    [InlineData("deezer/search_artist_exact.json", "Daft Punk Live", "Name")]  // near names only
+    [InlineData("deezer/search_artist_exact.json", "Daft Punk", "Album")]      // exact names, no album in common
+    public async Task MatchArtistAsync_EveryUnmatchedReason_ParsesToItsFailedStep(string fixture, string name, string step)
+    {
+        _h.Fixture(Search, fixture);
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/\d+/albums\?", System.Net.HttpStatusCode.OK, EmptyPage);
+
+        var match = await Source().MatchArtistAsync(Artist(name, "Some Album The Library Made Up"), CancellationToken.None);
+
+        Assert.Equal(step, MatchReasons.Parse(Source().Id, match.Reason)?.Step);
+    }
+
     private const string Albums27 = @"api\.deezer\.com/artist/27/albums\?";
 
     [Fact]
