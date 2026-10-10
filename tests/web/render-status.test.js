@@ -136,6 +136,14 @@ test('an entry with no failed step shows its stored reason text, escaped', () =>
     assert.match(rows[3], /<div class="nr-reason">MusicBrainz: rate &lt;limited&gt; &amp; retried<\/div>/);
 });
 
+// 008 SC-001: the fixed hint that sent every failure to the MusicBrainz artist ID is gone.
+test('the old fixed hint sentence appears nowhere on the page', () => {
+    const { document } = rendered(fixture('admin-status.json'));
+
+    assert.doesNotMatch(document.getElementById('nr-unmatched').querySelector('tbody').innerHTML, /picks it up on the next refresh/);
+    assert.doesNotMatch(pageSource('admin.html'), /picks it up on the next refresh/);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
