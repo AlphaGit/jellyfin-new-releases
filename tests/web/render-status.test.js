@@ -94,8 +94,7 @@ test('the unmatched table is headed Artist, Reason, How to fix', () => {
 test('each unmatched artist has one Reason line per reasons entry, led by the source display name', () => {
     const rows = unmatchedRows(fixture('admin-status.json'));
 
-    assert.equal(rows.length, 3);
-    assert.deepEqual(reasonLineSources(rows[0]), ['MusicBrainz', 'Deezer']);
+    assert.deepEqual(rows.map(reasonLineSources), [['MusicBrainz', 'Deezer'], ['MusicBrainz', 'Deezer'], ['MusicBrainz', 'Deezer']]);
 });
 
 /** A row's Reason lines as text, markup removed. */
@@ -133,9 +132,10 @@ test('an entry with no failed step shows its stored reason text, escaped', () =>
 
 // 008 SC-001: the fixed hint that sent every failure to the MusicBrainz artist ID is gone.
 test('the old fixed hint sentence appears nowhere on the page', () => {
-    const { document } = rendered(fixture('admin-status.json'));
+    const rows = unmatchedRows(fixture('admin-status.json'));
 
-    assert.doesNotMatch(document.getElementById('nr-unmatched').querySelector('tbody').innerHTML, /picks it up on the next refresh/);
+    assert.equal(rows.filter(row => fixes(row).length > 0).length, 3); // every row has its fixes to read
+    assert.doesNotMatch(rows.join(''), /picks it up on the next refresh/);
     assert.doesNotMatch(pageSource('admin.html'), /picks it up on the next refresh/);
 });
 
@@ -225,6 +225,7 @@ test('a Deezer Album failure without detail starts at "No Deezer album has the s
 test('a row whose only failure is at Deezer never mentions the MusicBrainz artist ID', () => {
     const row = unmatchedRows(fixture('admin-status.json'))[0];
 
+    assert.match(fixes(row)[0], /^Checked 2 Deezer artists/); // the Deezer fix is there
     assert.doesNotMatch(row, /MusicBrainz artist ID/);
 });
 
@@ -245,10 +246,12 @@ test('candidate names and IDs are written escaped', () => {
 
 // 008 FR-006: only a failed step gets a fix; a match or a source not yet checked gets none.
 test('a matched or not-checked source gives no fix paragraph', () => {
-    const rows = unmatchedRows(fixture('admin-status.json'));
+    // Stale text and candidates on a source that matched or never ran would earn a fix if the page keyed on them.
+    const matched = { source: 'musicbrainz', state: 'Matched', steps: [], reason: 'no result', candidates: [{ name: 'Daft Punk', score: 70, id: 'mbid-old' }] };
+    const notChecked = { source: 'deezer', state: 'NotChecked', steps: [], reason: 'no result', candidates: [] };
 
-    assert.equal(fixes(rows[0]).length, 1); // MusicBrainz matched, Deezer Album failed
-    assert.equal(fixes(rows[2]).length, 1); // MusicBrainz Score failed, Deezer not checked
+    assert.deepEqual(fixes(unmatchedRows(withReason(0, 0, matched))[0]), ['Checked 2 Deezer artists with this name and 37 of their albums. ' + ALBUM_RULE]);
+    assert.deepEqual(fixes(unmatchedRows(withReason(2, 1, notChecked))[2]), [ARTIST_ID_FIX]);
 });
 
 // 008 edge case, FR-006: a reason with no known failed step gets no fix, since no step is known to fix.
@@ -301,10 +304,9 @@ test('a not-reached step shows –, the words "not reached", and the dimming cla
 // 008 FR-010: a screen reader skips the mark and reads the words; the state is never in the mark or colour alone.
 test('every step hides its mark from screen readers and states itself in visually hidden words', () => {
     const [musicBrainz] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[1]);
-    const steps = musicBrainz.split(' · ');
+    const pairs = musicBrainz.split(' · ').map(step => (/<span aria-hidden="true">([✓✗–])<\/span><span class="nr-sr">([^<]*)<\/span>/.exec(step) || []).slice(1));
 
-    assert.equal(steps.length, 4);
-    for (const step of steps) assert.match(step, /<span aria-hidden="true">[✓✗–]<\/span><span class="nr-sr">(passed|failed|not reached)<\/span>/);
+    assert.deepEqual(pairs, [['✗', 'failed'], ['✓', 'passed'], ['✓', 'passed'], ['✗', 'failed']]);
 });
 
 // 008 FR-004: a failed Score step shows the best score after its mark.
