@@ -224,3 +224,40 @@ as in `007`. Cycle-log and test-list updates are committed in `docs:` batches. A
 - green: no production change. Suite -> dotnet 390 passed, 2 failed (A10, A11 held open)
 - refactor: none needed
 - commit: `7839d90`
+
+## Cycle 24: U49, U40 and U53 — the reasons shape, in one commit (deviation)
+
+The page fixture `tests/fixtures/pages/admin-status.json` is read by both `ResponseNamingTests`
+(against the server records) and `render-status.test.js` (by the page). Changing the shape on one
+side alone leaves the other suite red, so these three behaviours went green in one step and one
+commit. Each had its own red first:
+
+- U49 test: `Api/ResponseNamingTests.cs::AdminStatusResponse_AsTheAdminStatusEndpointDeclaresIt_CarriesTheNamesTheAdministratorPageReads`
+  (existing). The fixture was rewritten to the 008 shape (research R8) with no code change.
+  red: `dotnet test --configuration Release --filter "FullyQualifiedName~ResponseNamingTests.AdminStatusResponse" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected `["unmatched[]"] = ["jellyfinId", "name", "reasons"]` Actual `["unmatched[]"] = ["hint", "jellyfinId", "name", "sources"]` (1 failed)
+- U40 test: `Api/AdminControllerTests.cs::Status_EachUnmatchedArtist_CarriesReasons_AndNoSourcesOrHint` (new), on the serialized response.
+  red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_EachUnmatchedArtist_CarriesReasons" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected `["jellyfinId", "name", "reasons"]` Actual `["jellyfinId", "name", "sources", "hint"]` (1 failed)
+- U53 test: `tests/web/render-status.test.js::each unmatched artist has one Reason line per reasons entry, led by the source display name` (new).
+  red: `node --test tests/web/render-status.test.js` (no node single-test command)
+  -> `TypeError: Cannot read properties of undefined (reading 'map')` at `admin.html:85` (the page reads `u.sources`), 9 failed
+- green: `UnmatchedArtistDto(JellyfinId, Name, Reasons)` with `ReasonDto`, `StepDto`, `CandidateDto`
+  per contracts/http-api.md; `UnmatchedSourceDto` and `AdminController.UnmatchedHint` removed. The
+  controller fills `Source`, `State` (the stored status name) and `Reason` only; U41–U48 drive the
+  rest. The page writes one `<div class="nr-reason">{displayName}: {reason or state}</div>` per
+  entry and leaves How to fix empty. Suites -> dotnet 393 passed (A10 and A11 included), node 363 passed
+- existing tests changed with this behaviour, because FR-013 removes what they pinned:
+  - `ResponseNamingTests.PopulatedAdminStatusResponse` builds the new shape, every field non-null at least once.
+  - `AdminControllerTests.Status_ReportsSourceHealthRunTriggerArtistCountsAndUnmatchedArtistsWithHint` asserted the fixed hint; renamed `…WithReasons` and asserts the reason through `Reasons`.
+  - `render-status.test.js::every artist no source matched is listed with its reasons and the hint` asserted `musicbrainz: NoConfidentMatch<br>…` and the hint sentence; replaced by the U53 test. U57 pins that the hint is gone.
+- refactor: none needed
+- commit: `e542fd3`
+
+## Cycle 25: A10 and A11 close — a disabled source's unmatched artists
+
+- tests: `Acceptance/ConfigureAndRunTests.cs::Spec008_A10_WithDeezerDisabled_NoListedArtistHasADeezerReason`
+  and `Spec008_A11_AnArtistUnmatchedOnlyAtDisabledDeezer_IsHidden_AndReturnsWhenDeezerIsEnabledAgain`,
+  held open (uncommitted) since cycle 18 with the reds recorded there
+- green: after U30–U35 and cycle 24 both pass in the full suite with no change to them. Suite -> dotnet 393 passed
+- commit: `ebccd8e`

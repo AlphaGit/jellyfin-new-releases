@@ -71,7 +71,7 @@ sources only, and the page shows one Reason line per source. Both stories build 
   - An unrecognized reason gives `State` `Unmatched`, `FailedStep` null, empty `Steps`, and the stored text in `Reason`.
   - With Deezer disabled in the configuration, an artist Unmatched only at Deezer is absent.
   - `Candidates`, `ExactNameCount` and `AlbumsCompared` are null (no attempt detail yet). [U40] [U41] [U42] [U43] [U44] [U45] [U46]
-- [ ] T005 [P] Rewrite `tests/fixtures/pages/admin-status.json` `unmatched` with the shape of [contracts/http-api.md](./contracts/http-api.md), per research R8: an artist Matched at MusicBrainz and Unmatched at Deezer on `Album` with detail; an artist ambiguous at MusicBrainz with 3 candidates and Unmatched at Deezer on `Name` with near names; an artist with a row from before the upgrade (`candidates` null). Update the sample in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ResponseNamingTests.cs` to build the same shape. `ResponseNamingTests` fails. [U49]
+- [X] T005 [P] Rewrite `tests/fixtures/pages/admin-status.json` `unmatched` with the shape of [contracts/http-api.md](./contracts/http-api.md), per research R8: an artist Matched at MusicBrainz and Unmatched at Deezer on `Album` with detail; an artist ambiguous at MusicBrainz with 3 candidates and Unmatched at Deezer on `Name` with near names; an artist with a row from before the upgrade (`candidates` null). Update the sample in `tests/Jellyfin.Plugin.NewReleases.Tests/Api/ResponseNamingTests.cs` to build the same shape. `ResponseNamingTests` fails. [U49]
 - [ ] T006 [P] Add failing cases to `tests/web/render-status.test.js`, reading `admin-status.json`:
   - The table header is **Artist / Reason / How to fix**.
   - The Reason cell has one line per `reasons` entry, led by the source's `displayName` from `sources`.
@@ -85,7 +85,7 @@ sources only, and the page shows one Reason line per source. Both stories build 
 ### Implementation
 
 - [X] T007 Create `src/Jellyfin.Plugin.NewReleases/Matching/MatchReasons.cs` with the constants, `LowScore`, `Ambiguous`, `Parse` and `Steps`. Build every reason in `src/Jellyfin.Plugin.NewReleases/Sources/MusicBrainzSource.cs` and `src/Jellyfin.Plugin.NewReleases/Sources/DeezerSource.cs` through it. T001 and T002 pass; the existing reason-text assertions stay green. [U1] [U2] [U3] [U4] [U5] [U6] [U7] [U8] [U9] [U10] [U11] [U12] [U13] [U14] [U15] [U16] [U23]
-- [ ] T008 Change `UnmatchedAt` in `src/Jellyfin.Plugin.NewReleases/Model/StoredRecords.cs` to `(Source, Status, Reason)`. Rewrite `GetCountsAsync` in `src/Jellyfin.Plugin.NewReleases/Storage/ArtistRepository.cs` to take the enabled source IDs and list per research R4. T003 passes. [U30] [U31] [U32] [U33] [U34] [U35] [A10] [A11]
+- [X] T008 Change `UnmatchedAt` in `src/Jellyfin.Plugin.NewReleases/Model/StoredRecords.cs` to `(Source, Status, Reason)`. Rewrite `GetCountsAsync` in `src/Jellyfin.Plugin.NewReleases/Storage/ArtistRepository.cs` to take the enabled source IDs and list per research R4. T003 passes. [U30] [U31] [U32] [U33] [U34] [U35] [A10] [A11]
 - [ ] T009 In `src/Jellyfin.Plugin.NewReleases/Api/Dtos.cs`, replace `UnmatchedArtistDto.Sources` and `Hint` with `Reasons` (`ReasonDto`: `Source`, `State`, `FailedStep`, `Steps`, `Reason`, `Candidates`, `ExactNameCount`, `AlbumsCompared`; `StepDto`: `Name`, `State`, `Values`; `CandidateDto`: `Name`, `Score`, `Id`), and remove `UnmatchedSourceDto`. In `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, pass `configuration.EnabledSourceIds()` in the `sources` order, build `Reasons` through `MatchReasons`, and remove `UnmatchedHint`. T004 and T005 pass. [U40] [U41] [U42] [U43] [U44] [U45] [U46] [U49] [U51]
 - [ ] T010 In `src/Jellyfin.Plugin.NewReleases/Web/admin.html`, rename the header to Artist / Reason / How to fix and render one Reason line per `reasons` entry as T006 states. Leave How to fix empty for now. T006 passes; the existing `render-status.test.js` cases that read the old shape are updated in the same step. [U52] [U53] [U54] [U55] [U56] [U57] [A9]
 - [ ] T011 Amend the admin status example and the `admin.html` table description in `specs/001-track-new-releases/contracts/http-api.md` per [contracts/http-api.md](./contracts/http-api.md).
@@ -177,8 +177,8 @@ carries its state in words.
 - [ ] T040 [US2] Confirm that the acceptance test for US2-AS1 is green in the full suite before US2 counts as complete. [A7]
 - [ ] T041 [US2] Confirm that the acceptance test for US2-AS2 is green in the full suite before US2 counts as complete. [A8]
 - [ ] T042 [US2] Confirm that the acceptance test for US2-AS3 is green in the full suite before US2 counts as complete. [A9]
-- [ ] T043 [US2] Confirm that the acceptance test for US2-AS4 is green in the full suite before US2 counts as complete. [A10]
-- [ ] T044 [US2] Confirm that the acceptance test for US2-AS5 is green in the full suite before US2 counts as complete. [A11]
+- [X] T043 [US2] Confirm that the acceptance test for US2-AS4 is green in the full suite before US2 counts as complete. [A10]
+- [X] T044 [US2] Confirm that the acceptance test for US2-AS5 is green in the full suite before US2 counts as complete. [A11]
 - [ ] T045 [US2] Confirm that the acceptance test for US2-AS6 is green in the full suite before US2 counts as complete. [A12]
 
 **Checkpoint**: US1 and US2 complete. Both suites green.

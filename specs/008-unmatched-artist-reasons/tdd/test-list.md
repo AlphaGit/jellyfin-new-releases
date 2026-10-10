@@ -38,8 +38,8 @@ through `AcceptanceRig`.
 | A7  | A MusicBrainz `low score (70)` row's Reason line reads ID failed, Search passed, Score failed with 70, Unique not reached | US2-AS1 | example | PENDING | |
 | A8  | A Deezer `no corroborating album` row's Reason line reads Name passed, Album failed | US2-AS2 | example | PENDING | |
 | A9  | A Matched source's Reason line reads "<Source>: Matched" with no trail | US2-AS3 | example | PENDING | |
-| A10 | With Deezer disabled, no listed artist has a Deezer entry in the admin status | US2-AS4 | example | PENDING | |
-| A11 | An artist Unmatched only at disabled Deezer is absent from the admin status, and is listed with its stored reason once Deezer is enabled again, with no refresh between | US2-AS5 | example | PENDING | |
+| A10 | With Deezer disabled, no listed artist has a Deezer entry in the admin status | US2-AS4 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_A10_WithDeezerDisabled_NoListedArtistHasADeezerReason` |
+| A11 | An artist Unmatched only at disabled Deezer is absent from the admin status, and is listed with its stored reason once Deezer is enabled again, with no refresh between | US2-AS5 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_A11_AnArtistUnmatchedOnlyAtDisabledDeezer_IsHidden_AndReturnsWhenDeezerIsEnabledAgain` |
 | A12 | Every rendered step carries its state in words for a screen reader, separate from its mark and dimming | US2-AS6 | example | PENDING | |
 
 ## Inner loop: unit behaviors
@@ -112,7 +112,7 @@ through `AcceptanceRig`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U40 | Each `unmatched[]` entry carries `Reasons` and no `Sources` or `Hint` | FR-013 | example | PENDING | |
+| U40 | Each `unmatched[]` entry carries `Reasons` and no `Sources` or `Hint` | FR-013 | example | DONE | `Api/AdminControllerTests.cs::Status_EachUnmatchedArtist_CarriesReasons_AndNoSourcesOrHint` |
 | U41 | `Reasons` has one entry per enabled source, in the `Sources` order | FR-002, FR-001 | example | PENDING | |
 | U42 | An `ambiguous (score 92 vs 90)` MusicBrainz row gives `FailedStep` `Unique`, the four step states, and `Values` `[92, 90]` on `Unique` only | FR-003, FR-004, FR-013 | example | PENDING | |
 | U43 | A `Matched` entry has null `FailedStep`, empty `Steps` and null `Reason` | US2-AS3 | example | PENDING | |
@@ -126,7 +126,7 @@ through `AcceptanceRig`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U49 | The admin status record serializes with exactly the field names of `admin-status.json`, at every level | FR-013 | contract | PENDING | |
+| U49 | The admin status record serializes with exactly the field names of `admin-status.json`, at every level | FR-013 | contract | DONE | `Api/ResponseNamingTests.cs::AdminStatusResponse_AsTheAdminStatusEndpointDeclaresIt_CarriesTheNamesTheAdministratorPageReads` |
 
 ### End to end through the refresh task and `AdminController` (`Acceptance/ConfigureAndRunTests.cs`)
 
@@ -140,7 +140,7 @@ through `AcceptanceRig`.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U52 | The table header reads Artist, Reason, How to fix | FR-001 | example | PENDING | |
-| U53 | The Reason cell has one line per `reasons` entry, led by the source's `displayName` | FR-001, FR-002 | example | PENDING | |
+| U53 | The Reason cell has one line per `reasons` entry, led by the source's `displayName` | FR-001, FR-002 | example | DONE | `tests/web/render-status.test.js::each unmatched artist has one Reason line per reasons entry, led by the source display name` |
 | U54 | A `Matched` entry's line reads `Matched` | US2-AS3 | example | PENDING | |
 | U55 | A `NotChecked` entry's line reads `Not checked` | EC-notchecked | example | PENDING | |
 | U56 | An entry with no failed step shows its stored reason text, escaped | EC-unknown, INV-esc | example | PENDING | |
