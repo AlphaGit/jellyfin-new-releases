@@ -29,7 +29,7 @@ public sealed record ArtistCounts(int LibraryArtists, IReadOnlyDictionary<string
 /// <summary>A library artist Unmatched at one or more sources, with each source's reason.</summary>
 public sealed record UnmatchedArtist(Guid JellyfinId, string Name, IReadOnlyList<UnmatchedAt> Sources);
 
-public sealed record UnmatchedAt(string Source, string Reason, MatchStatus Status = MatchStatus.Unmatched);
+public sealed record UnmatchedAt(string Source, MatchStatus Status, string Reason);
 
 /// <summary>Row of <c>release</c>.</summary>
 public sealed record Release(

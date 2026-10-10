@@ -180,7 +180,7 @@ public sealed class ArtistRepository
             while (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 var jellyfinId = Guid.Parse(reader.GetString(0));
-                var at = new UnmatchedAt(reader.GetString(2), reader.IsDBNull(3) ? string.Empty : reader.GetString(3), Enum.Parse<MatchStatus>(reader.GetString(4)));
+                var at = new UnmatchedAt(reader.GetString(2), Enum.Parse<MatchStatus>(reader.GetString(4)), reader.IsDBNull(3) ? string.Empty : reader.GetString(3));
                 if (unmatched.Count > 0 && unmatched[^1].JellyfinId == jellyfinId)
                 {
                     unmatched[^1] = unmatched[^1] with { Sources = [.. unmatched[^1].Sources, at] };
