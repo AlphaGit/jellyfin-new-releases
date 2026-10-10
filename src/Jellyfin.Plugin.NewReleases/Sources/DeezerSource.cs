@@ -36,21 +36,30 @@ public sealed class DeezerSource : IReleaseSource
         var wanted = TitleNormalizer.NormalizeName(artist.Name);
         var libraryTitles = artist.Albums.Select(a => a.NormalizedTitle).ToHashSet(StringComparer.Ordinal);
         using var search = await GetJsonAsync($"{Base}search/artist?q={Uri.EscapeDataString(artist.Name)}&limit=25", ct).ConfigureAwait(false);
+        // FR-015, FR-016: the first three artists Deezer returned, whatever their names, kept for the fix.
+        var returned = search.RootElement.GetProperty("data").EnumerateArray()
+            .Take(3)
+            .Select(a => new MatchCandidate(a.GetProperty("name").GetString() ?? string.Empty))
+            .ToArray();
         var candidates = search.RootElement.GetProperty("data").EnumerateArray()
             .Where(a => TitleNormalizer.NormalizeName(a.GetProperty("name").GetString() ?? string.Empty) == wanted)
             .Select(a => a.GetProperty("id").GetInt64().ToString(CultureInfo.InvariantCulture))
             .ToList();
 
+        var albumsCompared = 0;
         foreach (var candidate in candidates)
         {
             var page = await FetchCataloguePageAsync(candidate, 0, ct).ConfigureAwait(false);
+            albumsCompared += page.Items.Count;
             if (page.Items.Any(item => libraryTitles.Contains(TitleNormalizer.NormalizeAlbum(item.Title))))
             {
                 return ArtistMatch.Matched(candidate);
             }
         }
 
-        return ArtistMatch.Unmatched(candidates.Count == 0 ? "no result" : "no corroborating album");
+        return candidates.Count == 0
+            ? ArtistMatch.Unmatched(MatchReasons.NoResult, new MatchDetail(returned))
+            : ArtistMatch.Unmatched(MatchReasons.NoCorroboratingAlbum, new MatchDetail(returned, candidates.Count, albumsCompared));
     }
 
     public async Task<CataloguePage> FetchCataloguePageAsync(string sourceArtistId, int offset, CancellationToken ct)

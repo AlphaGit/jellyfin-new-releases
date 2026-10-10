@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.NewReleases.Library;
+using Jellyfin.Plugin.NewReleases.Matching;
 using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.Sources;
 using Jellyfin.Plugin.NewReleases.Tests.Support;
@@ -104,7 +105,74 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
 
         var match = await Source().MatchArtistAsync(Artist("zzqxjv nonexistent artist qqq"), CancellationToken.None);
 
-        Assert.Equal(ArtistMatch.Unmatched("no result"), match);
+        // 008 FR-015 adds the attempt detail, compared in its own test; everything else is the record a bare Unmatched has.
+        Assert.Equal(ArtistMatch.Unmatched("no result") with { Detail = match.Detail }, match);
+    }
+
+    /// <summary>Spec 008 FR-015: an ambiguous result keeps the candidates the search returned, best first, with score and ID.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_Ambiguous_KeepsTheCandidatesInScoreOrderWithScoreAndId()
+    {
+        _h.Fixture(ArtistSearch, "musicbrainz/artist_search_ambiguous.json"); // Nirvana 100, Nirvana 96, Approaching Nirvana 74
+
+        var match = await Source().MatchArtistAsync(Artist("Nirvana"), CancellationToken.None);
+
+        Assert.Equal(
+            [
+                new MatchCandidate("Nirvana", 100, "5b11f4ce-a62d-471e-81fc-a69a8278c7da"),
+                new MatchCandidate("Nirvana", 96, "9282c8b4-ca0b-4c6b-b7e3-4f7762dfc4d6"),
+                new MatchCandidate("Approaching Nirvana", 74, "c3a64a25-251b-4d03-afba-1471440245b8"),
+            ],
+            match.Detail?.Candidates ?? []);
+    }
+
+    /// <summary>Spec 008 FR-016: a fix shows at most 3 candidates, so no more than 3 are kept.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_FiveResultsScoringBelow85_KeepsOnlyTheFirstThree()
+    {
+        SearchReturns(("mbid-1", "Blurt", 80), ("mbid-2", "Blurr", 70), ("mbid-3", "Blue", 60), ("mbid-4", "Bluo", 50), ("mbid-5", "Blum", 40));
+
+        var match = await Source().MatchArtistAsync(Artist("Blur"), CancellationToken.None);
+
+        Assert.Equal(["mbid-1", "mbid-2", "mbid-3"], match.Detail?.Candidates.Select(c => c.Id) ?? []);
+    }
+
+    /// <summary>Spec 008 FR-015: a search that found nobody records that, as an empty candidate list.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_NoResults_RecordsAnEmptyCandidateList()
+    {
+        _h.Fixture(ArtistSearch, "musicbrainz/artist_search_empty.json");
+
+        var match = await Source().MatchArtistAsync(Artist("zzqxjv nonexistent artist qqq"), CancellationToken.None);
+
+        Assert.NotNull(match.Detail);
+        Assert.Empty(match.Detail.Candidates);
+    }
+
+    /// <summary>Spec 008 FR-015: keeping the candidates sends nothing new: an unmatched attempt is still the one search.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_Ambiguous_SendsOnlyTheSearch()
+    {
+        _h.Fixture(ArtistSearch, "musicbrainz/artist_search_ambiguous.json");
+        _h.Http.OnUrlPattern(@"musicbrainz\.org/ws/2/artist/", System.Net.HttpStatusCode.OK, "{}"); // answers any lookup a change might add
+
+        await Source().MatchArtistAsync(Artist("Nirvana"), CancellationToken.None);
+
+        Assert.Equal(["https://musicbrainz.org/ws/2/artist?query=artist:%22Nirvana%22&limit=5&fmt=json"], _h.RequestedUrls);
+    }
+
+    /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
+    [Theory]
+    [InlineData("musicbrainz/artist_search_empty.json", "Search")]
+    [InlineData("musicbrainz/artist_search_low_score.json", "Score")]
+    [InlineData("musicbrainz/artist_search_ambiguous.json", "Unique")]
+    public async Task MatchArtistAsync_EveryUnmatchedReason_ParsesToItsFailedStep(string fixture, string step)
+    {
+        _h.Fixture(ArtistSearch, fixture);
+
+        var match = await Source().MatchArtistAsync(Artist("Nirvana"), CancellationToken.None);
+
+        Assert.Equal(step, MatchReasons.Parse(Source().Id, match.Reason)?.Step);
     }
 
     private const string ReleaseBrowse = @"musicbrainz\.org/ws/2/release\?artist=";

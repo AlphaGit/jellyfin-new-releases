@@ -9,6 +9,9 @@ namespace Jellyfin.Plugin.NewReleases.Storage;
 /// <summary>Data access for <c>library_artist</c> and <c>artist_source</c>. Parameterized SQL, no ORM.</summary>
 public sealed class ArtistRepository
 {
+    /// <summary><c>match_detail</c> JSON, as data-model.md writes it: camelCase, nulls left out.</summary>
+    private static readonly JsonSerializerOptions DetailJson = new(JsonSerializerDefaults.Web) { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
+
     private readonly PluginDatabase _db;
 
     public ArtistRepository(PluginDatabase db)
@@ -57,18 +60,20 @@ public sealed class ArtistRepository
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO artist_source (library_artist_id, source, status, source_artist_id, unmatched_reason)
-            VALUES (@artistId, @source, @status, @sourceArtistId, @reason)
+            INSERT INTO artist_source (library_artist_id, source, status, source_artist_id, unmatched_reason, match_detail)
+            VALUES (@artistId, @source, @status, @sourceArtistId, @reason, @detail)
             ON CONFLICT (library_artist_id, source) DO UPDATE SET
                 status = excluded.status,
                 source_artist_id = excluded.source_artist_id,
-                unmatched_reason = excluded.unmatched_reason
+                unmatched_reason = excluded.unmatched_reason,
+                match_detail = excluded.match_detail
             """;
         command.Parameters.AddWithValue("@artistId", artistId);
         command.Parameters.AddWithValue("@source", source);
         command.Parameters.AddWithValue("@status", match.Status.ToString());
         command.Parameters.AddWithValue("@sourceArtistId", (object?)match.SourceArtistId ?? DBNull.Value);
         command.Parameters.AddWithValue("@reason", (object?)match.Reason ?? DBNull.Value);
+        command.Parameters.AddWithValue("@detail", match.Detail is null ? DBNull.Value : JsonSerializer.Serialize(match.Detail, DetailJson));
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
@@ -143,7 +148,7 @@ public sealed class ArtistRepository
         reader.IsDBNull(8) ? null : reader.GetString(8));
 
     /// <summary>Admin counts: total artists, Matched per source, and every artist Unmatched at at least one source with the reasons (FR-012).</summary>
-    public async Task<ArtistCounts> GetCountsAsync(CancellationToken ct)
+    public async Task<ArtistCounts> GetCountsAsync(IReadOnlyList<string> enabledSources, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
 
@@ -162,30 +167,41 @@ public sealed class ArtistRepository
             }
         }
 
-        var unmatched = new List<UnmatchedArtist>();
+        var listed = new List<(Guid JellyfinId, string Name, Dictionary<string, UnmatchedAt> At)>();
         await using (var rows = connection.CreateCommand())
         {
             rows.CommandText = """
-                SELECT a.jellyfin_id, a.name, s.source, s.unmatched_reason
+                SELECT a.jellyfin_id, a.name, s.source, s.unmatched_reason, s.status, s.match_detail
                 FROM artist_source s JOIN library_artist a ON a.id = s.library_artist_id
-                WHERE s.status = 'Unmatched'
-                ORDER BY a.name, a.id, s.source
+                WHERE s.source IN (SELECT value FROM json_each(@enabled))
+                  AND s.library_artist_id IN (
+                    SELECT library_artist_id FROM artist_source
+                    WHERE status = 'Unmatched' AND source IN (SELECT value FROM json_each(@enabled)))
+                ORDER BY a.name, a.id
                 """;
+            rows.Parameters.AddWithValue("@enabled", JsonSerializer.Serialize(enabledSources));
             await using var reader = await rows.ExecuteReaderAsync(ct).ConfigureAwait(false);
             while (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 var jellyfinId = Guid.Parse(reader.GetString(0));
-                var at = new UnmatchedAt(reader.GetString(2), reader.IsDBNull(3) ? string.Empty : reader.GetString(3));
-                if (unmatched.Count > 0 && unmatched[^1].JellyfinId == jellyfinId)
+                var at = new UnmatchedAt(
+                    reader.GetString(2),
+                    Enum.Parse<MatchStatus>(reader.GetString(4)),
+                    reader.IsDBNull(3) ? null : reader.GetString(3),
+                    reader.IsDBNull(5) ? null : JsonSerializer.Deserialize<MatchDetail>(reader.GetString(5), DetailJson));
+                if (listed.Count == 0 || listed[^1].JellyfinId != jellyfinId)
                 {
-                    unmatched[^1] = unmatched[^1] with { Sources = [.. unmatched[^1].Sources, at] };
+                    listed.Add((jellyfinId, reader.GetString(1), new Dictionary<string, UnmatchedAt>(StringComparer.Ordinal)));
                 }
-                else
-                {
-                    unmatched.Add(new UnmatchedArtist(jellyfinId, reader.GetString(1), [at]));
-                }
+
+                listed[^1].At[at.Source] = at;
             }
         }
+
+        // An enabled source with no row never ran for the artist: listed as not checked (Pending).
+        var unmatched = listed
+            .Select(a => new UnmatchedArtist(a.JellyfinId, a.Name, enabledSources.Select(source => a.At.GetValueOrDefault(source) ?? new UnmatchedAt(source, MatchStatus.Pending, null)).ToArray()))
+            .ToList();
 
         return new ArtistCounts(libraryArtists, matched, unmatched);
     }

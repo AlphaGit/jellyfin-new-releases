@@ -115,19 +115,142 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
         await _db.Artists.SetMatchAsync(neitherId, "musicbrainz", ArtistMatch.Unmatched("ambiguous (score 90 vs 85)"), CancellationToken.None);
         await _db.Artists.SetMatchAsync(neitherId, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
 
-        var counts = await _db.Artists.GetCountsAsync(CancellationToken.None);
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz", "deezer"], CancellationToken.None);
 
         Assert.Equal(3, counts.LibraryArtists);
         Assert.Equal(2, counts.MatchedBySource["musicbrainz"]);
         Assert.Equal(1, counts.MatchedBySource["deezer"]);
-        // Records holding lists compare by reference; flatten to (artist, source, reason) rows.
+        // Records holding lists compare by reference; flatten to (artist, source, status, reason) rows.
+        // 008 FR-002: a listed artist carries every enabled source, its matches included, each with its own reason.
         Assert.Equal(
             [
-                (mbOnly.JellyfinId, "MB Only", "deezer", "no corroborating album"),
-                (neither.JellyfinId, "Neither", "deezer", "no result"),
-                (neither.JellyfinId, "Neither", "musicbrainz", "ambiguous (score 90 vs 85)"),
+                (mbOnly.JellyfinId, "MB Only", "musicbrainz", MatchStatus.Matched, (string?)null),
+                (mbOnly.JellyfinId, "MB Only", "deezer", MatchStatus.Unmatched, "no corroborating album"),
+                (neither.JellyfinId, "Neither", "musicbrainz", MatchStatus.Unmatched, "ambiguous (score 90 vs 85)"),
+                (neither.JellyfinId, "Neither", "deezer", MatchStatus.Unmatched, "no result"),
             ],
-            counts.Unmatched.SelectMany(u => u.Sources.OrderBy(s => s.Source).Select(s => (u.JellyfinId, u.Name, s.Source, s.Reason))));
+            counts.Unmatched.SelectMany(u => u.Sources.Select(s => (u.JellyfinId, u.Name, s.Source, s.Status, s.Reason))));
+    }
+
+    /// <summary>008 FR-002: a listed artist carries every enabled source, in the order the caller gives them.</summary>
+    [Fact]
+    public async Task GetCountsAsync_AListedArtistHasOneEntryPerEnabledSource_InTheOrderGiven()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Matched("mb-1"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var counts = await _db.Artists.GetCountsAsync(["deezer", "musicbrainz"], CancellationToken.None);
+
+        Assert.Equal(
+            [("deezer", MatchStatus.Unmatched), ("musicbrainz", MatchStatus.Matched)],
+            Assert.Single(counts.Unmatched).Sources.Select(s => (s.Source, s.Status)));
+    }
+
+    /// <summary>008 FR-002: an enabled source that never ran for the artist is still listed, as not checked (Pending).</summary>
+    [Fact]
+    public async Task GetCountsAsync_AnEnabledSourceWithNoRow_IsListedAsPending()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz", "deezer"], CancellationToken.None);
+
+        Assert.Equal(
+            [("musicbrainz", MatchStatus.Unmatched), ("deezer", MatchStatus.Pending)],
+            Assert.Single(counts.Unmatched).Sources.Select(s => (s.Source, s.Status)));
+    }
+
+    /// <summary>008 FR-002: a source whose stored state is still Pending reads as not checked, like one with no row.</summary>
+    [Fact]
+    public async Task GetCountsAsync_AnEnabledSourceWithAPendingRow_IsListedAsPending()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", new ArtistMatch(MatchStatus.Pending, null, null), CancellationToken.None);
+
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz", "deezer"], CancellationToken.None);
+
+        Assert.Equal(MatchStatus.Pending, Assert.Single(counts.Unmatched).Sources.Single(s => s.Source == "deezer").Status);
+    }
+
+    /// <summary>008: only an Unmatched entry has a reason; a match and a source not checked have none.</summary>
+    [Fact]
+    public async Task GetCountsAsync_MatchedAndNotCheckedEntries_HaveNoReason()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Matched("mb-1"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz", "deezer", "other"], CancellationToken.None);
+
+        Assert.Equal(
+            [("musicbrainz", null), ("deezer", "no result"), ("other", null)],
+            Assert.Single(counts.Unmatched).Sources.Select(s => (s.Source, s.Reason)));
+    }
+
+    /// <summary>008 FR-014: an artist is listed only for a failure at a source that is switched on.</summary>
+    [Fact]
+    public async Task GetCountsAsync_AnArtistUnmatchedOnlyAtADisabledSource_IsNotListed()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Matched("mb-1"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz"], CancellationToken.None);
+
+        Assert.Empty(counts.Unmatched);
+    }
+
+    /// <summary>008 FR-014: hiding a disabled source keeps its stored result, so enabling it again lists the artist as before.</summary>
+    [Fact]
+    public async Task GetCountsAsync_ADisabledSourcesResultIsKept_AndListsAgainOnceEnabled()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+        await _db.Artists.GetCountsAsync(["musicbrainz"], CancellationToken.None); // read while Deezer is off (U30 pins what that hides)
+
+        var counts = await _db.Artists.GetCountsAsync(["musicbrainz", "deezer"], CancellationToken.None);
+
+        Assert.Equal("no result", Assert.Single(counts.Unmatched).Sources.Single(s => s.Source == "deezer").Reason);
+    }
+
+    /// <summary>008 FR-015: a failed match's candidates and counts are stored with it and read back unchanged.</summary>
+    [Fact]
+    public async Task GetCountsAsync_ReadsBackTheDetailStoredWithAnUnmatchedResult()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        var detail = new MatchDetail([new MatchCandidate("Nirvana", 100, "mbid-1"), new MatchCandidate("Nirvana (UK)")], 2, 37);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Unmatched("no corroborating album", detail), CancellationToken.None);
+
+        var read = Assert.Single(Assert.Single((await _db.Artists.GetCountsAsync(["deezer"], CancellationToken.None)).Unmatched).Sources).Detail;
+
+        Assert.Equal(detail.Candidates, read?.Candidates ?? []);
+        Assert.Equal((2, 37), (read?.ExactNameCount, read?.AlbumsCompared));
+    }
+
+    /// <summary>008 data-model: a match replaces the failed attempt, its detail included.</summary>
+    [Fact]
+    public async Task SetMatchAsync_AMatchAfterAFailedAttempt_LeavesNoDetail()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Unmatched("no result", new MatchDetail([new MatchCandidate("B")])), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "deezer", ArtistMatch.Matched("27"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var deezer = Assert.Single((await _db.Artists.GetCountsAsync(["musicbrainz", "deezer"], CancellationToken.None)).Unmatched).Sources.Single(s => s.Source == "deezer");
+
+        Assert.Null(deezer.Detail);
+    }
+
+    /// <summary>008 edge case: a result written without detail, as every release before 008 wrote it, reads back with none.</summary>
+    [Fact]
+    public async Task GetCountsAsync_AResultWrittenWithoutDetail_ReadsBackWithNone()
+    {
+        var id = await _db.Artists.UpsertAsync(Artist("name:a", "A"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(id, "musicbrainz", ArtistMatch.Unmatched("low score (70)"), CancellationToken.None);
+
+        Assert.Null(Assert.Single(Assert.Single((await _db.Artists.GetCountsAsync(["musicbrainz"], CancellationToken.None)).Unmatched).Sources).Detail);
     }
 
     private static readonly HashSet<string> BothSources = ["musicbrainz", "deezer"];

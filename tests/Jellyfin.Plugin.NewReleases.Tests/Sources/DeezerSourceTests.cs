@@ -45,7 +45,8 @@ public sealed class DeezerSourceTests : IAsyncLifetime
 
         var match = await Source().MatchArtistAsync(Artist("Daft Punk", "Some Album The Library Made Up"), CancellationToken.None);
 
-        Assert.Equal(ArtistMatch.Unmatched("no corroborating album"), match);
+        // 008 FR-015 adds the attempt detail, compared in its own test; everything else is the record a bare Unmatched has.
+        Assert.Equal(ArtistMatch.Unmatched("no corroborating album") with { Detail = match.Detail }, match);
     }
 
     [Fact]
@@ -70,6 +71,93 @@ public sealed class DeezerSourceTests : IAsyncLifetime
 
         Assert.Equal(MatchStatus.Unmatched, match.Status);
         Assert.DoesNotContain(_h.RequestedUrls, u => u.Contains("/albums", StringComparison.Ordinal));
+    }
+
+    /// <summary>Spec 008 FR-015, FR-016: with no exact name, the first three artists Deezer returned are kept by name, in its order.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_NoExactName_KeepsTheFirstThreeNamesInResponseOrder()
+    {
+        _h.Fixture(Search, "deezer/search_artist_exact.json"); // five artists, none named "Daft Punk Live"
+
+        var match = await Source().MatchArtistAsync(Artist("Daft Punk Live", "Anything"), CancellationToken.None);
+
+        Assert.Equal("no result", match.Reason);
+        Assert.Equal(
+            [new MatchCandidate("Daft Punk"), new MatchCandidate("Daft Punk - Stardust"), new MatchCandidate("Daft Punk")],
+            match.Detail?.Candidates ?? []);
+    }
+
+    /// <summary>Spec 008 FR-015: a search that found nobody records that, as an empty candidate list.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_NoSearchResults_RecordsAnEmptyCandidateList()
+    {
+        _h.Fixture(Search, "deezer/search_artist_empty.json");
+
+        var match = await Source().MatchArtistAsync(Artist("zzqxjv nonexistent artist qqq", "Anything"), CancellationToken.None);
+
+        Assert.Equal("no result", match.Reason);
+        Assert.NotNull(match.Detail);
+        Assert.Empty(match.Detail.Candidates);
+    }
+
+    /// <summary>Spec 008 FR-015: an album check that found nothing in common records how many same-name artists it checked.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_NoCorroboratingAlbum_RecordsHowManyExactNameArtistsWereChecked()
+    {
+        _h.Fixture(Search, "deezer/search_artist_homonyms.json"); // exact "Nirvana": 415 then 278793911
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/\d+/albums\?", System.Net.HttpStatusCode.OK, EmptyPage);
+
+        var match = await Source().MatchArtistAsync(Artist("Nirvana", "Nevermind"), CancellationToken.None);
+
+        Assert.Equal(("no corroborating album", 2), (match.Reason, match.Detail?.ExactNameCount));
+    }
+
+    /// <summary>Spec 008 FR-015: the album check records how many albums it compared, across every same-name artist.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_NoCorroboratingAlbum_RecordsTheAlbumsComparedAcrossBothArtists()
+    {
+        _h.Fixture(Search, "deezer/search_artist_homonyms.json"); // exact "Nirvana": 415 then 278793911
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/415/albums\?", System.Net.HttpStatusCode.OK,
+            SourceJson.Deezer.Albums((1, "Live at Leeds", "album", "1990-01-01"), (2, "Rarities", "album", "1991-01-01")));
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/278793911/albums\?", System.Net.HttpStatusCode.OK,
+            SourceJson.Deezer.Albums((3, "Bleach", "album", "1989-06-15"), (4, "Incesticide", "album", "1992-12-14"), (5, "In Utero", "album", "1993-09-21")));
+
+        var match = await Source().MatchArtistAsync(Artist("Nirvana", "Nevermind"), CancellationToken.None);
+
+        Assert.Equal(5, match.Detail?.AlbumsCompared);
+    }
+
+    /// <summary>Spec 008 FR-015: keeping the detail sends nothing new: the search, then each same-name artist's first album page.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_NoCorroboratingAlbum_SendsOnlyTheSearchAndEachFirstAlbumPage()
+    {
+        _h.Fixture(Search, "deezer/search_artist_homonyms.json"); // exact "Nirvana": 415 then 278793911
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/\d+(/albums)?\?", System.Net.HttpStatusCode.OK, EmptyPage); // answers any request a change might add
+
+        await Source().MatchArtistAsync(Artist("Nirvana", "Nevermind"), CancellationToken.None);
+
+        Assert.Equal(
+            [
+                "https://api.deezer.com/search/artist?q=Nirvana&limit=25",
+                "https://api.deezer.com/artist/415/albums?index=0&limit=100",
+                "https://api.deezer.com/artist/278793911/albums?index=0&limit=100",
+            ],
+            _h.RequestedUrls);
+    }
+
+    /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
+    [Theory]
+    [InlineData("deezer/search_artist_empty.json", "Daft Punk", "Name")]       // no artist at all
+    [InlineData("deezer/search_artist_exact.json", "Daft Punk Live", "Name")]  // near names only
+    [InlineData("deezer/search_artist_exact.json", "Daft Punk", "Album")]      // exact names, no album in common
+    public async Task MatchArtistAsync_EveryUnmatchedReason_ParsesToItsFailedStep(string fixture, string name, string step)
+    {
+        _h.Fixture(Search, fixture);
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/\d+/albums\?", System.Net.HttpStatusCode.OK, EmptyPage);
+
+        var match = await Source().MatchArtistAsync(Artist(name, "Some Album The Library Made Up"), CancellationToken.None);
+
+        Assert.Equal(step, MatchReasons.Parse(Source().Id, match.Reason)?.Step);
     }
 
     private const string Albums27 = @"api\.deezer\.com/artist/27/albums\?";

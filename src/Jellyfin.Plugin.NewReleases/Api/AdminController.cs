@@ -1,5 +1,7 @@
 using Jellyfin.Extensions.Json;
 using Jellyfin.Plugin.NewReleases.Configuration;
+using Jellyfin.Plugin.NewReleases.Matching;
+using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.ScheduledTasks;
 using Jellyfin.Plugin.NewReleases.Sources;
 using Jellyfin.Plugin.NewReleases.Storage;
@@ -88,7 +90,7 @@ public sealed class AdminController : ControllerBase
         }
 
         var lastRun = await _sourceState.GetLatestRunAsync(cancellationToken).ConfigureAwait(false);
-        var counts = await _artists.GetCountsAsync(cancellationToken).ConfigureAwait(false);
+        var counts = await _artists.GetCountsAsync(sources.Where(s => s.Enabled).Select(s => s.Id).ToList(), cancellationToken).ConfigureAwait(false);
         var worker = RefreshWorker();
         return new AdminStatusResponse(
             sources,
@@ -100,7 +102,25 @@ public sealed class AdminController : ControllerBase
             worker is { State: TaskState.Running },
             counts.LibraryArtists,
             counts.MatchedBySource,
-            counts.Unmatched.Select(u => new UnmatchedArtistDto(u.JellyfinId, u.Name, u.Sources.Select(s => new UnmatchedSourceDto(s.Source, s.Reason)).ToList(), UnmatchedHint)).ToList());
+            counts.Unmatched.Select(u => new UnmatchedArtistDto(u.JellyfinId, u.Name, u.Sources.Select(ToReason).ToList())).ToList());
+    }
+
+    /// <summary>008 FR-013: one source's result as data, the step trail parsed from its stored reason.</summary>
+    private static ReasonDto ToReason(UnmatchedAt at)
+    {
+        var failed = at.Status == MatchStatus.Unmatched ? MatchReasons.Parse(at.Source, at.Reason) : null;
+        var steps = failed is null ? [] : MatchReasons.Steps(at.Source, failed)
+            .Select(step => new StepDto(step.Name, step.State.ToString(), step.Values.Count > 0 ? step.Values : null))
+            .ToList();
+        return new ReasonDto(
+            at.Source,
+            at.Status == MatchStatus.Pending ? "NotChecked" : at.Status.ToString(),
+            failed?.Step,
+            steps,
+            at.Reason,
+            at.Detail?.Candidates.Select(c => new CandidateDto(c.Name, c.Score, c.Id)).ToList(),
+            at.Detail?.ExactNameCount,
+            at.Detail?.AlbumsCompared);
     }
 
     /// <summary>Purge release data (FR-013): releases, entries, editions and ownership go; decisions, artists and match state stay; paging passes restart.</summary>
@@ -123,9 +143,6 @@ public sealed class AdminController : ControllerBase
         _logger.LogWarning("Archive cleared by an administrator.");
         return NoContent();
     }
-
-    /// <summary>FR-012: the fix is made in Jellyfin, never in the plugin.</summary>
-    public const string UnmatchedHint = "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin picks it up on the next refresh.";
 
     /// <summary>Next start from the task's first trigger, as Jellyfin fires them (server local time); null when no trigger is set.</summary>
     private static DateTimeOffset? NextRunAt(IScheduledTaskWorker? worker, DateTimeOffset now)

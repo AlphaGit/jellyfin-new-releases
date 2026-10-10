@@ -61,15 +61,14 @@ public sealed class AdminControllerTests : IAsyncLifetime
     }
 
     private static readonly Guid Library = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
-    private const string Hint = "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin picks it up on the next refresh.";
 
     [Fact]
-    public async Task Status_ReportsSourceHealthRunTriggerArtistCountsAndUnmatchedArtistsWithHint()
+    public async Task Status_ReportsSourceHealthRunTriggerArtistCountsAndUnmatchedArtistsWithReasons()
     {
         _configuration.DeezerEnabled = false;
         var blurId = Guid.NewGuid();
         var daft = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("mbid-1", Guid.NewGuid(), "Daft Punk", "mbid-1", [Library], []), CancellationToken.None);
-        var blur = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", blurId, "Blur", null, [Library], []), CancellationToken.None);
+        var blur = await UpsertBlurAsync(blurId);
         await _db.Artists.SetMatchAsync(daft, "musicbrainz", ArtistMatch.Matched("mbid-1"), CancellationToken.None);
         await _db.Artists.SetMatchAsync(blur, "musicbrainz", ArtistMatch.Unmatched("ambiguous (score 100 vs 97)"), CancellationToken.None);
         for (var i = 0; i < 3; i++)
@@ -99,8 +98,147 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.False(status.IsRunning);
         Assert.Equal((2, 1), (status.LibraryArtists, status.MatchedArtists["musicbrainz"]));
         var unmatched = Assert.Single(status.Unmatched);
-        Assert.Equal((blurId, "Blur", Hint), (unmatched.JellyfinId, unmatched.Name, unmatched.Hint));
-        Assert.Equal([("musicbrainz", "ambiguous (score 100 vs 97)")], unmatched.Sources.Select(s => (s.Source, s.Reason)));
+        Assert.Equal((blurId, "Blur"), (unmatched.JellyfinId, unmatched.Name));
+        Assert.Equal([("musicbrainz", "ambiguous (score 100 vs 97)")], unmatched.Reasons.Select(s => (s.Source, s.Reason)));
+    }
+
+    /// <summary>The admin status as the page receives it, serialized under the endpoint's declared naming.</summary>
+    private async Task<System.Text.Json.JsonElement> StatusJsonAsync()
+        => PageJson.Of((await Controller().GetStatusAsync(CancellationToken.None)).Value!);
+
+    /// <summary>The library artist "Blur", stored with no MusicBrainz ID; returns its id.</summary>
+    private Task<long> UpsertBlurAsync(Guid? jellyfinId = null)
+        => _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", jellyfinId ?? Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
+
+    /// <summary>008 FR-013: each unmatched artist carries its per-source reasons as data, and no fixed hint.</summary>
+    [Fact]
+    public async Task Status_EachUnmatchedArtist_CarriesReasons_AndNoSourcesOrHint()
+    {
+        var blur = await UpsertBlurAsync();
+        await _db.Artists.SetMatchAsync(blur, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var unmatched = Assert.Single((await StatusJsonAsync()).GetProperty("unmatched").EnumerateArray());
+
+        Assert.Equal(["jellyfinId", "name", "reasons"], unmatched.EnumerateObject().Select(p => p.Name));
+    }
+
+    /// <summary>008 FR-001, FR-002: one reason per enabled source, in the order the response lists its sources: MusicBrainz, then Deezer.</summary>
+    [Fact]
+    public async Task Status_Reasons_ListMusicBrainzThenDeezer_OnePerEnabledSource()
+    {
+        var blur = await UpsertBlurAsync();
+        await _db.Artists.SetMatchAsync(blur, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(blur, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        var status = (await Controller().GetStatusAsync(CancellationToken.None)).Value!;
+
+        Assert.Equal(["musicbrainz", "deezer"], Assert.Single(status.Unmatched).Reasons.Select(r => r.Source));
+    }
+
+    /// <summary>The single unmatched artist's reason at <paramref name="source"/>, with only that source enabled.</summary>
+    private async Task<ReasonDto> OnlyReasonAsync(string source, ArtistMatch match)
+    {
+        _configuration.MusicBrainzEnabled = source == "musicbrainz";
+        _configuration.DeezerEnabled = source == "deezer";
+        var artist = await UpsertBlurAsync();
+        await _db.Artists.SetMatchAsync(artist, source, match, CancellationToken.None);
+        return Assert.Single(Assert.Single((await Controller().GetStatusAsync(CancellationToken.None)).Value!.Unmatched).Reasons);
+    }
+
+    /// <summary>008 FR-003, FR-004: an ambiguous MusicBrainz result names Unique as failed and carries both scores on that step alone.</summary>
+    [Fact]
+    public async Task Status_AnAmbiguousMusicBrainzReason_GivesTheUniqueTrailWithBothScores()
+    {
+        var reason = await OnlyReasonAsync("musicbrainz", ArtistMatch.Unmatched("ambiguous (score 92 vs 90)"));
+
+        Assert.Equal("Unique", reason.FailedStep);
+        Assert.Equal(
+            [("Id", "Failed", ""), ("Search", "Passed", ""), ("Score", "Passed", ""), ("Unique", "Failed", "92 90")],
+            reason.Steps.Select(s => (s.Name, s.State, string.Join(' ', s.Values ?? []))));
+    }
+
+    /// <summary>Blur, Unmatched at MusicBrainz, with Deezer in the given state; returns Deezer's reason.</summary>
+    private async Task<ReasonDto> DeezerReasonBesideAMusicBrainzFailureAsync(ArtistMatch? deezer)
+    {
+        var artist = await UpsertBlurAsync();
+        await _db.Artists.SetMatchAsync(artist, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+        if (deezer is not null)
+        {
+            await _db.Artists.SetMatchAsync(artist, "deezer", deezer, CancellationToken.None);
+        }
+
+        return Assert.Single((await Controller().GetStatusAsync(CancellationToken.None)).Value!.Unmatched).Reasons.Single(r => r.Source == "deezer");
+    }
+
+    /// <summary>008 US2-AS3: a matched source is stated as Matched, with no trail and no reason.</summary>
+    [Fact]
+    public async Task Status_AMatchedSource_IsMatched_WithNoFailedStepNoStepsAndNoReason()
+    {
+        var reason = await DeezerReasonBesideAMusicBrainzFailureAsync(ArtistMatch.Matched("27"));
+
+        Assert.Equal(("Matched", null, 0, null), (reason.State, reason.FailedStep, reason.Steps.Count, reason.Reason));
+    }
+
+    /// <summary>008 FR-002: an enabled source that has not run for the artist is stated as NotChecked, with no trail and no reason.</summary>
+    [Fact]
+    public async Task Status_ASourceNotYetRun_IsNotChecked_WithNoFailedStepNoStepsAndNoReason()
+    {
+        var reason = await DeezerReasonBesideAMusicBrainzFailureAsync(null);
+
+        Assert.Equal(("NotChecked", null, 0, null), (reason.State, reason.FailedStep, reason.Steps.Count, reason.Reason));
+    }
+
+    /// <summary>008 edge case: a reason no released version writes keeps its text and claims no failed step.</summary>
+    [Fact]
+    public async Task Status_AnUnrecognizedReason_IsUnmatched_WithNoFailedStepNoSteps_AndKeepsItsText()
+    {
+        var reason = await OnlyReasonAsync("musicbrainz", ArtistMatch.Unmatched("rate limited"));
+
+        Assert.Equal(("Unmatched", null, 0, "rate limited"), (reason.State, reason.FailedStep, reason.Steps.Count, reason.Reason));
+    }
+
+    /// <summary>008 FR-014: with Deezer switched off, an artist only Deezer failed is not listed.</summary>
+    [Fact]
+    public async Task Status_WithDeezerDisabled_AnArtistOnlyDeezerFailed_IsNotListed()
+    {
+        _configuration.DeezerEnabled = false;
+        var artist = await UpsertBlurAsync();
+        await _db.Artists.SetMatchAsync(artist, "musicbrainz", ArtistMatch.Matched("mb-1"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(artist, "deezer", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+
+        Assert.Empty((await Controller().GetStatusAsync(CancellationToken.None)).Value!.Unmatched);
+    }
+
+    /// <summary>008 FR-015: the stored attempt detail reaches the page as candidates and counts.</summary>
+    [Fact]
+    public async Task Status_StoredDetail_AppearsAsCandidatesAndCounts()
+    {
+        var detail = new MatchDetail([new MatchCandidate("Blur"), new MatchCandidate("Blur Tribute")], 2, 37);
+
+        var reason = await DeezerReasonBesideAMusicBrainzFailureAsync(ArtistMatch.Unmatched("no corroborating album", detail));
+
+        Assert.Equal([new CandidateDto("Blur", null, null), new CandidateDto("Blur Tribute", null, null)], reason.Candidates ?? []);
+        Assert.Equal((2, 37), (reason.ExactNameCount, reason.AlbumsCompared));
+    }
+
+    /// <summary>008 FR-016: a MusicBrainz candidate reaches the page with the score and ID the fix shows.</summary>
+    [Fact]
+    public async Task Status_StoredMusicBrainzCandidates_KeepTheirScoreAndId()
+    {
+        var detail = new MatchDetail([new MatchCandidate("Blur", 92, "mbid-1"), new MatchCandidate("Blur", 90, "mbid-2")]);
+
+        var reason = await OnlyReasonAsync("musicbrainz", ArtistMatch.Unmatched("ambiguous (score 92 vs 90)", detail));
+
+        Assert.Equal([new CandidateDto("Blur", 92, "mbid-1"), new CandidateDto("Blur", 90, "mbid-2")], reason.Candidates ?? []);
+    }
+
+    /// <summary>008 edge case, FR-016: a row from before the upgrade has no detail, so the page shows the fix without candidates or counts.</summary>
+    [Fact]
+    public async Task Status_ARowWithoutDetail_HasNoCandidatesAndNoCounts()
+    {
+        var reason = await OnlyReasonAsync("musicbrainz", ArtistMatch.Unmatched("low score (70)"));
+
+        Assert.Equal((null, null, null), (reason.Candidates, reason.ExactNameCount, reason.AlbumsCompared));
     }
 
     /// <summary>002 FR-009/SC-005: an operator sees the run and the data age side by side, and sees them diverge.</summary>
