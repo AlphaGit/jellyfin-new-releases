@@ -131,6 +131,28 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal(status.Sources.Select(s => s.Id), Assert.Single(status.Unmatched).Reasons.Select(r => r.Source));
     }
 
+    /// <summary>The single unmatched artist's reason at <paramref name="source"/>, with only that source enabled.</summary>
+    private async Task<ReasonDto> OnlyReasonAsync(string source, ArtistMatch match)
+    {
+        _configuration.MusicBrainzEnabled = source == "musicbrainz";
+        _configuration.DeezerEnabled = source == "deezer";
+        var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(artist, source, match, CancellationToken.None);
+        return Assert.Single(Assert.Single((await Controller().GetStatusAsync(CancellationToken.None)).Value!.Unmatched).Reasons);
+    }
+
+    /// <summary>008 FR-003, FR-004: an ambiguous MusicBrainz result names Unique as failed and carries both scores on that step alone.</summary>
+    [Fact]
+    public async Task Status_AnAmbiguousMusicBrainzReason_GivesTheUniqueTrailWithBothScores()
+    {
+        var reason = await OnlyReasonAsync("musicbrainz", ArtistMatch.Unmatched("ambiguous (score 92 vs 90)"));
+
+        Assert.Equal("Unique", reason.FailedStep);
+        Assert.Equal(
+            [("Id", "Failed", ""), ("Search", "Passed", ""), ("Score", "Passed", ""), ("Unique", "Failed", "92 90")],
+            reason.Steps.Select(s => (s.Name, s.State, string.Join(' ', s.Values ?? []))));
+    }
+
     /// <summary>002 FR-009/SC-005: an operator sees the run and the data age side by side, and sees them diverge.</summary>
     [Fact]
     public async Task Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch()
