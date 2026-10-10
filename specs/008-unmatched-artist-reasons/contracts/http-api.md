@@ -45,7 +45,9 @@ Each entry's `sources` and `hint` are removed. `reasons` replaces them.
 | `candidates` | `null` when the row has no attempt detail (a match, or a row from before `002`). Otherwise up to 3 items in source order; `score` and `id` are `null` for Deezer. |
 | `exactNameCount`, `albumsCompared` | Deezer `Album` failures with attempt detail; otherwise `null`. |
 
-An artist is in `unmatched` only when at least one entry has `state` `Unmatched` (FR-014).
+An artist is in `unmatched` only when at least one entry has `state` `Unmatched` (FR-014). The
+endpoint leaves a `null` field out of the response (`WhenWritingNull`), so the page treats a
+missing field as `null`.
 
 The fields are camelCase under the existing `[Produces(JsonDefaults.CamelCaseMediaType)]`
 (`docs/http-surface.md` rule 2). Update `tests/fixtures/pages/admin-status.json` in the same
