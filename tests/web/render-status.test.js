@@ -408,6 +408,16 @@ test('the longest possible trail is at most 64 characters as a reader sees it', 
     assert.ok(visible(line).length <= ONE_LINE_BUDGET, `${visible(line).length} characters`);
 });
 
+// The Artist cell links the artist's Jellyfin page, with the name written escaped.
+test("each unmatched row's Artist cell links the artist's page with the name escaped", () => {
+    const base = fixture('admin-status.json');
+    const status = { ...base, unmatched: [{ ...base.unmatched[0], name: 'Tom & <Jerry>' }] };
+
+    const [row] = unmatchedRows(status);
+
+    assert.match(row, /^<tr><td><a is="emby-linkbutton" class="button-link" href="#\/details\?id=5f2a9c1e7b3d4e8fa6c0d9b14e72a3c8&serverId=[^"]+">Tom &amp; &lt;Jerry&gt;<\/a><\/td>/);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
