@@ -187,6 +187,10 @@
 
                 if (r.source === 'deezer' && r.failedStep === 'Name') {
                     var names = (r.candidates || []).map(function (c) { return c.name; });
+                    if (!names.length) {
+                        return '<p class="nr-fix">Deezer may not list this artist.</p>';
+                    }
+
                     return '<p class="nr-fix">Deezer lists ' + names.join(', ') + '. If one is this artist, its name on Deezer differs from the name in Jellyfin; Deezer matches by name only.</p>';
                 }
 

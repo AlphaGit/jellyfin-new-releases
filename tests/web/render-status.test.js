@@ -207,6 +207,15 @@ test('a Deezer Name failure with names lists them comma-separated and says Deeze
         'Deezer lists Nirvana (UK), Approaching Nirvana. If one is this artist, its name on Deezer differs from the name in Jellyfin; Deezer matches by name only.');
 });
 
+// 008 FR-008: a Deezer search that found nobody at all may mean Deezer does not list the artist.
+test('a Deezer Name failure with an empty candidate list says Deezer may not list this artist', () => {
+    const nobody = { source: 'deezer', state: 'Unmatched', failedStep: 'Name', steps: [], reason: 'no result', candidates: [] };
+
+    const row = unmatchedRows(withReason(1, 1, nobody))[1];
+
+    assert.equal(fixes(row)[1], 'Deezer may not list this artist.');
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
