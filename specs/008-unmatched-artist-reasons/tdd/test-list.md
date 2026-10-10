@@ -48,27 +48,27 @@ through `AcceptanceRig`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U1  | `LowScore(70)` is `low score (70)` | FR-011 | example | PENDING | |
-| U2  | `Ambiguous(92, 90)` is `ambiguous (score 92 vs 90)` | FR-011 | example | PENDING | |
-| U3  | MusicBrainz `no result` parses to failed step `Search` with no values | FR-003, FR-013 | example | PENDING | |
-| U4  | MusicBrainz `low score (70)` parses to `Score` with values `[70]` | FR-003, FR-004 | example | PENDING | |
-| U5  | MusicBrainz `ambiguous (score 92 vs 90)` parses to `Unique` with values `[92, 90]` | FR-003, FR-004 | example | PENDING | |
-| U6  | Deezer `no result` parses to `Name` | FR-003 | example | PENDING | |
-| U7  | Deezer `no corroborating album` parses to `Album` | FR-003 | example | PENDING | |
-| U8  | An unknown text parses to null | EC-unknown | example | PENDING | |
-| U9  | An empty text parses to null | EC-unknown | example | PENDING | |
-| U10 | A MusicBrainz-only text under the Deezer source parses to null | EC-unknown | example | PENDING | |
-| U11 | Steps for MusicBrainz failed at `Search`: Id Failed, Search Failed, Score NotReached, Unique NotReached | FR-003 | example | PENDING | |
-| U12 | Steps for MusicBrainz failed at `Score`: Id Failed, Search Passed, Score Failed with its values, Unique NotReached | FR-003, FR-004 | example | PENDING | |
-| U13 | Steps for MusicBrainz failed at `Unique` (last step): Id Failed, Search Passed, Score Passed, Unique Failed with its values | FR-003, FR-004 | example | PENDING | |
-| U14 | Steps for Deezer failed at `Name` (first step): Name Failed, Album NotReached | FR-003 | example | PENDING | |
-| U15 | Steps for Deezer failed at `Album` (last step): Name Passed, Album Failed | FR-003 | example | PENDING | |
+| U1 | `LowScore(70)` is `low score (70)` | FR-011 | example | DONE | `Matching/MatchReasonsTests.cs::LowScore_WritesTheBestScoreInParentheses` |
+| U2 | `Ambiguous(92, 90)` is `ambiguous (score 92 vs 90)` | FR-011 | example | DONE | `Matching/MatchReasonsTests.cs::Ambiguous_WritesTheBestScoreThenTheRunnerUp` |
+| U3 | MusicBrainz `no result` parses to failed step `Search` with no values | FR-003, FR-013 | example | DONE | `Matching/MatchReasonsTests.cs::Parse_MusicBrainzNoResult_FailsAtSearchWithNoValues` |
+| U4 | MusicBrainz `low score (70)` parses to `Score` with values `[70]` | FR-003, FR-004 | example | DONE | `Matching/MatchReasonsTests.cs::Parse_MusicBrainzLowScore_FailsAtScoreWithTheScore` |
+| U5 | MusicBrainz `ambiguous (score 92 vs 90)` parses to `Unique` with values `[92, 90]` | FR-003, FR-004 | example | DONE | `Matching/MatchReasonsTests.cs::Parse_MusicBrainzAmbiguous_FailsAtUniqueWithBothScores` |
+| U6 | Deezer `no result` parses to `Name` | FR-003 | example | DONE | `Matching/MatchReasonsTests.cs::Parse_DeezerNoResult_FailsAtNameWithNoValues` |
+| U7 | Deezer `no corroborating album` parses to `Album` | FR-003 | example | DONE | `Matching/MatchReasonsTests.cs::Parse_DeezerNoCorroboratingAlbum_FailsAtAlbumWithNoValues` |
+| U8 | An unknown text parses to null | EC-unknown | example | DONE | `Matching/MatchReasonsTests.cs::Parse_ATextNoReleasedVersionWrites_IsNull` |
+| U9 | An empty text parses to null | EC-unknown | example | DONE | `Matching/MatchReasonsTests.cs::Parse_AnEmptyText_IsNull` |
+| U10 | A MusicBrainz-only text under the Deezer source parses to null | EC-unknown | example | DONE | `Matching/MatchReasonsTests.cs::Parse_AMusicBrainzOnlyTextUnderDeezer_IsNull` |
+| U11 | Steps for MusicBrainz failed at `Search`: Id Failed, Search Failed, Score NotReached, Unique NotReached | FR-003 | example | DONE | `Matching/MatchReasonsTests.cs::Steps_MusicBrainzFailedAtSearch_IdAndSearchFailed_TheRestNotReached` |
+| U12 | Steps for MusicBrainz failed at `Score`: Id Failed, Search Passed, Score Failed with its values, Unique NotReached | FR-003, FR-004 | example | DONE | `Matching/MatchReasonsTests.cs::Steps_MusicBrainzFailedAtScore_CarriesTheScoreOnTheScoreStepOnly` |
+| U13 | Steps for MusicBrainz failed at `Unique` (last step): Id Failed, Search Passed, Score Passed, Unique Failed with its values | FR-003, FR-004 | example | DONE | `Matching/MatchReasonsTests.cs::Steps_MusicBrainzFailedAtUnique_EveryEarlierStepButIdPassed` |
+| U14 | Steps for Deezer failed at `Name` (first step): Name Failed, Album NotReached | FR-003 | example | DONE | `Matching/MatchReasonsTests.cs::Steps_DeezerFailedAtName_NameFailed_AlbumNotReached` |
+| U15 | Steps for Deezer failed at `Album` (last step): Name Passed, Album Failed | FR-003 | example | DONE | `Matching/MatchReasonsTests.cs::Steps_DeezerFailedAtAlbum_NamePassed_AlbumFailed` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Sources/MusicBrainzSource.cs`
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U16 | Every Unmatched reason the source writes (empty, low-score and ambiguous fixtures) parses to its expected failed step | FR-011, FR-013 | example | PENDING | |
+| U16 | Every Unmatched reason the source writes (empty, low-score and ambiguous fixtures) parses to its expected failed step | FR-011, FR-013 | example | DONE | `Sources/MusicBrainzSourceTests.cs::MatchArtistAsync_EveryUnmatchedReason_ParsesToItsFailedStep` |
 | U17 | `artist_search_ambiguous.json` gives 3 candidates in score order, each with name, score and MusicBrainz ID | FR-015 | example | PENDING | |
 | U18 | A search returning 4 or more results keeps only the first 3 candidates | FR-016 | example | PENDING | |
 | U19 | `artist_search_empty.json` gives an empty candidate list | FR-015 | example | PENDING | |
@@ -80,7 +80,7 @@ through `AcceptanceRig`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U23 | Every Unmatched reason the source writes (empty, near-name and homonym fixtures) parses to its expected failed step | FR-011, FR-013 | example | PENDING | |
+| U23 | Every Unmatched reason the source writes (empty, near-name and homonym fixtures) parses to its expected failed step | FR-011, FR-013 | example | DONE | `Sources/DeezerSourceTests.cs::MatchArtistAsync_EveryUnmatchedReason_ParsesToItsFailedStep` |
 | U24 | `search_artist_exact.json` for library artist `Daft Punk Live` gives `no result` and the first 3 of the 5 names in response order, with no score or ID | FR-015, FR-016 | example | PENDING | |
 | U25 | `search_artist_empty.json` gives `no result` and an empty candidate list | FR-015 | example | PENDING | |
 | U26 | `search_artist_homonyms.json` with no album in common gives `ExactNameCount` 2 | FR-015 | example | PENDING | |
