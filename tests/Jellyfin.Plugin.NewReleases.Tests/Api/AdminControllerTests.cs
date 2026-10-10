@@ -153,6 +153,28 @@ public sealed class AdminControllerTests : IAsyncLifetime
             reason.Steps.Select(s => (s.Name, s.State, string.Join(' ', s.Values ?? []))));
     }
 
+    /// <summary>Blur, Unmatched at MusicBrainz, with Deezer in the given state; returns Deezer's reason.</summary>
+    private async Task<ReasonDto> DeezerReasonBesideAMusicBrainzFailureAsync(ArtistMatch? deezer)
+    {
+        var artist = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:blur", Guid.NewGuid(), "Blur", null, [Library], []), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(artist, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+        if (deezer is not null)
+        {
+            await _db.Artists.SetMatchAsync(artist, "deezer", deezer, CancellationToken.None);
+        }
+
+        return Assert.Single((await Controller().GetStatusAsync(CancellationToken.None)).Value!.Unmatched).Reasons.Single(r => r.Source == "deezer");
+    }
+
+    /// <summary>008 US2-AS3: a matched source is stated as Matched, with no trail and no reason.</summary>
+    [Fact]
+    public async Task Status_AMatchedSource_IsMatched_WithNoFailedStepNoStepsAndNoReason()
+    {
+        var reason = await DeezerReasonBesideAMusicBrainzFailureAsync(ArtistMatch.Matched("27"));
+
+        Assert.Equal(("Matched", null, 0, null), (reason.State, reason.FailedStep, reason.Steps.Count, reason.Reason));
+    }
+
     /// <summary>002 FR-009/SC-005: an operator sees the run and the data age side by side, and sees them diverge.</summary>
     [Fact]
     public async Task Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch()
