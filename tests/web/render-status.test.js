@@ -179,6 +179,18 @@ test('a MusicBrainz Unique failure with candidates gives the sentence, then each
             'Approaching Nirvana (74) <code class="nr-id">c3a64a25-251b-4d03-afba-1471440245b8</code>');
 });
 
+/** The declarations of the admin page's style rule for `selector`, as { property: value }. */
+function declared(selector) {
+    const style = (/<style>([\s\S]*?)<\/style>/.exec(pageSource('admin.html')) || [, ''])[1];
+    const rule = [...style.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(([, selectors]) => selectors.split(',').map(x => x.trim()).includes(selector));
+    return Object.fromEntries((rule ? rule[2] : '').split(';').map(d => d.split(':').map(x => x.trim())).filter(d => d.length === 2));
+}
+
+// 008 FR-016: one click on a candidate's ID selects all of it, to paste into Jellyfin.
+test('a candidate ID selects as a whole', () => {
+    assert.equal(declared('#newreleasesConfigPage .nr-id')['user-select'], 'all');
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
