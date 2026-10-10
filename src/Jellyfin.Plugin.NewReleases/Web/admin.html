@@ -181,9 +181,14 @@
                 empty.hidden = status.unmatched.length !== 0;
             }
 
-            /** 008 FR-003: one step of a trail, by its short name. */
+            /** 008 FR-003, FR-010: each step state's mark, and the words a screen reader says for it. */
+            var STEP_MARKS = { Passed: ['✓', 'passed'] };
+
+            /** 008 FR-003: one step of a trail, by its short name, then its mark. */
             function stepFor(step) {
-                return '<span class="nr-step nr-step-' + esc(step.state.toLowerCase()) + '">' + (step.name === 'Id' ? 'ID' : esc(step.name)) + '</span>';
+                var mark = STEP_MARKS[step.state];
+                return '<span class="nr-step nr-step-' + esc(step.state.toLowerCase()) + '">' + (step.name === 'Id' ? 'ID' : esc(step.name))
+                    + (mark ? ' <span aria-hidden="true">' + mark[0] + '</span><span class="nr-sr">' + mark[1] + '</span>' : '') + '</span>';
             }
 
             /** 008 FR-008: the fix for one source's failed step, as a paragraph; nothing for a source that did not fail. */

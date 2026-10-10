@@ -328,6 +328,18 @@ test('a trail shows every step in order by short name, ID for Id, joined by " ·
     assert.equal(musicBrainz.split('</span> · <span class="nr-step').length, 4);
 });
 
+/** Each step of a trail line as [mark, words for a screen reader]. */
+function marks(line) {
+    return [...line.matchAll(/<span aria-hidden="true">([^<]*)<\/span><span class="nr-sr">([^<]*)<\/span>/g)].map(m => [m[1], m[2]]);
+}
+
+// 008 FR-003, FR-010: a passed step shows ✓, and says "passed" in words.
+test('a passed step shows ✓ and the words "passed"', () => {
+    const [, deezer] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[0]); // Name passed, Album failed
+
+    assert.deepEqual(marks(deezer)[0], ['✓', 'passed']);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
