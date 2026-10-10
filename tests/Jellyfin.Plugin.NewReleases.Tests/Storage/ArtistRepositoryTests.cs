@@ -120,19 +120,16 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
         Assert.Equal(3, counts.LibraryArtists);
         Assert.Equal(2, counts.MatchedBySource["musicbrainz"]);
         Assert.Equal(1, counts.MatchedBySource["deezer"]);
-        // Records holding lists compare by reference; flatten to (artist, source, status) rows.
-        // 008 FR-002: a listed artist carries every enabled source, its matches included.
+        // Records holding lists compare by reference; flatten to (artist, source, status, reason) rows.
+        // 008 FR-002: a listed artist carries every enabled source, its matches included, each with its own reason.
         Assert.Equal(
             [
-                (mbOnly.JellyfinId, "MB Only", "musicbrainz", MatchStatus.Matched),
-                (mbOnly.JellyfinId, "MB Only", "deezer", MatchStatus.Unmatched),
-                (neither.JellyfinId, "Neither", "musicbrainz", MatchStatus.Unmatched),
-                (neither.JellyfinId, "Neither", "deezer", MatchStatus.Unmatched),
+                (mbOnly.JellyfinId, "MB Only", "musicbrainz", MatchStatus.Matched, (string?)null),
+                (mbOnly.JellyfinId, "MB Only", "deezer", MatchStatus.Unmatched, "no corroborating album"),
+                (neither.JellyfinId, "Neither", "musicbrainz", MatchStatus.Unmatched, "ambiguous (score 90 vs 85)"),
+                (neither.JellyfinId, "Neither", "deezer", MatchStatus.Unmatched, "no result"),
             ],
-            counts.Unmatched.SelectMany(u => u.Sources.Select(s => (u.JellyfinId, u.Name, s.Source, s.Status))));
-        Assert.Equal(
-            ["no corroborating album", "ambiguous (score 90 vs 85)", "no result"],
-            counts.Unmatched.SelectMany(u => u.Sources.Where(s => s.Status == MatchStatus.Unmatched).Select(s => s.Reason)));
+            counts.Unmatched.SelectMany(u => u.Sources.Select(s => (u.JellyfinId, u.Name, s.Source, s.Status, s.Reason))));
     }
 
     /// <summary>008 FR-002: a listed artist carries every enabled source, in the order the caller gives them.</summary>
