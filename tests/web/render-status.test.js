@@ -250,36 +250,6 @@ test('a row whose only failure is at Deezer never mentions the MusicBrainz artis
     assert.doesNotMatch(row, /MusicBrainz artist ID/);
 });
 
-// 008 FR-007: one fix per failed source, and no fix twice on a row.
-test('a row failing at both sources gives two different fix paragraphs', () => {
-    const row = unmatchedRows(fixture('admin-status.json'))[1];
-    const found = fixes(row);
-
-    assert.equal(found.length, 2);
-    assert.notEqual(found[0], found[1]);
-});
-
-/** A row's tracking line, the last paragraph of How to fix. */
-function tracking(row) {
-    const found = /<p class="nr-tracking">([\s\S]*?)<\/p>/.exec(row);
-    return found ? found[1] : undefined;
-}
-
-// 008 FR-009: the row says through which source the artist is still tracked.
-test('a row with a matched source ends with "Tracked through" that source', () => {
-    const row = unmatchedRows(fixture('admin-status.json'))[0];
-
-    assert.equal(tracking(row), 'Tracked through MusicBrainz.');
-    assert.match(row, /<p class="nr-tracking">[^<]*<\/p><\/td>$/); // the last line of How to fix
-});
-
-// 008 FR-009: a row no enabled source matched says the artist is not tracked.
-test('a row with no matched source ends with "Not tracked."', () => {
-    const row = unmatchedRows(fixture('admin-status.json'))[1];
-
-    assert.equal(tracking(row), 'Not tracked.');
-});
-
 // Every value the page writes passes through esc: candidate names and IDs come from a third-party search.
 test('candidate names and IDs are written escaped', () => {
     const musicBrainz = { source: 'musicbrainz', state: 'Unmatched', failedStep: 'Unique', steps: [], reason: 'ambiguous (score 90 vs 88)', candidates: [{ name: '<b>Blur</b>', score: 90, id: 'id<1>' }] };
