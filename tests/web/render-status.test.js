@@ -347,6 +347,14 @@ test('a failed step shows ✗ and the words "failed"', () => {
     assert.deepEqual(marks(deezer)[1], ['✗', 'failed']);
 });
 
+// 008 FR-003, FR-010: a step after the failed one shows –, says "not reached", and carries the dimming class.
+test('a not-reached step shows –, the words "not reached", and the dimming class', () => {
+    const [musicBrainz] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[2]); // ID, Search, Score failed, Unique not reached
+
+    assert.deepEqual(marks(musicBrainz)[3], ['–', 'not reached']);
+    assert.deepEqual(trailSteps(musicBrainz)[3], ['Unique', 'notreached']);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
