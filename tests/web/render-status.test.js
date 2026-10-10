@@ -234,6 +234,15 @@ test('a Deezer Album failure with detail gives both counts', () => {
     assert.deepEqual(fixes(row), ['Checked 2 Deezer artists with this name and 37 of their albums. ' + ALBUM_RULE]);
 });
 
+// 008 FR-008, edge case: an album failure from before the upgrade has no counts, so the fix starts at the rule.
+test('a Deezer Album failure without detail starts at "No Deezer album has the same title"', () => {
+    const old = { source: 'deezer', state: 'Unmatched', failedStep: 'Album', steps: [], reason: 'no corroborating album' };
+
+    const row = unmatchedRows(withReason(0, 1, old))[0];
+
+    assert.deepEqual(fixes(row), [ALBUM_RULE.replace('None has', 'No Deezer album has')]);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
