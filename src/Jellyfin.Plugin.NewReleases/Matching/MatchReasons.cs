@@ -1,17 +1,35 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
 using Jellyfin.Plugin.NewReleases.Sources;
 
 namespace Jellyfin.Plugin.NewReleases.Matching;
 
 /// <summary>The reason texts a source writes for an Unmatched artist, and the matching steps they stand for (spec 008).</summary>
-public static class MatchReasons
+public static partial class MatchReasons
 {
     public static string LowScore(int score) => $"low score ({score})";
 
     /// <summary>The step a stored reason says failed, with the numbers it holds; null for a text no released version writes.</summary>
     public static FailedStep? Parse(string source, string? reason)
-        => source == SourceLimits.MusicBrainz && reason == "no result" ? new FailedStep("Search", []) : null;
+    {
+        if (source != SourceLimits.MusicBrainz || reason is null)
+        {
+            return null;
+        }
+
+        if (reason == "no result")
+        {
+            return new FailedStep("Search", []);
+        }
+
+        var lowScore = LowScorePattern().Match(reason);
+        return lowScore.Success ? new FailedStep("Score", [int.Parse(lowScore.Groups[1].Value, CultureInfo.InvariantCulture)]) : null;
+    }
 
     public static string Ambiguous(int best, int runnerUp) => $"ambiguous (score {best} vs {runnerUp})";
+
+    [GeneratedRegex(@"^low score \((\d+)\)$")]
+    private static partial Regex LowScorePattern();
 }
 
 /// <summary>The matching step a reason names as failed (spec 008 FR-003) and the values that decided it (FR-004).</summary>

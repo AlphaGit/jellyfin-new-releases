@@ -30,4 +30,13 @@ public class MatchReasonsTests
         Assert.Equal("Search", failed?.Step);
         Assert.Empty(failed!.Values);
     }
+
+    [Fact]
+    public void Parse_MusicBrainzLowScore_FailsAtScoreWithTheScore()
+    {
+        var failed = MatchReasons.Parse(SourceLimits.MusicBrainz, "low score (70)");
+
+        Assert.Equal("Score", failed?.Step);
+        Assert.Equal([70], failed!.Values);
+    }
 }
