@@ -482,3 +482,58 @@ commit. Each had its own red first:
 - green: no production change. Suite -> dotnet 410 passed
 - refactor: none needed
 - commit: `42a864d`
+
+## Cycle 50: U36 an Unmatched result's detail is read back with the same candidates and counts
+
+- test: `Storage/ArtistRepositoryTests.cs::GetCountsAsync_ReadsBackTheDetailStoredWithAnUnmatchedResult` (new), with `UnmatchedAt.Detail` declared (default null)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.GetCountsAsync_ReadsBackTheDetail" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected the two `MatchCandidate`s Actual `[]` (1 failed)
+- green: `SetMatchAsync` writes `match_detail` as camelCase JSON with nulls left out; `GetCountsAsync` reads it into `UnmatchedAt.Detail`. Suite -> dotnet 411 passed
+- refactor: none needed
+- commit: `56298ae`
+
+## Cycle 51: U37 a later `Matched` result for the same pair leaves no detail
+
+- test: `Storage/ArtistRepositoryTests.cs::SetMatchAsync_AMatchAfterAFailedAttempt_LeavesNoDetail` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.SetMatchAsync_AMatchAfterAFailedAttempt" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed): U36 writes every result’s detail, null for a match. Deliberate mutant: the upsert keeps an existing detail when the new one is null (`COALESCE`) -> `Assert.Null() Failure: Value is not null` (1 failed). Code restored exactly from a copy
+- green: no production change. Suite -> dotnet 412 passed
+- refactor: none needed
+- commit: `96a912d`
+
+## Cycle 52: U38 a row written without detail reads back with null detail
+
+- test: `Storage/ArtistRepositoryTests.cs::GetCountsAsync_AResultWrittenWithoutDetail_ReadsBackWithNone` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ArtistRepositoryTests.GetCountsAsync_AResultWrittenWithoutDetail" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed). Deliberate mutant: a null column reads as an empty detail -> `Assert.Null() Failure: Value is not null` (1 failed). Code restored exactly from a copy
+- green: no production change. Suite -> dotnet 413 passed
+- refactor: none needed
+- commit: `c8dc8e3`
+
+## Cycle 53: U47 stored detail appears as `Candidates` (Deezer with null `Score` and `Id`), `ExactNameCount` and `AlbumsCompared`
+
+- test: `Api/AdminControllerTests.cs::Status_StoredDetail_AppearsAsCandidatesAndCounts` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_StoredDetail" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> `Assert.Equal() Failure: Collections differ` Expected the two `CandidateDto`s Actual `[]` (1 failed)
+- green: `ToReason` maps `Detail` to `Candidates`, `ExactNameCount` and `AlbumsCompared`. Suite -> dotnet 414 passed
+- refactor: none needed
+- commit: `d799791`
+
+## Cycle 54: U48 a row without detail gives null `Candidates`, `ExactNameCount` and `AlbumsCompared`
+
+- test: `Api/AdminControllerTests.cs::Status_ARowWithoutDetail_HasNoCandidatesAndNoCounts` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~AdminControllerTests.Status_ARowWithoutDetail" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed). Deliberate mutant: a missing detail sends an empty candidate list -> `Assert.Equal() Failure: Values differ` Actual `([], null, null)` (1 failed). Code restored exactly from a copy
+- green: no production change. Suite -> dotnet 415 passed
+- refactor: none needed
+- commit: `4b87bd3`
+
+## Cycle 55: U50 after a refresh where MusicBrainz matches and Deezer finds no album in common, the status gives Deezer `Album` with both counts and MusicBrainz `Matched`
+
+- test: `Acceptance/ConfigureAndRunTests.cs::Spec008_U50_AfterARefreshWhereDeezerFindsNoAlbumInCommon_TheStatusGivesTheAlbumFailureWithItsCounts` (new)
+- red: `dotnet test --configuration Release --filter "FullyQualifiedName~ConfigureAndRunTests.Spec008_U50" -- RunConfiguration.TreatNoTestsAsError=true`
+  -> passed on first run (1 passed). Deliberate mutant: the Deezer match counts no albums -> `Assert.Equal() Failure: Values differ` Expected `("Album", 1, 2)` Actual `("Album", 1, 0)` (1 failed). Source restored exactly from a copy
+- green: no production change. Suite -> dotnet 416 passed
+- refactor: none needed
+- notes: test-after, as U51: it composes units each driven by its own red (U26, U27, U36, U42, U47); the mutant shows it can fail
+- commit: `4647380`

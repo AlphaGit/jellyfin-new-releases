@@ -119,8 +119,8 @@ MusicBrainz artist ID fix, and "Tracked through MusicBrainz."
   - `search_artist_homonyms.json` with no album title in common gives `no corroborating album`, `ExactNameCount` 2, and `AlbumsCompared` equal to the first-page items served for both candidates.
   - A corroborated match carries no detail.
   - The requests sent are the same as before (FR-015: nothing new to a source). [U24] [U25] [U26] [U27] [U28] [U29]
-- [ ] T015 [P] [US1] Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ArtistRepositoryTests.cs`: `SetMatchAsync` with an Unmatched result and detail is read back by `GetCountsAsync` with the same candidates and counts; a later `Matched` result for the same pair leaves `match_detail` null. [U36] [U37] [U38]
-- [ ] T016 [US1] Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Api/AdminControllerTests.cs`: stored detail appears as `Candidates` (Deezer with null `Score` and `Id`), `ExactNameCount` and `AlbumsCompared`; a row without detail keeps them null. [U47] [U48]
+- [X] T015 [P] [US1] Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Storage/ArtistRepositoryTests.cs`: `SetMatchAsync` with an Unmatched result and detail is read back by `GetCountsAsync` with the same candidates and counts; a later `Matched` result for the same pair leaves `match_detail` null. [U36] [U37] [U38]
+- [X] T016 [US1] Add failing cases to `tests/Jellyfin.Plugin.NewReleases.Tests/Api/AdminControllerTests.cs`: stored detail appears as `Candidates` (Deezer with null `Score` and `Id`), `ExactNameCount` and `AlbumsCompared`; a row without detail keeps them null. [U47] [U48]
 - [ ] T017 [US1] Add failing cases to `tests/web/render-status.test.js` for How to fix, per [contracts/admin-page.md](./contracts/admin-page.md):
   - MusicBrainz `Search`: the artist-ID sentence only.
   - MusicBrainz `Unique` with candidates: the sentence, then each `{name} ({score})` and its ID inside a `<code>`; the stylesheet gives that `<code>` `user-select: all`.
@@ -129,16 +129,16 @@ MusicBrainz artist ID fix, and "Tracked through MusicBrainz."
   - A row failing at both sources has two different paragraphs; a Deezer-only failure never contains "MusicBrainz artist ID" (SC-001).
   - The last line is `Tracked through MusicBrainz.` when an entry is Matched, otherwise `Not tracked.`
   - Every candidate name is escaped. [U68] [U69] [U70] [U71] [U72] [U73] [U74] [U75] [U76] [U77] [U78] [U79] [U80] [U81] [U82] [U83] [A1] [A2] [A3] [A4] [A5] [A6]
-- [ ] T018 [US1] Add a failing case to `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ConfigureAndRunTests.cs`, using `AcceptanceRig`: after a refresh where MusicBrainz matches and Deezer finds exact-name artists with no album in common, `AdminStatusAsync` gives the Deezer entry `FailedStep` `Album` with both counts, and the MusicBrainz entry `Matched`. [U50]
+- [X] T018 [US1] Add a failing case to `tests/Jellyfin.Plugin.NewReleases.Tests/Acceptance/ConfigureAndRunTests.cs`, using `AcceptanceRig`: after a refresh where MusicBrainz matches and Deezer finds exact-name artists with no album in common, `AdminStatusAsync` gives the Deezer entry `FailedStep` `Album` with both counts, and the MusicBrainz entry `Matched`. [U50]
 
 ### Implementation for User Story 1
 
 - [X] T019 [US1] Add `src/Jellyfin.Plugin.NewReleases/Storage/Migrations/002_match_detail.sql` with `ALTER TABLE artist_source ADD COLUMN match_detail TEXT;`. T012 passes. [U39]
-- [ ] T020 [US1] In `src/Jellyfin.Plugin.NewReleases/Model/SourceRecords.cs`, add `MatchCandidate(Name, Score, Id)`, `MatchDetail(Candidates, ExactNameCount, AlbumsCompared)`, and `ArtistMatch.Detail`; `Unmatched(reason, detail)` carries it and `Matched` does not. [U17] [U20] [U21] [U24] [U28] [U36]
+- [X] T020 [US1] In `src/Jellyfin.Plugin.NewReleases/Model/SourceRecords.cs`, add `MatchCandidate(Name, Score, Id)`, `MatchDetail(Candidates, ExactNameCount, AlbumsCompared)`, and `ArtistMatch.Detail`; `Unmatched(reason, detail)` carries it and `Matched` does not. [U17] [U20] [U21] [U24] [U28] [U36]
 - [X] T021 [US1] In `src/Jellyfin.Plugin.NewReleases/Sources/MusicBrainzSource.cs`, attach the first 3 sorted candidates to each Unmatched result (research R3). T013 passes. [U17] [U18] [U19] [U20] [U21] [U22]
 - [X] T022 [US1] In `src/Jellyfin.Plugin.NewReleases/Sources/DeezerSource.cs`, attach the first 3 search results' names, and for `no corroborating album` the exact-name count and the albums compared (research R3). T014 passes. [U24] [U25] [U26] [U27] [U28] [U29]
-- [ ] T023 [US1] In `src/Jellyfin.Plugin.NewReleases/Storage/ArtistRepository.cs`, write `match_detail` as JSON in `SetMatchAsync` (null for a match) and read it into `UnmatchedAt.Detail` in `GetCountsAsync`; add `Detail` to `UnmatchedAt` in `src/Jellyfin.Plugin.NewReleases/Model/StoredRecords.cs`. T015 passes. [U36] [U37] [U38]
-- [ ] T024 [US1] In `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, map `Detail` to `Candidates`, `ExactNameCount` and `AlbumsCompared`. T016 and T018 pass. [U47] [U48] [U50]
+- [X] T023 [US1] In `src/Jellyfin.Plugin.NewReleases/Storage/ArtistRepository.cs`, write `match_detail` as JSON in `SetMatchAsync` (null for a match) and read it into `UnmatchedAt.Detail` in `GetCountsAsync`; add `Detail` to `UnmatchedAt` in `src/Jellyfin.Plugin.NewReleases/Model/StoredRecords.cs`. T015 passes. [U36] [U37] [U38]
+- [X] T024 [US1] In `src/Jellyfin.Plugin.NewReleases/Api/AdminController.cs`, map `Detail` to `Candidates`, `ExactNameCount` and `AlbumsCompared`. T016 and T018 pass. [U47] [U48] [U50]
 - [ ] T025 [US1] In `src/Jellyfin.Plugin.NewReleases/Web/admin.html`, write the How to fix paragraphs, the candidate `<code>` with `user-select: all`, and the tracking line per [contracts/admin-page.md](./contracts/admin-page.md). T017 passes. [U68] [U69] [U70] [U71] [U72] [U73] [U74] [U75] [U76] [U77] [U78] [U79] [U80] [U81] [U82] [U83] [A1] [A2] [A3] [A4] [A5] [A6]
 
 - [ ] T034 [US1] Confirm that the acceptance test for US1-AS1 is green in the full suite before US1 counts as complete. [A1]

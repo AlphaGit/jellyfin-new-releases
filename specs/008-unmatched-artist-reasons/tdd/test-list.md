@@ -98,9 +98,9 @@ through `AcceptanceRig`.
 | U33 | An enabled source with a `Pending` row is `NotChecked` | FR-002, EC-notchecked | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_AnEnabledSourceWithAPendingRow_IsListedAsPending` |
 | U34 | `Reason` is null for `Matched` and `NotChecked` entries | FR-002 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_MatchedAndNotCheckedEntries_HaveNoReason` |
 | U35 | A disabled source's row stays stored, and enabling it again lists the artist with that reason | FR-014 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_ADisabledSourcesResultIsKept_AndListsAgainOnceEnabled` |
-| U36 | An Unmatched result's detail is read back with the same candidates and counts | FR-015 | example | PENDING | |
-| U37 | A later `Matched` result for the same pair leaves no detail | FR-015 | example | PENDING | |
-| U38 | A row written without detail reads back with null detail | EC-old | example | PENDING | |
+| U36 | An Unmatched result's detail is read back with the same candidates and counts | FR-015 | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_ReadsBackTheDetailStoredWithAnUnmatchedResult` |
+| U37 | A later `Matched` result for the same pair leaves no detail | FR-015 | example | DONE | `Storage/ArtistRepositoryTests.cs::SetMatchAsync_AMatchAfterAFailedAttempt_LeavesNoDetail` |
+| U38 | A row written without detail reads back with null detail | EC-old | example | DONE | `Storage/ArtistRepositoryTests.cs::GetCountsAsync_AResultWrittenWithoutDetail_ReadsBackWithNone` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Storage/Migrations/002_match_detail.sql`
 
@@ -119,8 +119,8 @@ through `AcceptanceRig`.
 | U44 | A `NotChecked` entry has null `FailedStep`, empty `Steps` and null `Reason` | EC-notchecked | example | DONE | `Api/AdminControllerTests.cs::Status_ASourceNotYetRun_IsNotChecked_WithNoFailedStepNoStepsAndNoReason` |
 | U45 | An unrecognized reason gives `Unmatched`, null `FailedStep`, empty `Steps`, and the stored text in `Reason` | EC-unknown | example | DONE | `Api/AdminControllerTests.cs::Status_AnUnrecognizedReason_IsUnmatched_WithNoFailedStepNoSteps_AndKeepsItsText` |
 | U46 | With Deezer disabled in the configuration, an artist Unmatched only at Deezer is absent | FR-014 | example | DONE | `Api/AdminControllerTests.cs::Status_WithDeezerDisabled_AnArtistOnlyDeezerFailed_IsNotListed` |
-| U47 | Stored detail appears as `Candidates` (Deezer with null `Score` and `Id`), `ExactNameCount` and `AlbumsCompared` | FR-015, FR-013 | example | PENDING | |
-| U48 | A row without detail gives null `Candidates`, `ExactNameCount` and `AlbumsCompared` | EC-old, FR-016 | example | PENDING | |
+| U47 | Stored detail appears as `Candidates` (Deezer with null `Score` and `Id`), `ExactNameCount` and `AlbumsCompared` | FR-015, FR-013 | example | DONE | `Api/AdminControllerTests.cs::Status_StoredDetail_AppearsAsCandidatesAndCounts` |
+| U48 | A row without detail gives null `Candidates`, `ExactNameCount` and `AlbumsCompared` | EC-old, FR-016 | example | DONE | `Api/AdminControllerTests.cs::Status_ARowWithoutDetail_HasNoCandidatesAndNoCounts` |
 
 ### `tests/fixtures/pages/admin-status.json` against the records (`ResponseNamingTests`)
 
@@ -132,7 +132,7 @@ through `AcceptanceRig`.
 
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
-| U50 | After a refresh where MusicBrainz matches and Deezer finds exact-name artists with no album in common, the status gives Deezer `Album` with both counts and MusicBrainz `Matched` | US1-AS2, US1-AS4, FR-015 | example | PENDING | |
+| U50 | After a refresh where MusicBrainz matches and Deezer finds exact-name artists with no album in common, the status gives Deezer `Album` with both counts and MusicBrainz `Matched` | US1-AS2, US1-AS4, FR-015 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_U50_AfterARefreshWhereDeezerFindsNoAlbumInCommon_TheStatusGivesTheAlbumFailureWithItsCounts` |
 | U51 | After a refresh where the MusicBrainz search scores below 85, the status gives steps Id Failed, Search Passed, Score Failed with the score, Unique NotReached | US2-AS1, FR-004 | example | DONE | `Acceptance/ConfigureAndRunTests.cs::Spec008_U51_AfterARefreshWhoseMusicBrainzSearchScoresBelow85_TheStatusGivesTheScoreTrail` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/admin.html`: Reason column
