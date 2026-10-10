@@ -39,7 +39,7 @@ public sealed class MusicBrainzSource : IReleaseSource
         var body = await _http.GetStringAsync(Id, $"{Base}artist?query=artist:{query}&limit=5&fmt=json", ct).ConfigureAwait(false);
         using var json = JsonDocument.Parse(body);
         var candidates = json.RootElement.GetProperty("artists").EnumerateArray()
-            .Select(a => (Id: a.GetProperty("id").GetString()!, Score: a.GetProperty("score").GetInt32()))
+            .Select(a => (Id: a.GetProperty("id").GetString()!, Name: a.GetProperty("name").GetString() ?? string.Empty, Score: a.GetProperty("score").GetInt32()))
             .OrderByDescending(a => a.Score)
             .ToList();
         if (candidates.Count == 0)
@@ -55,7 +55,9 @@ public sealed class MusicBrainzSource : IReleaseSource
 
         if (candidates.Count > 1 && top.Score - candidates[1].Score <= 5)
         {
-            return ArtistMatch.Unmatched(MatchReasons.Ambiguous(top.Score, candidates[1].Score));
+            return ArtistMatch.Unmatched(
+                MatchReasons.Ambiguous(top.Score, candidates[1].Score),
+                new MatchDetail(candidates.Select(c => new MatchCandidate(c.Name, c.Score, c.Id)).ToArray()));
         }
 
         return ArtistMatch.Matched(top.Id);

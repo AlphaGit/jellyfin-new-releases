@@ -108,6 +108,23 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
         Assert.Equal(ArtistMatch.Unmatched("no result"), match);
     }
 
+    /// <summary>Spec 008 FR-015: an ambiguous result keeps the candidates the search returned, best first, with score and ID.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_Ambiguous_KeepsTheCandidatesInScoreOrderWithScoreAndId()
+    {
+        _h.Fixture(ArtistSearch, "musicbrainz/artist_search_ambiguous.json"); // Nirvana 100, Nirvana 96, Approaching Nirvana 74
+
+        var match = await Source().MatchArtistAsync(Artist("Nirvana"), CancellationToken.None);
+
+        Assert.Equal(
+            [
+                new MatchCandidate("Nirvana", 100, "5b11f4ce-a62d-471e-81fc-a69a8278c7da"),
+                new MatchCandidate("Nirvana", 96, "9282c8b4-ca0b-4c6b-b7e3-4f7762dfc4d6"),
+                new MatchCandidate("Approaching Nirvana", 74, "c3a64a25-251b-4d03-afba-1471440245b8"),
+            ],
+            match.Detail?.Candidates ?? []);
+    }
+
     /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
     [Theory]
     [InlineData("musicbrainz/artist_search_empty.json", "Search")]
