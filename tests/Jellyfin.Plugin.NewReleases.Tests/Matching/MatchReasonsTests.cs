@@ -74,4 +74,12 @@ public class MatchReasonsTests
     {
         Assert.Null(MatchReasons.Parse(source, "rate limited"));
     }
+
+    [Theory]
+    [InlineData(SourceLimits.MusicBrainz)]
+    [InlineData(SourceLimits.Deezer)]
+    public void Parse_AnEmptyText_IsNull(string source)
+    {
+        Assert.Null(MatchReasons.Parse(source, string.Empty));
+    }
 }
