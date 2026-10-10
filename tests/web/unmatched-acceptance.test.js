@@ -2,8 +2,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { loadPageDom } = require('./load-page.js');
 const { fixture } = require('./fixtures.js');
+const { unmatchedRows, reasonMarkup, visible } = require('./unmatched-table.js');
 
 // 008 acceptance scenarios for the Unmatched artists table, through the page's own rendering of the
 // committed admin status (tests/fixtures/pages/admin-status.json, held to the server records by
@@ -13,10 +13,7 @@ const { fixture } = require('./fixtures.js');
 
 /** The rendered unmatched rows, each as { reason, fix } cell text with markup removed, plus the fix markup. */
 function rows(status) {
-    const { internals, document } = loadPageDom('admin.html');
-    internals.renderStatus(status);
-    const body = document.getElementById('nr-unmatched').querySelector('tbody').innerHTML;
-    return body.split('</tr>').filter(r => r.includes('<tr>')).map(r => {
+    return unmatchedRows(status).map(r => {
         const cells = [...r.matchAll(/<td>([\s\S]*?)<\/td>/g)].map(m => m[1]);
         return { reason: cells[1].replace(/<[^>]*>/g, ''), fix: cells[2].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(), fixMarkup: cells[2] };
     });
@@ -64,16 +61,7 @@ test('A6 (US1-AS6): a row failing at both sources has one fix per failed source 
 });
 
 /** A row's Reason lines as markup, one per source. */
-function reasonLines(status, row) {
-    const { internals, document } = loadPageDom('admin.html');
-    internals.renderStatus(status);
-    const body = document.getElementById('nr-unmatched').querySelector('tbody').innerHTML;
-    const markup = body.split('</tr>').filter(r => r.includes('<tr>'))[row];
-    return [...markup.matchAll(/<div class="nr-reason">([\s\S]*?)<\/div>/g)].map(m => m[1]);
-}
-
-/** What a sighted reader sees on a line: the screen-reader words removed, then every tag. */
-const visible = line => line.replace(/<span class="nr-sr">[^<]*<\/span>/g, '').replace(/<[^>]*>/g, '');
+const reasonLines = (status, row) => reasonMarkup(unmatchedRows(status)[row]);
 
 test('A7 (US2-AS1): a MusicBrainz low-score line reads ID failed, Search passed, Score failed with 70, Unique not reached', () => {
     const [musicBrainz] = reasonLines(fixture('admin-status.json'), 2);

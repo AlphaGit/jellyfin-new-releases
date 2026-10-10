@@ -4,6 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadPageDom, pageSource } = require('./load-page.js');
 const { fixture } = require('./fixtures.js');
+const { unmatchedRows, reasonMarkup, fixes, visible } = require('./unmatched-table.js');
 const { HOUR, DAY, ago } = require('./fixed-clock.js');
 
 // The administrator page showed a dash for every value on Jellyfin 12. These capture what
@@ -77,12 +78,6 @@ test('a healthy source hides its last error', () => {
     assert.doesNotMatch(text('nr-health-musicbrainz'), /503/);
 });
 
-/** The unmatched table's rows, one string of cell markup per row. */
-function unmatchedRows(status) {
-    const { document } = rendered(status);
-    return document.getElementById('nr-unmatched').querySelector('tbody').innerHTML.split('</tr>').filter(r => r.includes('<tr>'));
-}
-
 /** The source each Reason line of a row starts with. */
 function reasonLineSources(row) {
     return [...row.matchAll(/<div class="nr-reason">([^:<]+): /g)].map(m => m[1]);
@@ -149,11 +144,6 @@ function withReason(row, source, reason) {
     const base = fixture('admin-status.json');
     const unmatched = base.unmatched.map((u, i) => i !== row ? u : { ...u, reasons: u.reasons.map((r, j) => j !== source ? r : reason) });
     return { ...base, unmatched };
-}
-
-/** A row's fix paragraphs as text, markup removed. */
-function fixes(row) {
-    return [...row.matchAll(/<p class="nr-fix">([\s\S]*?)<\/p>/g)].map(m => m[1].replace(/<[^>]*>/g, ''));
 }
 
 const ARTIST_ID_FIX = "Set the MusicBrainz artist ID in Jellyfin's metadata editor or artist.nfo; the plugin uses it on the next refresh.";
@@ -268,11 +258,6 @@ test('an entry with no failed step gives no fix paragraph', () => {
     assert.deepEqual(fixes(row), []);
 });
 
-/** A row's Reason lines as markup. */
-function reasonMarkup(row) {
-    return [...row.matchAll(/<div class="nr-reason">([\s\S]*?)<\/div>/g)].map(m => m[1]);
-}
-
 /** Each step of a trail line as [short name, state class]. */
 function trailSteps(line) {
     return [...line.matchAll(/<span class="nr-step nr-step-(\w+)">([^ <]+)/g)].map(m => [m[2], m[1]]);
@@ -321,9 +306,6 @@ test('every step hides its mark from screen readers and states itself in visuall
     assert.equal(steps.length, 4);
     for (const step of steps) assert.match(step, /<span aria-hidden="true">[✓✗–]<\/span><span class="nr-sr">(passed|failed|not reached)<\/span>/);
 });
-
-/** A trail line as a sighted reader sees it: screen-reader words removed, then every tag. */
-const visible = line => line.replace(/<span class="nr-sr">[^<]*<\/span>/g, '').replace(/<[^>]*>/g, '');
 
 // 008 FR-004: a failed Score step shows the best score after its mark.
 test('a failed Score step shows its score after the mark', () => {
