@@ -198,6 +198,15 @@ test('a MusicBrainz Score failure without stored candidates gives the sentence o
     assert.deepEqual(fixes(row), [ARTIST_ID_FIX]);
 });
 
+// 008 FR-008: Deezer matches by exact name only, so its near names are what the administrator compares.
+test('a Deezer Name failure with names lists them comma-separated and says Deezer matches by name only', () => {
+    const row = unmatchedRows(fixture('admin-status.json'))[1];
+
+    assert.equal(
+        fixes(row)[1],
+        'Deezer lists Nirvana (UK), Approaching Nirvana. If one is this artist, its name on Deezer differs from the name in Jellyfin; Deezer matches by name only.');
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
