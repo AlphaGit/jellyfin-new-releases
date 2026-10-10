@@ -250,6 +250,15 @@ test('a row whose only failure is at Deezer never mentions the MusicBrainz artis
     assert.doesNotMatch(row, /MusicBrainz artist ID/);
 });
 
+// 008 FR-007: one fix per failed source, and no fix twice on a row.
+test('a row failing at both sources gives two different fix paragraphs', () => {
+    const row = unmatchedRows(fixture('admin-status.json'))[1];
+    const found = fixes(row);
+
+    assert.equal(found.length, 2);
+    assert.notEqual(found[0], found[1]);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
