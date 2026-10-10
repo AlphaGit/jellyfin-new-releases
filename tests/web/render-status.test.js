@@ -364,6 +364,13 @@ test('every step hides its mark from screen readers and states itself in visuall
     for (const step of steps) assert.match(step, /<span aria-hidden="true">[✓✗–]<\/span><span class="nr-sr">(passed|failed|not reached)<\/span>/);
 });
 
+// 008 FR-003, FR-010: a step not reached is dimmed, and the screen-reader words take no space on screen.
+test('the stylesheet dims a not-reached step and hides the screen-reader words visually', () => {
+    assert.ok(Number(declared('#newreleasesConfigPage .nr-step-notreached').opacity) < 1);
+    const hidden = declared('#newreleasesConfigPage .nr-sr');
+    assert.deepEqual([hidden.position, hidden.width, hidden.height, hidden.overflow], ['absolute', '1px', '1px', 'hidden']);
+});
+
 test('with no unmatched artists the table is hidden and the empty line is shown', () => {
     const { document } = rendered(fixture('admin-status-quiet.json'));
 
