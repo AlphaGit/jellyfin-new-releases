@@ -127,6 +127,24 @@ public sealed class DeezerSourceTests : IAsyncLifetime
         Assert.Equal(5, match.Detail?.AlbumsCompared);
     }
 
+    /// <summary>Spec 008 FR-015: keeping the detail sends nothing new: the search, then each same-name artist's first album page.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_NoCorroboratingAlbum_SendsOnlyTheSearchAndEachFirstAlbumPage()
+    {
+        _h.Fixture(Search, "deezer/search_artist_homonyms.json"); // exact "Nirvana": 415 then 278793911
+        _h.Http.OnUrlPattern(@"api\.deezer\.com/artist/\d+(/albums)?\?", System.Net.HttpStatusCode.OK, EmptyPage); // answers any request a change might add
+
+        await Source().MatchArtistAsync(Artist("Nirvana", "Nevermind"), CancellationToken.None);
+
+        Assert.Equal(
+            [
+                "https://api.deezer.com/search/artist?q=Nirvana&limit=25",
+                "https://api.deezer.com/artist/415/albums?index=0&limit=100",
+                "https://api.deezer.com/artist/278793911/albums?index=0&limit=100",
+            ],
+            _h.RequestedUrls);
+    }
+
     /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
     [Theory]
     [InlineData("deezer/search_artist_empty.json", "Daft Punk", "Name")]       // no artist at all
