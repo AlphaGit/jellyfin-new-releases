@@ -44,7 +44,7 @@ public sealed class MusicBrainzSource : IReleaseSource
             .ToList();
         if (candidates.Count == 0)
         {
-            return ArtistMatch.Unmatched(MatchReasons.NoResult);
+            return ArtistMatch.Unmatched(MatchReasons.NoResult, new MatchDetail([]));
         }
 
         // FR-016: a fix shows at most 3 candidates, so no more are kept.

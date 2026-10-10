@@ -105,7 +105,8 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
 
         var match = await Source().MatchArtistAsync(Artist("zzqxjv nonexistent artist qqq"), CancellationToken.None);
 
-        Assert.Equal(ArtistMatch.Unmatched("no result"), match);
+        // 008 FR-015 adds the attempt detail to an Unmatched result, so the whole record no longer equals a bare one.
+        Assert.Equal((MatchStatus.Unmatched, "no result"), (match.Status, match.Reason));
     }
 
     /// <summary>Spec 008 FR-015: an ambiguous result keeps the candidates the search returned, best first, with score and ID.</summary>
@@ -134,6 +135,18 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
         var match = await Source().MatchArtistAsync(Artist("Blur"), CancellationToken.None);
 
         Assert.Equal(["mbid-1", "mbid-2", "mbid-3"], match.Detail?.Candidates.Select(c => c.Id) ?? []);
+    }
+
+    /// <summary>Spec 008 FR-015: a search that found nobody records that, as an empty candidate list.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_NoResults_RecordsAnEmptyCandidateList()
+    {
+        _h.Fixture(ArtistSearch, "musicbrainz/artist_search_empty.json");
+
+        var match = await Source().MatchArtistAsync(Artist("zzqxjv nonexistent artist qqq"), CancellationToken.None);
+
+        Assert.NotNull(match.Detail);
+        Assert.Empty(match.Detail.Candidates);
     }
 
     /// <summary>Spec 008 FR-011: every reason the match writes names its failed step, so the admin page can show the trail.</summary>
