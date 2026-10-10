@@ -184,6 +184,15 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal(("NotChecked", null, 0, null), (reason.State, reason.FailedStep, reason.Steps.Count, reason.Reason));
     }
 
+    /// <summary>008 edge case: a reason no released version writes keeps its text and claims no failed step.</summary>
+    [Fact]
+    public async Task Status_AnUnrecognizedReason_IsUnmatched_WithNoFailedStepNoSteps_AndKeepsItsText()
+    {
+        var reason = await OnlyReasonAsync("musicbrainz", ArtistMatch.Unmatched("rate limited"));
+
+        Assert.Equal(("Unmatched", null, 0, "rate limited"), (reason.State, reason.FailedStep, reason.Steps.Count, reason.Reason));
+    }
+
     /// <summary>002 FR-009/SC-005: an operator sees the run and the data age side by side, and sees them diverge.</summary>
     [Fact]
     public async Task Status_ReportsTheLastRunAndTheDataAge_WhichDivergeAfterARunThatCompletedNoFetch()
