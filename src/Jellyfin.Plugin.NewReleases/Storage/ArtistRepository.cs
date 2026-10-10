@@ -167,13 +167,12 @@ public sealed class ArtistRepository
         {
             rows.CommandText = """
                 SELECT a.jellyfin_id, a.name, s.source, s.unmatched_reason, s.status
-                FROM artist_source s
-                JOIN library_artist a ON a.id = s.library_artist_id
-                JOIN json_each(@enabled) e ON e.value = s.source
-                WHERE s.library_artist_id IN (
+                FROM artist_source s JOIN library_artist a ON a.id = s.library_artist_id
+                WHERE s.source IN (SELECT value FROM json_each(@enabled))
+                  AND s.library_artist_id IN (
                     SELECT library_artist_id FROM artist_source
                     WHERE status = 'Unmatched' AND source IN (SELECT value FROM json_each(@enabled)))
-                ORDER BY a.name, a.id, e.key
+                ORDER BY a.name, a.id
                 """;
             rows.Parameters.AddWithValue("@enabled", JsonSerializer.Serialize(enabledSources));
             await using var reader = await rows.ExecuteReaderAsync(ct).ConfigureAwait(false);
