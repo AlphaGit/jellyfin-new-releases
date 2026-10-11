@@ -82,6 +82,9 @@ separate defects contributed.
 - Q: Which trail does a placeholder show for each source? → A: One step only, "Placeholder"
   failed, on every enabled source, however the placeholder was found. No step that did not run
   is shown as passed.
+- Q: How long is the plugin's own backoff between retries? → A: It starts at 1 second and grows
+  fourfold: 1 s, 4 s, 16 s (was 0.2 s, 0.8 s, 3.2 s, about 4 s in all, too short for a busy spell
+  at MusicBrainz).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -252,6 +255,7 @@ run now has an end time and an interrupted outcome while finished runs are uncha
 - **FR-006**: Each retry after a transient answer MUST wait at least the plugin's own backoff for
   that attempt, whatever retry hint the source gives.
 - **FR-007**: A retry hint longer than the plugin's own backoff MUST still be honoured, as today.
+- **FR-007a**: The plugin's own backoff before retries 1, 2 and 3 MUST be 1 s, 4 s and 16 s.
 - **FR-008**: When the plugin starts, every stored run with no end time MUST be closed with an
   end time and the outcome "Interrupted". New installs MUST accept this outcome. The plugin ships
   no migration for it (Clarifications, session 2026-10-10).
@@ -296,7 +300,8 @@ run now has an end time and an interrupted outcome while finished runs are uncha
 
 - Retrying, later in the same run, an artist that failed after all its retries. The next run
   picks it up, as today.
-- Any change to the per-source rate, daily budget, failure threshold or cooldown values.
+- Any change to the per-source rate, daily budget, failure threshold or cooldown values. The
+  retry backoff is the only timing this feature changes (FR-007a).
 - A migration that lets existing installs store the "Interrupted" outcome. The maintainer's
   server is the only existing install and is changed once by hand. This is a deliberate
   deviation from constitution IV, which the plan records.

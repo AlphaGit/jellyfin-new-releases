@@ -123,10 +123,10 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
         var client = Client();
 
         var pending = client.GetStringAsync(Deezer, Url, CancellationToken.None);
-        await Assert.ThrowsAsync<HttpRequestException>(() => RunAdvancingAsync(pending, TimeSpan.FromMilliseconds(100), maxSteps: 60));
+        await Assert.ThrowsAsync<HttpRequestException>(() => RunAdvancingAsync(pending, TimeSpan.FromSeconds(1), maxSteps: 30));
 
         Assert.Equal(4, _http.ReceivedRequests.Count);
-        Assert.Equal([TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(800), TimeSpan.FromMilliseconds(3_200)], sentAt.Zip(sentAt.Skip(1), (a, b) => b - a));
+        Assert.Equal([TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(16)], sentAt.Zip(sentAt.Skip(1), (a, b) => b - a));
     }
 
     [Theory]

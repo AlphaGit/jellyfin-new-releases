@@ -120,6 +120,9 @@ Facts were checked against the code at `afb9b69`, the live MusicBrainz and Deeze
   A date hint in the past gives a negative hint, so the backoff wins. The source's next-allowed
   floor is set only when the hint is longer than the backoff.
 - **Rationale**: FR-006 and FR-007 in one line. Today a hint of zero replaces the backoff.
+- **Decision** (FR-007a): `SourceLimits.RetryBackoffs` becomes 1 s, 4 s, 16 s, the same fourfold
+  growth from a 1 s start. Three retries now span 21 s instead of 4.2 s. Deezer's quota retry reads
+  the same table.
 - **Note**: `SourceLimits.DefaultRetryAfter` is unused before and after this change. It is not
   removed here (out of scope); it is reported for a later clean-up.
 

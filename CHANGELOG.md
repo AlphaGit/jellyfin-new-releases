@@ -32,7 +32,8 @@ All notable changes to this project are documented here. The format follows
   "Seven Lions + Kill the Noise", no longer fails every run with a malformed request. Its list
   holds only the releases credited to all of its members.
 - **A busy source gets time before a retry.** A "retry after 0 seconds" answer no longer replaces
-  the plugin's own backoff, so fewer artists fail while MusicBrainz is busy.
+  the plugin's own backoff, and that backoff is now 1, 4 and 16 seconds (was 0.2, 0.8 and 3.2), so
+  fewer artists fail while MusicBrainz is busy.
 - **A run interrupted by a restart is closed.** When the plugin starts, a run left open is
   recorded as Interrupted, so the administrator page no longer shows "(running)" when nothing
   runs. A database created before this version keeps such a run open and logs one warning.
