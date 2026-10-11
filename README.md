@@ -98,6 +98,5 @@ Tests make no network calls: source responses are recorded fixtures under `tests
 
 ## Development
 
-Specs live in `specs/` (Spec Kit). Every behaviour is test-driven; the evidence per feature is in
-`specs/<feature>/tdd/cycle-log.md`. Sibling project and reference implementation:
+Specs live in `specs/` (Spec Kit). Sibling project and reference implementation:
 [jellyfin-concert-radar](https://github.com/AlphaGit/jellyfin-concert-radar).

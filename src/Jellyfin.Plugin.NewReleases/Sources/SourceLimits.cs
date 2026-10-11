@@ -8,7 +8,7 @@ public static class SourceLimits
 
     public const int FailureThreshold = 5;
     public static readonly TimeSpan Cooldown = TimeSpan.FromHours(6);
-    public static readonly TimeSpan[] RetryBackoffs = [TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(800), TimeSpan.FromMilliseconds(3_200)];
+    public static readonly TimeSpan[] RetryBackoffs = [TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(16)]; // 009 FR-007a
     public static readonly TimeSpan DefaultRetryAfter = TimeSpan.FromSeconds(60);
     public const long MaxResponseBytes = 10 * 1024 * 1024;
 

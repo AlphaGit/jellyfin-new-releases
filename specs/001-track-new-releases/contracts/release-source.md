@@ -32,15 +32,19 @@ surface as **Partial** when they interrupt paging.
 
 | Concern | MusicBrainz | Deezer |
 | --- | --- | --- |
-| Match by identifier | `artist.Mbid` present → `Matched(mbid)` without a request | n/a |
+| Match by identifier | `artist.Mbid` parsed by `MusicBrainzIds.Parse` (split on `;`, trim, drop placeholders, distinct); non-empty → `Matched(string.Join(';', ids))` without a request (009) | n/a |
 | Match by name | `artist?query=artist:"<name>"&limit=5`; top score ≥ 85 and second < top − 5 | `search/artist?q=<name>&limit=25`; exact normalized name AND first albums page contains a library album title |
-| Catalogue page | `release?artist=<id>&status=official&inc=release-groups&limit=100&offset=N`; items grouped by release-group id; `NextOffset = offset+100 < release-count ? … : null` | `artist/<id>/albums?index=N&limit=100`; `NextOffset` from `next` presence |
+| Catalogue page | `release?artist=<first id>&status=official&inc=release-groups+artist-credits&limit=100&offset=N`; with two or more IDs, only releases whose `artist-credit[].artist.id` contains every ID are kept (009); items grouped by release-group id; `NextOffset = offset+100 < release-count ? … : null` | `artist/<id>/albums?index=N&limit=100`; `NextOffset` from `next` presence |
 | `CatalogueItem.SourceReleaseId` | release-group MBID | album id |
+| `CatalogueItem.Credit` (009) | the kept release's `artist-credit` as `(artist.id, artist.name)`; empty when absent | always empty: album items carry no artist |
 | `Url` | `https://musicbrainz.org/release-group/<id>` | `link` |
 | Types | `primary-type` → Album/EP/Single/Other; `secondary-types[]` → Compilation/Live/Remix/Soundtrack/Other | `record_type`: album→Album, ep→EP, single→Single, compile→Compilation (as primary); no secondaries |
 | Date | `first-release-date` (may be `YYYY`, `YYYY-MM`, empty) | `release_date` (`0000-00-00` → null) |
 | Editions | `release?release-group=<id>&status=official&inc=recordings+media&limit=25&offset=N`; each release → one edition; tracks = all `media[].tracks[].title` normalized as tracks | `album/<id>` for the title (the tracks endpoint carries none), then `album/<id>/tracks?limit=100` (+`next`); one edition = the album |
-| Error handling | 503/429 → `Retry-After` → backoff; 404 on artist → `Unmatched("not found")` | HTTP 200 with `error.code 4` → transient (backoff 5 s); other `error` → Failed |
+| Error handling | 503/429 → wait `max(Retry-After, backoff)`; a longer `Retry-After` also sets the next-allowed floor (009); 404 on artist → `Unmatched("not found")` | HTTP 200 with `error.code 4` → transient (backoff 5 s); other `error` → Failed |
+
+A source match to a placeholder identity (`PlaceholderArtists`) is turned by the refresh task into
+`Unmatched("placeholder artist")` at every enabled source, with no catalogue request (009 research R2).
 
 ## Fixtures (`tests/fixtures/`)
 
@@ -51,6 +55,8 @@ nothing personal), one file per scenario:
   `artist_search_low_score.json`, `artist_search_empty.json`
 - `musicbrainz/releases_page1.json`, `releases_page2.json` (a two-page catalogue with mixed
   primary/secondary types and a year-only date), `releases_empty.json`
+- `musicbrainz/releases_joint_artist.json` (009: Seven Lions with `artist-credits`, trimmed to a
+  solo release, one credited to Seven Lions and Kill the Noise, and one credited to both and others)
 - `musicbrainz/editions_two_official.json` (two editions, one with an extra track)
 - `musicbrainz/error_503_retry_after.txt`
 - `deezer/search_artist_exact.json`, `search_artist_homonyms.json`, `search_artist_empty.json`

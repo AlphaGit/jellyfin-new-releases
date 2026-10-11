@@ -256,7 +256,7 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
         Assert.Equal(
             [
                 "https://musicbrainz.org/ws/2/artist?query=artist:%22Daft%20Punk%22&limit=5&fmt=json",
-                $"https://musicbrainz.org/ws/2/release?artist={DaftPunkMbid}&status=official&inc=release-groups&limit=100&offset=0&fmt=json",
+                $"https://musicbrainz.org/ws/2/release?artist={DaftPunkMbid}&status=official&inc=release-groups+artist-credits&limit=100&offset=0&fmt=json",
                 "https://musicbrainz.org/ws/2/release?release-group=48117b90-a16e-34ca-a514-19c702df1158&status=official&inc=recordings+media&limit=25&offset=0&fmt=json",
             ],
             _h.RequestedUrls);
@@ -274,5 +274,65 @@ public sealed class MusicBrainzSourceTests : IAsyncLifetime
 
         var paging = source.FetchCataloguePageAsync(DaftPunkMbid, 0, CancellationToken.None);
         await Assert.ThrowsAsync<HttpRequestException>(() => _h.RunAdvancingAsync(paging, TimeSpan.FromMilliseconds(500)));
+    }
+
+    private const string SevenLions = "75c016da-48e4-4992-8a10-b7128189b272";
+    private const string KillTheNoise = "a9930a14-8fbb-435a-ad25-f4b6cae71523";
+
+    /// <summary>009 FR-005: a joint artist's IDs are parsed and joined, with no request.</summary>
+    [Fact]
+    public async Task MatchArtistAsync_JointIds_MatchedToTheParsedIds_WithNoRequest()
+    {
+        var match = await Source().MatchArtistAsync(Artist("Seven Lions + Kill the Noise", $" {SevenLions} ; {KillTheNoise} "), CancellationToken.None);
+
+        Assert.Equal(ArtistMatch.Matched($"{SevenLions};{KillTheNoise}"), match);
+        Assert.Empty(_h.RequestedUrls);
+    }
+
+    /// <summary>009 US2-AS1: one request, one ID: the first.</summary>
+    [Fact]
+    public async Task FetchCataloguePageAsync_JointIds_BrowsesTheFirstIdOnly_WithArtistCredits()
+    {
+        _h.Fixture(ReleaseBrowse, "musicbrainz/releases_joint_artist.json");
+
+        await Source().FetchCataloguePageAsync($"{SevenLions};{KillTheNoise}", 0, CancellationToken.None);
+
+        Assert.Equal([$"https://musicbrainz.org/ws/2/release?artist={SevenLions}&status=official&inc=release-groups+artist-credits&limit=100&offset=0&fmt=json"], _h.RequestedUrls);
+    }
+
+    /// <summary>009 US2-AS2: only releases credited to every ID are kept; another credited artist is allowed.</summary>
+    [Fact]
+    public async Task FetchCataloguePageAsync_JointIds_KeepsOnlyReleasesCreditedToEveryId()
+    {
+        _h.Fixture(ReleaseBrowse, "musicbrainz/releases_joint_artist.json"); // Ophelia Volume 1 (solo), The Blood (both), Horizon (both + others); release-count 158
+
+        var page = await Source().FetchCataloguePageAsync($"{SevenLions};{KillTheNoise}", 0, CancellationToken.None);
+
+        Assert.Equal(["The Blood", "Horizon"], page.Items.Select(i => i.Title));
+        Assert.Equal((100, 158), (page.NextOffset, page.Total));
+    }
+
+    /// <summary>009 US2-AS4: one ID keeps every release, as before, and each item carries its credit.</summary>
+    [Fact]
+    public async Task FetchCataloguePageAsync_OneId_KeepsEveryRelease_WithItsCredit()
+    {
+        _h.Fixture(ReleaseBrowse, "musicbrainz/releases_joint_artist.json");
+
+        var page = await Source().FetchCataloguePageAsync(SevenLions, 0, CancellationToken.None);
+
+        Assert.Equal(["Ophelia Volume 1", "The Blood", "Horizon"], page.Items.Select(i => i.Title));
+        Assert.Equal([new CreditedArtist(SevenLions, "Seven Lions"), new CreditedArtist(KillTheNoise, "Kill the Noise")], page.Items[1].Credit); // the artist's own name, not the credited spelling
+        Assert.Equal(4, page.Items[2].Credit.Count);
+    }
+
+    /// <summary>009 R5: a recorded page without artist-credit gives empty credits.</summary>
+    [Fact]
+    public async Task FetchCataloguePageAsync_NoArtistCredit_GivesEmptyCredits()
+    {
+        _h.Fixture(ReleaseBrowse, "musicbrainz/releases_page1.json");
+
+        var page = await Source().FetchCataloguePageAsync(DaftPunkMbid, 0, CancellationToken.None);
+
+        Assert.All(page.Items, i => Assert.Empty(i.Credit));
     }
 }

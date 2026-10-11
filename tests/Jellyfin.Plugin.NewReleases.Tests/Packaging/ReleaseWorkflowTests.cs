@@ -84,7 +84,7 @@ public class ReleaseWorkflowTests
     }
 
     /// <summary>
-    /// The predicate above is a rule, and a rule needs a table (`tdd-profile.md`). Written from the
+    /// The predicate above is a rule, and a rule needs a table. Written from the
     /// ways a workflow can grant a permission — a key under `permissions:`, the `write-all`
     /// shorthand, the flow form — before the predicate was widened (006 second audit, finding 7).
     /// </summary>

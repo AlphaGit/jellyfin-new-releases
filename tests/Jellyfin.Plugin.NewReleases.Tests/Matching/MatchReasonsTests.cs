@@ -135,4 +135,33 @@ public class MatchReasonsTests
 
         Assert.Equal([("Name", StepState.Passed), ("Album", StepState.Failed)], steps.Select(s => (s.Name, s.State)));
     }
+
+    [Fact]
+    public void Placeholder_IsThePlaceholderArtistText()
+    {
+        Assert.Equal("placeholder artist", MatchReasons.Placeholder);
+    }
+
+    [Theory]
+    [InlineData(SourceLimits.MusicBrainz)]
+    [InlineData(SourceLimits.Deezer)]
+    public void Parse_Placeholder_FailsAtPlaceholderWithNoValues(string source)
+    {
+        var failed = MatchReasons.Parse(source, MatchReasons.Placeholder);
+
+        Assert.Equal("Placeholder", failed?.Step);
+        Assert.Empty(failed!.Values);
+    }
+
+    [Theory]
+    [InlineData(SourceLimits.MusicBrainz)]
+    [InlineData(SourceLimits.Deezer)]
+    public void Steps_Placeholder_IsTheOnlyStep_Failed(string source)
+    {
+        var steps = MatchReasons.Steps(source, new FailedStep("Placeholder", []));
+
+        var step = Assert.Single(steps);
+        Assert.Equal(("Placeholder", StepState.Failed), (step.Name, step.State));
+        Assert.Empty(step.Values);
+    }
 }

@@ -50,7 +50,11 @@ public sealed record Release(
     Guid? LibraryAlbumId,
     long? ComparedEditionId,
     IReadOnlyList<string> MissingTracks,
-    DateTimeOffset? OwnershipCheckedAt);
+    DateTimeOffset? OwnershipCheckedAt)
+{
+    /// <summary>The union of its entries' album-artist credits (spec 009 R5); empty when no source gives one.</summary>
+    public IReadOnlyList<CreditedArtist> Credit { get; init; } = [];
+}
 
 /// <summary>Row of <c>decision</c>: an Ignore or Have-it decision keyed by the natural release key (R8).</summary>
 public sealed record Decision(string ArtistKey, string NormalizedTitle, DecisionKind Kind, Guid UserId, DateTimeOffset DecidedAt);

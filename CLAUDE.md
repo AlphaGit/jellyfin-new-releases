@@ -15,10 +15,6 @@ Installed extensions (`specify extension list`; hooks in `.specify/extensions.ym
 
 - **grill** — `/speckit-grill-me` replaces `/speckit-clarify`: one question at a time until
   the spec has no open decision. `/speckit-grill-with-docs` also syncs `docs/domain_knowledge/`.
-- **tdd** — `before_implement` hook is mandatory: `/speckit-tdd-run` drives red-green-refactor
-  from `specs/<feature>/tdd/test-list.md` before `/speckit-implement` writes anything.
-  Stack commands live in `.specify/memory/tdd-profile.md`; re-run `/speckit-tdd-setup refresh`
-  when the test stack changes.
 - **worktrees** — `after_specify` offers a nested `.worktrees/<branch>` worktree. `auto_create`
   is off because Orca already isolates each agent in its own worktree; decline unless you
   need a second one.

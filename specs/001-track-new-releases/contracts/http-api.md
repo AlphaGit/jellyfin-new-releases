@@ -139,7 +139,9 @@ Small status for the fragment header (also embedded in the list response; kept f
 }
 ```
 
-`health` ∈ `Ok` | `Failing` | `CoolingDown` | `Disabled`. `nextRunAt` is computed from the task's
+`health` ∈ `Ok` | `Failing` | `CoolingDown` | `Disabled`. `lastRun.outcome` ∈ `Completed` | `Cancelled` |
+`Failed` | `Interrupted` (a run left open by a restart, closed when the plugin started; 009), or
+`null` while the run is in progress. `nextRunAt` is computed from the task's
 triggers (server local time, as Jellyfin fires them) and is `null` when no trigger is set.
 `releasesLastCheckedAt` is the same instant the user page reports, so an administrator can see the
 last run and the age of the data diverge.
@@ -147,7 +149,9 @@ last run and the age of the data diverge.
 `unmatched` (amended by `specs/008-unmatched-artist-reasons/contracts/http-api.md`, which holds the
 field rules): an artist is listed when it is `Unmatched` at an enabled source. `reasons` has one
 entry per enabled source, in the order of `sources`; `state` ∈ `Matched` | `Unmatched` |
-`NotChecked`. A field whose value is `null` is left out of the response.
+`NotChecked`. A field whose value is `null` is left out of the response. A placeholder artist
+(009, `specs/009-fix-refresh-defects/contracts/http-api.md`) has `failedStep` `Placeholder` and the
+single step `Placeholder` `Failed` at every enabled source.
 
 Field names and the meaning of `releasesLastCheckedAt` are settled by
 `specs/002-report-data-age/contracts/http-api.md`.

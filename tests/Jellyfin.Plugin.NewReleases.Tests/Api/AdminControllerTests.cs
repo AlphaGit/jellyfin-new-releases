@@ -1,6 +1,7 @@
 using Jellyfin.Plugin.NewReleases.Api;
 using Jellyfin.Plugin.NewReleases.Configuration;
 using Jellyfin.Plugin.NewReleases.Library;
+using Jellyfin.Plugin.NewReleases.Matching;
 using Jellyfin.Plugin.NewReleases.Model;
 using Jellyfin.Plugin.NewReleases.ScheduledTasks;
 using Jellyfin.Plugin.NewReleases.Sources;
@@ -155,6 +156,26 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal(
             [("Id", "Failed", ""), ("Search", "Passed", ""), ("Score", "Passed", ""), ("Unique", "Failed", "92 90")],
             reason.Steps.Select(s => (s.Name, s.State, string.Join(' ', s.Values ?? []))));
+    }
+
+    /// <summary>009 US1-AS3, FR-003a: a placeholder shows the one Placeholder step at every enabled source, with no detail.</summary>
+    [Fact]
+    public async Task Status_APlaceholder_GivesTheSinglePlaceholderStepAtEverySource()
+    {
+        var artist = await UpsertBlurAsync();
+        await _db.Artists.SetMatchAsync(artist, "musicbrainz", ArtistMatch.Unmatched(MatchReasons.Placeholder), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(artist, "deezer", ArtistMatch.Unmatched(MatchReasons.Placeholder), CancellationToken.None);
+
+        var reasons = Assert.Single((await Controller().GetStatusAsync(CancellationToken.None)).Value!.Unmatched).Reasons;
+
+        Assert.Equal(["musicbrainz", "deezer"], reasons.Select(r => r.Source));
+        Assert.All(reasons, reason =>
+        {
+            Assert.Equal(("Unmatched", "Placeholder", "placeholder artist"), (reason.State, reason.FailedStep, reason.Reason));
+            var step = Assert.Single(reason.Steps);
+            Assert.Equal(("Placeholder", "Failed", null), (step.Name, step.State, step.Values));
+            Assert.Equal((null, null, null), (reason.Candidates, reason.ExactNameCount, reason.AlbumsCompared));
+        });
     }
 
     /// <summary>Blur, Unmatched at MusicBrainz, with Deezer in the given state; returns Deezer's reason.</summary>
