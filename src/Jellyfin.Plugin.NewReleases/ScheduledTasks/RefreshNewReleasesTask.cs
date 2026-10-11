@@ -96,6 +96,7 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
         {
             // 3. Rotate artists × enabled sources.
             var rotation = await _artists.GetRotationAsync(cancellationToken).ConfigureAwait(false);
+            var placeholders = new HashSet<long>();
             var done = 0;
             foreach (var stored in rotation)
             {
@@ -103,8 +104,16 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
                 var artist = snapshots[stored.ArtistKey];
                 var everySourceAttempted = true;
                 var anySourceAttempted = false;
+
+                // 009 FR-001: an artist whose every MBID is a placeholder asks no source anything.
+                var placeholder = !string.IsNullOrEmpty(artist.Mbid?.Trim(' ', ';')) && MusicBrainzIds.Parse(artist.Mbid).Count == 0;
                 foreach (var source in enabledSources)
                 {
+                    if (placeholder)
+                    {
+                        break;
+                    }
+
                     if (!await _http.IsAvailableAsync(source.Id, cancellationToken).ConfigureAwait(false))
                     {
                         everySourceAttempted = false;
@@ -114,7 +123,7 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
                     anySourceAttempted = true;
                     try
                     {
-                        await RefreshArtistAtSourceAsync(stored.Id, artist, source, runId, counts, cancellationToken).ConfigureAwait(false);
+                        placeholder = await RefreshArtistAtSourceAsync(stored.Id, artist, source, runId, counts, cancellationToken).ConfigureAwait(false);
                     }
                     catch (OperationCanceledException)
                     {
@@ -127,6 +136,17 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
                         _logger.LogWarning(ex, "Source {Source} failed for {Artist}.", source.Id, artist.Name);
                         var state = await _artists.GetSourceStateAsync(stored.Id, source.Id, cancellationToken).ConfigureAwait(false);
                         await _artists.SetFetchOutcomeAsync(stored.Id, source.Id, FetchOutcome.Failed, state?.ResumeOffset ?? 0, ex.Message, _clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+                    }
+                }
+
+                if (placeholder)
+                {
+                    // 009 FR-003: a placeholder at any source is one at every source; every source counts as attempted.
+                    placeholders.Add(stored.Id);
+                    everySourceAttempted = true;
+                    foreach (var source in enabledSources)
+                    {
+                        await _artists.SetMatchAsync(stored.Id, source.Id, ArtistMatch.Unmatched(MatchReasons.Placeholder), cancellationToken).ConfigureAwait(false);
                     }
                 }
 
@@ -144,10 +164,11 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
             }
 
             // 4. Ownership for every artist, from stored editions plus the fresh snapshot; editions fetched only for candidates (R11, EC-7).
-            foreach (var stored in rotation)
+            var credited = CreditIndex(snapshot.Artists);
+            foreach (var stored in rotation.Where(s => !placeholders.Contains(s.Id)))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await DecideOwnershipAsync(stored.Id, snapshots[stored.ArtistKey], enabledSources, counts, cancellationToken).ConfigureAwait(false);
+                await DecideOwnershipAsync(stored.Id, snapshots[stored.ArtistKey], credited, enabledSources, counts, cancellationToken).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)
@@ -179,12 +200,32 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
         public int Errors { get; set; }
     }
 
-    private async Task DecideOwnershipAsync(long artistId, LibraryArtistSnapshot artist, IReadOnlyList<IReleaseSource> enabledSources, RunCounts counts, CancellationToken ct)
+    /// <summary>
+    /// 009 FR-005a, R6: the library artists a credit entry names: by MBID where both sides have one, otherwise by
+    /// normalized name. Built once per run.
+    /// </summary>
+    private static Func<CreditedArtist, IEnumerable<LibraryArtistSnapshot>> CreditIndex(IReadOnlyList<LibraryArtistSnapshot> library)
+    {
+        var byMbid = library.SelectMany(a => MusicBrainzIds.Parse(a.Mbid).Select(id => (Id: id, Artist: a))).ToLookup(x => x.Id, x => x.Artist, StringComparer.OrdinalIgnoreCase);
+        var byName = library.ToLookup(a => TitleNormalizer.NormalizeName(a.Name), StringComparer.Ordinal);
+        return credit => credit.Mbid is null
+            ? byName[TitleNormalizer.NormalizeName(credit.Name)]
+            : byMbid[credit.Mbid].Concat(byName[TitleNormalizer.NormalizeName(credit.Name)].Where(a => MusicBrainzIds.Parse(a.Mbid).Count == 0));
+    }
+
+    /// <summary>The found-for artist's albums first, so the matcher keeps its preference, then those of every other credited library artist.</summary>
+    private static IReadOnlyList<LibraryAlbumSnapshot> CandidateAlbums(Release release, LibraryArtistSnapshot artist, Func<CreditedArtist, IEnumerable<LibraryArtistSnapshot>> credited)
+        => release.Credit.Count == 0
+            ? artist.Albums
+            : [.. artist.Albums, .. release.Credit.SelectMany(credited).Where(a => a.ArtistKey != artist.ArtistKey).DistinctBy(a => a.ArtistKey).SelectMany(a => a.Albums)];
+
+    private async Task DecideOwnershipAsync(long artistId, LibraryArtistSnapshot artist, Func<CreditedArtist, IEnumerable<LibraryArtistSnapshot>> credited, IReadOnlyList<IReleaseSource> enabledSources, RunCounts counts, CancellationToken ct)
     {
         foreach (var release in await _releases.GetByArtistAsync(artistId, ct).ConfigureAwait(false))
         {
+            var albums = CandidateAlbums(release, artist, credited);
             var editions = await _releases.GetEditionsAsync(release.Id, ct).ConfigureAwait(false);
-            var result = OwnershipMatcher.Decide(release, editions, artist.Albums);
+            var result = OwnershipMatcher.Decide(release, editions, albums);
             if (result.NeedsEditions)
             {
                 foreach (var (sourceId, sourceReleaseId) in await _releases.GetSourceEntriesAsync(release.Id, ct).ConfigureAwait(false))
@@ -210,7 +251,7 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
                 }
 
                 editions = await _releases.GetEditionsAsync(release.Id, ct).ConfigureAwait(false);
-                result = OwnershipMatcher.Decide(release, editions, artist.Albums);
+                result = OwnershipMatcher.Decide(release, editions, albums);
             }
 
             if (!result.NeedsEditions)
@@ -220,16 +261,22 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
         }
     }
 
-    private async Task RefreshArtistAtSourceAsync(long artistId, LibraryArtistSnapshot artist, IReleaseSource source, long runId, RunCounts counts, CancellationToken ct)
+    /// <summary>Refreshes one artist at one source. True when the match is that source's placeholder (009 R2): nothing is fetched or stored.</summary>
+    private async Task<bool> RefreshArtistAtSourceAsync(long artistId, LibraryArtistSnapshot artist, IReleaseSource source, long runId, RunCounts counts, CancellationToken ct)
     {
         var state = await _artists.GetSourceStateAsync(artistId, source.Id, ct).ConfigureAwait(false);
         var match = state is { Status: MatchStatus.Matched, SourceArtistId: not null }
             ? ArtistMatch.Matched(state.SourceArtistId)
             : await source.MatchArtistAsync(artist, ct).ConfigureAwait(false);
+        if (match.Status == MatchStatus.Matched && PlaceholderArtists.IsPlaceholder(source.Id, match.SourceArtistId))
+        {
+            return true;
+        }
+
         await _artists.SetMatchAsync(artistId, source.Id, match, ct).ConfigureAwait(false);
         if (match.Status != MatchStatus.Matched)
         {
-            return;
+            return false;
         }
 
         var offset = state?.ResumeOffset ?? 0;
@@ -246,7 +293,7 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
                 // Partial: keep the offset for the next run and remove nothing (FR-014, edge cases 5 and 8).
                 _logger.LogInformation("Source {Source}: budget exhausted at offset {Offset} for {Artist}; resuming next run.", source.Id, next, artist.Name);
                 await _artists.SetFetchOutcomeAsync(artistId, source.Id, FetchOutcome.Partial, next.Value, null, _clock.GetUtcNow(), ct).ConfigureAwait(false);
-                return;
+                return false;
             }
 
             foreach (var item in page.Items)
@@ -261,6 +308,7 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
         // Complete: only now may this source's entries be dropped, and only those not seen since the paging pass began (FR-014).
         await _releases.PruneEntriesAsync(artistId, source.Id, passStartedIn, ct).ConfigureAwait(false);
         await _artists.SetFetchOutcomeAsync(artistId, source.Id, FetchOutcome.Complete, 0, null, _clock.GetUtcNow(), ct).ConfigureAwait(false);
+        return false;
     }
 
     private static bool IsEnabled(PluginConfiguration configuration, string sourceId) => sourceId switch

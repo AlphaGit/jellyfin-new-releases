@@ -283,5 +283,55 @@ public sealed class ConfigureAndRunTests : IAsyncLifetime
         Assert.Equal("Matched", reasons.Single(r => r.Source == "musicbrainz").State);
         Assert.Equal(("Album", 1, 2), (deezer.FailedStep, deezer.ExactNameCount, deezer.AlbumsCompared));
     }
-}
 
+    /// <summary>009 US1-AS1, AS3, AS4; SC-001, SC-002: a placeholder costs no request, has no release, and shows the Placeholder step.</summary>
+    [Fact]
+    public async Task A009_1_APlaceholderIsSkippedAtEverySource_TheRealArtistBesideItIsRefreshed()
+    {
+        const string variousArtists = "89ad4ac3-39f7-470e-963a-56509c546377";
+        const string daftPunk = "056e4f3e-d505-4dad-8ec1-d04f521cbb56";
+        _rig.Library_.Artist("Various Artists", variousArtists);
+        _rig.Library_.Album("Now 42", "Various Artists", AcceptanceRig.Library);
+        _rig.Library_.Artist("Daft Punk", daftPunk);
+        _rig.Library_.Album("Homework", "Daft Punk", AcceptanceRig.Library, trackTitles: Homework);
+        _rig.MusicBrainzCatalogue(daftPunk, ("rg-home", "Homework", "Album", [], "1997-01-20"), ("rg-disc", "Discovery", "Album", [], "2001-03-12"))
+            .MusicBrainzEditions("rg-home", ("rel-home", "Homework", Homework));
+        _rig.DeezerArtist(27, "Daft Punk", (2, "Homework", "album", "1997-01-16")).DeezerAlbum(2, "Homework", Homework);
+
+        await _rig.RunAsync();
+
+        Assert.DoesNotContain(_rig.Harness.RequestedUrls, url => url.Contains(variousArtists, StringComparison.Ordinal) || url.Contains("Various", StringComparison.Ordinal));
+        Assert.Equal(["Discovery"], (await _rig.ListAsync()).Items.Select(i => i.Title)); // Homework owned; nothing for the placeholder
+        var placeholder = Assert.Single((await _rig.AdminStatusAsync()).Unmatched);
+        Assert.Equal("Various Artists", placeholder.Name);
+        Assert.All(placeholder.Reasons, r => Assert.Equal(("Placeholder", "Placeholder"), (r.FailedStep, Assert.Single(r.Steps).Name)));
+        Assert.Equal(["musicbrainz", "deezer"], placeholder.Reasons.Select(r => r.Source));
+    }
+
+    /// <summary>
+    /// 009 US2-AS1..3, AS5; SC-003: a joint artist sends one ID per request, keeps only its joint releases, completes,
+    /// and a joint release filed in the library under a credited member is owned.
+    /// </summary>
+    [Fact]
+    public async Task A009_2_AJointArtistRefreshes_AJointReleaseFiledUnderAMemberIsOwned()
+    {
+        const string sevenLions = "75c016da-48e4-4992-8a10-b7128189b272";
+        const string killTheNoise = "a9930a14-8fbb-435a-ad25-f4b6cae71523";
+        const string theBlood = "7664177b-fe47-4b9d-a541-25d773856561";
+        _rig.Harness.Configuration.DeezerEnabled = false;
+        _rig.Library_.Artist("Seven Lions + Kill the Noise", $"{sevenLions};{killTheNoise}");
+        _rig.Library_.Album("Cold Hearted", "Seven Lions + Kill the Noise", AcceptanceRig.Library);
+        _rig.Library_.Artist("Kill the Noise", killTheNoise);
+        _rig.Library_.Album("The Blood", "Kill the Noise", AcceptanceRig.Library, trackTitles: "The Blood");
+        _rig.Harness.Fixture($@"musicbrainz\.org/ws/2/release\?artist={sevenLions}", "musicbrainz/releases_joint_artist.json");
+        _rig.MusicBrainzCatalogue(killTheNoise).MusicBrainzEditions(theBlood, ("rel-blood", "The Blood", ["The Blood"]));
+
+        await _rig.RunAsync();
+
+        var browses = _rig.Harness.RequestedUrls.Where(u => u.Contains("/release?artist=", StringComparison.Ordinal)).ToList();
+        Assert.All(browses, u => Assert.DoesNotContain(";", u, StringComparison.Ordinal));
+        Assert.DoesNotContain(browses, u => u.Contains("%3B", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(["Horizon Missing", "The Blood Owned"], await _rig.Harness.Db.ColumnAsync<string>("SELECT title || ' ' || ownership_state FROM release ORDER BY title")); // Seven Lions' solo album not kept
+        Assert.Equal(["Complete", "Complete"], await _rig.Harness.Db.ColumnAsync<string>("SELECT last_outcome FROM artist_source WHERE source = 'musicbrainz'"));
+    }
+}

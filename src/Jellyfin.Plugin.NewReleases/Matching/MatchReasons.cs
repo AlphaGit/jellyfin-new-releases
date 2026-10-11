@@ -12,6 +12,11 @@ public static partial class MatchReasons
 
     public const string NoCorroboratingAlbum = "no corroborating album";
 
+    /// <summary>Written by the refresh, not a source, for every enabled source of a placeholder artist (spec 009 FR-003).</summary>
+    public const string Placeholder = "placeholder artist";
+
+    private const string PlaceholderStep = "Placeholder";
+
     private static readonly string[] MusicBrainzSteps = ["Id", "Search", "Score", "Unique"];
 
     private static readonly string[] DeezerSteps = ["Name", "Album"];
@@ -26,6 +31,11 @@ public static partial class MatchReasons
         if (reason is null)
         {
             return null;
+        }
+
+        if (reason == Placeholder && (source == SourceLimits.MusicBrainz || source == SourceLimits.Deezer))
+        {
+            return new FailedStep(PlaceholderStep, []);
         }
 
         if (source == SourceLimits.Deezer)
@@ -63,6 +73,11 @@ public static partial class MatchReasons
     /// <summary>Every step of the source in its matching order, marked against the failed one (spec 008 FR-003).</summary>
     public static IReadOnlyList<MatchStep> Steps(string source, FailedStep failed)
     {
+        if (failed.Step == PlaceholderStep)
+        {
+            return [new MatchStep(PlaceholderStep, StepState.Failed, [])]; // spec 009: one step only, however it was found
+        }
+
         var order = source == SourceLimits.Deezer ? DeezerSteps : MusicBrainzSteps;
         var at = Array.IndexOf(order, failed.Step);
         return order.Select((name, i) => new MatchStep(

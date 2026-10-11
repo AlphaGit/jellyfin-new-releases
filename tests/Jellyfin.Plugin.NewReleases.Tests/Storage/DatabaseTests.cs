@@ -29,8 +29,8 @@ public sealed class DatabaseTests : IDisposable
         Assert.True(Directory.Exists(Path.Combine(_dataPath, "newreleases")));
     }
 
-    /// <summary>The newest embedded migration: 002_match_detail (spec 008). A fresh database ends at it.</summary>
-    private const long LatestSchema = 2;
+    /// <summary>The newest embedded migration: 003_source_entry_credit (spec 009). A fresh database ends at it.</summary>
+    private const long LatestSchema = 3;
 
     private static readonly string[] SchemaTables =
         ["library_artist", "artist_source", "release", "source_entry", "edition", "decision", "source_state", "refresh_run", "schema_version"];
@@ -117,6 +117,43 @@ public sealed class DatabaseTests : IDisposable
         Assert.True(await read.ReadAsync());
 
         Assert.Equal(("low score (70)", 1L, LatestSchema), (read.GetString(0), read.GetInt64(1), read.GetInt64(2)));
+    }
+
+    /// <summary>009 data-model: a database at schema 002 migrates to 003; an existing entry reads an empty credit.</summary>
+    [Fact]
+    public async Task OpenAsync_ADatabaseAtSchema002_MigratesTo003_ExistingEntriesHaveAnEmptyCredit()
+    {
+        var db = NewDatabase();
+        Directory.CreateDirectory(Path.GetDirectoryName(db.DatabasePath)!);
+        await using (var old = new Microsoft.Data.Sqlite.SqliteConnection(db.ConnectionString))
+        {
+            await old.OpenAsync();
+            string Script(string name)
+            {
+                using var reader = new StreamReader(typeof(PluginDatabase).Assembly.GetManifestResourceStream($"Jellyfin.Plugin.NewReleases.Storage.Migrations.{name}")!);
+                return reader.ReadToEnd();
+            }
+
+            await using var setup = old.CreateCommand();
+            setup.CommandText = Script("001_initial.sql") + Script("002_match_detail.sql") + """
+                CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL);
+                INSERT INTO schema_version VALUES (1, '2026-09-06T00:00:00Z'), (2, '2026-10-01T00:00:00Z');
+                INSERT INTO library_artist (id, artist_key, jellyfin_id, name, library_ids, album_count) VALUES (1, 'name:blur', '00000000-0000-0000-0000-000000000001', 'Blur', '[]', 1);
+                INSERT INTO release (id, library_artist_id, normalized_title, title, canonical_source, canonical_source_id, primary_type, secondary_types, first_seen_at, last_seen_at, ownership_state)
+                    VALUES (1, 1, 'parklife', 'Parklife', 'musicbrainz', 'rg-1', 'Album', '[]', '2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z', 'Missing');
+                INSERT INTO source_entry (release_id, source, source_release_id, url, source_title, source_primary_type, source_secondary_types, last_seen_run_id)
+                    VALUES (1, 'musicbrainz', 'rg-1', 'https://musicbrainz.org/release-group/rg-1', 'Parklife', 'Album', '[]', 1);
+                """;
+            await setup.ExecuteNonQueryAsync();
+        }
+
+        await using var connection = await db.OpenAsync(CancellationToken.None);
+        await using var row = connection.CreateCommand();
+        row.CommandText = "SELECT credit, (SELECT MAX(version) FROM schema_version) FROM source_entry";
+        await using var read = await row.ExecuteReaderAsync();
+        Assert.True(await read.ReadAsync());
+
+        Assert.Equal(("[]", 3L), (read.GetString(0), read.GetInt64(1)));
     }
 
     private static async Task<long> CountAsync(Microsoft.Data.Sqlite.SqliteConnection connection, string table)

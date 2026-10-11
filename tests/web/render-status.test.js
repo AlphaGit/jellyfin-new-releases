@@ -366,3 +366,43 @@ test('while a refresh is running the next refresh says so', () => {
 
     assert.equal(text('nr-next-refresh'), 'Running now');
 });
+
+const PLACEHOLDER_FIX = 'Placeholder artist, such as Various Artists. If this is a real artist, correct its MusicBrainz ID in Jellyfin\'s metadata editor or artist.nfo.';
+
+/** The fixture with one more artist, a placeholder at both sources (009 contracts/http-api.md). */
+function withPlaceholder() {
+    const base = fixture('admin-status.json');
+    const entry = source => ({ source, state: 'Unmatched', failedStep: 'Placeholder', steps: [{ name: 'Placeholder', state: 'Failed' }], reason: 'placeholder artist' });
+    const various = { jellyfinId: '7d1e5b3a9c2f4e6a8b0d1c3e5f7a9b2c', name: 'Various Artists', reasons: [entry('musicbrainz'), entry('deezer')] };
+    return { ...base, unmatched: [...base.unmatched, various] };
+}
+
+// 009 US1-AS3, FR-003a: a placeholder's trail is the one Placeholder step at every source.
+test('a placeholder reads "<Source>: Placeholder ✗" at every source', () => {
+    const row = unmatchedRows(withPlaceholder())[3];
+
+    assert.deepEqual(reasonMarkup(row).map(visible), ['MusicBrainz: Placeholder ✗', 'Deezer: Placeholder ✗']);
+});
+
+// 009 FR-003a, 008 FR-007: the placeholder fix shows once, though both sources fail at that step.
+test('a placeholder has the placeholder fix once, then Not tracked', () => {
+    const row = unmatchedRows(withPlaceholder())[3];
+
+    assert.deepEqual(fixes(row), [PLACEHOLDER_FIX]);
+    assert.match(row, /<p class="nr-tracking">Not tracked\.<\/p>/);
+});
+
+// 009 FR-003a: the other rows keep 008's trails and fixes.
+test('a placeholder row leaves the other rows as they were', () => {
+    const before = unmatchedRows(fixture('admin-status.json'));
+
+    assert.deepEqual(unmatchedRows(withPlaceholder()).slice(0, 3), before);
+});
+
+// 009 US4: a run closed at start reads "(Interrupted)".
+test('a run closed as interrupted shows its outcome in brackets', () => {
+    const base = fixture('admin-status.json');
+    const { text } = rendered({ ...base, lastRun: { ...base.lastRun, outcome: 'Interrupted', errors: 0 } });
+
+    assert.equal(text('nr-last-refresh'), '9/19/2026, 3:15:00 AM (Interrupted)');
+});

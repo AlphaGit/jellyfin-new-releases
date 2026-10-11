@@ -21,7 +21,14 @@ public sealed record CatalogueItem(
     string Url,
     ReleaseType PrimaryType,
     IReadOnlyList<ReleaseType> SecondaryTypes,
-    string? Date);
+    string? Date)
+{
+    /// <summary>The release's album-artist credit (spec 009 FR-005a). Empty when the source gives none, as Deezer's album lists do.</summary>
+    public IReadOnlyList<CreditedArtist> Credit { get; init; } = [];
+}
+
+/// <summary>One artist credited on a release: MusicBrainz gives the MBID and name.</summary>
+public sealed record CreditedArtist(string? Mbid, string Name);
 
 /// <summary>One page of an artist's catalogue. <paramref name="NextOffset"/> null means last page.</summary>
 public sealed record CataloguePage(IReadOnlyList<CatalogueItem> Items, int? NextOffset, int Total);

@@ -126,6 +126,21 @@ public sealed class SourceStateRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// 009 R8: closes every run left open by a restart, started before <paramref name="before"/>, as Interrupted with
+    /// the current time as its end. Returns the count closed. An install whose outcome check predates Interrupted
+    /// throws a constraint <see cref="SqliteException"/>; the caller decides what that means.
+    /// </summary>
+    public async Task<int> CloseOpenRunsAsync(DateTimeOffset before, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE refresh_run SET ended_at = @now, outcome = 'Interrupted' WHERE ended_at IS NULL AND started_at < @before";
+        command.Parameters.AddWithValue("@now", _clock.GetUtcNow().ToString("O"));
+        command.Parameters.AddWithValue("@before", before.ToString("O"));
+        return await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
     /// <summary>The latest run with outcome Completed. It is no longer what the pages report: 002 reports the last completed catalogue fetch instead.</summary>
     public Task<RefreshRun?> GetLastCompletedRunAsync(CancellationToken ct) => QueryRunAsync("WHERE outcome = 'Completed' ORDER BY ended_at DESC, id DESC", ct);
 

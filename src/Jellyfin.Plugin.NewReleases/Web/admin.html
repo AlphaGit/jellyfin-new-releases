@@ -177,7 +177,7 @@
                         return '<div class="nr-reason">' + esc(displayName(r.source)) + ': ' + line + '</div>';
                     }).join('');
                     var matched = u.reasons.filter(function (r) { return r.state === 'Matched'; }).map(function (r) { return displayName(r.source); });
-                    var fixes = u.reasons.map(fixFor).join('') + '<p class="nr-tracking">' + (matched.length ? 'Tracked through ' + matched.join(', ') + '.' : 'Not tracked.') + '</p>';
+                    var fixes = u.reasons.map(fixFor).filter(function (fix, i, all) { return all.indexOf(fix) === i; }).join('') + '<p class="nr-tracking">' + (matched.length ? 'Tracked through ' + matched.join(', ') + '.' : 'Not tracked.') + '</p>';
                     body.insertAdjacentHTML('beforeend', '<tr><td><a is="emby-linkbutton" class="button-link" href="' + link + '">' + esc(u.name) + '</a></td><td>' + reasons + '</td><td>' + fixes + '</td></tr>');
                 });
                 table.hidden = status.unmatched.length === 0;
@@ -197,6 +197,10 @@
 
             /** 008 FR-008: the fix for one source's failed step, as a paragraph; nothing for a source that did not fail. */
             function fixFor(r) {
+                if (r.failedStep === 'Placeholder') {
+                    return '<p class="nr-fix">Placeholder artist, such as Various Artists. If this is a real artist, correct its MusicBrainz ID in Jellyfin\'s metadata editor or artist.nfo.</p>';
+                }
+
                 if (r.source === 'musicbrainz' && r.failedStep) {
                     var candidates = (r.candidates || []).map(function (c) {
                         return esc(c.name) + ' (' + esc(c.score) + ') <code class="nr-id">' + esc(c.id) + '</code>';

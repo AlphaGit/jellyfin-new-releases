@@ -29,9 +29,10 @@ public sealed class MusicBrainzSource : IReleaseSource
 
     public async Task<ArtistMatch> MatchArtistAsync(LibraryArtistSnapshot artist, CancellationToken ct)
     {
-        if (artist.Mbid is not null)
+        var ids = MusicBrainzIds.Parse(artist.Mbid);
+        if (ids.Count > 0)
         {
-            return ArtistMatch.Matched(artist.Mbid);
+            return ArtistMatch.Matched(string.Join(';', ids)); // 009 FR-005: a joint artist keeps every ID
         }
 
         // Only the artist name leaves the server (FR-017). Quotes inside the name are escaped for the Lucene query.
@@ -63,16 +64,26 @@ public sealed class MusicBrainzSource : IReleaseSource
         return ArtistMatch.Matched(top.Id);
     }
 
-    /// <summary>Browses Official releases with their release groups and yields one item per release group (R2).</summary>
+    /// <summary>
+    /// Browses Official releases with their release groups and credits and yields one item per release group (R2).
+    /// A joint artist browses its first ID and keeps only releases credited to every ID (009 R4).
+    /// </summary>
     public async Task<CataloguePage> FetchCataloguePageAsync(string sourceArtistId, int offset, CancellationToken ct)
     {
-        var url = $"{Base}release?artist={Uri.EscapeDataString(sourceArtistId)}&status=official&inc=release-groups&limit={CataloguePageSize}&offset={offset}&fmt=json";
+        var ids = MusicBrainzIds.Parse(sourceArtistId);
+        var url = $"{Base}release?artist={Uri.EscapeDataString(ids[0])}&status=official&inc=release-groups+artist-credits&limit={CataloguePageSize}&offset={offset}&fmt=json";
         var body = await _http.GetStringAsync(Id, url, ct).ConfigureAwait(false);
         using var json = JsonDocument.Parse(body);
         var items = new List<CatalogueItem>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var release in json.RootElement.GetProperty("releases").EnumerateArray())
         {
+            var credit = Credit(release);
+            if (ids.Count > 1 && !ids.All(id => credit.Any(c => string.Equals(c.Mbid, id, StringComparison.OrdinalIgnoreCase))))
+            {
+                continue;
+            }
+
             var group = release.GetProperty("release-group");
             var groupId = group.GetProperty("id").GetString()!;
             if (!seen.Add(groupId))
@@ -83,13 +94,23 @@ public sealed class MusicBrainzSource : IReleaseSource
             var (primary, secondaries) = ReleaseTypeMapper.MapMusicBrainz(
                 OptionalString(group, "primary-type"),
                 group.TryGetProperty("secondary-types", out var secondary) ? secondary.EnumerateArray().Select(t => t.GetString()!) : []);
-            items.Add(new CatalogueItem(groupId, group.GetProperty("title").GetString()!, $"https://musicbrainz.org/release-group/{groupId}", primary, secondaries, OptionalString(group, "first-release-date")));
+            items.Add(new CatalogueItem(groupId, group.GetProperty("title").GetString()!, $"https://musicbrainz.org/release-group/{groupId}", primary, secondaries, OptionalString(group, "first-release-date")) { Credit = credit });
         }
 
         var total = json.RootElement.GetProperty("release-count").GetInt32();
         var next = offset + CataloguePageSize;
         return new CataloguePage(items, next < total ? next : null, total);
     }
+
+    /// <summary>A release's <c>artist-credit</c> as (MBID, name); empty when absent.</summary>
+    private static IReadOnlyList<CreditedArtist> Credit(JsonElement release)
+        => release.TryGetProperty("artist-credit", out var credit) && credit.ValueKind == JsonValueKind.Array
+            ? credit.EnumerateArray()
+                .Where(c => c.TryGetProperty("artist", out _))
+                .Select(c => c.GetProperty("artist"))
+                .Select(a => new CreditedArtist(OptionalString(a, "id"), OptionalString(a, "name") ?? string.Empty))
+                .ToArray()
+            : [];
 
     /// <summary>A string property, or null when absent or empty (MusicBrainz sends `""` for an unknown date).</summary>
     private static string? OptionalString(JsonElement element, string name)

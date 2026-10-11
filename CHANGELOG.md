@@ -18,6 +18,24 @@ All notable changes to this project are documented here. The format follows
   leaves the table. The stored result returns when you enable the source again.
 - **The administrator status response changed.** Each `unmatched` entry has `reasons` in place of
   `sources` and `hint`. A script that reads `hint` stops finding it.
+- **Ownership counts every artist credited on a release.** A release is owned when its album is in
+  the library under any library artist credited on it, not only under the artist it was found for.
+  An album by an artist the release does not credit is never compared, even with the same title.
+
+### Fixed
+
+- **Placeholder artists no longer flood the refresh.** An artist tagged with a MusicBrainz
+  special-purpose artist, such as Various Artists or [unknown], or matched to Deezer's Various
+  Artists, gets no catalogue request at any source and no releases. The Unmatched artists table
+  lists it with the step Placeholder and a fix for a real artist tagged by mistake.
+- **Joint artists refresh.** An artist that Jellyfin stores with several MusicBrainz IDs, such as
+  "Seven Lions + Kill the Noise", no longer fails every run with a malformed request. Its list
+  holds only the releases credited to all of its members.
+- **A busy source gets time before a retry.** A "retry after 0 seconds" answer no longer replaces
+  the plugin's own backoff, so fewer artists fail while MusicBrainz is busy.
+- **A run interrupted by a restart is closed.** When the plugin starts, a run left open is
+  recorded as Interrupted, so the administrator page no longer shows "(running)" when nothing
+  runs. A database created before this version keeps such a run open and logs one warning.
 
 ## 0.2.1 — 2026-10-10
 

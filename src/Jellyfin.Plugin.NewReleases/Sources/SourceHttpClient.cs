@@ -77,8 +77,10 @@ public sealed class SourceHttpClient : IAsyncDisposable
             }
 
             var retryAfter = response.Headers.RetryAfter?.Delta ?? (response.Headers.RetryAfter?.Date is { } date ? date - _clock.GetUtcNow() : null);
-            var delay = retryAfter ?? SourceLimits.RetryBackoffs[attempt];
-            if (retryAfter is not null)
+            // 009 FR-006/FR-007: the hint never shortens the backoff; only a longer hint is honoured and becomes the floor.
+            var backoff = SourceLimits.RetryBackoffs[attempt];
+            var delay = retryAfter > backoff ? retryAfter.Value : backoff;
+            if (retryAfter > backoff)
             {
                 await _state.SetNextAllowedAtAsync(source, _clock.GetUtcNow() + delay, ct).ConfigureAwait(false);
             }

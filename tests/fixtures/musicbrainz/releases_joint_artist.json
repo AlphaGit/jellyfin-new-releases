@@ -1,0 +1,353 @@
+{
+  "release-count": 158,
+  "release-offset": 0,
+  "releases": [
+    {
+      "asin": null,
+      "date": "2019-04-05",
+      "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+      "packaging": "None",
+      "artist-credit": [
+        {
+          "name": "Seven Lions",
+          "artist": {
+            "type": "Person",
+            "name": "Seven Lions",
+            "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+            "id": "75c016da-48e4-4992-8a10-b7128189b272",
+            "sort-name": "Seven Lions",
+            "disambiguation": "",
+            "country": "US"
+          },
+          "joinphrase": ""
+        }
+      ],
+      "status": "Official",
+      "barcode": "5039060398494",
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "id": "02c7d59f-0bb8-4de4-a24d-f76ad14bc2c1",
+      "release-group": {
+        "primary-type": "Album",
+        "first-release-date": "2019-04-05",
+        "title": "Ophelia Volume 1",
+        "disambiguation": "",
+        "artist-credit": [
+          {
+            "joinphrase": "",
+            "artist": {
+              "type": "Person",
+              "name": "Seven Lions",
+              "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+              "id": "75c016da-48e4-4992-8a10-b7128189b272",
+              "sort-name": "Seven Lions",
+              "disambiguation": "",
+              "country": "US"
+            },
+            "name": "Seven Lions"
+          }
+        ],
+        "secondary-types": [],
+        "secondary-type-ids": [],
+        "id": "36a04cd3-1212-4fc5-92ef-9ce35d756110",
+        "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc"
+      },
+      "release-events": [
+        {
+          "area": {
+            "iso-3166-1-codes": [
+              "XW"
+            ],
+            "sort-name": "[Worldwide]",
+            "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+            "type": null,
+            "name": "[Worldwide]",
+            "type-id": null,
+            "disambiguation": ""
+          },
+          "date": "2019-04-05"
+        }
+      ],
+      "disambiguation": "",
+      "title": "Ophelia Volume 1",
+      "quality": "normal",
+      "cover-art-archive": {
+        "back": false,
+        "front": true,
+        "artwork": true,
+        "count": 1,
+        "darkened": false
+      },
+      "country": "XW",
+      "text-representation": {
+        "script": "Latn",
+        "language": "eng"
+      }
+    },
+    {
+      "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+      "packaging": "None",
+      "asin": null,
+      "date": "2019-03-29",
+      "artist-credit": [
+        {
+          "artist": {
+            "disambiguation": "",
+            "country": "US",
+            "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+            "type": "Person",
+            "name": "Seven Lions",
+            "id": "75c016da-48e4-4992-8a10-b7128189b272",
+            "sort-name": "Seven Lions"
+          },
+          "joinphrase": " + ",
+          "name": "Seven Lions"
+        },
+        {
+          "joinphrase": "",
+          "artist": {
+            "country": "US",
+            "disambiguation": "American DJ & record producer",
+            "sort-name": "Kill the Noise",
+            "id": "a9930a14-8fbb-435a-ad25-f4b6cae71523",
+            "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+            "name": "Kill the Noise",
+            "type": "Person"
+          },
+          "name": "Kill The Noise"
+        }
+      ],
+      "id": "7456321b-e8c8-438b-9d65-2f6c73ef1efb",
+      "release-group": {
+        "title": "The Blood",
+        "primary-type": "Single",
+        "first-release-date": "2019-03-29",
+        "artist-credit": [
+          {
+            "joinphrase": " + ",
+            "artist": {
+              "country": "US",
+              "disambiguation": "",
+              "id": "75c016da-48e4-4992-8a10-b7128189b272",
+              "sort-name": "Seven Lions",
+              "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+              "name": "Seven Lions",
+              "type": "Person"
+            },
+            "name": "Seven Lions"
+          },
+          {
+            "name": "Kill The Noise",
+            "joinphrase": "",
+            "artist": {
+              "name": "Kill the Noise",
+              "type": "Person",
+              "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+              "sort-name": "Kill the Noise",
+              "id": "a9930a14-8fbb-435a-ad25-f4b6cae71523",
+              "disambiguation": "American DJ & record producer",
+              "country": "US"
+            }
+          }
+        ],
+        "secondary-types": [],
+        "disambiguation": "",
+        "id": "7664177b-fe47-4b9d-a541-25d773856561",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "secondary-type-ids": []
+      },
+      "release-events": [
+        {
+          "date": "2019-03-29",
+          "area": {
+            "sort-name": "[Worldwide]",
+            "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+            "iso-3166-1-codes": [
+              "XW"
+            ],
+            "type-id": null,
+            "type": null,
+            "name": "[Worldwide]",
+            "disambiguation": ""
+          }
+        }
+      ],
+      "status": "Official",
+      "barcode": "5039060395196",
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "quality": "normal",
+      "title": "The Blood",
+      "cover-art-archive": {
+        "back": false,
+        "artwork": true,
+        "front": true,
+        "count": 1,
+        "darkened": false
+      },
+      "country": "XW",
+      "text-representation": {
+        "language": "eng",
+        "script": "Latn"
+      },
+      "disambiguation": ""
+    },
+    {
+      "packaging": "None",
+      "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+      "date": "2018-05-18",
+      "asin": null,
+      "artist-credit": [
+        {
+          "artist": {
+            "country": "US",
+            "disambiguation": "",
+            "sort-name": "Seven Lions",
+            "id": "75c016da-48e4-4992-8a10-b7128189b272",
+            "name": "Seven Lions",
+            "type": "Person",
+            "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+          },
+          "joinphrase": " + ",
+          "name": "Seven Lions"
+        },
+        {
+          "name": "Tritonal",
+          "joinphrase": " + ",
+          "artist": {
+            "name": "Tritonal",
+            "type": "Group",
+            "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+            "id": "bbee6bad-1904-460e-b9f7-9e61fc890673",
+            "sort-name": "Tritonal",
+            "disambiguation": "",
+            "country": "US"
+          }
+        },
+        {
+          "artist": {
+            "country": "US",
+            "disambiguation": "American DJ & record producer",
+            "sort-name": "Kill the Noise",
+            "id": "a9930a14-8fbb-435a-ad25-f4b6cae71523",
+            "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+            "name": "Kill the Noise",
+            "type": "Person"
+          },
+          "joinphrase": " feat. ",
+          "name": "Kill the Noise"
+        },
+        {
+          "joinphrase": "",
+          "artist": {
+            "id": "70f7d517-00d3-4102-8edd-39861d1a1ef2",
+            "sort-name": "HALIENE",
+            "type": "Person",
+            "name": "HALIENE",
+            "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+            "country": "US",
+            "disambiguation": "US | electronic"
+          },
+          "name": "HALIENE"
+        }
+      ],
+      "release-group": {
+        "first-release-date": "2018-05-18",
+        "title": "Horizon",
+        "primary-type": "Single",
+        "secondary-types": [],
+        "artist-credit": [
+          {
+            "artist": {
+              "country": "US",
+              "disambiguation": "",
+              "id": "75c016da-48e4-4992-8a10-b7128189b272",
+              "sort-name": "Seven Lions",
+              "name": "Seven Lions",
+              "type": "Person",
+              "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+            },
+            "joinphrase": " + ",
+            "name": "Seven Lions"
+          },
+          {
+            "artist": {
+              "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+              "name": "Tritonal",
+              "type": "Group",
+              "sort-name": "Tritonal",
+              "id": "bbee6bad-1904-460e-b9f7-9e61fc890673",
+              "disambiguation": "",
+              "country": "US"
+            },
+            "joinphrase": " + ",
+            "name": "Tritonal"
+          },
+          {
+            "joinphrase": " feat. ",
+            "artist": {
+              "disambiguation": "American DJ & record producer",
+              "country": "US",
+              "name": "Kill the Noise",
+              "type": "Person",
+              "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+              "sort-name": "Kill the Noise",
+              "id": "a9930a14-8fbb-435a-ad25-f4b6cae71523"
+            },
+            "name": "Kill the Noise"
+          },
+          {
+            "artist": {
+              "sort-name": "HALIENE",
+              "id": "70f7d517-00d3-4102-8edd-39861d1a1ef2",
+              "type": "Person",
+              "name": "HALIENE",
+              "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+              "country": "US",
+              "disambiguation": "US | electronic"
+            },
+            "joinphrase": "",
+            "name": "HALIENE"
+          }
+        ],
+        "disambiguation": "",
+        "id": "78fd73f5-e7a3-47eb-aa9b-d4d160357c7a",
+        "secondary-type-ids": [],
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9"
+      },
+      "release-events": [
+        {
+          "area": {
+            "disambiguation": "",
+            "iso-3166-1-codes": [
+              "XW"
+            ],
+            "sort-name": "[Worldwide]",
+            "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+            "type": null,
+            "name": "[Worldwide]",
+            "type-id": null
+          },
+          "date": "2018-05-18"
+        }
+      ],
+      "id": "a532001b-3773-41e4-bfd7-75f482861a5d",
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "status": "Official",
+      "barcode": "5054283645682",
+      "text-representation": {
+        "script": "Latn",
+        "language": "eng"
+      },
+      "country": "XW",
+      "title": "Horizon",
+      "quality": "normal",
+      "cover-art-archive": {
+        "count": 1,
+        "darkened": false,
+        "back": false,
+        "front": true,
+        "artwork": true
+      },
+      "disambiguation": ""
+    }
+  ]
+}

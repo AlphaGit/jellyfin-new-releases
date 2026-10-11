@@ -205,4 +205,59 @@ public sealed class SourceHttpClientTests : IAsyncLifetime
         Assert.Equal(2, _http.ReceivedRequests.Count);
         Assert.InRange(watch.Elapsed, TimeSpan.FromMilliseconds(900), TimeSpan.FromSeconds(5));
     }
+
+    /// <summary>Sends 503 with the given Retry-After header once, then 200; returns the gap between the two requests.</summary>
+    private async Task<TimeSpan> RetryGapAsync(System.Net.Http.Headers.RetryConditionHeaderValue? retryAfter)
+    {
+        var sentAt = new List<DateTimeOffset>();
+        _http.OnUrlPattern(".*", (_, attempt) =>
+        {
+            sentAt.Add(_clock.GetUtcNow());
+            var response = attempt == 0 ? Response(HttpStatusCode.ServiceUnavailable, "busy") : Response(HttpStatusCode.OK, "{}");
+            response.Headers.RetryAfter = attempt == 0 ? retryAfter : null;
+            return response;
+        });
+
+        await RunAdvancingAsync(Client().GetStringAsync(Deezer, Url, CancellationToken.None), TimeSpan.FromMilliseconds(100));
+        return sentAt[1] - sentAt[0];
+    }
+
+    private async Task<DateTimeOffset?> NextAllowedAtAsync() => (await _db.SourceState.GetAsync(Deezer, CancellationToken.None))?.NextAllowedAt;
+
+    /// <summary>009 US3-AS1, FR-006: "retry after 0 s" does not replace the backoff, and sets no floor.</summary>
+    [Fact]
+    public async Task GetStringAsync_RetryAfterZero_WaitsTheBackoff_SetsNoFloor()
+    {
+        var gap = await RetryGapAsync(new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.Zero));
+
+        Assert.Equal(SourceLimits.RetryBackoffs[0], gap);
+        Assert.Null(await NextAllowedAtAsync());
+    }
+
+    /// <summary>009 US3-AS2, FR-007: a hint longer than the backoff is honoured and becomes the floor.</summary>
+    [Fact]
+    public async Task GetStringAsync_RetryAfterLongerThanTheBackoff_WaitsTheHint_SetsTheFloor()
+    {
+        var gap = await RetryGapAsync(new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.FromSeconds(2)));
+
+        Assert.Equal(TimeSpan.FromSeconds(2), gap);
+        Assert.Equal(Start + TimeSpan.FromSeconds(2), await NextAllowedAtAsync());
+    }
+
+    /// <summary>009 US3-AS3: a hint dated in the past waits the backoff and does not fail.</summary>
+    [Fact]
+    public async Task GetStringAsync_RetryAfterDateInThePast_WaitsTheBackoff_SetsNoFloor()
+    {
+        var gap = await RetryGapAsync(new System.Net.Http.Headers.RetryConditionHeaderValue(Start - TimeSpan.FromMinutes(1)));
+
+        Assert.Equal(SourceLimits.RetryBackoffs[0], gap);
+        Assert.Null(await NextAllowedAtAsync());
+    }
+
+    /// <summary>009 US3-AS4: no hint waits the backoff, as before.</summary>
+    [Fact]
+    public async Task GetStringAsync_NoRetryAfter_WaitsTheBackoff()
+    {
+        Assert.Equal(SourceLimits.RetryBackoffs[0], await RetryGapAsync(null));
+    }
 }

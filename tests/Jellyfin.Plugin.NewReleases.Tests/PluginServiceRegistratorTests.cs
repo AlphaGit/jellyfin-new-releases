@@ -89,4 +89,15 @@ public class PluginServiceRegistratorTests
             provider.GetRequiredService<IEnumerable<IHostedService>>(),
             service => service is PluginPagesRegistrationService);
     }
+
+    /// <summary>009 US4: runs left open by a restart are closed by a hosted service at host start.</summary>
+    [Fact]
+    public async Task RegisterServices_TheInterruptedRunCloserRunsAsAHostedService()
+    {
+        await using var provider = HostContainer.AsTheHostWouldBuildIt();
+
+        Assert.Contains(
+            provider.GetRequiredService<IEnumerable<IHostedService>>(),
+            service => service is InterruptedRunCloser);
+    }
 }

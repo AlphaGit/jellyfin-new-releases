@@ -105,5 +105,5 @@ CREATE TABLE refresh_run (
     releases_found    INTEGER NOT NULL DEFAULT 0,
     editions_fetched  INTEGER NOT NULL DEFAULT 0,
     errors            INTEGER NOT NULL DEFAULT 0,
-    outcome           TEXT    CHECK (outcome IN ('Completed', 'Cancelled', 'Failed'))
+    outcome           TEXT    CHECK (outcome IN ('Completed', 'Cancelled', 'Failed', 'Interrupted'))
 );

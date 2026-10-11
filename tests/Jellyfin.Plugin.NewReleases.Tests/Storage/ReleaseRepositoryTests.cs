@@ -321,4 +321,40 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         Assert.Equal(500, rows.Count);
         Assert.InRange(watch.ElapsedMilliseconds, 0, 500);
     }
+
+    private static readonly CreditedArtist SevenLions = new("75c016da-48e4-4992-8a10-b7128189b272", "Seven Lions");
+    private static readonly CreditedArtist KillTheNoise = new("a9930a14-8fbb-435a-ad25-f4b6cae71523", "Kill The Noise");
+
+    /// <summary>009 R5: the entry stores the release's credit as JSON; the read model carries it.</summary>
+    [Fact]
+    public async Task UpsertFromSourceAsync_StoresTheCredit_TheReleaseReadsIt()
+    {
+        var id = await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("The Blood") with { Credit = [SevenLions, KillTheNoise] }, Run1, Now, CancellationToken.None);
+
+        Assert.Equal(
+            ["""[{"mbid":"75c016da-48e4-4992-8a10-b7128189b272","name":"Seven Lions"},{"mbid":"a9930a14-8fbb-435a-ad25-f4b6cae71523","name":"Kill The Noise"}]"""],
+            await _db.ColumnAsync<string>("SELECT credit FROM source_entry"));
+        Assert.Equal([SevenLions, KillTheNoise], (await _db.Releases.GetAsync(id, CancellationToken.None))!.Credit);
+    }
+
+    /// <summary>009 data-model: the credit is rewritten on every upsert.</summary>
+    [Fact]
+    public async Task UpsertFromSourceAsync_ASecondUpsert_RewritesTheCredit()
+    {
+        await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("The Blood") with { Credit = [SevenLions, KillTheNoise] }, Run1, Now, CancellationToken.None);
+        var id = await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("The Blood") with { Credit = [SevenLions] }, Run1 + 1, Now, CancellationToken.None);
+
+        Assert.Equal([SevenLions], (await _db.Releases.GetAsync(id, CancellationToken.None))!.Credit);
+    }
+
+    /// <summary>009 data-model: the release's credit is the union of its entries'; Deezer's is empty.</summary>
+    [Fact]
+    public async Task GetByArtistAsync_TheCreditIsTheUnionOfTheEntries_AnEmptyCreditStoresAnEmptyArray()
+    {
+        await _db.Releases.UpsertFromSourceAsync(_artist, "musicbrainz", MusicBrainzItem("The Blood") with { Credit = [SevenLions, KillTheNoise] }, Run1, Now, CancellationToken.None);
+        await _db.Releases.UpsertFromSourceAsync(_artist, "deezer", DeezerItem("The Blood"), Run1, Now, CancellationToken.None);
+
+        Assert.Equal([SevenLions, KillTheNoise], Assert.Single(await _db.Releases.GetByArtistAsync(_artist, CancellationToken.None)).Credit);
+        Assert.Equal(["[]"], await _db.ColumnAsync<string>("SELECT credit FROM source_entry WHERE source = 'deezer'"));
+    }
 }

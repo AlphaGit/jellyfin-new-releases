@@ -115,4 +115,33 @@ public sealed class SourceStateRepositoryTests : IAsyncLifetime
         Assert.Equal(second, (await _db.SourceState.GetLatestRunAsync(CancellationToken.None))!.Id);
         Assert.Equal("Cancelled", (await _db.SourceState.GetLatestRunAsync(CancellationToken.None))!.Outcome);
     }
+
+    /// <summary>009 US4-AS1/AS2, R8: an open run started before the instant is closed as Interrupted; others are untouched.</summary>
+    [Fact]
+    public async Task CloseOpenRunsAsync_ClosesOpenRunsStartedBefore_AsInterrupted_LeavesTheRest()
+    {
+        var finished = await _db.SourceState.StartRunAsync(CancellationToken.None);
+        await _db.SourceState.FinishRunAsync(finished, 1, 2, 3, 0, "Completed", CancellationToken.None);
+        var open = await _db.SourceState.StartRunAsync(CancellationToken.None);
+        _clock.Advance(TimeSpan.FromMinutes(5));
+        var before = _clock.GetUtcNow();
+        var startedAtTheInstant = await _db.SourceState.StartRunAsync(CancellationToken.None);
+
+        Assert.Equal(1, await _db.SourceState.CloseOpenRunsAsync(before, CancellationToken.None));
+
+        Assert.Equal(
+            [$"{finished} Completed {LateEvening:O}", $"{open} Interrupted {before:O}", $"{startedAtTheInstant} - -"],
+            await _db.ColumnAsync<string>("SELECT id || ' ' || COALESCE(outcome, '-') || ' ' || COALESCE(ended_at, '-') FROM refresh_run ORDER BY id"));
+    }
+
+    /// <summary>009 edge case "interrupted twice": the second start finds nothing open.</summary>
+    [Fact]
+    public async Task CloseOpenRunsAsync_ASecondCall_ClosesNothing()
+    {
+        await _db.SourceState.StartRunAsync(CancellationToken.None);
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        await _db.SourceState.CloseOpenRunsAsync(_clock.GetUtcNow(), CancellationToken.None);
+
+        Assert.Equal(0, await _db.SourceState.CloseOpenRunsAsync(_clock.GetUtcNow(), CancellationToken.None));
+    }
 }

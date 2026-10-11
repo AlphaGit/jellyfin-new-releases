@@ -297,4 +297,180 @@ public sealed class RefreshNewReleasesTaskTests : IAsyncLifetime
 
         await _musicBrainz.Received(2).MatchArtistAsync(Arg.Is<LibraryArtistSnapshot>(a => a.Name == "Blur"), Arg.Any<CancellationToken>());
     }
+
+    private const string VariousArtists = "89ad4ac3-39f7-470e-963a-56509c546377";
+
+    /// <summary>The stored match rows of one artist, as "source status reason detail".</summary>
+    private async Task<string[]> MatchRowsAsync(string name) => (await _h.Db.ColumnAsync<string>(
+        $"SELECT s.source || ' ' || s.status || ' ' || COALESCE(s.unmatched_reason, '-') || ' ' || COALESCE(s.match_detail, '-') FROM artist_source s JOIN library_artist a ON a.id = s.library_artist_id WHERE a.name = '{name}' ORDER BY s.source DESC")).ToArray();
+
+    private static readonly string[] PlaceholderAtBoth = ["musicbrainz Unmatched placeholder artist -", "deezer Unmatched placeholder artist -"];
+
+    /// <summary>009 US1-AS1, FR-001: a placeholder MBID on the library artist costs no request at any source.</summary>
+    [Fact]
+    public async Task Run_PlaceholderMbid_AsksNoSource_UnmatchedAsPlaceholderAtEverySource()
+    {
+        _library.Artist("Various Artists", VariousArtists); _library.Album("Now 42", "Various Artists", Library);
+        MatchEverything(_musicBrainz, "mb:"); MatchEverything(_deezer, "dz:");
+
+        await RunAsync();
+
+        foreach (var source in new[] { _musicBrainz, _deezer })
+        {
+            await source.DidNotReceive().MatchArtistAsync(Arg.Any<LibraryArtistSnapshot>(), Arg.Any<CancellationToken>());
+            await source.DidNotReceive().FetchCataloguePageAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+        }
+
+        Assert.Equal(PlaceholderAtBoth, await MatchRowsAsync("Various Artists"));
+        Assert.Empty(await StoredTitlesAsync());
+        Assert.Equal(_h.Clock.GetUtcNow(), Assert.Single(await _h.Db.Artists.GetAllAsync(CancellationToken.None)).LastRefreshedAt);
+    }
+
+    /// <summary>009 edge case: a joint artist with one placeholder ID is a real artist; the source drops the placeholder ID.</summary>
+    [Fact]
+    public async Task Run_JointArtistWithOnePlaceholderId_IsNotAPlaceholder()
+    {
+        _library.Artist("Seven Lions", "75c016da-48e4-4992-8a10-b7128189b272;" + VariousArtists); _library.Album("Start Again", "Seven Lions", Library);
+        _configuration.DeezerEnabled = false;
+        MatchEverything(_musicBrainz, "mb:");
+
+        await RunAsync();
+
+        await _musicBrainz.Received(1).FetchCataloguePageAsync("mb:Seven Lions", 0, Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>009 US1-AS2, FR-003: a MusicBrainz search that lands on a placeholder stops both sources before any catalogue.</summary>
+    [Fact]
+    public async Task Run_MusicBrainzSearchFindsAPlaceholder_NoCatalogueAndNoDeezerRequest()
+    {
+        _library.Artist("Various Artists"); _library.Album("Now 42", "Various Artists", Library);
+        MatchEverything(_musicBrainz, "mb:"); MatchEverything(_deezer, "dz:");
+        _musicBrainz.MatchArtistAsync(Arg.Any<LibraryArtistSnapshot>(), Arg.Any<CancellationToken>()).Returns(ArtistMatch.Matched(VariousArtists));
+
+        await RunAsync();
+
+        await _musicBrainz.DidNotReceive().FetchCataloguePageAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+        await _deezer.DidNotReceive().MatchArtistAsync(Arg.Any<LibraryArtistSnapshot>(), Arg.Any<CancellationToken>());
+        await _deezer.DidNotReceive().FetchCataloguePageAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+        Assert.Equal(PlaceholderAtBoth, await MatchRowsAsync("Various Artists"));
+    }
+
+    /// <summary>009 edge case "Deezer's own placeholder": a Deezer match to Various Artists is a placeholder too.</summary>
+    [Fact]
+    public async Task Run_DeezerMatchesItsVariousArtists_NoDeezerCatalogue()
+    {
+        _library.Artist("Various Artists"); _library.Album("Now 42", "Various Artists", Library);
+        _configuration.MusicBrainzEnabled = false;
+        MatchEverything(_deezer, "dz:");
+        _deezer.MatchArtistAsync(Arg.Any<LibraryArtistSnapshot>(), Arg.Any<CancellationToken>()).Returns(ArtistMatch.Matched("5080"));
+
+        await RunAsync();
+
+        await _deezer.DidNotReceive().FetchCataloguePageAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+        Assert.Equal(["deezer Unmatched placeholder artist -"], await MatchRowsAsync("Various Artists"));
+    }
+
+    /// <summary>009 R2: a match stored by an earlier version (the live server's Various Artists) is caught before its catalogue.</summary>
+    [Fact]
+    public async Task Run_StoredMatchToAPlaceholder_BecomesUnmatched_WithNoCatalogue()
+    {
+        _library.Artist("Various Artists"); _library.Album("Now 42", "Various Artists", Library);
+        MatchEverything(_musicBrainz, "mb:"); MatchEverything(_deezer, "dz:");
+        var artist = await _h.Db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:various artists", Guid.NewGuid(), "Various Artists", null, [Library], []), CancellationToken.None);
+        await _h.Db.Artists.SetMatchAsync(artist, "musicbrainz", ArtistMatch.Matched(VariousArtists), CancellationToken.None);
+
+        await RunAsync();
+
+        await _musicBrainz.DidNotReceive().FetchCataloguePageAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+        await _deezer.DidNotReceive().FetchCataloguePageAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+        Assert.Equal(PlaceholderAtBoth, await MatchRowsAsync("Various Artists"));
+    }
+
+    /// <summary>009 US1-AS4, FR-009: a real artist beside a placeholder is refreshed as before.</summary>
+    [Fact]
+    public async Task Run_RealArtistBesideAPlaceholder_IsRefreshedAsBefore()
+    {
+        _library.Artist("Various Artists", VariousArtists); _library.Album("Now 42", "Various Artists", Library);
+        _library.Artist("Daft Punk"); _library.Album("Homework", "Daft Punk", Library);
+        MatchEverything(_musicBrainz, "mb:"); MatchEverything(_deezer, "dz:");
+
+        await RunAsync();
+
+        await _musicBrainz.Received(1).FetchCataloguePageAsync("mb:Daft Punk", 0, Arg.Any<CancellationToken>());
+        await _deezer.Received(1).FetchCataloguePageAsync("dz:Daft Punk", 0, Arg.Any<CancellationToken>());
+        Assert.Equal(["musicbrainz Matched - -", "deezer Matched - -"], await MatchRowsAsync("Daft Punk"));
+    }
+
+    private const string SevenLionsMbid = "75c016da-48e4-4992-8a10-b7128189b272";
+    private const string KillTheNoiseMbid = "a9930a14-8fbb-435a-ad25-f4b6cae71523";
+
+    /// <summary>"The Blood", found for Seven Lions at MusicBrainz with the given credit; its one edition has the track "The Blood".</summary>
+    private void TheBloodFoundForSevenLions(params CreditedArtist[] credit)
+    {
+        _configuration.DeezerEnabled = false;
+        MatchEverything(_musicBrainz, "mb:");
+        _musicBrainz.FetchCataloguePageAsync("mb:Seven Lions", 0, Arg.Any<CancellationToken>())
+            .Returns(new CataloguePage([Item("musicbrainz", "rg-blood", "The Blood") with { Credit = credit }], null, 1));
+        _musicBrainz.FetchEditionsAsync("rg-blood", Arg.Any<CancellationToken>())
+            .Returns([new EditionTrackList("rel-blood", "The Blood", ["the blood"])]);
+    }
+
+    /// <summary>"The Blood"'s ownership state and library album, or "-" for none.</summary>
+    private async Task<string> TheBloodOwnershipAsync()
+        => Assert.Single(await _h.Db.ColumnAsync<string>("SELECT ownership_state || ' ' || COALESCE(library_album_id, '-') FROM release WHERE title = 'The Blood'"));
+
+    /// <summary>009 US2-AS5, FR-005a: a release is owned by a library album filed under another credited artist (by MBID).</summary>
+    [Fact]
+    public async Task Run_ReleaseCreditedToAnotherLibraryArtist_IsOwnedByThatArtistsAlbum()
+    {
+        _library.Artist("Seven Lions", SevenLionsMbid); _library.Album("Start Again", "Seven Lions", Library);
+        _library.Artist("Kill the Noise", KillTheNoiseMbid);
+        var album = _library.Album("The Blood", "Kill the Noise", Library, trackTitles: "The Blood");
+        TheBloodFoundForSevenLions(new CreditedArtist(SevenLionsMbid, "Seven Lions"), new CreditedArtist(KillTheNoiseMbid, "Kill the Noise"));
+
+        await RunAsync();
+
+        Assert.Equal($"Owned {album.Id}", await TheBloodOwnershipAsync());
+    }
+
+    /// <summary>009 FR-005a: with no MBID on the library side, the credited artist is found by normalized name.</summary>
+    [Fact]
+    public async Task Run_CreditedArtistWithoutMbid_IsMatchedByName()
+    {
+        _library.Artist("Seven Lions", SevenLionsMbid); _library.Album("Start Again", "Seven Lions", Library);
+        _library.Artist("Kill The Noise");
+        var album = _library.Album("The Blood", "Kill The Noise", Library, trackTitles: "The Blood");
+        TheBloodFoundForSevenLions(new CreditedArtist(SevenLionsMbid, "Seven Lions"), new CreditedArtist(KillTheNoiseMbid, "Kill the Noise"));
+
+        await RunAsync();
+
+        Assert.Equal($"Owned {album.Id}", await TheBloodOwnershipAsync());
+    }
+
+    /// <summary>009 US2-AS6: an uncredited artist's same-title album is never compared.</summary>
+    [Fact]
+    public async Task Run_SameTitleAlbumOfAnUncreditedArtist_IsNotCompared()
+    {
+        _library.Artist("Seven Lions", SevenLionsMbid); _library.Album("Start Again", "Seven Lions", Library);
+        _library.Artist("Someone Else"); _library.Album("The Blood", "Someone Else", Library, trackTitles: "The Blood");
+        TheBloodFoundForSevenLions(new CreditedArtist(SevenLionsMbid, "Seven Lions"), new CreditedArtist(KillTheNoiseMbid, "Kill the Noise"));
+
+        await RunAsync();
+
+        Assert.Equal("Missing -", await TheBloodOwnershipAsync());
+        await _musicBrainz.DidNotReceive().FetchEditionsAsync("rg-blood", Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>009 R5: a release with no credit (Deezer) is decided against the found-for artist's albums only, as before.</summary>
+    [Fact]
+    public async Task Run_ReleaseWithoutCredit_ComparesOnlyTheFoundForArtistsAlbums()
+    {
+        _library.Artist("Seven Lions", SevenLionsMbid); _library.Album("Start Again", "Seven Lions", Library);
+        _library.Artist("Kill the Noise", KillTheNoiseMbid); _library.Album("The Blood", "Kill the Noise", Library, trackTitles: "The Blood");
+        TheBloodFoundForSevenLions();
+
+        await RunAsync();
+
+        Assert.Equal("Missing -", await TheBloodOwnershipAsync());
+    }
 }

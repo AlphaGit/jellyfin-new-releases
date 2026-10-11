@@ -64,8 +64,8 @@ public sealed class ReleaseRepository
         {
             entry.Transaction = transaction;
             entry.CommandText = """
-                INSERT INTO source_entry (release_id, source, source_release_id, url, source_title, source_primary_type, source_secondary_types, source_date, last_seen_run_id)
-                VALUES (@releaseId, @source, @sourceReleaseId, @url, @title, @primary, @secondaries, @date, @runId)
+                INSERT INTO source_entry (release_id, source, source_release_id, url, source_title, source_primary_type, source_secondary_types, source_date, last_seen_run_id, credit)
+                VALUES (@releaseId, @source, @sourceReleaseId, @url, @title, @primary, @secondaries, @date, @runId, @credit)
                 ON CONFLICT (release_id, source) DO UPDATE SET
                     source_release_id = excluded.source_release_id,
                     url = excluded.url,
@@ -73,7 +73,8 @@ public sealed class ReleaseRepository
                     source_primary_type = excluded.source_primary_type,
                     source_secondary_types = excluded.source_secondary_types,
                     source_date = excluded.source_date,
-                    last_seen_run_id = excluded.last_seen_run_id
+                    last_seen_run_id = excluded.last_seen_run_id,
+                    credit = excluded.credit
                 """;
             entry.Parameters.AddWithValue("@releaseId", releaseId);
             entry.Parameters.AddWithValue("@source", source);
@@ -84,6 +85,7 @@ public sealed class ReleaseRepository
             entry.Parameters.AddWithValue("@secondaries", JsonSerializer.Serialize(item.SecondaryTypes.Select(t => t.ToString())));
             entry.Parameters.AddWithValue("@date", (object?)item.Date ?? DBNull.Value);
             entry.Parameters.AddWithValue("@runId", runId);
+            entry.Parameters.AddWithValue("@credit", JsonSerializer.Serialize(item.Credit, JsonWeb));
             await entry.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         }
 
@@ -402,7 +404,8 @@ public sealed class ReleaseRepository
 
     private const string ReleaseColumns =
         "SELECT id, library_artist_id, normalized_title, title, canonical_source, canonical_source_id, primary_type, secondary_types, release_date, date_sort, " +
-        "first_seen_at, last_seen_at, ownership_state, match_method, library_album_id, compared_edition_id, missing_tracks, ownership_checked_at";
+        "first_seen_at, last_seen_at, ownership_state, match_method, library_album_id, compared_edition_id, missing_tracks, ownership_checked_at, " +
+        "(SELECT json_group_array(json(c.value)) FROM source_entry e, json_each(e.credit) c WHERE e.release_id = release.id) AS credit";
 
     private static Release ReadRelease(SqliteDataReader r) => new(
         r.GetInt64(0),
@@ -422,5 +425,8 @@ public sealed class ReleaseRepository
         r.IsDBNull(14) ? null : Guid.Parse(r.GetString(14)),
         r.IsDBNull(15) ? null : r.GetInt64(15),
         JsonSerializer.Deserialize<string[]>(r.GetString(16)) ?? [],
-        r.IsDBNull(17) ? null : DateTimeOffset.Parse(r.GetString(17), CultureInfo.InvariantCulture));
+        r.IsDBNull(17) ? null : DateTimeOffset.Parse(r.GetString(17), CultureInfo.InvariantCulture))
+    {
+        Credit = (JsonSerializer.Deserialize<CreditedArtist[]>(r.GetString(18), JsonWeb) ?? []).Distinct().ToArray(),
+    };
 }

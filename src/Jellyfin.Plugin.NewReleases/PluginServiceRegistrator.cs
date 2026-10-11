@@ -49,5 +49,6 @@ public sealed class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddSingleton(new PluginPagesGateway(
             () => AssemblyLoadContext.All.SelectMany(context => context.Assemblies)));
         serviceCollection.AddHostedService<PluginPagesRegistrationService>();
+        serviceCollection.AddHostedService<InterruptedRunCloser>();
     }
 }
