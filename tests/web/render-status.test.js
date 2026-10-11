@@ -80,7 +80,7 @@ test('a healthy source hides its last error', () => {
 
 /** The source each Reason line of a row starts with. */
 function reasonLineSources(row) {
-    return [...row.matchAll(/<div class="nr-reason">([^:<]+): /g)].map(m => m[1]);
+    return [...row.matchAll(/<div class="nr-reason">([^:<]+):/g)].map(m => m[1]);
 }
 
 // 008 FR-001: the table's columns are Artist, Reason, How to fix.
@@ -90,8 +90,8 @@ test('the unmatched table is headed Artist, Reason, How to fix', () => {
     assert.deepEqual([...head.matchAll(/<th>([^<]*)<\/th>/g)].map(m => m[1]), ['Artist', 'Reason', 'How to fix']);
 });
 
-// 008 FR-001, FR-002: one Reason line per enabled source, led by the name the Sources section shows.
-test('each unmatched artist has one Reason line per reasons entry, led by the source display name', () => {
+// 008 FR-001, FR-002: one Reason entry per enabled source, led by the name the Sources section shows.
+test('each unmatched artist has one Reason entry per reasons entry, led by the source display name', () => {
     const rows = unmatchedRows(fixture('admin-status.json'));
 
     assert.deepEqual(rows.map(reasonLineSources), [['MusicBrainz', 'Deezer'], ['MusicBrainz', 'Deezer'], ['MusicBrainz', 'Deezer']]);
@@ -266,12 +266,12 @@ function trailSteps(line) {
     return [...line.matchAll(/<span class="nr-step nr-step-(\w+)">([^ <]+)/g)].map(m => [m[2], m[1]]);
 }
 
-// 008 FR-003: a trail shows every step of the source in its order, by short name, joined by " · ".
-test('a trail shows every step in order by short name, ID for Id, joined by " · "', () => {
+// 008 FR-003: a trail shows every step of the source in its order, by short name, one bullet per step.
+test('a trail shows every step in order by short name, ID for Id, one bullet per step', () => {
     const [musicBrainz] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[1]);
 
     assert.deepEqual(trailSteps(musicBrainz).map(([name]) => name), ['ID', 'Search', 'Score', 'Unique']);
-    assert.equal(musicBrainz.split('</span> · <span class="nr-step').length, 4);
+    assert.equal(musicBrainz.split('<li><span class="nr-step').length - 1, 4);
 });
 
 /** Each step of a trail line as [mark, words for a screen reader]. */
@@ -304,7 +304,7 @@ test('a not-reached step shows –, the words "not reached", and the dimming cla
 // 008 FR-010: a screen reader skips the mark and reads the words; the state is never in the mark or colour alone.
 test('every step hides its mark from screen readers and states itself in visually hidden words', () => {
     const [musicBrainz] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[1]);
-    const pairs = musicBrainz.split(' · ').map(step => (/<span aria-hidden="true">([✓✗–])<\/span><span class="nr-sr">([^<]*)<\/span>/.exec(step) || []).slice(1));
+    const pairs = musicBrainz.split('<li>').slice(1).map(step => (/<span aria-hidden="true">([✓✗–])<\/span><span class="nr-sr">([^<]*)<\/span>/.exec(step) || []).slice(1));
 
     assert.deepEqual(pairs, [['✗', 'failed'], ['✓', 'passed'], ['✓', 'passed'], ['✗', 'failed']]);
 });
@@ -313,20 +313,20 @@ test('every step hides its mark from screen readers and states itself in visuall
 test('a failed Score step shows its score after the mark', () => {
     const [musicBrainz] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[2]);
 
-    assert.match(visible(musicBrainz), / · Score ✗ 70 · /);
+    assert.match(visible(musicBrainz), /\nScore ✗ 70\n/);
 });
 
 // 008 FR-004: a failed Unique step shows the two closest scores.
 test('a failed Unique step shows both scores: "Unique ✗ 100 vs 96"', () => {
     const [musicBrainz] = reasonMarkup(unmatchedRows(fixture('admin-status.json'))[1]);
 
-    assert.match(visible(musicBrainz), / · Unique ✗ 100 vs 96$/);
+    assert.match(visible(musicBrainz), /\nUnique ✗ 100 vs 96$/);
 });
 
-// 008 FR-005, SC-004 (research R7): the longest trail any source can write fits the one-line budget of 64 characters.
-const ONE_LINE_BUDGET = 64;
+// 008 FR-005, SC-004 (research R7): each step of the longest trail any source can write fits a narrow Reason column of 20 characters.
+const ONE_LINE_BUDGET = 20;
 
-test('the longest possible trail is at most 64 characters as a reader sees it', () => {
+test('every step of the longest possible trail is at most 20 characters as a reader sees it', () => {
     const longest = {
         source: 'musicbrainz', state: 'Unmatched', failedStep: 'Unique', reason: 'ambiguous (score 100 vs 95)',
         steps: [{ name: 'Id', state: 'Failed' }, { name: 'Search', state: 'Passed' }, { name: 'Score', state: 'Passed' }, { name: 'Unique', state: 'Failed', values: [100, 95] }],
@@ -334,8 +334,8 @@ test('the longest possible trail is at most 64 characters as a reader sees it', 
 
     const [line] = reasonMarkup(unmatchedRows(withReason(1, 0, longest))[1]);
 
-    assert.equal(visible(line), 'MusicBrainz: ID ✗ · Search ✓ · Score ✓ · Unique ✗ 100 vs 95');
-    assert.ok(visible(line).length <= ONE_LINE_BUDGET, `${visible(line).length} characters`);
+    assert.equal(visible(line), 'MusicBrainz:\nID ✗\nSearch ✓\nScore ✓\nUnique ✗ 100 vs 95');
+    for (const step of visible(line).split('\n')) assert.ok(step.length <= ONE_LINE_BUDGET, `${step}: ${step.length} characters`);
 });
 
 // The Artist cell links the artist's Jellyfin page, with the name written escaped.
@@ -381,7 +381,7 @@ function withPlaceholder() {
 test('a placeholder reads "<Source>: Placeholder ✗" at every source', () => {
     const row = unmatchedRows(withPlaceholder())[3];
 
-    assert.deepEqual(reasonMarkup(row).map(visible), ['MusicBrainz: Placeholder ✗', 'Deezer: Placeholder ✗']);
+    assert.deepEqual(reasonMarkup(row).map(visible), ['MusicBrainz:\nPlaceholder ✗', 'Deezer:\nPlaceholder ✗']);
 });
 
 // 009 FR-003a, 008 FR-007: the placeholder fix shows once, though both sources fail at that step.

@@ -526,7 +526,18 @@ test('the stylesheet dims a not-reached step and hides the screen-reader words v
     assert.deepEqual([hidden.position, hidden.width, hidden.height, hidden.overflow], ['absolute', '1px', '1px', 'hidden']);
 });
 
-// 008 FR-005, SC-004: a Reason line stays on one line.
-test('a Reason line does not wrap', () => {
+// 008 FR-005, SC-004: a Reason step stays on one line.
+test('a Reason step does not wrap', () => {
     assert.equal(adminDeclarations('.nr-reason')['white-space'], 'nowrap');
+});
+
+// 008 FR-005, SC-004 (research R7): a line between rows, every cell at the top of its row, the artist left-aligned,
+// and the Reason column shrunk to its bulleted steps so How to fix takes the rest of the width.
+test('the Unmatched artists table separates rows and sizes its columns', () => {
+    assert.equal(adminDeclarations('#nr-unmatched')['border-collapse'], 'collapse');
+    assert.match(adminDeclarations('#nr-unmatched tbody td')['border-top'], /solid/);
+    assert.deepEqual([adminDeclarations('#nr-unmatched th:nth-child(1)').width, adminDeclarations('#nr-unmatched th:nth-child(2)').width], ['25%', '1%']);
+    assert.equal(adminDeclarations('#nr-unmatched tbody td')['vertical-align'], 'top');
+    assert.equal(adminDeclarations('#nr-unmatched td > :first-child')['margin-top'], '0');
+    assert.equal(adminDeclarations('#nr-unmatched td:first-child')['text-align'], 'left');
 });

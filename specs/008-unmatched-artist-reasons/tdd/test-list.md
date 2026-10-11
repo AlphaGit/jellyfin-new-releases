@@ -140,12 +140,12 @@ through `AcceptanceRig`.
 | id  | behavior | traces | kind | state | test |
 | --- | --- | --- | --- | --- | --- |
 | U52 | The table header reads Artist, Reason, How to fix | FR-001 | example | DONE | `tests/web/render-status.test.js::the unmatched table is headed Artist, Reason, How to fix` |
-| U53 | The Reason cell has one line per `reasons` entry, led by the source's `displayName` | FR-001, FR-002 | example | DONE | `tests/web/render-status.test.js::each unmatched artist has one Reason line per reasons entry, led by the source display name` |
+| U53 | The Reason cell has one entry per `reasons` entry, led by the source's `displayName` | FR-001, FR-002 | example | DONE | `tests/web/render-status.test.js::each unmatched artist has one Reason entry per reasons entry, led by the source display name` |
 | U54 | A `Matched` entry's line reads `Matched` | US2-AS3 | example | DONE | `tests/web/render-status.test.js::a matched source reads "<Source>: Matched" and nothing else` |
 | U55 | A `NotChecked` entry's line reads `Not checked` | EC-notchecked | example | DONE | `tests/web/render-status.test.js::a source not yet checked reads "<Source>: Not checked"` |
 | U56 | An entry with no failed step shows its stored reason text, escaped | EC-unknown, INV-esc | example | DONE | `tests/web/render-status.test.js::an entry with no failed step shows its stored reason text, escaped` |
 | U57 | The old fixed hint sentence appears nowhere on the page | SC-001 | example | DONE | `tests/web/render-status.test.js::the old fixed hint sentence appears nowhere on the page` |
-| U58 | A trail shows every step as short name and mark, joined by ` · `, with `Id` written `ID` | FR-003 | example | DONE | `tests/web/render-status.test.js::a trail shows every step in order by short name, ID for Id, joined by " · "` |
+| U58 | A trail shows every step as short name and mark, one step per bullet, with `Id` written `ID` | FR-003 | example | DONE | `tests/web/render-status.test.js::a trail shows every step in order by short name, ID for Id, one bullet per step` |
 | U59 | A passed step shows `✓` and the words `passed` | FR-003, FR-010 | example | DONE | `tests/web/render-status.test.js::a passed step shows ✓ and the words "passed"` |
 | U60 | A failed step shows `✗` and the words `failed` | FR-003, FR-010 | example | DONE | `tests/web/render-status.test.js::a failed step shows ✗ and the words "failed"` |
 | U61 | A not-reached step shows `–`, the words `not reached`, and the dimming class | FR-003, FR-010 | example | DONE | `tests/web/render-status.test.js::a not-reached step shows –, the words "not reached", and the dimming class` |
@@ -153,8 +153,9 @@ through `AcceptanceRig`.
 | U63 | The stylesheet gives the dimming class an `opacity` below 1 and makes `.nr-sr` visually hidden | FR-010 | example | DONE | `tests/web/styles.test.js::the stylesheet dims a not-reached step and hides the screen-reader words visually` |
 | U64 | A failed `Score` step shows its value after the mark: `Score ✗ 70` | FR-004 | example | DONE | `tests/web/render-status.test.js::a failed Score step shows its score after the mark` |
 | U65 | A failed `Unique` step shows both values: `Unique ✗ 92 vs 90` | FR-004 | example | DONE | `tests/web/render-status.test.js::a failed Unique step shows both scores: "Unique ✗ 100 vs 96"` |
-| U66 | The trail line declares `white-space: nowrap` | FR-005, SC-004 | example | DONE | `tests/web/styles.test.js::a Reason line does not wrap` |
-| U67 | The longest possible trail text is at most 64 characters | FR-005, SC-004 | example | DONE | `tests/web/render-status.test.js::the longest possible trail is at most 64 characters as a reader sees it` |
+| U66 | The Reason entry declares `white-space: nowrap` | FR-005, SC-004 | example | DONE | `tests/web/styles.test.js::a Reason step does not wrap` |
+| U67 | Every step of the longest possible trail is at most 20 characters | FR-005, SC-004 | example | DONE | `tests/web/render-status.test.js::every step of the longest possible trail is at most 20 characters as a reader sees it` |
+| U84 | The table separates rows with a line, aligns every cell to the top, left-aligns the artist, and sizes Artist 25%, Reason 1%, How to fix the rest | FR-005, SC-004 | example | DONE | `tests/web/styles.test.js::the Unmatched artists table separates rows and sizes its columns` |
 
 ### `src/Jellyfin.Plugin.NewReleases/Web/admin.html`: How to fix column
 
@@ -189,8 +190,8 @@ U83; EC-notchecked on U32, U33, U44 and U55.
 - Links to a source's site: clarification 5, FR-016 forbids them.
 - A MusicBrainz artist ID that is set but wrong, and an artist with no Jellyfin page: spec edge
   cases, out of scope.
-- Pixel width at 1280 pixels (SC-004): the fake DOM measures no pixels; U66–U67 assert the
-  declarations and a character bound, and the maintainer's real-server pass checks the width
+- Pixel width at 1280 pixels (SC-004): the fake DOM measures no pixels; U66, U67 and U84 assert
+  the declarations and a character bound, and the maintainer's real-server pass checks the width
   (research R7).
 - SC-002 and SC-003 (reading time, naming the failed step without documentation): human
   measures, checked in the real-server pass; U58–U61 and U79–U80 pin what they read.

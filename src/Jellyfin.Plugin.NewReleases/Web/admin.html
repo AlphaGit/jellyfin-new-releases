@@ -14,6 +14,14 @@
         #newreleasesConfigPage .nr-reason { white-space: nowrap; }
         #newreleasesConfigPage .nr-step-notreached { opacity: 0.5; }
         #newreleasesConfigPage .nr-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+        #newreleasesConfigPage #nr-unmatched { width: 100%; border-collapse: collapse; }
+        #newreleasesConfigPage #nr-unmatched th, #newreleasesConfigPage #nr-unmatched td { padding: .5em 1em .5em 0; }
+        #newreleasesConfigPage #nr-unmatched tbody td { border-top: 1px solid rgba(127,127,127,.25); vertical-align: top; }
+        #newreleasesConfigPage .nr-steps { margin: .15em 0 .4em; padding-left: 1.4em; }
+        #newreleasesConfigPage #nr-unmatched td > :first-child { margin-top: 0; }
+        #newreleasesConfigPage #nr-unmatched th:nth-child(1) { width: 25%; }
+        #newreleasesConfigPage #nr-unmatched th:nth-child(2) { width: 1%; }
+        #newreleasesConfigPage #nr-unmatched td:first-child { text-align: left; }
     </style>
 
     <div data-role="content">
@@ -172,9 +180,9 @@
                     var link = '#/details?id=' + encodeURIComponent(u.jellyfinId) + '&serverId=' + encodeURIComponent(ApiClient.serverId());
                     var reasons = u.reasons.map(function (r) {
                         var line = r.failedStep
-                            ? r.steps.map(stepFor).join(' · ')
-                            : esc(r.reason || (r.state === 'NotChecked' ? 'Not checked' : r.state));
-                        return '<div class="nr-reason">' + esc(displayName(r.source)) + ': ' + line + '</div>';
+                            ? '<ul class="nr-steps">' + r.steps.map(function (step) { return '<li>' + stepFor(step) + '</li>'; }).join('') + '</ul>'
+                            : ' ' + esc(r.reason || (r.state === 'NotChecked' ? 'Not checked' : r.state));
+                        return '<div class="nr-reason">' + esc(displayName(r.source)) + ':' + line + '</div>';
                     }).join('');
                     var matched = u.reasons.filter(function (r) { return r.state === 'Matched'; }).map(function (r) { return displayName(r.source); });
                     var fixes = u.reasons.map(fixFor).filter(function (fix, i, all) { return all.indexOf(fix) === i; }).join('') + '<p class="nr-tracking">' + (matched.length ? 'Tracked through ' + matched.join(', ') + '.' : 'Not tracked.') + '</p>';

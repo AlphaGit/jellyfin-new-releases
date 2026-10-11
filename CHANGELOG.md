@@ -3,6 +3,14 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Changed
+
+- **The Unmatched artists table is easier to read.** Reason lists each source's matching steps as
+  bullets, one step per line, so the column stays narrow and How to fix gets most of the width.
+  A line separates the rows, and every cell starts at the top of its row.
+
 ## 0.3.0 — 2026-10-10
 
 ### Changed

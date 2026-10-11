@@ -66,13 +66,13 @@ const reasonLines = (status, row) => reasonMarkup(unmatchedRows(status)[row]);
 test('A7 (US2-AS1): a MusicBrainz low-score line reads ID failed, Search passed, Score failed with 70, Unique not reached', () => {
     const [musicBrainz] = reasonLines(fixture('admin-status.json'), 2);
 
-    assert.equal(visible(musicBrainz), 'MusicBrainz: ID ✗ · Search ✓ · Score ✗ 70 · Unique –');
+    assert.equal(visible(musicBrainz), 'MusicBrainz:\nID ✗\nSearch ✓\nScore ✗ 70\nUnique –');
 });
 
 test('A8 (US2-AS2): a Deezer album line reads Name passed, Album failed', () => {
     const [, deezer] = reasonLines(fixture('admin-status.json'), 0);
 
-    assert.equal(visible(deezer), 'Deezer: Name ✓ · Album ✗');
+    assert.equal(visible(deezer), 'Deezer:\nName ✓\nAlbum ✗');
 });
 
 test('A12 (US2-AS6): every step carries its state in words for a screen reader, apart from its mark', () => {

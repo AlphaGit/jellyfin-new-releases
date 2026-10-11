@@ -89,9 +89,10 @@ which values), so the page parses no reason text (FR-013). The page owns the wor
 ## R6 — Rendering the trail
 
 **Decision**: Each step renders as `<span class="nr-step nr-step-{state}">{name} <span
-aria-hidden="true">{mark}</span><span class="nr-sr">{state in words}</span>{value}</span>`, joined
-by ` · `. `nr-step-notreached` is dimmed with `opacity`. `nr-sr` is the visually hidden text
-pattern. The trail line has `white-space: nowrap`. A MusicBrainz candidate's ID renders in a
+aria-hidden="true">{mark}</span><span class="nr-sr">{state in words}</span>{value}</span>`, each
+in its own `<li>` of a `<ul class="nr-steps">` after the source's name (amended 2026-10-11; the steps
+were first joined by ` · ` on one line). `nr-step-notreached` is dimmed with `opacity`. `nr-sr` is
+the visually hidden text pattern. The Reason entry has `white-space: nowrap`, so no step wraps. A MusicBrainz candidate's ID renders in a
 `<code>` with `user-select: all`, so one click selects all of it.
 
 **Rationale**: FR-010 needs the state in words for a screen reader, and not in color alone; the
@@ -100,11 +101,14 @@ mark and the dimming are both visual extras. No external asset, no framework.
 **Alternatives considered**: `aria-label` on the span. Rejected: the step's visible name would be
 replaced, not added to.
 
-## R7 — Measuring the one-line rule (FR-005, SC-004)
+## R7 — Measuring the narrow Reason column (FR-005, SC-004)
 
-**Decision**: A page test asserts `white-space: nowrap` on the trail and that the longest possible
-trail text (MusicBrainz with `Unique ✗ 100 vs 95`) is at most 64 characters. The real-browser
-pass in [quickstart.md](./quickstart.md) checks the 1280-pixel width by eye.
+**Decision**: A page test asserts `white-space: nowrap` on the Reason entry and that every step of
+the longest possible trail (MusicBrainz with `Unique ✗ 100 vs 95`) is at most 20 characters. A
+stylesheet test asserts the row line, the top alignment, the left-aligned artist, and the column
+widths: Artist 25%, Reason 1% (as narrow as its content), How to fix the rest. The real-browser
+pass in [quickstart.md](./quickstart.md) checks the 1280-pixel width by eye. (Amended 2026-10-11;
+the first rule was one line of at most 64 characters per source.)
 
 **Rationale**: The string-capturing fake DOM measures no pixels, the same limit `007` recorded
 (its R11).

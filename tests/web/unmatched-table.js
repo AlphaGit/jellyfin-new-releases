@@ -22,7 +22,7 @@ function fixes(row) {
     return [...row.matchAll(/<p class="nr-fix">([\s\S]*?)<\/p>/g)].map(m => m[1].replace(/<[^>]*>/g, ''));
 }
 
-/** A trail line as a sighted reader sees it: screen-reader words removed, then every tag. */
-const visible = line => line.replace(/<span class="nr-sr">[^<]*<\/span>/g, '').replace(/<[^>]*>/g, '');
+/** A Reason as a sighted reader sees it: screen-reader words removed, each bullet on its own line, then every tag. */
+const visible = line => line.replace(/<span class="nr-sr">[^<]*<\/span>/g, '').replace(/<li>/g, '\n').replace(/<[^>]*>/g, '');
 
 module.exports = { unmatchedRows, reasonMarkup, fixes, visible };

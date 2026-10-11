@@ -59,7 +59,7 @@ Replace, in the `001` contract's `admin.html` section, "sources and reasons, the
 sentence" with:
 
 - Columns **Artist**, **Reason**, **How to fix**.
-- **Reason**: one line per entry of `reasons`, `<displayName>: ` then the trail, `Matched`, or
-  `Not checked`. The trail and the fix wording are specified in
+- **Reason**: one entry per item of `reasons`, `<displayName>:` then the trail as a bulleted
+  list, `Matched`, or `Not checked`. The trail and the fix wording are specified in
   [admin-page.md](./admin-page.md).
 - **How to fix**: one fix per `Unmatched` entry with a known `failedStep`, then the tracking line.

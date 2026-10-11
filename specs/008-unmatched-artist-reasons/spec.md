@@ -82,6 +82,13 @@ kept and is not tried again.
 - Q: How does a Matched source show on a listed row? → A: "<Source>: Matched", with no match
   method and no step trail. The plugin stores no match method, and it would change nothing the
   administrator does.
+- Q (amendment, 2026-10-11): The one-line trail made the Reason column wide and left How to fix
+  narrow. How does the trail show instead? → A: The source's name, then a bulleted list with one
+  step per bullet, in the same order and with the same marks. A source with no trail (Matched, Not
+  checked, or a stored reason text) stays on one line. The Reason column is then only as wide as
+  its longest step, and How to fix takes the width the other columns leave. Rows are separated by a
+  line, and every cell is aligned to the top. This replaces the ` · ` separator and the one-line
+  rule of the condensed-format answer above.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -179,19 +186,21 @@ Unique failed with both scores.
 ### Functional Requirements
 
 - **FR-001**: The unmatched artists table MUST have the columns Artist, Reason and How to fix,
-  in that order. The Reason column replaces the Sources column. Reason holds one line per enabled
+  in that order. The Reason column replaces the Sources column. Reason holds one entry per enabled
   source, led by the source's name, in the same source order on every row.
 - **FR-002**: For each listed artist, Reason MUST show every enabled source: Matched, Unmatched,
   or not checked.
 - **FR-003**: For each source where the artist is Unmatched, Reason MUST show all of that
   source's matching steps in the order the source runs them, each as its short name followed by a
-  mark: ✓ passed, ✗ failed, – not reached (shown dimmed), separated by ` · `. The steps and
+  mark: ✓ passed, ✗ failed, – not reached (shown dimmed), one step per bullet in a list under
+  the source's name. The steps and
   their short names are the ones listed under "The matching steps today": ID, Search, Score and
   Unique for MusicBrainz; Name and Album for Deezer.
 - **FR-004**: A failed step MUST show the value that decided it, when the source reported one:
   the best result's score for Score, the two closest scores for Unique.
-- **FR-005**: The Reason for one source MUST fit on one line of the table at a desktop width of
-  1280 pixels, for an artist name of up to 40 characters.
+- **FR-005**: Each step of a Reason MUST fit on one bullet line, so the Reason column is only as
+  wide as its longest step. The table MUST separate rows with a line, align every cell to the top,
+  left-align the artist name, and give How to fix the width the Artist and Reason columns leave.
 - **FR-006**: How to fix MUST contain only fixes for steps that failed on that row. Each fix
   names the change to make in Jellyfin, or states that no change in Jellyfin fixes it.
 - **FR-007**: How to fix MUST give at most one fix per failed source, and MUST NOT repeat a fix
@@ -254,8 +263,8 @@ Unique failed with both scores.
   artist is still tracked, without reading another part of the page.
 - **SC-003**: For any unmatched row, the administrator can name the step that failed at each
   source without reading documentation.
-- **SC-004**: Each row stays one line per source at a 1280-pixel desktop width, for an artist
-  name of up to 40 characters.
+- **SC-004**: At a 1280-pixel desktop width, every step of a Reason stays on one line and How to
+  fix takes at least half the table width, for an artist name of up to 40 characters.
 - **SC-005**: After the upgrade and before any refresh, every row recorded by an earlier version
   shows a step trail.
 

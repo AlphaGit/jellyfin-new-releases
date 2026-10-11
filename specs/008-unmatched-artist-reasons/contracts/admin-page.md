@@ -6,13 +6,13 @@ page (research R5).
 
 ## Reason column
 
-One line per `reasons[]` entry, `<displayName>: ` followed by:
+One entry per `reasons[]` entry, `<displayName>:` followed by:
 
 | Entry | Line content |
 | --- | --- |
 | `Matched` | `Matched` |
 | `NotChecked` | `Not checked` |
-| `Unmatched`, known `failedStep` | The trail: each step as `<short name> <mark>`, joined by ` · ` |
+| `Unmatched`, known `failedStep` | The trail: a bulleted list, one step per bullet as `<short name> <mark>` |
 | `Unmatched`, `failedStep` null | The stored `reason` text |
 
 Short names: `Id` → `ID`; the other step names show as they are.
@@ -24,7 +24,11 @@ Short names: `Id` → `ID`; the other step names show as they are.
 | `NotReached` | `–` | not reached | dimmed |
 
 The failed step's `values` follow its mark: `Score ✗ 70`, `Unique ✗ 100 vs 96`. The mark is
-`aria-hidden`; the words are visually hidden text (research R6). The line does not wrap.
+`aria-hidden`; the words are visually hidden text (research R6). A step does not wrap.
+
+The table separates rows with a line and aligns every cell to the top. The artist name is
+left-aligned. Artist takes 25% of the width, Reason only the width of its longest step, and How to
+fix the rest (research R7).
 
 ## How to fix column
 
