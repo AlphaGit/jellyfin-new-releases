@@ -29,8 +29,8 @@ public sealed class DatabaseTests : IDisposable
         Assert.True(Directory.Exists(Path.Combine(_dataPath, "newreleases")));
     }
 
-    /// <summary>The newest embedded migration: 003_source_entry_credit (spec 009). A fresh database ends at it.</summary>
-    private const long LatestSchema = 3;
+    /// <summary>The newest embedded migration: 004_decision_want_it (spec 010). A fresh database ends at it.</summary>
+    private const long LatestSchema = 4;
 
     private static readonly string[] SchemaTables =
         ["library_artist", "artist_source", "release", "source_entry", "edition", "decision", "source_state", "refresh_run", "schema_version"];
@@ -153,7 +153,56 @@ public sealed class DatabaseTests : IDisposable
         await using var read = await row.ExecuteReaderAsync();
         Assert.True(await read.ReadAsync());
 
-        Assert.Equal(("[]", 3L), (read.GetString(0), read.GetInt64(1)));
+        Assert.Equal(("[]", LatestSchema), (read.GetString(0), read.GetInt64(1)));
+    }
+
+    /// <summary>010 research R1: a database at schema 003 keeps its Ignore and Have-it rows through 004, then accepts a Want-it row.</summary>
+    [Fact]
+    public async Task OpenAsync_ADatabaseAtSchema003_MigratesTo004_KeepingItsDecisionsAndAcceptingWantIt()
+    {
+        var db = NewDatabase();
+        Directory.CreateDirectory(Path.GetDirectoryName(db.DatabasePath)!);
+        await using (var old = new Microsoft.Data.Sqlite.SqliteConnection(db.ConnectionString))
+        {
+            await old.OpenAsync();
+            string Script(string name)
+            {
+                using var reader = new StreamReader(typeof(PluginDatabase).Assembly.GetManifestResourceStream($"Jellyfin.Plugin.NewReleases.Storage.Migrations.{name}")!);
+                return reader.ReadToEnd();
+            }
+
+            await using var setup = old.CreateCommand();
+            setup.CommandText = Script("001_initial.sql") + Script("002_match_detail.sql") + Script("003_source_entry_credit.sql") + """
+                CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL);
+                INSERT INTO schema_version VALUES (1, '2026-09-06T00:00:00Z'), (2, '2026-10-01T00:00:00Z'), (3, '2026-10-10T00:00:00Z');
+                INSERT INTO decision VALUES ('name:blur', 'parklife', 'Ignore', 'aaaaaaaa-1111-1111-1111-111111111111', '2026-10-02T00:00:00.0000000+00:00'),
+                                            ('name:blur', 'the great escape', 'HaveIt', 'bbbbbbbb-2222-2222-2222-222222222222', '2026-10-03T00:00:00.0000000+00:00');
+                """;
+            await setup.ExecuteNonQueryAsync();
+        }
+
+        await using var connection = await db.OpenAsync(CancellationToken.None);
+        await using var rows = connection.CreateCommand();
+        rows.CommandText = "SELECT normalized_title, kind, user_id, decided_at FROM decision ORDER BY normalized_title";
+        var read = new List<(string, string, string, string)>();
+        await using (var reader = await rows.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                read.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
+            }
+        }
+
+        Assert.Equal(
+            [
+                ("parklife", "Ignore", "aaaaaaaa-1111-1111-1111-111111111111", "2026-10-02T00:00:00.0000000+00:00"),
+                ("the great escape", "HaveIt", "bbbbbbbb-2222-2222-2222-222222222222", "2026-10-03T00:00:00.0000000+00:00"),
+            ],
+            read);
+
+        await using var insert = connection.CreateCommand();
+        insert.CommandText = "INSERT INTO decision VALUES ('name:blur', 'leisure', 'WantIt', 'aaaaaaaa-1111-1111-1111-111111111111', '2026-11-10T00:00:00.0000000+00:00')";
+        Assert.Equal(1, await insert.ExecuteNonQueryAsync());
     }
 
     private static async Task<long> CountAsync(Microsoft.Data.Sqlite.SqliteConnection connection, string table)

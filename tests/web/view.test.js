@@ -39,17 +39,25 @@ test('U85: the List tab is selected on open, and switching tabs moves the select
     const { document } = await loadedView();
     // What the loaded page holds: what its script wrote, or else what its markup declares.
     const now = (id, name) => document.getElementById(id).getAttribute(name) ?? staticAttribute(id, name);
-    const state = () => [now('nr-tab-list', 'aria-selected'), now('nr-tab-archive', 'aria-selected'), now('nr-panel', 'aria-labelledby')];
+    const state = () => [now('nr-tab-list', 'aria-selected'), now('nr-tab-wantit', 'aria-selected'), now('nr-tab-archive', 'aria-selected'), now('nr-panel', 'aria-labelledby')];
     const opened = state();
+    document.getElementById('nr-tab-wantit').listeners.click[0]();
+    const wanted = state();
     document.getElementById('nr-tab-archive').listeners.click[0]();
     const archive = state();
     document.getElementById('nr-tab-list').listeners.click[0]();
 
-    assert.deepEqual([opened, archive, state()], [
-        ['true', 'false', 'nr-tab-list'],
-        ['false', 'true', 'nr-tab-archive'],
-        ['true', 'false', 'nr-tab-list'],
+    assert.deepEqual([opened, wanted, archive, state()], [
+        ['true', 'false', 'false', 'nr-tab-list'],
+        ['false', 'true', 'false', 'nr-tab-wantit'],
+        ['false', 'false', 'true', 'nr-tab-archive'],
+        ['true', 'false', 'false', 'nr-tab-list'],
     ]);
+});
+
+test('010: the tabs read List, Want it and Archive, in that order', () => {
+    assert.deepEqual([...PAGE.matchAll(/role="tab" id="(nr-tab-\w+)"[^>]*>([^<]*)</g)].map(([, id, text]) => [id, text]),
+        [['nr-tab-list', 'List'], ['nr-tab-wantit', 'Want it'], ['nr-tab-archive', 'Archive']]);
 });
 
 test('U86: the status line is announced politely', () => {
@@ -80,7 +88,7 @@ test('U71: every listener the New Releases view registers keeps listening', () =
 });
 
 // 007 T091 group B, characterization (BASELINE): the status line a screen reader announces after an action.
-for (const [action, said] of [['Ignore', 'Ignored Kill for Love'], ['HaveIt', 'Marked Kill for Love as Have it'], ['Restore', 'Restored Kill for Love']]) {
+for (const [action, said] of [['Ignore', 'Ignored Kill for Love'], ['HaveIt', 'Marked Kill for Love as Have it'], ['WantIt', 'Marked Kill for Love as Want it'], ['Restore', 'Restored Kill for Love']]) {
     test(`U84: after ${action} the status line says "${said}"`, async () => {
         const { document } = await loadedView();
 

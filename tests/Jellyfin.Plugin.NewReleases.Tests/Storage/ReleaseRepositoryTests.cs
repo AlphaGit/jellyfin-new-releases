@@ -235,6 +235,60 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         Assert.Equal((DecisionKind.Ignore, user, new DateTimeOffset(2026, 9, 1, 10, 0, 0, TimeSpan.Zero)), (archived.Archived!.Kind, archived.Archived.UserId, archived.Archived.DecidedAt));
     }
 
+    private Task DecideAsync(string title, string kind) => _db.ExecuteAsync($"INSERT INTO decision (artist_key, normalized_title, kind, user_id, decided_at) VALUES ('name:daft punk', '{title}', '{kind}', '11111111-1111-1111-1111-111111111111', '2026-09-01T10:00:00Z')");
+
+    private async Task<string[]> TitlesIn(ReleaseFilter filter) => (await _db.Releases.ListAsync(filter, CancellationToken.None)).Select(r => r.Title).ToArray();
+
+    [Fact]
+    public async Task ListAsync_WantedFlagShowsOnlyWantItRows_NeitherInTheListNorTheArchive()
+    {
+        await Seed("Kept", "2020-01-01", "rg-kept");
+        await Seed("Wanted Album", "2020-01-02", "rg-want");
+        await Seed("Ignored Album", "2020-01-03", "rg-ign");
+        await Seed("Had Album", "2020-01-04", "rg-had");
+        await DecideAsync("wanted album", "WantIt");
+        await DecideAsync("ignored album", "Ignore");
+        await DecideAsync("had album", "HaveIt");
+
+        Assert.Equal(["Kept"], await TitlesIn(DefaultFilter));
+        Assert.Equal(["Wanted Album"], await TitlesIn(DefaultFilter with { Wanted = true }));
+        Assert.Equal(["Had Album", "Ignored Album"], await TitlesIn(DefaultFilter with { Archived = true }));
+        Assert.All(await _db.Releases.ListAsync(DefaultFilter with { Wanted = true }, CancellationToken.None), r => Assert.Null(r.Archived));
+    }
+
+    [Fact]
+    public async Task ListAsync_AnOwnedWantItRowIsInNoView_AndComesBackWhenItIsNoLongerOwned()
+    {
+        var id = await Seed("Bought Album", "2020-01-01", "rg-bought");
+        await DecideAsync("bought album", "WantIt");
+        await _db.ExecuteAsync($"UPDATE release SET ownership_state = 'Owned' WHERE id = {id}");
+
+        Assert.Empty(await TitlesIn(DefaultFilter));
+        Assert.Empty(await TitlesIn(DefaultFilter with { Wanted = true }));
+        Assert.Empty(await TitlesIn(DefaultFilter with { Archived = true }));
+
+        await _db.ExecuteAsync($"UPDATE release SET ownership_state = 'Missing' WHERE id = {id}");
+
+        Assert.Equal(["Bought Album"], await TitlesIn(DefaultFilter with { Wanted = true }));
+    }
+
+    [Fact]
+    public async Task ListAsync_FiltersApplyToTheWantItView()
+    {
+        await Seed("Old Album", "2020-01-01", "rg-old");
+        await Seed("New Album", "2024-05-01", "rg-new");
+        await Seed("Upcoming Album", "2027-01-01", "rg-up");
+        await DecideAsync("old album", "WantIt");
+        await DecideAsync("new album", "WantIt");
+        await DecideAsync("upcoming album", "WantIt");
+        var wanted = DefaultFilter with { Wanted = true };
+
+        Assert.Equal(["Upcoming Album", "New Album", "Old Album"], await TitlesIn(wanted));
+        Assert.Equal(["Upcoming Album"], await TitlesIn(wanted with { State = ListState.Upcoming }));
+        Assert.Equal(["New Album"], await TitlesIn(wanted with { From = new DateOnly(2024, 1, 1), To = new DateOnly(2024, 12, 31) }));
+        Assert.Equal(["Old Album"], await TitlesIn(wanted with { ReleasedSince = null, To = new DateOnly(2020, 12, 31) }));
+    }
+
     private Task SeedManyAsync(int count) => _db.ExecuteAsync($"""
         WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < {count})
         INSERT INTO release (library_artist_id, normalized_title, title, canonical_source, canonical_source_id, primary_type, secondary_types, release_date, date_sort, first_seen_at, last_seen_at, ownership_state)

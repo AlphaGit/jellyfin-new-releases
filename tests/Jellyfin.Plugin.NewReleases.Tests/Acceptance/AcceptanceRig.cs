@@ -60,9 +60,9 @@ internal sealed class AcceptanceRig : IAsyncDisposable
         return result.Value ?? (AdminStatusResponse)((ObjectResult)result.Result!).Value!;
     }
 
-    public async Task<ListResponse> ListAsync(Guid? artistId = null, string? type = null, string? state = null, string? from = null, string? to = null, bool archived = false)
+    public async Task<ListResponse> ListAsync(Guid? artistId = null, string? type = null, string? state = null, string? from = null, string? to = null, bool archived = false, bool wanted = false)
     {
-        var result = await ControllerFor(Alice).GetReleasesAsync(artistId, type, state, from, to, archived, CancellationToken.None);
+        var result = await ControllerFor(Alice).GetReleasesAsync(artistId, type, state, from, to, archived, wanted, CancellationToken.None);
         return result.Value ?? (ListResponse)((ObjectResult)result.Result!).Value!;
     }
 

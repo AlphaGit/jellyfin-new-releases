@@ -48,6 +48,19 @@ public sealed class ArchiveRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task SetAsync_AcceptsWantIt_AndClearAsyncKeepsItWhileDeletingIgnoreAndHaveIt()
+    {
+        await _db.Archive.SetAsync("name:a", "one", DecisionKind.WantIt, Alice, T1, CancellationToken.None);
+        await _db.Archive.SetAsync("name:a", "two", DecisionKind.Ignore, Alice, T1, CancellationToken.None);
+        await _db.Archive.SetAsync("name:a", "three", DecisionKind.HaveIt, Bob, T1, CancellationToken.None);
+
+        await _db.Archive.ClearAsync(CancellationToken.None);
+
+        Assert.Equal(new Decision("name:a", "one", DecisionKind.WantIt, Alice, T1), await _db.Archive.GetAsync("name:a", "one", CancellationToken.None));
+        Assert.Equal(1L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision"));
+    }
+
+    [Fact]
     public async Task Decision_SurvivesPurgeAndJoinsTheReleaseWhenItIsFetchedAgain()
     {
         var now = new DateTimeOffset(2026, 9, 6, 3, 0, 0, TimeSpan.Zero);

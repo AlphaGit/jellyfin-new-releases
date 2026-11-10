@@ -56,10 +56,10 @@ public sealed record Release(
     public IReadOnlyList<CreditedArtist> Credit { get; init; } = [];
 }
 
-/// <summary>Row of <c>decision</c>: an Ignore or Have-it decision keyed by the natural release key (R8).</summary>
+/// <summary>Row of <c>decision</c>: an Ignore, Have-it or Want-it decision keyed by the natural release key (R8).</summary>
 public sealed record Decision(string ArtistKey, string NormalizedTitle, DecisionKind Kind, Guid UserId, DateTimeOffset DecidedAt);
 
-/// <summary>Read-time query for the list and the Archive. Type set, released-since and today come from configuration and the clock (R7).</summary>
+/// <summary>Read-time query for the list, the Want-it list (<c>Wanted</c>) and the Archive (<c>Archived</c>); at most one of the two is set. Type set, released-since and today come from configuration and the clock (R7).</summary>
 public sealed record ReleaseFilter(
     ISet<ReleaseType> EnabledTypes,
     DateOnly Today,
@@ -69,7 +69,8 @@ public sealed record ReleaseFilter(
     ListState? State = null,
     DateOnly? From = null,
     DateOnly? To = null,
-    bool Archived = false);
+    bool Archived = false,
+    bool Wanted = false);
 
 /// <summary>One row of the list or the Archive, joined with its artist, source links, compared edition and decision.</summary>
 public sealed record ListedRelease(

@@ -122,9 +122,13 @@ test('a six-hour interval states a twelve-hour-old instant', () => {
 test('a rendered row offers the actions under the names the decision routes are served under', () => {
     const { panel } = renderedList(fixture('releases.json'));
     const archived = renderedList(fixture('releases.json'), { archive: true }).panel;
+    const wanted = renderedList(fixture('releases.json'), { wanted: true }).panel;
+    const actions = html => [...new Set([...html.matchAll(/data-action="(\w+)"/g)].map(m => m[1]))];
 
-    assert.deepEqual([...new Set([...panel.matchAll(/data-action="(\w+)"/g)].map(m => m[1]))], ['Ignore', 'HaveIt']);
-    assert.deepEqual([...new Set([...archived.matchAll(/data-action="(\w+)"/g)].map(m => m[1]))], ['Restore']);
+    // 010 FR-002b: the buttons of each view, in order, and no others.
+    assert.deepEqual(actions(panel), ['WantIt', 'Ignore', 'HaveIt']);
+    assert.deepEqual(actions(wanted), ['HaveIt', 'Ignore', 'Restore']);
+    assert.deepEqual(actions(archived), ['Restore', 'WantIt']);
 });
 
 test('a narrowed response lists only what it carries', () => {
@@ -159,7 +163,7 @@ test('a title containing markup appears nowhere in the row unescaped', () => {
 const QUOTED_TITLE = `"'><img src=x onerror=alert(1)>`;
 
 test('a title containing quotes is escaped in every place the row writes it', () => {
-    assert.equal((renderedWithTitle(QUOTED_TITLE).match(/&quot;&#39;&gt;&lt;img src=x onerror=alert\(1\)&gt;/g) ?? []).length, 4);
+    assert.equal((renderedWithTitle(QUOTED_TITLE).match(/&quot;&#39;&gt;&lt;img src=x onerror=alert\(1\)&gt;/g) ?? []).length, 5);
 });
 
 // 007 US2: the cover box each row opens with. The markup is read as a string; what a browser does
@@ -259,6 +263,10 @@ for (const [label, body] of [
     ['with stored releases', { ...fixture('releases.json'), items: [] }],
     ['before the first refresh', fixture('releases-empty.json')],
 ]) {
+    test(`010: an empty Want it list says how a release gets there, ${label}`, () => {
+        assert.equal(renderedList(body, { wanted: true }).panel, '<p class="nr-empty">Nothing on the Want it list. Choose Want it on a release to add it.</p>');
+    });
+
     test(`U79: an empty Archive says the Archive is empty, ${label}`, () => {
         assert.equal(renderedList(body, { archive: true }).panel, '<p class="nr-empty">The Archive is empty.</p>');
     });
@@ -267,12 +275,13 @@ for (const [label, body] of [
 /** Each button of the row with `id`, as `[screen-reader label, visible text]`. */
 const buttonsOf = (panel, id) => [...rowOf(panel, id).matchAll(/<button [^>]*aria-label="([^"]*)">([^<]*)<\/button>/g)].map(([, label, text]) => [label, text]);
 
-test('U80: the buttons read Ignore, Have it and Restore, and their screen-reader labels name the release', () => {
+test('U80: the buttons read Want it, Ignore, Have it and Restore, and their screen-reader labels name the release', () => {
     const body = fixture('releases.json');
 
-    assert.deepEqual([buttonsOf(renderedList(body).panel, 101), buttonsOf(renderedList(body, { archive: true }).panel, 104)], [
-        [['Ignore Closer to Grey', 'Ignore'], ['Mark Closer to Grey as Have it', 'Have it']],
-        [['Restore II', 'Restore']],
+    assert.deepEqual([buttonsOf(renderedList(body).panel, 101), buttonsOf(renderedList(body, { wanted: true }).panel, 101), buttonsOf(renderedList(body, { archive: true }).panel, 104)], [
+        [['Mark Closer to Grey as Want it', 'Want it'], ['Ignore Closer to Grey', 'Ignore'], ['Mark Closer to Grey as Have it', 'Have it']],
+        [['Mark Closer to Grey as Have it', 'Have it'], ['Ignore Closer to Grey', 'Ignore'], ['Restore Closer to Grey', 'Restore']],
+        [['Restore II', 'Restore'], ['Mark II as Want it', 'Want it']],
     ]);
 });
 

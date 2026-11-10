@@ -25,12 +25,14 @@ plans, UI strings, and identifiers use these terms verbatim.
 | **Owned** | Internal name for the automatic check's positive result. | Code and plan only, never UI. | — |
 | **Ignore** | User action: this Release is not wanted. Moves it to the Archive for every user. | Row button "Ignore". | dismiss, hide, not interested |
 | **Have it** | User action: this Release counts as In library regardless of the automatic check. Moves it to the Archive for every user. | Row button "Have it". | mark as owned, already own |
+| **Want it** | User action: this Release is wanted but not yet in the library. Moves it to the Want-it list for every user. A Want-it Release the library later gains leaves the Want-it list by itself. | Row button "Want it"; tab "Want it". | wishlist, bookmark, favourite |
+| **Want-it list** | The set of Releases with a Want it decision: a shopping list. Shared server-wide, filtered by the viewer's library access, grouped and filtered like the list. Not part of the Archive. From it, a user can Have it, Ignore, or Restore. | Tab "Want it" on the New Releases page. | wishlist, shopping list (in UI), cart |
 | **Archive** | The set of Releases with an Ignore or Have-it decision. Shared server-wide, browsable, filtered by the viewer's library access. | Tab or link "Archive" on the New Releases page. | hidden, hidden list, ignored list, dismissed |
-| **Restore** | User action: undo Ignore or Have it; the Release returns to the list. | Button "Restore" in the Archive. | undo, unhide, unarchive |
+| **Restore** | User action: undo a decision (Ignore, Have it or Want it); the Release returns to the list. | Button "Restore" in the Archive and in the Want-it list. | undo, unhide, unarchive |
 | **Refresh** | The plugin's scheduled task: enumerate library artists, query sources, recompute ownership. Runs daily by default; interval edited in Jellyfin's Scheduled Tasks. | Jellyfin task "Refresh new releases", category "New Releases"; admin status ("Last refresh", "Next refresh"). | scan, sync, update |
 | **Run now** | Admin action: start a Refresh immediately. | Admin button "Run now". | scan now, sync now, fetch |
 | **Purge release data** | Admin action: delete all stored Releases, Source entries, and ownership results. Leaves the Archive intact. | Admin button "Purge release data". | purge, clear cache, reset |
-| **Clear Archive** | Admin action: delete all Ignore and Have-it decisions. Leaves release data intact. | Admin button "Clear Archive". | clear user decisions, reset decisions |
+| **Clear Archive** | Admin action: delete all Ignore and Have-it decisions. Leaves release data and Want-it decisions intact. | Admin button "Clear Archive". | clear user decisions, reset decisions |
 | **Released since** | Optional admin cutoff: only Releases dated on or after this day are considered. Default unrestricted. | Admin date field "Released since". | lookback, window, since date |
 | **Complete / Partial / Failed** | Outcome of one source fetch for one artist within a Refresh. Only a Complete fetch may remove a Source entry. | Admin run status. | success/error (as the only words) |
 
@@ -46,8 +48,11 @@ plans, UI strings, and identifiers use these terms verbatim.
   best-matching Edition's track list, using exact equality of normalized titles (see
   [title-normalization.md](title-normalization.md)). A user's Have it or Ignore decision overrides the
   automatic result and survives later refreshes and purges.
-- The list and the Archive are one shared, server-wide set. What each viewer sees is filtered
-  by the Jellyfin music libraries that viewer may access.
+- The list, the Want-it list and the Archive are one shared, server-wide set; a Release is in at
+  most one of them. What each viewer sees is filtered by the Jellyfin music libraries that viewer
+  may access.
+- A Want it decision is kept while the library has the Release (it is then in none of the three)
+  and applies again if the library loses it. Have it and Ignore do not reopen this way.
 - A Release leaves the list only when the library has it, its artist stops being a library
   artist, or no Source entry remains. Source entries are removed only by a Complete fetch that
   omits them.
@@ -63,7 +68,7 @@ plans, UI strings, and identifiers use these terms verbatim.
 - Fixed sentences: empty state "No data yet. New Releases is waiting for its first refresh.";
   stale data "Releases last checked <relative time> ago." (relative time, never a raw timestamp).
 - Code identifiers are the PascalCase form of the term: `LibraryArtist`, `SourceEntry`,
-  `ReleaseState.Incomplete`, `HaveIt`, `Archive`.
+  `ReleaseState.Incomplete`, `HaveIt`, `WantIt`, `Archive`.
 
 ## Related documents
 
@@ -72,3 +77,4 @@ plans, UI strings, and identifiers use these terms verbatim.
 - [Release types](release-types.md) — how source types map to ours, inclusion rule, displayed badge.
 - [Title normalization](title-normalization.md) — the deterministic transformation behind every title comparison.
 - [Feature spec: Track New Releases](../../specs/001-track-new-releases/spec.md) — the feature this vocabulary was settled for.
+- [Feature spec: Want it list](../../specs/010-want-it-list/spec.md) — adds Want it, the Want-it list, and Restore from it.

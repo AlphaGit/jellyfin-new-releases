@@ -62,7 +62,7 @@ test('the administrator page asks for its status and posts its actions', async (
 
 // U72, characterization (maintainer decision T083): the action handler predates 007. A row is built as a
 // browser builds it from the markup the view writes, and the click is handed to the panel's listener.
-for (const action of ['Ignore', 'HaveIt', 'Restore']) {
+for (const action of ['Ignore', 'HaveIt', 'WantIt', 'Restore']) {
     test(`U72: the ${action} button posts ${action} for the release of its row`, async () => {
         const { requests, document } = await loadedView({ items: [], hasStoredReleases: false });
         const { button } = actionRow({ id: '102', title: 'Kill for Love', action });
@@ -95,16 +95,18 @@ async function loadedView(body = { items: [], hasStoredReleases: true }) {
     return loaded;
 }
 
-test('U73: the Archive tab asks for archived releases, and the List tab asks for the others', async () => {
+test('U73: the Archive tab asks for archived releases, the Want it tab for wanted ones, and the List tab asks for the others', async () => {
     const { requests, document } = await loadedView();
     const before = requests.length;
 
     document.getElementById('nr-tab-archive').listeners.click[0]();
     await settled();
+    document.getElementById('nr-tab-wantit').listeners.click[0]();
+    await settled();
     document.getElementById('nr-tab-list').listeners.click[0]();
     await settled();
 
-    assert.deepEqual(requests.slice(before), ['GET Plugins/NewReleases/Releases?archived=true', 'GET Plugins/NewReleases/Releases']);
+    assert.deepEqual(requests.slice(before), ['GET Plugins/NewReleases/Releases?archived=true', 'GET Plugins/NewReleases/Releases?wanted=true', 'GET Plugins/NewReleases/Releases']);
 });
 
 for (const [id, value, sent] of [
@@ -125,6 +127,19 @@ for (const [id, value, sent] of [
         assert.deepEqual(requests.slice(before), ['GET Plugins/NewReleases/Releases?' + sent]);
     });
 }
+
+test('010: an action in the Want it tab reloads the Want it list and stays on it', async () => {
+    const { requests, document } = await loadedView();
+    document.getElementById('nr-tab-wantit').listeners.click[0]();
+    await settled();
+    const before = requests.length;
+
+    document.getElementById('nr-panel').listeners.click[0]({ target: actionRow({ action: 'HaveIt' }).button });
+    await settled();
+
+    assert.deepEqual([requests.slice(before), document.getElementById('nr-tab-wantit').getAttribute('aria-selected')],
+        [['POST Plugins/NewReleases/Releases/101/HaveIt', 'GET Plugins/NewReleases/Releases?wanted=true'], 'true']);
+});
 
 test('U76: an action in the Archive tab reloads the Archive and stays on it', async () => {
     const { requests, document } = await loadedView();

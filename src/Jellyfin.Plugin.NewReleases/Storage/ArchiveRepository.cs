@@ -4,7 +4,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Jellyfin.Plugin.NewReleases.Storage;
 
-/// <summary>Data access for <c>decision</c> — the Archive (FR-013, FR-016). Keyed by the natural release key so decisions survive a purge (R8).</summary>
+/// <summary>Data access for <c>decision</c> — the Archive (Ignore, Have it) and the Want-it list (FR-013, FR-016; spec 010). Keyed by the natural release key so decisions survive a purge (R8).</summary>
 public sealed class ArchiveRepository
 {
     private readonly PluginDatabase _db;
@@ -14,7 +14,7 @@ public sealed class ArchiveRepository
         _db = db;
     }
 
-    /// <summary>Ignore or Have it: one decision per release; a new decision replaces the old.</summary>
+    /// <summary>Ignore, Have it or Want it: one decision per release; a new decision replaces the old.</summary>
     public async Task SetAsync(string artistKey, string normalizedTitle, DecisionKind kind, Guid userId, DateTimeOffset now, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
@@ -42,7 +42,7 @@ public sealed class ArchiveRepository
             : null;
     }
 
-    /// <summary>Restore: deletes the decision for one release.</summary>
+    /// <summary>Restore: deletes the decision (any kind) for one release.</summary>
     public async Task RemoveAsync(string artistKey, string normalizedTitle, CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
@@ -52,12 +52,12 @@ public sealed class ArchiveRepository
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
-    /// <summary>Clear Archive: deletes every decision (FR-013).</summary>
+    /// <summary>Clear Archive: deletes every Ignore and Have-it decision; Want-it decisions stay (spec 010 FR-006).</summary>
     public async Task ClearAsync(CancellationToken ct)
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM decision";
+        command.CommandText = "DELETE FROM decision WHERE kind <> 'WantIt'";
         await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 

@@ -37,6 +37,7 @@
 
     <div role="tablist" aria-label="New Releases views">
         <button type="button" role="tab" id="nr-tab-list" aria-selected="true" aria-controls="nr-panel">List</button>
+        <button type="button" role="tab" id="nr-tab-wantit" aria-selected="false" aria-controls="nr-panel">Want it</button>
         <button type="button" role="tab" id="nr-tab-archive" aria-selected="false" aria-controls="nr-panel">Archive</button>
     </div>
 
@@ -69,9 +70,9 @@
             var API = 'Plugins/NewReleases/';
             var panel = root.querySelector('#nr-panel');
             var announce = root.querySelector('#nr-announce');
-            var tabs = { list: root.querySelector('#nr-tab-list'), archive: root.querySelector('#nr-tab-archive') };
+            var tabs = { list: root.querySelector('#nr-tab-list'), wantit: root.querySelector('#nr-tab-wantit'), archive: root.querySelector('#nr-tab-archive') };
             var filters = { artist: root.querySelector('#nr-f-artist'), type: root.querySelector('#nr-f-type'), state: root.querySelector('#nr-f-state'), from: root.querySelector('#nr-f-from'), to: root.querySelector('#nr-f-to') };
-            var archived = false;
+            var view = 'list'; // 'list' | 'wantit' | 'archive'
             var artistIds = artistIndex([]), appliedArtistId;
 
             function api(method, path) {
@@ -92,7 +93,8 @@
                 if (filters.state.value) q.push('state=' + encodeURIComponent(filters.state.value));
                 if (filters.from.value) q.push('from=' + filters.from.value);
                 if (filters.to.value) q.push('to=' + filters.to.value);
-                if (archived) q.push('archived=true');
+                if (view === 'archive') q.push('archived=true');
+                if (view === 'wantit') q.push('wanted=true');
                 return q.length ? '?' + q.join('&') : '';
             }
 
@@ -184,7 +186,7 @@
                 html += '<div class="nr-meta"><span class="nr-badge">' + esc(item.type) + '</span>';
                 html += '<span>' + (item.date ? esc(item.date) : 'Undated') + '</span>';
                 html += '<span class="nr-badge nr-badge-state" role="status">' + (item.state === 'Upcoming' ? 'Upcoming, not yet released' : esc(item.state)) + '</span>';
-                if (archived && item.archived) html += '<span class="nr-badge">' + (item.archived.kind === 'HaveIt' ? 'Have it, In library' : 'Ignored') + '</span>';
+                if (view === 'archive' && item.archived) html += '<span class="nr-badge">' + (item.archived.kind === 'HaveIt' ? 'Have it, In library' : 'Ignored') + '</span>';
                 html += '</div>';
                 if (item.state === 'Incomplete' && item.missingTracks) {
                     html += '<details><summary>' + item.missingTracks.length + ' missing track' + (item.missingTracks.length === 1 ? '' : 's') + '</summary><ul>';
@@ -198,23 +200,27 @@
                     html += '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + (s.source === 'musicbrainz' ? 'MusicBrainz' : s.source === 'deezer' ? 'Deezer' : esc(s.source)) + '</a>';
                 });
                 html += '</div></div><div class="nr-actions">';
-                if (archived) {
-                    html += '<button type="button" data-action="Restore" aria-label="Restore ' + esc(item.title) + '">Restore</button>';
-                } else {
-                    html += '<button type="button" data-action="Ignore" aria-label="Ignore ' + esc(item.title) + '">Ignore</button>';
-                    html += '<button type="button" data-action="HaveIt" aria-label="Mark ' + esc(item.title) + ' as Have it">Have it</button>';
-                }
+                var buttons = {
+                    WantIt: ['Want it', 'Mark ' + item.title + ' as Want it'],
+                    Ignore: ['Ignore', 'Ignore ' + item.title],
+                    HaveIt: ['Have it', 'Mark ' + item.title + ' as Have it'],
+                    Restore: ['Restore', 'Restore ' + item.title]
+                };
+                var offered = view === 'archive' ? ['Restore', 'WantIt'] : view === 'wantit' ? ['HaveIt', 'Ignore', 'Restore'] : ['WantIt', 'Ignore', 'HaveIt'];
+                offered.forEach(function (action) {
+                    html += '<button type="button" data-action="' + action + '" aria-label="' + esc(buttons[action][1]) + '">' + buttons[action][0] + '</button>';
+                });
                 return html + '</div></article>';
             }
 
             function render(data) {
                 staleness(data);
-                if (!data.hasStoredReleases && !archived) {
+                if (!data.hasStoredReleases && view === 'list') {
                     panel.innerHTML = '<p class="nr-empty">No data yet. New Releases is waiting for its first refresh.</p>';
                     return;
                 }
                 if (!data.items.length) {
-                    panel.innerHTML = '<p class="nr-empty">' + (archived ? 'The Archive is empty.' : 'Nothing missing for this selection.') + '</p>';
+                    panel.innerHTML = '<p class="nr-empty">' + (view === 'archive' ? 'The Archive is empty.' : view === 'wantit' ? 'Nothing on the Want it list. Choose Want it on a release to add it.' : 'Nothing missing for this selection.') + '</p>';
                     return;
                 }
                 var groups = {}, order = [];
@@ -245,14 +251,14 @@
             }
 
             function selectTab(name) {
-                archived = name === 'archive';
-                tabs.list.setAttribute('aria-selected', String(!archived));
-                tabs.archive.setAttribute('aria-selected', String(archived));
-                panel.setAttribute('aria-labelledby', archived ? 'nr-tab-archive' : 'nr-tab-list');
+                view = name;
+                Object.keys(tabs).forEach(function (key) { tabs[key].setAttribute('aria-selected', String(key === name)); });
+                panel.setAttribute('aria-labelledby', 'nr-tab-' + name);
                 load();
             }
 
             tabs.list.addEventListener('click', function () { selectTab('list'); });
+            tabs.wantit.addEventListener('click', function () { selectTab('wantit'); });
             tabs.archive.addEventListener('click', function () { selectTab('archive'); });
             Object.keys(filters).forEach(function (key) { filters[key].addEventListener('change', load); });
             filters.artist.addEventListener('input', function () {
@@ -277,7 +283,7 @@
                 button.disabled = true;
                 api('POST', 'Releases/' + id + '/' + action).then(function () {
                     article.remove(); // optimistic removal, then reload
-                    announce.textContent = action === 'Ignore' ? 'Ignored ' + title : action === 'HaveIt' ? 'Marked ' + title + ' as Have it' : 'Restored ' + title;
+                    announce.textContent = action === 'Ignore' ? 'Ignored ' + title : action === 'HaveIt' ? 'Marked ' + title + ' as Have it' : action === 'WantIt' ? 'Marked ' + title + ' as Want it' : 'Restored ' + title;
                     return load();
                 }).catch(function () {
                     button.disabled = false;

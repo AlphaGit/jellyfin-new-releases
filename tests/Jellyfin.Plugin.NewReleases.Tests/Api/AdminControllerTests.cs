@@ -357,4 +357,15 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.Equal(0L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision"));
         Assert.Equal((1L, 1L, 1L), (await _db.ScalarAsync<long>("SELECT COUNT(*) FROM release"), await _db.ScalarAsync<long>("SELECT COUNT(*) FROM source_entry"), await _db.ScalarAsync<long>("SELECT COUNT(*) FROM edition")));
     }
+
+    [Fact]
+    public async Task ClearArchive_KeepsWantItDecisions()
+    {
+        await SeedReleaseDataAsync();
+        await _db.Archive.SetAsync("name:daft punk", "homework", DecisionKind.WantIt, Guid.NewGuid(), _clock.GetUtcNow(), CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(await Controller().ClearArchiveAsync(CancellationToken.None));
+
+        Assert.Equal(["homework"], await _db.ScalarAsync<string>("SELECT group_concat(normalized_title) FROM decision") is { } kept ? kept.Split(',') : []);
+    }
 }

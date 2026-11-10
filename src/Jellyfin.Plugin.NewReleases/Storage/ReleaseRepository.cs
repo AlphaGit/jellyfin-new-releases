@@ -183,7 +183,12 @@ public sealed class ReleaseRepository
     {
         await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
-        command.CommandText = """
+        // The view is a fixed condition on the decision and ownership (spec 010 R3); no caller text reaches the SQL.
+        // A Want-it release the library already has matches no view: it is not listed and not archived, and its decision stays.
+        var view = filter.Archived ? "d.kind IN ('Ignore', 'HaveIt')"
+            : filter.Wanted ? "r.ownership_state <> 'Owned' AND d.kind = 'WantIt'"
+            : "r.ownership_state <> 'Owned' AND d.kind IS NULL";
+        command.CommandText = $"""
             SELECT r.id, a.name, a.jellyfin_id, a.library_ids, r.title, r.primary_type, r.secondary_types, r.release_date, r.date_sort,
                    r.ownership_state, r.missing_tracks, e.source, e.title,
                    a.artist_key, r.normalized_title, d.kind, d.user_id, d.decided_at,
@@ -193,13 +198,11 @@ public sealed class ReleaseRepository
             JOIN library_artist a ON a.id = r.library_artist_id
             LEFT JOIN edition e ON e.id = r.compared_edition_id
             LEFT JOIN decision d ON d.artist_key = a.artist_key AND d.normalized_title = r.normalized_title
-            WHERE (@archived = 1 OR r.ownership_state <> 'Owned')
+            WHERE {view}
               AND (@artist IS NULL OR a.jellyfin_id = @artist)
-              AND ((d.kind IS NOT NULL) = @archived)
             ORDER BY r.date_sort IS NULL, r.date_sort DESC, r.title
             """;
         command.Parameters.AddWithValue("@artist", (object?)filter.ArtistJellyfinId?.ToString("D") ?? DBNull.Value);
-        command.Parameters.AddWithValue("@archived", filter.Archived ? 1 : 0);
         var today = filter.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         var from = filter.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         var to = filter.To?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -269,7 +272,7 @@ public sealed class ReleaseRepository
             JsonSerializer.Deserialize<string[]>(r.GetString(10)) ?? [],
             r.IsDBNull(11) ? null : new ComparedEdition(r.GetString(11), r.GetString(12)),
             sources,
-            r.IsDBNull(15) ? null : new Decision(r.GetString(13), r.GetString(14), Enum.Parse<DecisionKind>(r.GetString(15)), Guid.Parse(r.GetString(16)), DateTimeOffset.Parse(r.GetString(17), CultureInfo.InvariantCulture)));
+            r.IsDBNull(15) || r.GetString(15) == nameof(DecisionKind.WantIt) ? null : new Decision(r.GetString(13), r.GetString(14), Enum.Parse<DecisionKind>(r.GetString(15)), Guid.Parse(r.GetString(16)), DateTimeOffset.Parse(r.GetString(17), CultureInfo.InvariantCulture)));
     }
 
     private static readonly JsonSerializerOptions JsonWeb = new(JsonSerializerDefaults.Web);

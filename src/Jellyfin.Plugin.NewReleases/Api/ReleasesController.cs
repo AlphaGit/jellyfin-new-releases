@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.NewReleases.Api;
 
-/// <summary>User-facing endpoints (any authenticated user): the list, the Archive, the artist filter, status, and decisions (FR-007, FR-008, FR-015, FR-016).</summary>
+/// <summary>User-facing endpoints (any authenticated user): the list, the Want-it list, the Archive, the artist filter, status, and decisions (FR-007, FR-008, FR-015, FR-016).</summary>
 [ApiController]
 [Authorize]
 [Produces(JsonDefaults.CamelCaseMediaType)]
@@ -64,8 +64,14 @@ public sealed class ReleasesController : ControllerBase
         [FromQuery] string? from = null,
         [FromQuery] string? to = null,
         [FromQuery] bool archived = false,
+        [FromQuery] bool wanted = false,
         CancellationToken cancellationToken = default)
     {
+        if (archived && wanted)
+        {
+            return BadRequest(); // two different views at once; 010 contract
+        }
+
         if (CallerId() is not { } userId)
         {
             return Unauthorized();
@@ -87,7 +93,8 @@ public sealed class ReleasesController : ControllerBase
             Enum.TryParse<ListState>(state, ignoreCase: true, out var st) ? st : null,
             ParseDate(from),
             ParseDate(to),
-            archived);
+            archived,
+            wanted);
 
         var rows = await _releases.ListAsync(filter, cancellationToken).ConfigureAwait(false);
         var visible = rows.Where(access.CanSee).Select(ToDto).ToList();
@@ -118,11 +125,15 @@ public sealed class ReleasesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<ActionResult> HaveItAsync(long id, CancellationToken cancellationToken = default) => DecideAsync(id, DecisionKind.HaveIt, cancellationToken);
 
+    [HttpPost("Releases/{id:long}/WantIt")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public Task<ActionResult> WantItAsync(long id, CancellationToken cancellationToken = default) => DecideAsync(id, DecisionKind.WantIt, cancellationToken);
+
     [HttpPost("Releases/{id:long}/Restore")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<ActionResult> RestoreAsync(long id, CancellationToken cancellationToken = default) => DecideAsync(id, null, cancellationToken);
 
-    /// <summary>Ignore / Have it (upsert) or Restore (delete) on the release's natural key with the caller's id (FR-005b, FR-016). Visibility is checked before writing (FR-007).</summary>
+    /// <summary>Ignore / Have it / Want it (upsert) or Restore (delete) on the release's natural key with the caller's id (FR-005b, FR-016). Visibility is checked before writing (FR-007).</summary>
     private async Task<ActionResult> DecideAsync(long id, DecisionKind? kind, CancellationToken ct)
     {
         if (CallerId() is not { } userId || AccessOf(userId) is not { } access)

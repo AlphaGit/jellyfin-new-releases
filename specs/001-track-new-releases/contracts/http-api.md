@@ -22,6 +22,7 @@ Query parameters (all optional):
 | `state` | string | `Missing` \| `Incomplete` \| `Upcoming` |
 | `from`, `to` | `yyyy-MM-dd` | inclusive bounds on `date_sort`; undated rows are excluded when either is set |
 | `archived` | bool | `false` (default) = the list; `true` = the Archive |
+| `wanted` | bool | `false` (default); `true` = the Want-it list (added by `010-want-it-list`, which also holds the `archived` + `wanted` rule) |
 
 Response `200`:
 
@@ -90,7 +91,7 @@ Library artists visible to the caller, for the artist filter.
 
 ### POST `/Releases/{id}/Ignore` · POST `/Releases/{id}/HaveIt` · POST `/Releases/{id}/Restore`
 
-Record or remove a decision (FR-005b, FR-016). `ignore` and `have-it` upsert the decision for
+Record or remove a decision (FR-005b, FR-016). `POST /Releases/{id}/WantIt` is added by `specs/010-want-it-list/contracts/http-api.md`. `ignore` and `have-it` upsert the decision for
 the release's natural key with the caller's user id; `restore` deletes it.
 
 | Result | Status |
@@ -169,7 +170,7 @@ Leaves `decision`, `library_artist`, `artist_source` match status. `204`.
 
 ### POST `/Admin/ClearArchive`
 
-Deletes all `decision` rows. `204`.
+Deletes all `Ignore` and `HaveIt` `decision` rows; `WantIt` rows stay (`010-want-it-list`). `204`.
 
 ## Existing endpoints (unchanged)
 

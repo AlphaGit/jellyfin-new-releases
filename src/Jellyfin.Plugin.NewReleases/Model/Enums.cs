@@ -21,11 +21,12 @@ public enum OwnershipState
     Owned,
 }
 
-/// <summary>A user's decision on a release; both send it to the Archive.</summary>
+/// <summary>A user's decision on a release. Ignore and Have it send it to the Archive; Want it sends it to the Want-it list.</summary>
 public enum DecisionKind
 {
     Ignore,
     HaveIt,
+    WantIt,
 }
 
 /// <summary>Outcome of one (artist, source) catalogue fetch. Only <c>Complete</c> may prune source entries (FR-014).</summary>

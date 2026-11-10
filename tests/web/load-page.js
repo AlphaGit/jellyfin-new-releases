@@ -121,14 +121,18 @@ function loadPageDom(fileName, overrides = {}) {
 /** Lets every pending promise callback run; the pages chain their loads through `.then`. */
 const settled = () => new Promise(resolve => setImmediate(resolve));
 
-/** Loads the New Releases view (not the administrator page) and renders one response through its list, in the List tab or the Archive tab. Returns what the panel holds. */
-function renderedList(body, { archive = false } = {}) {
+/** Loads the New Releases view (not the administrator page) and renders one response through its list, in the List tab, the Want it tab or the Archive tab. Returns what the panel holds. */
+function renderedList(body, { archive = false, wanted = false } = {}) {
     const { internals, document } = loadPageDom('user-view.html', {
         ApiClient: { ajax: () => Promise.resolve(body) },
     });
 
     if (archive) {
         document.getElementById('nr-tab-archive').listeners.click[0]();
+    }
+
+    if (wanted) {
+        document.getElementById('nr-tab-wantit').listeners.click[0]();
     }
 
     internals.render(body);

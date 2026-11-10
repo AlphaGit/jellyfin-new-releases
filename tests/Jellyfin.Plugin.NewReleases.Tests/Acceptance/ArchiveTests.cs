@@ -3,7 +3,7 @@ using Xunit;
 
 namespace Jellyfin.Plugin.NewReleases.Tests.Acceptance;
 
-/// <summary>User Story 3 acceptance scenarios (spec.md US3-AS1…AS4) through the real controller and task.</summary>
+/// <summary>User Story 3 acceptance scenarios (spec.md US3-AS1…AS4) through the real controller and task, and the Want it list of spec 010 (US1 to US3).</summary>
 public sealed class ArchiveTests : IAsyncLifetime
 {
     private static readonly string[] Homework = ["Daftendirekt", "Da Funk", "Around the World"];
@@ -91,5 +91,90 @@ public sealed class ArchiveTests : IAsyncLifetime
         var archived = (await _rig.ListAsync(archived: true)).Items.Single(i => i.Title == "Human After All");
         Assert.Equal("HaveIt", archived.Archived!.Kind);
         Assert.DoesNotContain((await _rig.ListAsync()).Items, i => i.Title == "Human After All");
+    }
+
+    private async Task<long> WantedId(string title) => (await _rig.ListAsync(wanted: true)).Items.Single(i => i.Title == title).Id;
+
+    private async Task<string[]> Titles(bool archived = false, bool wanted = false) => (await _rig.ListAsync(archived: archived, wanted: wanted)).Items.Select(i => i.Title).ToArray();
+
+    [Fact]
+    public async Task W1_WantIt_MovesTheReleaseFromTheListToTheWantItList_AndItStaysThereAfterARun()
+    {
+        Scenario();
+        await _rig.RunAsync();
+
+        Assert.IsType<NoContentResult>(await _rig.ControllerFor(AcceptanceRig.Alice).WantItAsync(await IdOf("Alive 2007"), CancellationToken.None));
+        await _rig.RunAsync();
+
+        Assert.Equal(["Human After All"], await Titles());
+        Assert.Equal(["Alive 2007"], await Titles(wanted: true));
+        Assert.Empty(await Titles(archived: true));
+    }
+
+    [Fact]
+    public async Task W2_FromTheWantItList_HaveItAndIgnoreGoToTheArchive_RestoreGoesBackToTheList()
+    {
+        Scenario();
+        await _rig.RunAsync();
+        var controller = _rig.ControllerFor(AcceptanceRig.Alice);
+        await controller.WantItAsync(await IdOf("Alive 2007"), CancellationToken.None);
+        await controller.WantItAsync(await IdOf("Human After All"), CancellationToken.None);
+
+        await controller.HaveItAsync(await WantedId("Alive 2007"), CancellationToken.None);
+        await controller.IgnoreAsync(await WantedId("Human After All"), CancellationToken.None);
+
+        Assert.Empty(await Titles(wanted: true));
+        var archive = (await _rig.ListAsync(archived: true)).Items.ToDictionary(i => i.Title, i => i.Archived!.Kind);
+        Assert.Equal(new Dictionary<string, string> { ["Alive 2007"] = "HaveIt", ["Human After All"] = "Ignore" }, archive);
+
+        await controller.WantItAsync(await IdOf("Alive 2007", archived: true), CancellationToken.None);
+        Assert.Equal(["Alive 2007"], await Titles(wanted: true));
+        Assert.DoesNotContain("Alive 2007", await Titles(archived: true));
+
+        await controller.RestoreAsync(await WantedId("Alive 2007"), CancellationToken.None);
+
+        Assert.Equal(["Alive 2007"], await Titles());
+        Assert.Empty(await Titles(wanted: true));
+    }
+
+    [Fact]
+    public async Task W3_AWantItReleaseTheLibraryGainsLeavesTheWantItList_WithoutGoingToTheArchive_AndReturnsIfTheLibraryLosesIt()
+    {
+        var humanAfterAll = Scenario();
+        await _rig.RunAsync();
+        await _rig.ControllerFor(AcceptanceRig.Alice).WantItAsync(await IdOf("Human After All"), CancellationToken.None);
+
+        _rig.Library_.SetTracks(humanAfterAll, HumanAfterAll); // the library gains the fourth track
+        await _rig.RunAsync();
+
+        Assert.Empty(await Titles(wanted: true));
+        Assert.DoesNotContain("Human After All", await Titles());
+        Assert.DoesNotContain("Human After All", await Titles(archived: true));
+
+        _rig.Library_.SetTracks(humanAfterAll, HumanAfterAll.Take(3).ToArray()); // and loses it again
+        await _rig.RunAsync();
+
+        Assert.Equal(["Human After All"], await Titles(wanted: true));
+    }
+
+    [Fact]
+    public async Task W4_WantItDecisionsSurvivePurgeAndClearArchive_WhileClearArchiveStillEmptiesTheArchive()
+    {
+        Scenario();
+        await _rig.RunAsync();
+        var controller = _rig.ControllerFor(AcceptanceRig.Alice);
+        await controller.WantItAsync(await IdOf("Alive 2007"), CancellationToken.None);
+        await controller.IgnoreAsync(await IdOf("Human After All"), CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(await _rig.AdminController().PurgeAsync(CancellationToken.None));
+        await _rig.RunAsync();
+
+        Assert.Equal(["Alive 2007"], await Titles(wanted: true));
+
+        Assert.IsType<NoContentResult>(await _rig.AdminController().ClearArchiveAsync(CancellationToken.None));
+
+        Assert.Equal(["Alive 2007"], await Titles(wanted: true));
+        Assert.Empty(await Titles(archived: true));
+        Assert.Equal(["Human After All"], await Titles());
     }
 }

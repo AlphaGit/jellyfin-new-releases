@@ -315,6 +315,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     [Theory]
     [InlineData("Ignore")]
     [InlineData("HaveIt")]
+    [InlineData("WantIt")]
     [InlineData("Restore")]
     public async Task EveryDecision_ForACallerWithoutAUser_Is401(string decision)
     {
@@ -327,6 +328,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         {
             "Ignore" => await controller.IgnoreAsync(id, CancellationToken.None),
             "HaveIt" => await controller.HaveItAsync(id, CancellationToken.None),
+            "WantIt" => await controller.WantItAsync(id, CancellationToken.None),
             "Restore" => await controller.RestoreAsync(id, CancellationToken.None),
             _ => throw new ArgumentOutOfRangeException(nameof(decision), decision, "not a decision action"),
         };
@@ -343,6 +345,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
 
         Assert.IsType<NotFoundResult>(await limited.IgnoreAsync(999_999, CancellationToken.None));
         Assert.IsType<ForbidResult>(await limited.IgnoreAsync(crossId, CancellationToken.None));
+        Assert.IsType<ForbidResult>(await limited.WantItAsync(crossId, CancellationToken.None));
         Assert.IsType<ForbidResult>(await limited.RestoreAsync(crossId, CancellationToken.None));
         Assert.Equal(0L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision"));
     }
@@ -362,6 +365,74 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         Assert.Empty(list.Items);
         var archived = Assert.Single(archive.Items);
         Assert.Equal(("Discovery", "HaveIt", _clock.GetUtcNow()), (archived.Title, archived.Archived!.Kind, archived.Archived.DecidedAt));
+    }
+
+    [Fact]
+    public async Task WantIt_StoresTheCallerAndClock_ReplacesAnEarlierDecision_RestoreDeletesIt_Returns204()
+    {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var controller = SignedInController();
+        var id = Ok(await controller.GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.Single().Id;
+        await controller.IgnoreAsync(id, CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(await controller.WantItAsync(id, CancellationToken.None));
+
+        Assert.Equal(new Decision("name:daft punk", "discovery", DecisionKind.WantIt, Alice, _clock.GetUtcNow()), await _db.Archive.GetAsync("name:daft punk", "discovery", CancellationToken.None));
+        Assert.Equal(1L, await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision"));
+
+        Assert.IsType<NoContentResult>(await controller.RestoreAsync(id, CancellationToken.None));
+
+        Assert.Null(await _db.Archive.GetAsync("name:daft punk", "discovery", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task WantIt_UnknownReleaseIs404()
+    {
+        Assert.IsType<NotFoundResult>(await SignedInController().WantItAsync(999_999, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetReleases_Wanted_ListsWantItReleasesOnly_AndSharesThemWithEveryUser()
+    {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"), ("Homework", "1997-01-20"));
+        var alice = SignedInController();
+        var ids = Ok(await alice.GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.ToDictionary(i => i.Title, i => i.Id);
+        await alice.WantItAsync(ids["Discovery"], CancellationToken.None);
+
+        var bob = Controller(Bob, ControllerContextFactory.User(Bob, allFolders: true));
+        var list = Ok(await bob.GetReleasesAsync(cancellationToken: CancellationToken.None));
+        var wanted = Ok(await bob.GetReleasesAsync(wanted: true, cancellationToken: CancellationToken.None));
+        var archive = Ok(await bob.GetReleasesAsync(archived: true, cancellationToken: CancellationToken.None));
+
+        Assert.Equal(["Homework"], list.Items.Select(i => i.Title));
+        var row = Assert.Single(wanted.Items);
+        Assert.Equal(("Discovery", null), (row.Title, row.Archived));
+        Assert.Empty(archive.Items);
+    }
+
+    [Fact]
+    public async Task GetReleases_Wanted_ShowsOnlyTheCallersLibraries()
+    {
+        await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        await SeedArtistAsync("Justice", OtherLibrary, ("Cross", "2007-06-11"));
+        var all = SignedInController();
+        foreach (var item in Ok(await all.GetReleasesAsync(cancellationToken: CancellationToken.None)).Items)
+        {
+            await all.WantItAsync(item.Id, CancellationToken.None);
+        }
+
+        var limited = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: false, Library));
+
+        Assert.Equal(["Discovery"], Ok(await limited.GetReleasesAsync(wanted: true, cancellationToken: CancellationToken.None)).Items.Select(i => i.Title));
+        Assert.Equal(2, Ok(await all.GetReleasesAsync(wanted: true, cancellationToken: CancellationToken.None)).Items.Count);
+    }
+
+    [Fact]
+    public async Task GetReleases_ArchivedAndWantedTogether_Is400()
+    {
+        var result = await SignedInController().GetReleasesAsync(archived: true, wanted: true, cancellationToken: CancellationToken.None);
+
+        Assert.IsType<BadRequestResult>(result.Result);
     }
 
     /// <summary>Stores one release for a new artist from each (source, source release id) given, and lists it as Alice.</summary>
