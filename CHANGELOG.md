@@ -3,6 +3,23 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 0.4.0 — 2026-11-10
+
+### Added
+
+- **Want it.** A release can now be marked Want it, next to Ignore and Have it. It moves to a new
+  Want it tab, a shopping list shared by every user. From there you can mark it Have it (you
+  bought it), Ignore (you decided against it) or Restore it to the list. In the Archive, Restore
+  and Want it are offered. A Want it release that your library gains leaves the tab by itself.
+  Purge release data and Clear Archive leave Want it decisions in place.
+
+### Changed
+
+- The list endpoint accepts `wanted=true` for the Want it list, and `POST Releases/{id}/WantIt`
+  records the decision. Asking for `archived=true` and `wanted=true` together answers 400.
+- Upgrading runs one database migration that keeps every existing Ignore and Have it decision.
+  A downgrade to an older version is not supported after it.
+
 ## 0.3.1 — 2026-10-11
 
 ### Changed
