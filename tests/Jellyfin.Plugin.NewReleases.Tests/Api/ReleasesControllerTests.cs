@@ -38,7 +38,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     private ReleasesController ControllerWithoutUser() => Build(ControllerContextFactory.ForCallerWithoutUser());
 
     private ReleasesController Build(ControllerContext context, params Jellyfin.Database.Implementations.Entities.User[] users)
-        => new(_db.Releases, _db.Artists, _db.Archive, _db.SourceState, ControllerContextFactory.UserManager(users), _tasks, _clock, NullLogger<ReleasesController>.Instance, () => _configuration)
+        => new(_db.Releases, _db.Artists, _db.Archive, _db.Unfollowed, _db.SourceState, ControllerContextFactory.UserManager(users), _tasks, _clock, NullLogger<ReleasesController>.Instance, () => _configuration)
         {
             ControllerContext = context,
         };
@@ -111,7 +111,7 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
     private void TriggersAre(params TaskTriggerInfo[] triggers)
     {
         var worker = Substitute.For<IScheduledTaskWorker>();
-        worker.ScheduledTask.Returns(new RefreshNewReleasesTask(null!, null!, null!, null!, null!, [], null!, null!)); // only its type/key matter here
+        worker.ScheduledTask.Returns(new RefreshNewReleasesTask(null!, null!, null!, null!, null!, null!, [], null!, null!)); // only its type/key matter here
         worker.Triggers.Returns(triggers);
         _tasks.ScheduledTasks.Returns([worker]);
     }
@@ -490,5 +490,125 @@ public sealed class ReleasesControllerTests : IAsyncLifetime
         var release = await ListedWithSourcesAsync(("musicbrainz", "rg-disc"), ("deezer", "302127"));
 
         Assert.Equal(["deezer", "musicbrainz"], release.Sources.Select(s => s.Source));
+    }
+
+    // ── Unfollow and Follow (spec 011) ───────────────────────────────────────────
+
+    private async Task<string[]> UnfollowedKeysAsync() => (await _db.Unfollowed.GetKeysAsync(CancellationToken.None)).Order().ToArray();
+
+    [Fact]
+    public async Task Unfollow_StoresTheCallerAndClock_Returns204_AndIsIdempotent()
+    {
+        var artist = await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"));
+        var controller = SignedInController();
+
+        Assert.IsType<NoContentResult>(await controller.UnfollowAsync(artist, CancellationToken.None));
+        Assert.IsType<NoContentResult>(await controller.UnfollowAsync(artist, CancellationToken.None));
+
+        Assert.Equal(["name:daft punk"], await UnfollowedKeysAsync());
+        Assert.Equal(Alice.ToString("D"), await _db.ScalarAsync<string>("SELECT user_id FROM unfollowed_artist"));
+        Assert.Equal(_clock.GetUtcNow(), DateTimeOffset.Parse(await _db.ScalarAsync<string>("SELECT decided_at FROM unfollowed_artist") ?? string.Empty, System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    [Fact]
+    public async Task UnfollowAndFollow_AnswerForACallerWithoutAUser401_AnUnknownArtist404_AnArtistOfALibraryTheCallerMaySee403_AndWriteNothing()
+    {
+        var hidden = await SeedArtistAsync("Justice", OtherLibrary, ("Cross", "2007-06-11"));
+        var limited = Controller(Alice, ControllerContextFactory.User(Alice, allFolders: false, Library));
+
+        Assert.IsType<UnauthorizedResult>(await ControllerWithoutUser().UnfollowAsync(hidden, CancellationToken.None));
+        Assert.IsType<UnauthorizedResult>(await ControllerWithoutUser().FollowAsync(hidden, CancellationToken.None));
+        Assert.IsType<NotFoundResult>(await limited.UnfollowAsync(Guid.NewGuid(), CancellationToken.None));
+        Assert.IsType<NotFoundResult>(await limited.FollowAsync(Guid.NewGuid(), CancellationToken.None));
+        Assert.IsType<ForbidResult>(await limited.UnfollowAsync(hidden, CancellationToken.None));
+        Assert.IsType<ForbidResult>(await limited.FollowAsync(hidden, CancellationToken.None));
+
+        Assert.Empty(await UnfollowedKeysAsync());
+
+        await _db.Unfollowed.SetAsync("name:justice", Bob, _clock.GetUtcNow(), CancellationToken.None);
+        Assert.IsType<ForbidResult>(await limited.FollowAsync(hidden, CancellationToken.None));
+        Assert.Equal(["name:justice"], await UnfollowedKeysAsync());
+    }
+
+    /// <summary>FR-005, FR-006, FR-013: the List drops the artist's undecided Releases; Want-it and Archive rows stay and carry the flag.</summary>
+    [Fact]
+    public async Task GetReleases_AfterUnfollow_TheListHidesUndecidedReleases_AndWantItAndArchiveRowsStayWithTheFlag()
+    {
+        var daftPunk = await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"), ("Homework", "1997-01-20"), ("Alive 2007", "2007-11-19"));
+        await SeedArtistAsync("Justice", Library, ("Cross", "2007-06-11"));
+        var alice = SignedInController();
+        var ids = Ok(await alice.GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.ToDictionary(i => i.Title, i => i.Id);
+        await alice.WantItAsync(ids["Discovery"], CancellationToken.None);
+        await alice.IgnoreAsync(ids["Homework"], CancellationToken.None);
+
+        await alice.UnfollowAsync(daftPunk, CancellationToken.None);
+
+        var list = Ok(await alice.GetReleasesAsync(cancellationToken: CancellationToken.None));
+        var wanted = Ok(await alice.GetReleasesAsync(wanted: true, cancellationToken: CancellationToken.None));
+        var archive = Ok(await alice.GetReleasesAsync(archived: true, cancellationToken: CancellationToken.None));
+        Assert.Equal(["Cross"], list.Items.Select(i => i.Title));
+        Assert.All(list.Items, i => Assert.False(i.ArtistUnfollowed));
+        Assert.Equal(["Discovery"], wanted.Items.Select(i => i.Title));
+        Assert.True(wanted.Items.Single().ArtistUnfollowed);
+        Assert.Equal(["Homework"], archive.Items.Select(i => i.Title));
+        Assert.True(archive.Items.Single().ArtistUnfollowed);
+        Assert.Empty(Ok(await alice.GetReleasesAsync(artistId: daftPunk, cancellationToken: CancellationToken.None)).Items); // the Artist filter on an unfollowed artist: no rows (FR-016)
+    }
+
+    /// <summary>FR-007, FR-006: Follow brings the undecided Releases back at once and changes no Release decision.</summary>
+    [Fact]
+    public async Task Follow_RemovesTheRow_ReturnsTheUndecidedReleasesToTheList_AndLeavesEveryReleaseDecisionAlone()
+    {
+        var daftPunk = await SeedArtistAsync("Daft Punk", Library, ("Discovery", "2001-03-12"), ("Homework", "1997-01-20"), ("Alive 2007", "2007-11-19"));
+        var alice = SignedInController();
+        var ids = Ok(await alice.GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.ToDictionary(i => i.Title, i => i.Id);
+        await alice.WantItAsync(ids["Discovery"], CancellationToken.None);
+        await alice.IgnoreAsync(ids["Homework"], CancellationToken.None);
+        var before = await _db.ColumnAsync<string>("SELECT artist_key || '|' || normalized_title || '|' || kind || '|' || user_id || '|' || decided_at FROM decision ORDER BY 1");
+        await alice.UnfollowAsync(daftPunk, CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(await alice.FollowAsync(daftPunk, CancellationToken.None));
+        Assert.IsType<NoContentResult>(await alice.FollowAsync(daftPunk, CancellationToken.None)); // already followed: nothing happens
+
+        Assert.Empty(await UnfollowedKeysAsync());
+        Assert.Equal(["Alive 2007"], Ok(await alice.GetReleasesAsync(cancellationToken: CancellationToken.None)).Items.Select(i => i.Title));
+        Assert.Equal(before, await _db.ColumnAsync<string>("SELECT artist_key || '|' || normalized_title || '|' || kind || '|' || user_id || '|' || decided_at FROM decision ORDER BY 1"));
+    }
+
+    [Fact]
+    public async Task GetUnfollowedArtists_ListsUnfollowedLibraryArtistsTheCallerMaySee_SortedByName_AndOmitsAKeyWithNoLibraryArtist()
+    {
+        var zed = await SeedArtistAsync("Zed", Library, ("Z1", "2020-01-01"));
+        var abba = await SeedArtistAsync("Abba", Library, ("A1", "2020-01-01"));
+        var hidden = await SeedArtistAsync("Justice", OtherLibrary, ("Cross", "2007-06-11"));
+        await SeedArtistAsync("Followed", Library, ("F1", "2020-01-01"));
+        var all = SignedInController();
+        foreach (var artist in new[] { zed, abba, hidden })
+        {
+            await all.UnfollowAsync(artist, CancellationToken.None);
+        }
+
+        await _db.Unfollowed.SetAsync("name:gone", Alice, _clock.GetUtcNow(), CancellationToken.None); // left the library
+
+        var everything = (await all.GetUnfollowedArtistsAsync(CancellationToken.None)).Value!;
+        var some = (await Controller(Alice, ControllerContextFactory.User(Alice, allFolders: false, Library)).GetUnfollowedArtistsAsync(CancellationToken.None)).Value!;
+
+        Assert.Equal(["Abba", "Justice", "Zed"], everything.Items.Select(i => i.Name));
+        Assert.Equal(["Abba", "Zed"], some.Items.Select(i => i.Name));
+        Assert.IsType<UnauthorizedResult>((await ControllerWithoutUser().GetUnfollowedArtistsAsync(CancellationToken.None)).Result);
+    }
+
+    /// <summary>FR-016: the Artist filter's suggestions still name every library artist, unfollowed ones included.</summary>
+    [Fact]
+    public async Task GetArtists_StillListsEveryLibraryArtist_UnfollowedOnesIncluded()
+    {
+        var quiet = await SeedArtistAsync("Quiet", Library, ("Q1", "2020-01-01"));
+        await SeedArtistAsync("Loud", Library, ("L1", "2020-01-01"));
+        var controller = SignedInController();
+        await controller.UnfollowAsync(quiet, CancellationToken.None);
+
+        var artists = (await controller.GetArtistsAsync(CancellationToken.None)).Value!;
+
+        Assert.Equal(["Loud", "Quiet"], artists.Items.Select(i => i.Name));
     }
 }

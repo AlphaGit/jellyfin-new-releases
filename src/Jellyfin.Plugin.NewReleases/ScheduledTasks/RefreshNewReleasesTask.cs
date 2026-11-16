@@ -19,6 +19,7 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
     private readonly ArtistRepository _artists;
     private readonly ReleaseRepository _releases;
     private readonly SourceStateRepository _sourceState;
+    private readonly UnfollowedArtistRepository _unfollowed;
     private readonly SourceHttpClient _http;
     private readonly IReadOnlyList<IReleaseSource> _sources;
     private readonly TimeProvider _clock;
@@ -30,11 +31,12 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
         ArtistRepository artists,
         ReleaseRepository releases,
         SourceStateRepository sourceState,
+        UnfollowedArtistRepository unfollowed,
         SourceHttpClient http,
         IEnumerable<IReleaseSource> sources,
         TimeProvider clock,
         ILogger<RefreshNewReleasesTask> logger)
-        : this(scanner, artists, releases, sourceState, http, sources, clock, logger, () => Plugin.Instance?.Configuration ?? new PluginConfiguration())
+        : this(scanner, artists, releases, sourceState, unfollowed, http, sources, clock, logger, () => Plugin.Instance?.Configuration ?? new PluginConfiguration())
     {
     }
 
@@ -43,6 +45,7 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
         ArtistRepository artists,
         ReleaseRepository releases,
         SourceStateRepository sourceState,
+        UnfollowedArtistRepository unfollowed,
         SourceHttpClient http,
         IEnumerable<IReleaseSource> sources,
         TimeProvider clock,
@@ -53,6 +56,7 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
         _artists = artists;
         _releases = releases;
         _sourceState = sourceState;
+        _unfollowed = unfollowed;
         _http = http;
         _sources = sources.ToList();
         _clock = clock;
@@ -94,8 +98,11 @@ public sealed class RefreshNewReleasesTask : IScheduledTask
 
         try
         {
-            // 3. Rotate artists × enabled sources.
-            var rotation = await _artists.GetRotationAsync(cancellationToken).ConfigureAwait(false);
+            // 3. Rotate artists × enabled sources. Spec 011 FR-008: an unfollowed artist leaves the rotation, so it gets no source request,
+            // no match write, no ownership check and no timestamp change. The library snapshot stays whole, so a followed artist's
+            // ownership check still sees albums credited to an unfollowed one.
+            var unfollowed = await _unfollowed.GetKeysAsync(cancellationToken).ConfigureAwait(false);
+            var rotation = (await _artists.GetRotationAsync(cancellationToken).ConfigureAwait(false)).Where(a => !unfollowed.Contains(a.ArtistKey)).ToList();
             var placeholders = new HashSet<long>();
             var done = 0;
             foreach (var stored in rotation)

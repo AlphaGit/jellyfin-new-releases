@@ -13,7 +13,8 @@
         { "source": "musicbrainz", "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000101" },
         { "source": "deezer", "url": "https://www.deezer.com/album/101" }
       ],
-      "covers": ["https://api.deezer.com/album/101/image?size=medium", "https://coverartarchive.org/release-group/00000000-0000-0000-0000-000000000101/front-250"]
+      "covers": ["https://api.deezer.com/album/101/image?size=medium", "https://coverartarchive.org/release-group/00000000-0000-0000-0000-000000000101/front-250"],
+      "artistUnfollowed": false
     },
     {
       "id": 102,
@@ -29,7 +30,8 @@
       "sources": [
         { "source": "musicbrainz", "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000102" }
       ],
-      "covers": ["https://coverartarchive.org/release-group/00000000-0000-0000-0000-000000000102/front-250"]
+      "covers": ["https://coverartarchive.org/release-group/00000000-0000-0000-0000-000000000102/front-250"],
+      "artistUnfollowed": false
     },
     {
       "id": 103,
@@ -43,7 +45,8 @@
       "sources": [
         { "source": "deezer", "url": "https://www.deezer.com/album/103" }
       ],
-      "covers": ["https://api.deezer.com/album/103/image?size=medium"]
+      "covers": ["https://api.deezer.com/album/103/image?size=medium"],
+      "artistUnfollowed": false
     },
     {
       "id": 104,
@@ -57,7 +60,8 @@
       "sources": [
         { "source": "musicbrainz", "url": "https://musicbrainz.org/release-group/00000000-0000-0000-0000-000000000104" }
       ],
-      "covers": ["https://coverartarchive.org/release-group/00000000-0000-0000-0000-000000000104/front-250"]
+      "covers": ["https://coverartarchive.org/release-group/00000000-0000-0000-0000-000000000104/front-250"],
+      "artistUnfollowed": true
     }
   ],
   "total": 4,

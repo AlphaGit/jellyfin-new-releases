@@ -35,6 +35,7 @@
   "nextRunAt": "2026-09-21T03:00:00+00:00",
   "isRunning": false,
   "libraryArtists": 83,
+  "unfollowedArtists": 4,
   "matchedArtists": {
     "musicbrainz": 41,
     "deezer": 38

@@ -55,9 +55,9 @@ test('U85: the List tab is selected on open, and switching tabs moves the select
     ]);
 });
 
-test('010: the tabs read List, Want it and Archive, in that order', () => {
+test('010, 011: the tabs read List, Want it, Archive and Unfollowed artists, in that order', () => {
     assert.deepEqual([...PAGE.matchAll(/role="tab" id="(nr-tab-\w+)"[^>]*>([^<]*)</g)].map(([, id, text]) => [id, text]),
-        [['nr-tab-list', 'List'], ['nr-tab-wantit', 'Want it'], ['nr-tab-archive', 'Archive']]);
+        [['nr-tab-list', 'List'], ['nr-tab-wantit', 'Want it'], ['nr-tab-archive', 'Archive'], ['nr-tab-unfollowed', 'Unfollowed artists']]);
 });
 
 test('U86: the status line is announced politely', () => {

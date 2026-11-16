@@ -27,7 +27,7 @@ public sealed class AdminControllerTests : IAsyncLifetime
 
     public async Task DisposeAsync() => await _db.DisposeAsync();
 
-    private AdminController Controller() => new(_db.Artists, _db.Releases, _db.Archive, _db.SourceState, _tasks, _clock, NullLogger<AdminController>.Instance, () => _configuration);
+    private AdminController Controller() => new(_db.Artists, _db.Releases, _db.Archive, _db.Unfollowed, _db.SourceState, _tasks, _clock, NullLogger<AdminController>.Instance, () => _configuration);
 
     /// <summary>The pipeline enforces the policy; the test pins the declaration (FR-013: admin-only actions).</summary>
     [Fact]
@@ -41,7 +41,7 @@ public sealed class AdminControllerTests : IAsyncLifetime
     private void RefreshWorkerIs(TaskState state, params TaskTriggerInfo[] triggers)
     {
         var worker = Substitute.For<IScheduledTaskWorker>();
-        worker.ScheduledTask.Returns(new RefreshNewReleasesTask(null!, null!, null!, null!, null!, [], null!, null!));
+        worker.ScheduledTask.Returns(new RefreshNewReleasesTask(null!, null!, null!, null!, null!, null!, [], null!, null!));
         worker.State.Returns(state);
         worker.Triggers.Returns(triggers);
         _tasks.ScheduledTasks.Returns([worker]);
@@ -367,5 +367,59 @@ public sealed class AdminControllerTests : IAsyncLifetime
         Assert.IsType<NoContentResult>(await Controller().ClearArchiveAsync(CancellationToken.None));
 
         Assert.Equal(["homework"], await _db.ScalarAsync<string>("SELECT group_concat(normalized_title) FROM decision") is { } kept ? kept.Split(',') : []);
+    }
+
+    // ── Unfollowed artists (spec 011) ────────────────────────────────────────────
+
+    /// <summary>FR-017, SC-007: library artists stay the total; unfollowed ones get their own line and leave the matched and unmatched sections.</summary>
+    [Fact]
+    public async Task Status_UnfollowedArtists_AreCountedOnTheirOwnLine_AndLeaveTheMatchedAndUnmatchedSections()
+    {
+        var blur = await UpsertBlurAsync();
+        var oasis = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:oasis", Guid.NewGuid(), "Oasis", null, [Library], []), CancellationToken.None);
+        var pulp = await _db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:pulp", Guid.NewGuid(), "Pulp", null, [Library], []), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(blur, "musicbrainz", ArtistMatch.Matched("mb-blur"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(oasis, "musicbrainz", ArtistMatch.Matched("mb-oasis"), CancellationToken.None);
+        await _db.Artists.SetMatchAsync(pulp, "musicbrainz", ArtistMatch.Unmatched("no result"), CancellationToken.None);
+        var before = (await Controller().GetStatusAsync(CancellationToken.None)).Value!;
+        Assert.Equal((3, 0, 2, 1), (before.LibraryArtists, before.UnfollowedArtists, before.MatchedArtists["musicbrainz"], before.Unmatched.Count));
+
+        await _db.Unfollowed.SetAsync("name:oasis", Guid.NewGuid(), _clock.GetUtcNow(), CancellationToken.None);
+        await _db.Unfollowed.SetAsync("name:pulp", Guid.NewGuid(), _clock.GetUtcNow(), CancellationToken.None);
+        await _db.Unfollowed.SetAsync("name:gone", Guid.NewGuid(), _clock.GetUtcNow(), CancellationToken.None); // left the library: not counted
+
+        var after = (await Controller().GetStatusAsync(CancellationToken.None)).Value!;
+
+        Assert.Equal((3, 2, 1, 0), (after.LibraryArtists, after.UnfollowedArtists, after.MatchedArtists["musicbrainz"], after.Unmatched.Count));
+        Assert.Equal(after.LibraryArtists, after.UnfollowedArtists + 1); // library = followed + unfollowed
+    }
+
+    [Fact]
+    public async Task ClearUnfollowedArtists_FollowsEveryone_IncludingAbsentArtists_AndChangesNoReleaseOrDecision()
+    {
+        await SeedReleaseDataAsync();
+        await _db.Archive.SetAsync("name:daft punk", "homework", DecisionKind.WantIt, Guid.NewGuid(), _clock.GetUtcNow(), CancellationToken.None);
+        await _db.Unfollowed.SetAsync("name:daft punk", Guid.NewGuid(), _clock.GetUtcNow(), CancellationToken.None);
+        await _db.Unfollowed.SetAsync("name:gone", Guid.NewGuid(), _clock.GetUtcNow(), CancellationToken.None);
+        var decisions = await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision");
+        var releases = await _db.ScalarAsync<long>("SELECT COUNT(*) FROM release");
+
+        Assert.IsType<NoContentResult>(await Controller().ClearUnfollowedArtistsAsync(CancellationToken.None));
+
+        Assert.Empty(await _db.Unfollowed.GetKeysAsync(CancellationToken.None));
+        Assert.Equal((decisions, releases), (await _db.ScalarAsync<long>("SELECT COUNT(*) FROM decision"), await _db.ScalarAsync<long>("SELECT COUNT(*) FROM release")));
+    }
+
+    /// <summary>FR-015: Purge release data and Clear Archive leave unfollowed artists alone.</summary>
+    [Fact]
+    public async Task PurgeAndClearArchive_LeaveUnfollowedArtistsAlone()
+    {
+        await SeedReleaseDataAsync();
+        await _db.Unfollowed.SetAsync("name:daft punk", Guid.NewGuid(), _clock.GetUtcNow(), CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(await Controller().PurgeAsync(CancellationToken.None));
+        Assert.IsType<NoContentResult>(await Controller().ClearArchiveAsync(CancellationToken.None));
+
+        Assert.Equal(["name:daft punk"], await _db.Unfollowed.GetKeysAsync(CancellationToken.None));
     }
 }

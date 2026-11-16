@@ -156,10 +156,19 @@ public sealed class ArtistRepository
         total.CommandText = "SELECT COUNT(*) FROM library_artist";
         var libraryArtists = Convert.ToInt32(await total.ExecuteScalarAsync(ct).ConfigureAwait(false), CultureInfo.InvariantCulture);
 
+        await using var unfollowedCount = connection.CreateCommand();
+        unfollowedCount.CommandText = "SELECT COUNT(*) FROM library_artist WHERE artist_key IN (SELECT artist_key FROM unfollowed_artist)";
+        var unfollowed = Convert.ToInt32(await unfollowedCount.ExecuteScalarAsync(ct).ConfigureAwait(false), CultureInfo.InvariantCulture);
+
         var matched = new Dictionary<string, int>(StringComparer.Ordinal);
         await using (var perSource = connection.CreateCommand())
         {
-            perSource.CommandText = "SELECT source, COUNT(*) FROM artist_source WHERE status = 'Matched' GROUP BY source";
+            // Spec 011 FR-017: an unfollowed artist is left out of the matched counts and the unmatched list; it is counted on its own line.
+            perSource.CommandText = """
+                SELECT s.source, COUNT(*) FROM artist_source s JOIN library_artist a ON a.id = s.library_artist_id
+                WHERE s.status = 'Matched' AND a.artist_key NOT IN (SELECT artist_key FROM unfollowed_artist)
+                GROUP BY s.source
+                """;
             await using var reader = await perSource.ExecuteReaderAsync(ct).ConfigureAwait(false);
             while (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
@@ -174,6 +183,7 @@ public sealed class ArtistRepository
                 SELECT a.jellyfin_id, a.name, s.source, s.unmatched_reason, s.status, s.match_detail
                 FROM artist_source s JOIN library_artist a ON a.id = s.library_artist_id
                 WHERE s.source IN (SELECT value FROM json_each(@enabled))
+                  AND a.artist_key NOT IN (SELECT artist_key FROM unfollowed_artist)
                   AND s.library_artist_id IN (
                     SELECT library_artist_id FROM artist_source
                     WHERE status = 'Unmatched' AND source IN (SELECT value FROM json_each(@enabled)))
@@ -203,7 +213,7 @@ public sealed class ArtistRepository
             .Select(a => new UnmatchedArtist(a.JellyfinId, a.Name, enabledSources.Select(source => a.At.GetValueOrDefault(source) ?? new UnmatchedAt(source, MatchStatus.Pending, null)).ToArray()))
             .ToList();
 
-        return new ArtistCounts(libraryArtists, matched, unmatched);
+        return new ArtistCounts(libraryArtists, matched, unmatched, unfollowed);
     }
 
     /// <summary>Stamps the rotation key once every enabled source was attempted for the artist in a run.</summary>
@@ -252,6 +262,17 @@ public sealed class ArtistRepository
         => QueryArtistsAsync("ORDER BY last_refreshed_at IS NOT NULL, last_refreshed_at, name", ct);
 
     public Task<IReadOnlyList<LibraryArtist>> GetAllAsync(CancellationToken ct) => QueryArtistsAsync("ORDER BY name", ct);
+
+    /// <summary>The library artist with this Jellyfin id, or null. The page and the Follow and Unfollow routes name an artist by it (spec 011 R4).</summary>
+    public async Task<LibraryArtist?> GetByJellyfinIdAsync(Guid jellyfinId, CancellationToken ct)
+    {
+        await using var connection = await _db.OpenAsync(ct).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT id, artist_key, jellyfin_id, name, mbid, library_ids, album_count, last_refreshed_at FROM library_artist WHERE jellyfin_id = @jellyfinId LIMIT 1";
+        command.Parameters.AddWithValue("@jellyfinId", jellyfinId.ToString("D"));
+        await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        return await reader.ReadAsync(ct).ConfigureAwait(false) ? ReadArtist(reader) : null;
+    }
 
     public async Task<LibraryArtist?> GetByIdAsync(long id, CancellationToken ct)
         => (await QueryArtistsAsync($"WHERE id = {id}", ct).ConfigureAwait(false)).FirstOrDefault();

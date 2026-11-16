@@ -185,15 +185,17 @@ public sealed class ReleaseRepository
         await using var command = connection.CreateCommand();
         // The view is a fixed condition on the decision and ownership (spec 010 R3); no caller text reaches the SQL.
         // A Want-it release the library already has matches no view: it is not listed and not archived, and its decision stays.
+        // Spec 011 R3: the List also hides an unfollowed artist's undecided releases; Want-it and Archive rows stay whatever the artist's state.
         var view = filter.Archived ? "d.kind IN ('Ignore', 'HaveIt')"
             : filter.Wanted ? "r.ownership_state <> 'Owned' AND d.kind = 'WantIt'"
-            : "r.ownership_state <> 'Owned' AND d.kind IS NULL";
+            : "r.ownership_state <> 'Owned' AND d.kind IS NULL AND NOT EXISTS (SELECT 1 FROM unfollowed_artist u WHERE u.artist_key = a.artist_key)";
         command.CommandText = $"""
             SELECT r.id, a.name, a.jellyfin_id, a.library_ids, r.title, r.primary_type, r.secondary_types, r.release_date, r.date_sort,
                    r.ownership_state, r.missing_tracks, e.source, e.title,
                    a.artist_key, r.normalized_title, d.kind, d.user_id, d.decided_at,
                    (SELECT json_group_array(json_object('source', s.source, 'url', s.url, 'sourceReleaseId', s.source_release_id))
-                      FROM (SELECT source, url, source_release_id FROM source_entry WHERE release_id = r.id ORDER BY source) AS s) AS sources
+                      FROM (SELECT source, url, source_release_id FROM source_entry WHERE release_id = r.id ORDER BY source) AS s) AS sources,
+                   EXISTS (SELECT 1 FROM unfollowed_artist u WHERE u.artist_key = a.artist_key) AS artist_unfollowed
             FROM release r
             JOIN library_artist a ON a.id = r.library_artist_id
             LEFT JOIN edition e ON e.id = r.compared_edition_id
@@ -272,7 +274,8 @@ public sealed class ReleaseRepository
             JsonSerializer.Deserialize<string[]>(r.GetString(10)) ?? [],
             r.IsDBNull(11) ? null : new ComparedEdition(r.GetString(11), r.GetString(12)),
             sources,
-            r.IsDBNull(15) || r.GetString(15) == nameof(DecisionKind.WantIt) ? null : new Decision(r.GetString(13), r.GetString(14), Enum.Parse<DecisionKind>(r.GetString(15)), Guid.Parse(r.GetString(16)), DateTimeOffset.Parse(r.GetString(17), CultureInfo.InvariantCulture)));
+            r.IsDBNull(15) || r.GetString(15) == nameof(DecisionKind.WantIt) ? null : new Decision(r.GetString(13), r.GetString(14), Enum.Parse<DecisionKind>(r.GetString(15)), Guid.Parse(r.GetString(16)), DateTimeOffset.Parse(r.GetString(17), CultureInfo.InvariantCulture)),
+            r.GetInt64(19) != 0);
     }
 
     private static readonly JsonSerializerOptions JsonWeb = new(JsonSerializerDefaults.Web);

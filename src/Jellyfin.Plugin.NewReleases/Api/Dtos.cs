@@ -28,7 +28,8 @@ public sealed record ReleaseDto(
     ComparedEditionDto? ComparedEdition,
     IReadOnlyList<SourceLinkDto> Sources,
     ArchivedDto? Archived,
-    IReadOnlyList<string> Covers);
+    IReadOnlyList<string> Covers,
+    bool ArtistUnfollowed);
 
 public sealed record ComparedEditionDto(string Source, string Title);
 
@@ -51,6 +52,7 @@ public sealed record AdminStatusResponse(
     DateTimeOffset? NextRunAt,
     bool IsRunning,
     int LibraryArtists,
+    int UnfollowedArtists,
     IReadOnlyDictionary<string, int> MatchedArtists,
     IReadOnlyList<UnmatchedArtistDto> Unmatched);
 

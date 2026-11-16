@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.NewReleases.Api;
 
-/// <summary>User-facing endpoints (any authenticated user): the list, the Want-it list, the Archive, the artist filter, status, and decisions (FR-007, FR-008, FR-015, FR-016).</summary>
+/// <summary>User-facing endpoints (any authenticated user): the list, the Want-it list, the Archive, the artist filter, Follow and Unfollow, status, and decisions (FR-007, FR-008, FR-015, FR-016; spec 011).</summary>
 [ApiController]
 [Authorize]
 [Produces(JsonDefaults.CamelCaseMediaType)]
@@ -29,6 +29,7 @@ public sealed class ReleasesController : ControllerBase
     private readonly ReleaseRepository _releases;
     private readonly ArtistRepository _artists;
     private readonly ArchiveRepository _archive;
+    private readonly UnfollowedArtistRepository _unfollowed;
     private readonly SourceStateRepository _runs;
     private readonly IUserManager _users;
     private readonly ITaskManager _tasks;
@@ -36,16 +37,17 @@ public sealed class ReleasesController : ControllerBase
     private readonly Func<PluginConfiguration> _configuration;
     private readonly ILogger<ReleasesController> _logger;
 
-    public ReleasesController(ReleaseRepository releases, ArtistRepository artists, ArchiveRepository archive, SourceStateRepository runs, IUserManager users, ITaskManager tasks, TimeProvider clock, ILogger<ReleasesController> logger)
-        : this(releases, artists, archive, runs, users, tasks, clock, logger, () => Plugin.Instance?.Configuration ?? new PluginConfiguration())
+    public ReleasesController(ReleaseRepository releases, ArtistRepository artists, ArchiveRepository archive, UnfollowedArtistRepository unfollowed, SourceStateRepository runs, IUserManager users, ITaskManager tasks, TimeProvider clock, ILogger<ReleasesController> logger)
+        : this(releases, artists, archive, unfollowed, runs, users, tasks, clock, logger, () => Plugin.Instance?.Configuration ?? new PluginConfiguration())
     {
     }
 
-    public ReleasesController(ReleaseRepository releases, ArtistRepository artists, ArchiveRepository archive, SourceStateRepository runs, IUserManager users, ITaskManager tasks, TimeProvider clock, ILogger<ReleasesController> logger, Func<PluginConfiguration> configuration)
+    public ReleasesController(ReleaseRepository releases, ArtistRepository artists, ArchiveRepository archive, UnfollowedArtistRepository unfollowed, SourceStateRepository runs, IUserManager users, ITaskManager tasks, TimeProvider clock, ILogger<ReleasesController> logger, Func<PluginConfiguration> configuration)
     {
         _releases = releases;
         _artists = artists;
         _archive = archive;
+        _unfollowed = unfollowed;
         _runs = runs;
         _users = users;
         _tasks = tasks;
@@ -115,6 +117,64 @@ public sealed class ReleasesController : ControllerBase
 
         var artists = await _artists.GetAllAsync(cancellationToken).ConfigureAwait(false);
         return new ArtistsResponse(artists.Where(a => access.CanSee(a.LibraryIds)).Select(a => new ArtistDto(a.JellyfinId, a.Name)).ToList());
+    }
+
+    /// <summary>The unfollowed library artists the caller may see, sorted by name (spec 011 FR-010, FR-011). An unfollowed artist that is not in the library now is not listed.</summary>
+    [HttpGet("Artists/Unfollowed")]
+    [ProducesResponseType(typeof(ArtistsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ArtistsResponse>> GetUnfollowedArtistsAsync(CancellationToken cancellationToken = default)
+    {
+        if (CallerId() is not { } userId || AccessOf(userId) is not { } access)
+        {
+            return Unauthorized();
+        }
+
+        var keys = await _unfollowed.GetKeysAsync(cancellationToken).ConfigureAwait(false);
+        var artists = await _artists.GetAllAsync(cancellationToken).ConfigureAwait(false); // ordered by name
+        return new ArtistsResponse(artists.Where(a => keys.Contains(a.ArtistKey) && access.CanSee(a.LibraryIds)).Select(a => new ArtistDto(a.JellyfinId, a.Name)).ToList());
+    }
+
+    [HttpPost("Artists/{jellyfinId:guid}/Unfollow")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public Task<ActionResult> UnfollowAsync(Guid jellyfinId, CancellationToken cancellationToken = default) => FollowDecisionAsync(jellyfinId, follow: false, cancellationToken);
+
+    [HttpPost("Artists/{jellyfinId:guid}/Follow")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public Task<ActionResult> FollowAsync(Guid jellyfinId, CancellationToken cancellationToken = default) => FollowDecisionAsync(jellyfinId, follow: true, cancellationToken);
+
+    /// <summary>
+    /// Unfollow (upsert) or Follow (delete) on the artist's key. Idempotent; never touches a Release decision (spec 011 FR-006, FR-007).
+    /// Visibility is checked before writing, as for a Release decision (research R4).
+    /// </summary>
+    private async Task<ActionResult> FollowDecisionAsync(Guid jellyfinId, bool follow, CancellationToken ct)
+    {
+        if (CallerId() is not { } userId || AccessOf(userId) is not { } access)
+        {
+            return Unauthorized();
+        }
+
+        var artist = await _artists.GetByJellyfinIdAsync(jellyfinId, ct).ConfigureAwait(false);
+        if (artist is null)
+        {
+            return NotFound();
+        }
+
+        if (!access.CanSee(artist.LibraryIds))
+        {
+            return Forbid();
+        }
+
+        if (follow)
+        {
+            await _unfollowed.RemoveAsync(artist.ArtistKey, ct).ConfigureAwait(false);
+        }
+        else
+        {
+            await _unfollowed.SetAsync(artist.ArtistKey, userId, _clock.GetUtcNow(), ct).ConfigureAwait(false);
+        }
+
+        return NoContent();
     }
 
     [HttpPost("Releases/{id:long}/Ignore")]
@@ -231,7 +291,8 @@ public sealed class ReleasesController : ControllerBase
         r.State == ListState.Incomplete && r.ComparedEdition is { } edition ? new ComparedEditionDto(edition.Source, edition.Title) : null,
         r.Sources.Select(s => new SourceLinkDto(s.Source, s.Url)).ToList(),
         r.Archived is { } decision ? new ArchivedDto(decision.Kind.ToString(), decision.DecidedAt) : null,
-        CoversOf(r.Sources));
+        CoversOf(r.Sources),
+        r.ArtistUnfollowed);
 
     /// <summary>One cover URL per source link, Deezer's first (007 FR-006, FR-006a, research R6). The browser loads them; the server never does (FR-008).</summary>
     private static List<string> CoversOf(IReadOnlyList<SourceLink> sources) => sources

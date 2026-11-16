@@ -11,7 +11,11 @@ plans, UI strings, and identifiers use these terms verbatim.
 | **New Releases** | The plugin and its user-facing page: releases by library artists that the library does not contain, read as "new to your library". | Plugin name, side-menu entry, page title, repository, roadmap board. | Release Radar, Missing Releases |
 | **Source** | An external release database the plugin reads: MusicBrainz, Deezer. | Admin "Sources" section; per-row source links. | catalogue, provider, adapter (in UI) |
 | **Catalogue** | An artist's whole body of releases as known to the sources. Not a system, not a UI word. | Prose only. | — |
-| **Library artist** | An artist credited as album artist of at least one album in a Jellyfin music library. Featured-credit-only artists are not library artists. | Admin counts ("Library artists"). | tracked artist, followed artist |
+| **Library artist** | An artist credited as album artist of at least one album in a Jellyfin music library. Featured-credit-only artists are not library artists. | Admin counts ("Library artists"). | — |
+| **Followed artist** | A library artist the plugin tracks: the default for every library artist. Refresh queries the sources for it and its undecided Releases reach the list. Also called tracked. | Not shown as a word; it is the absence of an Unfollow. | — |
+| **Unfollowed artist** | A library artist with an Unfollow decision: server-wide, kept while the artist is out of the library. Refresh skips it fully (no source request, no ownership check) and the list hides its undecided Releases. Its Have it, Want it and Ignore decisions are untouched. | Tab "Unfollowed artists"; admin line "Unfollowed artists". | ignored artist, muted artist, untracked artist |
+| **Unfollow** | User action: stop tracking this artist. No confirmation. Applies to every user. | Small button next to the artist name on every Release row, apart from the Release buttons. | Ignore (that is a Release action), mute, stop tracking |
+| **Follow** | User action: undo an Unfollow. The artist's stored Releases with no decision show in the list again at once; new Releases come with the next Refresh. | Button "Follow" in the Unfollowed artists tab, and in place of "Unfollow" on the rows of an unfollowed artist. | Restore (that undoes a Release decision), unmute |
 | **Unmatched** | A library artist for which no source identity could be established with confidence. Fixed in Jellyfin by setting the MusicBrainz artist ID, never in the plugin. | Admin "Unmatched artists" section. | unresolved, not found |
 | **Release** | A musical work as a whole (an album or EP). MusicBrainz "release group", Deezer "album". All editions belong to one Release. | Row title in the list. | album (as the generic word), release group |
 | **Edition** | One concrete version of a Release (a pressing, a deluxe or regional variant). Carries the track list used by the ownership check. MusicBrainz "release". Only Official editions count; Promotion, Bootleg, and Pseudo-release editions are ignored. | Incomplete rows: "compared with <edition> from <source>". | version, pressing, release (MusicBrainz sense) |
@@ -32,6 +36,7 @@ plans, UI strings, and identifiers use these terms verbatim.
 | **Refresh** | The plugin's scheduled task: enumerate library artists, query sources, recompute ownership. Runs daily by default; interval edited in Jellyfin's Scheduled Tasks. | Jellyfin task "Refresh new releases", category "New Releases"; admin status ("Last refresh", "Next refresh"). | scan, sync, update |
 | **Run now** | Admin action: start a Refresh immediately. | Admin button "Run now". | scan now, sync now, fetch |
 | **Purge release data** | Admin action: delete all stored Releases, Source entries, and ownership results. Leaves the Archive intact. | Admin button "Purge release data". | purge, clear cache, reset |
+| **Clear unfollowed artists** | Admin action: delete every Unfollow decision, including those of artists not in the library now. Leaves Releases, Want-it decisions and the Archive intact. | Admin button "Clear unfollowed artists". | reset artists |
 | **Clear Archive** | Admin action: delete all Ignore and Have-it decisions. Leaves release data and Want-it decisions intact. | Admin button "Clear Archive". | clear user decisions, reset decisions |
 | **Released since** | Optional admin cutoff: only Releases dated on or after this day are considered. Default unrestricted. | Admin date field "Released since". | lookback, window, since date |
 | **Complete / Partial / Failed** | Outcome of one source fetch for one artist within a Refresh. Only a Complete fetch may remove a Source entry. | Admin run status. | success/error (as the only words) |
@@ -53,6 +58,11 @@ plans, UI strings, and identifiers use these terms verbatim.
   may access.
 - A Want it decision is kept while the library has the Release (it is then in none of the three)
   and applies again if the library loses it. Have it and Ignore do not reopen this way.
+- An Unfollow is an artist-level decision, separate from the three Release decisions. It is
+  server-wide, stored by artist key so it survives Purge release data, Clear Archive and the
+  artist leaving the library (it applies again on return), and it never changes a Release
+  decision. A Release stored under a followed artist is not affected when it credits an
+  unfollowed one.
 - A Release leaves the list only when the library has it, its artist stops being a library
   artist, or no Source entry remains. Source entries are removed only by a Complete fetch that
   omits them.
@@ -68,7 +78,7 @@ plans, UI strings, and identifiers use these terms verbatim.
 - Fixed sentences: empty state "No data yet. New Releases is waiting for its first refresh.";
   stale data "Releases last checked <relative time> ago." (relative time, never a raw timestamp).
 - Code identifiers are the PascalCase form of the term: `LibraryArtist`, `SourceEntry`,
-  `ReleaseState.Incomplete`, `HaveIt`, `WantIt`, `Archive`.
+  `ReleaseState.Incomplete`, `HaveIt`, `WantIt`, `Archive`, `UnfollowedArtist`.
 
 ## Related documents
 
@@ -78,3 +88,4 @@ plans, UI strings, and identifiers use these terms verbatim.
 - [Title normalization](title-normalization.md) — the deterministic transformation behind every title comparison.
 - [Feature spec: Track New Releases](../../specs/001-track-new-releases/spec.md) — the feature this vocabulary was settled for.
 - [Feature spec: Want it list](../../specs/010-want-it-list/spec.md) — adds Want it, the Want-it list, and Restore from it.
+- [Feature spec: Unfollow artist](../../specs/011-unfollow-artist/spec.md) — adds Unfollow, Follow, the Unfollowed artists tab, and Clear unfollowed artists.

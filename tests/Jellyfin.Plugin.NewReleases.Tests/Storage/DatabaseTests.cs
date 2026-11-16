@@ -29,11 +29,11 @@ public sealed class DatabaseTests : IDisposable
         Assert.True(Directory.Exists(Path.Combine(_dataPath, "newreleases")));
     }
 
-    /// <summary>The newest embedded migration: 004_decision_want_it (spec 010). A fresh database ends at it.</summary>
-    private const long LatestSchema = 4;
+    /// <summary>The newest embedded migration: 005_unfollowed_artist (spec 011). A fresh database ends at it.</summary>
+    private const long LatestSchema = 5;
 
     private static readonly string[] SchemaTables =
-        ["library_artist", "artist_source", "release", "source_entry", "edition", "decision", "source_state", "refresh_run", "schema_version"];
+        ["library_artist", "artist_source", "release", "source_entry", "edition", "decision", "unfollowed_artist", "source_state", "refresh_run", "schema_version"];
 
     [Fact]
     public async Task OpenAsync_FirstOpenAppliesTheInitialMigration()
@@ -202,6 +202,47 @@ public sealed class DatabaseTests : IDisposable
 
         await using var insert = connection.CreateCommand();
         insert.CommandText = "INSERT INTO decision VALUES ('name:blur', 'leisure', 'WantIt', 'aaaaaaaa-1111-1111-1111-111111111111', '2026-11-10T00:00:00.0000000+00:00')";
+        Assert.Equal(1, await insert.ExecuteNonQueryAsync());
+    }
+
+    /// <summary>011 research R1: a database at schema 004 keeps every row through 005, then accepts an unfollowed artist.</summary>
+    [Fact]
+    public async Task OpenAsync_ADatabaseAtSchema004_MigratesTo005_KeepingEveryRowAndAcceptingAnUnfollowedArtist()
+    {
+        var db = NewDatabase();
+        Directory.CreateDirectory(Path.GetDirectoryName(db.DatabasePath)!);
+        await using (var old = new Microsoft.Data.Sqlite.SqliteConnection(db.ConnectionString))
+        {
+            await old.OpenAsync();
+            string Script(string name)
+            {
+                using var reader = new StreamReader(typeof(PluginDatabase).Assembly.GetManifestResourceStream($"Jellyfin.Plugin.NewReleases.Storage.Migrations.{name}")!);
+                return reader.ReadToEnd();
+            }
+
+            await using var setup = old.CreateCommand();
+            setup.CommandText = Script("001_initial.sql") + Script("002_match_detail.sql") + Script("003_source_entry_credit.sql") + Script("004_decision_want_it.sql") + """
+                CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL);
+                INSERT INTO schema_version VALUES (1, '2026-09-06T00:00:00Z'), (2, '2026-10-01T00:00:00Z'), (3, '2026-10-10T00:00:00Z'), (4, '2026-11-10T00:00:00Z');
+                INSERT INTO library_artist (id, artist_key, jellyfin_id, name, library_ids, album_count) VALUES (1, 'name:blur', '00000000-0000-0000-0000-000000000001', 'Blur', '[]', 1);
+                INSERT INTO release (id, library_artist_id, normalized_title, title, canonical_source, canonical_source_id, primary_type, secondary_types, first_seen_at, last_seen_at, ownership_state)
+                    VALUES (1, 1, 'parklife', 'Parklife', 'musicbrainz', 'rg-1', 'Album', '[]', '2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z', 'Missing');
+                INSERT INTO decision VALUES ('name:blur', 'parklife', 'Ignore', 'aaaaaaaa-1111-1111-1111-111111111111', '2026-10-02T00:00:00.0000000+00:00'),
+                                            ('name:blur', 'leisure', 'WantIt', 'bbbbbbbb-2222-2222-2222-222222222222', '2026-11-11T00:00:00.0000000+00:00'),
+                                            ('name:blur', 'the great escape', 'HaveIt', 'bbbbbbbb-2222-2222-2222-222222222222', '2026-10-03T00:00:00.0000000+00:00');
+                """;
+            await setup.ExecuteNonQueryAsync();
+        }
+
+        await using var connection = await db.OpenAsync(CancellationToken.None);
+
+        Assert.Equal(1, await CountAsync(connection, "library_artist"));
+        Assert.Equal(1, await CountAsync(connection, "release"));
+        Assert.Equal(3, await CountAsync(connection, "decision"));
+        Assert.Equal(0, await CountAsync(connection, "unfollowed_artist"));
+
+        await using var insert = connection.CreateCommand();
+        insert.CommandText = "INSERT INTO unfollowed_artist VALUES ('name:blur', 'aaaaaaaa-1111-1111-1111-111111111111', '2026-11-15T00:00:00.0000000+00:00')";
         Assert.Equal(1, await insert.ExecuteNonQueryAsync());
     }
 

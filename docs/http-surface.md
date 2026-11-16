@@ -91,7 +91,10 @@ or an assumed deployment sub-path.
 | --- | --- | --- | --- |
 | `GET` | `Plugins/NewReleases/Releases` | `ReleasesController` | `ListResponse` |
 | `GET` | `Plugins/NewReleases/Artists` | `ReleasesController` | `ArtistsResponse` |
+| `GET` | `Plugins/NewReleases/Artists/Unfollowed` | `ReleasesController` | `ArtistsResponse` |
 | `GET` | `Plugins/NewReleases/Status` | `ReleasesController` | `StatusResponse` |
+| `POST` | `Plugins/NewReleases/Artists/{jellyfinId:guid}/Unfollow` | `ReleasesController` | none (204) |
+| `POST` | `Plugins/NewReleases/Artists/{jellyfinId:guid}/Follow` | `ReleasesController` | none (204) |
 | `POST` | `Plugins/NewReleases/Releases/{id:long}/Ignore` | `ReleasesController` | none (204) |
 | `POST` | `Plugins/NewReleases/Releases/{id:long}/HaveIt` | `ReleasesController` | none (204) |
 | `POST` | `Plugins/NewReleases/Releases/{id:long}/Restore` | `ReleasesController` | none (204) |
@@ -99,6 +102,7 @@ or an assumed deployment sub-path.
 | `POST` | `Plugins/NewReleases/Admin/RunNow` | `AdminController` | none (202), or `{message}` (409) |
 | `POST` | `Plugins/NewReleases/Admin/Purge` | `AdminController` | none (204) |
 | `POST` | `Plugins/NewReleases/Admin/ClearArchive` | `AdminController` | none (204) |
+| `POST` | `Plugins/NewReleases/Admin/ClearUnfollowedArtists` | `AdminController` | none (204) |
 | `GET` | `Plugins/NewReleases/UserView` | `UserViewController` | `text/html` fragment |
 
 Status codes, query parameters, ownership rules and body contents are specified in

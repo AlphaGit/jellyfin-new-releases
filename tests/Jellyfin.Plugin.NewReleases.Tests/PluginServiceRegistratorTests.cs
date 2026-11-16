@@ -34,12 +34,12 @@ public class PluginServiceRegistratorTests
         Type[] registered =
         [
             typeof(PluginDatabase), typeof(ArtistRepository), typeof(ReleaseRepository),
-            typeof(ArchiveRepository), typeof(SourceStateRepository), typeof(TimeProvider),
+            typeof(ArchiveRepository), typeof(UnfollowedArtistRepository), typeof(SourceStateRepository), typeof(TimeProvider),
             typeof(IHttpClientFactory), typeof(SourceHttpClient), typeof(LibraryScanner),
             typeof(IScheduledTask), typeof(PluginPagesGateway),
         ];
 
-        Assert.Equal(11, registered.Length);
+        Assert.Equal(12, registered.Length);
         Assert.All(registered, service => Assert.NotNull(provider.GetService(service)));
 
         Assert.NotEmpty(provider.GetRequiredService<IEnumerable<IReleaseSource>>());

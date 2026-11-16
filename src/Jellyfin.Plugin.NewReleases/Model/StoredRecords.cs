@@ -23,8 +23,8 @@ public sealed record ArtistSourceState(
     DateTimeOffset? LastCompleteAt,
     string? LastError);
 
-/// <summary>Admin-page counts (FR-012).</summary>
-public sealed record ArtistCounts(int LibraryArtists, IReadOnlyDictionary<string, int> MatchedBySource, IReadOnlyList<UnmatchedArtist> Unmatched);
+/// <summary>Admin-page counts (FR-012; spec 011 FR-017: <c>LibraryArtists</c> counts every library artist, <c>Unfollowed</c> those unfollowed, and the other two leave them out).</summary>
+public sealed record ArtistCounts(int LibraryArtists, IReadOnlyDictionary<string, int> MatchedBySource, IReadOnlyList<UnmatchedArtist> Unmatched, int Unfollowed = 0);
 
 /// <summary>A library artist Unmatched at one or more sources, with each source's reason.</summary>
 public sealed record UnmatchedArtist(Guid JellyfinId, string Name, IReadOnlyList<UnmatchedAt> Sources);
@@ -86,7 +86,8 @@ public sealed record ListedRelease(
     IReadOnlyList<string> MissingTracks,
     ComparedEdition? ComparedEdition,
     IReadOnlyList<SourceLink> Sources,
-    Decision? Archived);
+    Decision? Archived,
+    bool ArtistUnfollowed = false);
 
 public sealed record SourceLink(string Source, string Url, string SourceReleaseId);
 

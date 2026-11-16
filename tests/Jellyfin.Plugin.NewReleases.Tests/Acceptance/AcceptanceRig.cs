@@ -25,7 +25,7 @@ internal sealed class AcceptanceRig : IAsyncDisposable
         Harness = harness;
         Task = new RefreshNewReleasesTask(
             new LibraryScanner(Library_.Manager, NullLogger<LibraryScanner>.Instance),
-            harness.Db.Artists, harness.Db.Releases, harness.Db.SourceState, harness.HttpClient,
+            harness.Db.Artists, harness.Db.Releases, harness.Db.SourceState, harness.Db.Unfollowed, harness.HttpClient,
             [new MusicBrainzSource(harness.HttpClient, NullLogger<MusicBrainzSource>.Instance), new DeezerSource(harness.HttpClient, harness.Clock, NullLogger<DeezerSource>.Instance)],
             harness.Clock, NullLogger<RefreshNewReleasesTask>.Instance, () => harness.Configuration);
     }
@@ -43,7 +43,7 @@ internal sealed class AcceptanceRig : IAsyncDisposable
     public Task RunAsync(CancellationToken ct = default) => Task.ExecuteAsync(new Progress<double>(), ct);
 
     public ReleasesController ControllerFor(Guid user, bool allFolders = true, params Guid[] folders) => new(
-        Harness.Db.Releases, Harness.Db.Artists, Harness.Db.Archive, Harness.Db.SourceState,
+        Harness.Db.Releases, Harness.Db.Artists, Harness.Db.Archive, Harness.Db.Unfollowed, Harness.Db.SourceState,
         ControllerContextFactory.UserManager(ControllerContextFactory.User(user, allFolders, folders)), Tasks, Harness.Clock,
         NullLogger<ReleasesController>.Instance, () => Harness.Configuration)
     {
@@ -51,7 +51,7 @@ internal sealed class AcceptanceRig : IAsyncDisposable
     };
 
     public AdminController AdminController() => new(
-        Harness.Db.Artists, Harness.Db.Releases, Harness.Db.Archive, Harness.Db.SourceState, Tasks, Harness.Clock,
+        Harness.Db.Artists, Harness.Db.Releases, Harness.Db.Archive, Harness.Db.Unfollowed, Harness.Db.SourceState, Tasks, Harness.Clock,
         NullLogger<AdminController>.Instance, () => Harness.Configuration);
 
     public async Task<AdminStatusResponse> AdminStatusAsync()

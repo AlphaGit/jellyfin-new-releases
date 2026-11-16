@@ -21,6 +21,7 @@ internal sealed class TestDatabase : IAsyncDisposable
         Artists = new ArtistRepository(database);
         Releases = new ReleaseRepository(database);
         Archive = new ArchiveRepository(database);
+        Unfollowed = new UnfollowedArtistRepository(database);
         SourceState = new SourceStateRepository(database, clock);
     }
 
@@ -33,6 +34,8 @@ internal sealed class TestDatabase : IAsyncDisposable
     public ReleaseRepository Releases { get; }
 
     public ArchiveRepository Archive { get; }
+
+    public UnfollowedArtistRepository Unfollowed { get; }
 
     public SourceStateRepository SourceState { get; }
 

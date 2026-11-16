@@ -289,6 +289,49 @@ public sealed class ReleaseRepositoryTests : IAsyncLifetime
         Assert.Equal(["Old Album"], await TitlesIn(wanted with { ReleasedSince = null, To = new DateOnly(2020, 12, 31) }));
     }
 
+    /// <summary>Spec 011 FR-005, FR-006, FR-013: Unfollow hides only the List rows; Want-it and Archive rows stay and say the artist is unfollowed.</summary>
+    [Fact]
+    public async Task ListAsync_AnUnfollowedArtistsUndecidedReleasesLeaveTheList_WhileWantItAndArchiveRowsStayAndCarryTheFlag()
+    {
+        await Seed("Undecided", "2020-01-01", "rg-und");
+        await Seed("Wanted Album", "2020-01-02", "rg-want");
+        await Seed("Ignored Album", "2020-01-03", "rg-ign");
+        await DecideAsync("wanted album", "WantIt");
+        await DecideAsync("ignored album", "Ignore");
+        Assert.Equal(["Undecided"], await TitlesIn(DefaultFilter));
+
+        await _db.Unfollowed.SetAsync("name:daft punk", Guid.NewGuid(), Now, CancellationToken.None);
+
+        Assert.Empty(await TitlesIn(DefaultFilter));
+        Assert.Empty(await TitlesIn(DefaultFilter with { ArtistJellyfinId = (await _db.Artists.GetAllAsync(CancellationToken.None)).Single().JellyfinId }));
+        Assert.Equal(["Wanted Album"], await TitlesIn(DefaultFilter with { Wanted = true }));
+        Assert.Equal(["Ignored Album"], await TitlesIn(DefaultFilter with { Archived = true }));
+        Assert.All(await _db.Releases.ListAsync(DefaultFilter with { Wanted = true }, CancellationToken.None), r => Assert.True(r.ArtistUnfollowed));
+        Assert.All(await _db.Releases.ListAsync(DefaultFilter with { Archived = true }, CancellationToken.None), r => Assert.True(r.ArtistUnfollowed));
+
+        await _db.Unfollowed.RemoveAsync("name:daft punk", CancellationToken.None);
+
+        Assert.Equal(["Undecided"], await TitlesIn(DefaultFilter));
+        Assert.All(await _db.Releases.ListAsync(DefaultFilter with { Wanted = true }, CancellationToken.None), r => Assert.False(r.ArtistUnfollowed));
+    }
+
+    /// <summary>Spec 011 US3 scenario 4: Restore deletes the decision; the Release returns to the List but is hidden while the artist is unfollowed.</summary>
+    [Fact]
+    public async Task ListAsync_ARestoredReleaseOfAnUnfollowedArtistStaysOutOfTheListUntilFollow()
+    {
+        await Seed("Ignored Album", "2020-01-03", "rg-ign");
+        await DecideAsync("ignored album", "Ignore");
+        await _db.Unfollowed.SetAsync("name:daft punk", Guid.NewGuid(), Now, CancellationToken.None);
+
+        await _db.Archive.RemoveAsync("name:daft punk", "ignored album", CancellationToken.None);
+
+        Assert.Empty(await TitlesIn(DefaultFilter));
+
+        await _db.Unfollowed.RemoveAsync("name:daft punk", CancellationToken.None);
+
+        Assert.Equal(["Ignored Album"], await TitlesIn(DefaultFilter));
+    }
+
     private Task SeedManyAsync(int count) => _db.ExecuteAsync($"""
         WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < {count})
         INSERT INTO release (library_artist_id, normalized_title, title, canonical_source, canonical_source_id, primary_type, secondary_types, release_date, date_sort, first_seen_at, last_seen_at, ownership_state)

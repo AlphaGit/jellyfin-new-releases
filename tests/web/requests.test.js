@@ -47,7 +47,7 @@ test('the administrator page asks for its status and posts its actions', async (
     page.listeners.pageshow[0]();
     await settled();
 
-    for (const id of ['nr-run-now', 'nr-purge', 'nr-clear-archive']) {
+    for (const id of ['nr-run-now', 'nr-purge', 'nr-clear-archive', 'nr-clear-unfollowed']) {
         document.getElementById(id).listeners.click[0]();
         await settled();
     }
@@ -57,6 +57,7 @@ test('the administrator page asks for its status and posts its actions', async (
         'POST Plugins/NewReleases/Admin/RunNow',
         'POST Plugins/NewReleases/Admin/Purge',
         'POST Plugins/NewReleases/Admin/ClearArchive',
+        'POST Plugins/NewReleases/Admin/ClearUnfollowedArtists',
     ]);
 });
 

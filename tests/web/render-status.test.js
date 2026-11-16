@@ -35,6 +35,12 @@ test('after a completed refresh the releases-last-checked value is a sentence, n
     assert.equal(text('nr-last-checked'), 'Releases last checked 8 hours ago.');
 });
 
+// 011 FR-017: the unfollowed artists have their own line; the library count and the Unmatched section are the server's business.
+test('the unfollowed artists line shows the count the server sends', () => {
+    assert.equal(rendered(fixture('admin-status.json')).text('nr-unfollowed-artists'), '4');
+    assert.equal(rendered(fixture('admin-status-quiet.json')).text('nr-unfollowed-artists'), '0');
+});
+
 // 002 SC-005: the last refresh and the data age are separate values. The fixture gives them the
 // same instant, so this response separates them: one cannot be shown for the other.
 test('the releases-last-checked value states the data age, not the last refresh', () => {

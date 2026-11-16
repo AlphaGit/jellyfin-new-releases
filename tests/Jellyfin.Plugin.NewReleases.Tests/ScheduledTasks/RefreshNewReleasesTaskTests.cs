@@ -41,6 +41,7 @@ public sealed class RefreshNewReleasesTaskTests : IAsyncLifetime
         _h.Db.Artists,
         _h.Db.Releases,
         _h.Db.SourceState,
+        _h.Db.Unfollowed,
         _h.HttpClient,
         [_musicBrainz, _deezer],
         _h.Clock,
@@ -445,6 +446,52 @@ public sealed class RefreshNewReleasesTaskTests : IAsyncLifetime
         await RunAsync();
 
         Assert.Equal($"Owned {album.Id}", await TheBloodOwnershipAsync());
+    }
+
+    /// <summary>
+    /// 011 FR-008, SC-003, SC-004: an unfollowed artist gets no source request, no ownership check and no timestamp change, and its
+    /// stored Releases, Source entries and decisions stay as they were, even though the library now holds the album.
+    /// </summary>
+    [Fact]
+    public async Task Run_UnfollowedArtist_GetsNoSourceCallNoOwnershipCheckNoTimestampChange_AndItsStoredDataStaysAsItWas()
+    {
+        _library.Artist("Quiet"); _library.Album("Q Album", "Quiet", Library, trackTitles: "q track");
+        _library.Artist("Loud"); _library.Album("L1", "Loud", Library);
+        MatchEverything(_musicBrainz, "mb:"); MatchEverything(_deezer, "dz:");
+        var quiet = await _h.Db.Artists.UpsertAsync(new LibraryArtistSnapshot("name:quiet", Guid.NewGuid(), "Quiet", null, [Library], []), CancellationToken.None);
+        await _h.Db.Releases.UpsertFromSourceAsync(quiet, "musicbrainz", Item("musicbrainz", "rg-q", "Q Album"), 0, SourceHarness.Start, CancellationToken.None);
+        await _h.Db.ExecuteAsync("UPDATE library_artist SET last_refreshed_at = '2026-01-01T00:00:00Z' WHERE name = 'Quiet'");
+        await _h.Db.Archive.SetAsync("name:quiet", "q album", DecisionKind.WantIt, Guid.NewGuid(), SourceHarness.Start, CancellationToken.None);
+        await _h.Db.Unfollowed.SetAsync("name:quiet", Guid.NewGuid(), SourceHarness.Start, CancellationToken.None);
+
+        await RunAsync();
+
+        await _musicBrainz.DidNotReceive().MatchArtistAsync(Arg.Is<LibraryArtistSnapshot>(a => a.Name == "Quiet"), Arg.Any<CancellationToken>());
+        await _deezer.DidNotReceive().MatchArtistAsync(Arg.Is<LibraryArtistSnapshot>(a => a.Name == "Quiet"), Arg.Any<CancellationToken>());
+        await _musicBrainz.DidNotReceive().FetchEditionsAsync("rg-q", Arg.Any<CancellationToken>());
+        await _musicBrainz.Received(1).MatchArtistAsync(Arg.Is<LibraryArtistSnapshot>(a => a.Name == "Loud"), Arg.Any<CancellationToken>()); // the control: followed artists still run
+        Assert.Equal(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero), (await _h.Db.Artists.GetAllAsync(CancellationToken.None)).Single(a => a.Name == "Quiet").LastRefreshedAt);
+        Assert.Equal("Missing", await _h.Db.ScalarAsync<string>("SELECT ownership_state FROM release WHERE title = 'Q Album'"));
+        Assert.Null(await _h.Db.ScalarAsync<string>("SELECT ownership_checked_at FROM release WHERE title = 'Q Album'"));
+        Assert.Equal(1L, await _h.Db.ScalarAsync<long>("SELECT COUNT(*) FROM source_entry"));
+        Assert.Equal("WantIt", await _h.Db.ScalarAsync<string>("SELECT kind FROM decision WHERE artist_key = 'name:quiet'"));
+        Assert.Equal(0L, await _h.Db.ScalarAsync<long>("SELECT COUNT(*) FROM artist_source WHERE library_artist_id = " + quiet));
+    }
+
+    /// <summary>011 FR-019: a followed artist's Release credited to an unfollowed collaborator is still owned by the collaborator's album.</summary>
+    [Fact]
+    public async Task Run_FollowedArtistsReleaseCreditedToAnUnfollowedCollaborator_IsStillOwnedByTheCollaboratorsAlbum()
+    {
+        _library.Artist("Seven Lions", SevenLionsMbid); _library.Album("Start Again", "Seven Lions", Library);
+        _library.Artist("Kill the Noise", KillTheNoiseMbid);
+        var album = _library.Album("The Blood", "Kill the Noise", Library, trackTitles: "The Blood");
+        TheBloodFoundForSevenLions(new CreditedArtist(SevenLionsMbid, "Seven Lions"), new CreditedArtist(KillTheNoiseMbid, "Kill the Noise"));
+        await _h.Db.Unfollowed.SetAsync(KillTheNoiseMbid, Guid.NewGuid(), SourceHarness.Start, CancellationToken.None);
+
+        await RunAsync();
+
+        Assert.Equal($"Owned {album.Id}", await TheBloodOwnershipAsync());
+        await _musicBrainz.DidNotReceive().MatchArtistAsync(Arg.Is<LibraryArtistSnapshot>(a => a.Name == "Kill the Noise"), Arg.Any<CancellationToken>());
     }
 
     /// <summary>009 US2-AS6: an uncredited artist's same-title album is never compared.</summary>

@@ -68,6 +68,7 @@ const STATIC = [
     'button#nr-tab-list[aria-controls aria-selected id role type]',
     'button#nr-tab-wantit[aria-controls aria-selected id role type]',
     'button#nr-tab-archive[aria-controls aria-selected id role type]',
+    'button#nr-tab-unfollowed[aria-controls aria-selected id role type]',
     'form#nr-filters.nr-filters[aria-label class id role]',
     'div.nr-filter[class]',
     'label[for]',
@@ -111,6 +112,15 @@ async function loadedInto(id, ajax) {
 
 const RELEASES = fixture('releases.json');
 
+/** What the view writes into the panel once the Unfollowed artists tab is open and the server answers `body`. */
+async function unfollowedPanel(body) {
+    const { document } = loadPageDom('user-view.html', { ApiClient: { ajax: () => Promise.resolve(body) } });
+    await settled();
+    document.getElementById('nr-tab-unfollowed').listeners.click[0]();
+    await settled();
+    return document.getElementById('nr-panel').innerHTML;
+}
+
 /** An `ajax` that answers the Artists request with `artists.json` and every other with `releases.json`. */
 const artistsAndReleases = options => Promise.resolve(fixture(options.url.includes('Artists') ? 'artists.json' : 'releases.json'));
 const only = (id, changes = {}) => ({ ...RELEASES, items: [{ ...RELEASES.items.find(item => item.id === id), ...changes }] });
@@ -120,7 +130,8 @@ const only = (id, changes = {}) => ({ ...RELEASES, items: [{ ...RELEASES.items.f
 // change it records.
 const LIST = ['div.nr-list[class]', 'h2[]'];
 const COVER = ['div.nr-cover[class]', 'img[alt data-fallback height loading referrerpolicy src width]'];
-const DETAILS_COLUMN = ['div[]', 'div.nr-title[class]', 'div.nr-artist[class]', 'a[href]', 'div.nr-meta[class]', 'span.nr-badge[class]', 'span[]', 'span.nr-badge.nr-badge-state[class role]'];
+const ARTIST_BUTTON = 'button.nr-artist-action[aria-label class data-artist-action data-artist-id data-artist-name type]';
+const DETAILS_COLUMN = ['div[]', 'div.nr-title[class]', 'div.nr-artist[class]', 'a[href]', ARTIST_BUTTON, 'div.nr-meta[class]', 'span.nr-badge[class]', 'span[]', 'span.nr-badge.nr-badge-state[class role]'];
 const LINK = 'a[href rel target]';
 const BUTTON = 'button[aria-label data-action type]';
 const EMPTY = ['p.nr-empty[class]'];
@@ -141,6 +152,10 @@ const TEMPLATES = [
         [...LIST, 'article.nr-row[class data-id data-title]', ...COVER, ...DETAILS_COLUMN, 'div.nr-links[class]', LINK, LINK, 'div.nr-actions[class]', BUTTON, BUTTON, BUTTON]],
     ['a release with no cover', () => panelFor(only(101, { covers: [] })),
         [...LIST, 'article.nr-row[class data-id data-title]', 'div.nr-cover[class]', ...DETAILS_COLUMN, 'div.nr-links[class]', LINK, LINK, 'div.nr-actions[class]', BUTTON, BUTTON, BUTTON]],
+    // 011: the Unfollowed artists tab writes, per artist, a row with the name link and the Follow button; artists.json holds two artists.
+    ['the Unfollowed artists tab', () => unfollowedPanel(fixture('artists.json')),
+        [...LIST.slice(0, 1), 'article.nr-artist-row[class]', 'div.nr-title[class]', 'a[href]', ARTIST_BUTTON, 'article.nr-artist-row[class]', 'div.nr-title[class]', 'a[href]', ARTIST_BUTTON]],
+    ['an empty Unfollowed artists tab', () => unfollowedPanel({ items: [] }), EMPTY],
     ['no stored releases', () => panelFor(fixture('releases-empty.json')), EMPTY],
     ['an empty selection', () => panelFor({ ...RELEASES, items: [] }), EMPTY],
     ['an empty Archive', () => panelFor(fixture('releases-empty.json'), true), EMPTY],
@@ -186,6 +201,8 @@ const RUNTIME = {
     'nr-tab-list': ['aria-selected'],
     'nr-tab-wantit': ['aria-selected'],
     'nr-tab-archive': ['aria-selected'],
+    'nr-tab-unfollowed': ['aria-selected'],
+    'nr-filters': ['hidden'], // 011: this tab has no filter
     'nr-panel': ['aria-labelledby'],
 };
 
@@ -199,6 +216,7 @@ test('U68: through load, every tab, a filter change, Clear and a render, the vie
         load: () => {},
         'the Want it tab': () => document.getElementById('nr-tab-wantit').listeners.click[0](),
         'the Archive tab': () => document.getElementById('nr-tab-archive').listeners.click[0](),
+        'the Unfollowed artists tab': () => document.getElementById('nr-tab-unfollowed').listeners.click[0](),
         'the List tab': () => document.getElementById('nr-tab-list').listeners.click[0](),
         'a filter change': () => document.getElementById('nr-f-type').listeners.change[0](),
         Clear: () => document.getElementById('nr-f-clear').listeners.click[0](),

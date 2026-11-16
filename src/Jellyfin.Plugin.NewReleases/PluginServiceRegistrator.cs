@@ -26,6 +26,7 @@ public sealed class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddSingleton<ArtistRepository>();
         serviceCollection.AddSingleton<ReleaseRepository>();
         serviceCollection.AddSingleton<ArchiveRepository>();
+        serviceCollection.AddSingleton<UnfollowedArtistRepository>();
         serviceCollection.AddSingleton<SourceStateRepository>();
 
         // Clock: the host may already provide one; tests substitute it.

@@ -172,6 +172,8 @@ Leaves `decision`, `library_artist`, `artist_source` match status. `204`.
 
 Deletes all `Ignore` and `HaveIt` `decision` rows; `WantIt` rows stay (`010-want-it-list`). `204`.
 
+Unfollow and Follow (`POST /Artists/{jellyfinId}/Unfollow`, `.../Follow`), `GET /Artists/Unfollowed`, `POST /Admin/ClearUnfollowedArtists`, the `artistUnfollowed` row field and the `unfollowedArtists` status field are added by `specs/011-unfollow-artist/contracts/http-api.md`.
+
 ## Existing endpoints (unchanged)
 
 - GET `/Plugins/NewReleases/UserView` → `Web/user-view.html` fragment for Plugin Pages.

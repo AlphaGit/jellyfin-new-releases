@@ -42,6 +42,18 @@ public sealed class ArtistRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetByJellyfinIdAsync_FindsAnUpsertedArtist_AndReturnsNullForAnUnknownId()
+    {
+        var snapshot = Artist("name:blur", "Blur");
+        await _db.Artists.UpsertAsync(snapshot, CancellationToken.None);
+
+        var found = await _db.Artists.GetByJellyfinIdAsync(snapshot.JellyfinId, CancellationToken.None);
+
+        Assert.Equal("name:blur", found?.ArtistKey);
+        Assert.Null(await _db.Artists.GetByJellyfinIdAsync(Guid.NewGuid(), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task DeleteMissingAsync_RemovesArtistsAbsentFromTheSnapshotWithTheirRows()
     {
         var keep = await _db.Artists.UpsertAsync(Artist("name:keep", "Keep"), CancellationToken.None);

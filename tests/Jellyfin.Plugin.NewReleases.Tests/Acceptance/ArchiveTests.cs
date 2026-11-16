@@ -177,4 +177,77 @@ public sealed class ArchiveTests : IAsyncLifetime
         Assert.Empty(await Titles(archived: true));
         Assert.Equal(["Human After All"], await Titles());
     }
+
+    // ── Unfollow artist (spec 011, US1 to US3) ─────────────────────────────────
+
+    private static readonly string[] Alive2007 = ["Robot Rock", "Oh Yeah"];
+
+    private async Task<string[]> TitlesAsync(bool wanted = false, bool archived = false)
+        => (await _rig.ListAsync(wanted: wanted, archived: archived)).Items.Select(i => i.Title).ToArray();
+
+    /// <summary>
+    /// US3: Unfollow hides only the undecided Releases. A Want-it and an Ignored Release stay in their tabs with the flag, Restore does
+    /// not bring the Ignored one back into the List while the artist is unfollowed, and Refresh runs no ownership check, so the Want-it
+    /// Release stays even though the library now holds the album. Follow returns the artist to the Refresh, which then finds it owned.
+    /// </summary>
+    [Fact]
+    public async Task U1_UnfollowKeepsEveryDecision_RefreshSkipsTheArtist_FollowResumesIt()
+    {
+        Scenario();
+        _rig.DeezerAlbum(3, "Alive 2007", Alive2007);
+        await _rig.RunAsync();
+        var daftPunk = (await _rig.ListAsync()).Items.First().ArtistJellyfinId;
+        var controller = _rig.ControllerFor(AcceptanceRig.Alice);
+        await controller.WantItAsync(await IdOf("Alive 2007"), CancellationToken.None);
+        await controller.IgnoreAsync(await IdOf("Human After All"), CancellationToken.None);
+        Assert.Empty(await TitlesAsync());
+
+        Assert.IsType<NoContentResult>(await controller.UnfollowAsync(daftPunk, CancellationToken.None));
+
+        Assert.Equal(["Alive 2007"], await TitlesAsync(wanted: true));
+        Assert.Equal(["Human After All"], await TitlesAsync(archived: true));
+        Assert.All((await _rig.ListAsync(wanted: true)).Items.Concat((await _rig.ListAsync(archived: true)).Items), i => Assert.True(i.ArtistUnfollowed));
+
+        Assert.IsType<NoContentResult>(await controller.RestoreAsync(await IdOf("Human After All", archived: true), CancellationToken.None));
+        Assert.Empty(await TitlesAsync()); // restored, but hidden while the artist is unfollowed
+
+        _rig.Library_.Album("Alive 2007", "Daft Punk", AcceptanceRig.Library, trackTitles: Alive2007); // the user buys it
+        await _rig.RunAsync();
+
+        Assert.Equal(["Alive 2007"], await TitlesAsync(wanted: true)); // no ownership check ran for the unfollowed artist (FR-008)
+
+        Assert.IsType<NoContentResult>(await controller.FollowAsync(daftPunk, CancellationToken.None));
+        Assert.Equal(["Human After All"], await TitlesAsync()); // the restored Release is back at once (FR-007)
+
+        await _rig.RunAsync();
+
+        Assert.Empty(await TitlesAsync(wanted: true)); // owned now: the Want-it Release leaves its list by itself
+    }
+
+    /// <summary>US3, FR-015, US4: Purge release data and Clear Archive leave the artist unfollowed; the admin counts follow it; Clear unfollowed artists follows everyone.</summary>
+    [Fact]
+    public async Task U2_UnfollowSurvivesPurgeAndClearArchive_TheAdminCountsFollowIt_AndClearUnfollowedArtistsFollowsEveryone()
+    {
+        Scenario();
+        await _rig.RunAsync();
+        var daftPunk = (await _rig.ListAsync()).Items.First().ArtistJellyfinId;
+        var controller = _rig.ControllerFor(AcceptanceRig.Alice);
+        await controller.UnfollowAsync(daftPunk, CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(await _rig.AdminController().PurgeAsync(CancellationToken.None));
+        Assert.IsType<NoContentResult>(await _rig.AdminController().ClearArchiveAsync(CancellationToken.None));
+        await _rig.RunAsync();
+
+        Assert.Equal(["Daft Punk"], (await controller.GetUnfollowedArtistsAsync(CancellationToken.None)).Value!.Items.Select(a => a.Name));
+        Assert.Empty(await TitlesAsync()); // not fetched again while unfollowed
+        var status = await _rig.AdminStatusAsync();
+        Assert.Equal((1, 1), (status.LibraryArtists, status.UnfollowedArtists));
+
+        Assert.IsType<NoContentResult>(await _rig.AdminController().ClearUnfollowedArtistsAsync(CancellationToken.None));
+        await _rig.RunAsync();
+
+        Assert.Empty((await controller.GetUnfollowedArtistsAsync(CancellationToken.None)).Value!.Items);
+        Assert.Equal(["Alive 2007", "Human After All"], await TitlesAsync());
+        Assert.Equal(0, (await _rig.AdminStatusAsync()).UnfollowedArtists);
+    }
 }

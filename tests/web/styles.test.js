@@ -66,6 +66,7 @@ const STYLESHEET = [
     ['#nr-user-view [role="tab"]', 'padding: .45em 1em; border-radius: 4px; border: 1px solid rgba(127,127,127,.4); background: transparent; color: inherit; cursor: pointer'],
     ['#nr-user-view [role="tab"][aria-selected="true"]', 'background: rgba(127,127,127,.25); font-weight: 700'],
     ['#nr-user-view .nr-filters', 'display: flex; flex-wrap: wrap; gap: .6em 1em; align-items: flex-end; margin-bottom: 1em; padding: .75em 1em; background: rgba(127,127,127,.08); border: 1px solid rgba(127,127,127,.25); border-radius: 6px'],
+    ['#nr-user-view .nr-filters[hidden]', 'display: none'], // 011
     ['#nr-user-view .nr-filter', 'min-width: 140px; flex: 1 1 140px'],
     ['#nr-user-view .nr-filter label', 'display: block; font-size: .78em; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; opacity: .7; margin-bottom: .25em'],
     ['#nr-user-view .nr-filter select, #nr-user-view .nr-filter input', 'width: 100%; box-sizing: border-box; padding: .4em .55em; border-radius: 4px; border: 1px solid rgba(127,127,127,.4); background: rgba(0,0,0,.25); color: inherit; font-size: .9em'],
@@ -75,6 +76,8 @@ const STYLESHEET = [
     ['#nr-user-view .nr-cover img', 'display: block; width: 100%; height: 100%; object-fit: cover'], // 007
     ['#nr-user-view .nr-title', 'font-size: 1.1em; font-weight: 700'],
     ['#nr-user-view .nr-artist a', 'color: inherit'],
+    ['#nr-user-view .nr-artist-action', 'margin-left: .6em; padding: 0; border: 0; background: transparent; color: inherit; font-size: .82em; text-decoration: underline; cursor: pointer'], // 011
+    ['#nr-user-view .nr-artist-row', 'display: flex; align-items: center; justify-content: space-between; gap: 1em; padding: .7em 1em; background: rgba(127,127,127,.08); border: 1px solid rgba(127,127,127,.25); border-radius: 6px'], // 011
     ['#nr-user-view .nr-meta', 'display: flex; flex-wrap: wrap; gap: .4em .8em; align-items: center; font-size: .85em; opacity: .9'],
     ['#nr-user-view .nr-badge', 'display: inline-block; font-size: .72em; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .18em .55em; border-radius: 10px; background: #3a3a3a; color: #ddd'],
     ['#nr-user-view .nr-badge-state', 'background: #24405c'],

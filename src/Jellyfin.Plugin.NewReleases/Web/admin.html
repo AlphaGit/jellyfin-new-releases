@@ -72,6 +72,7 @@
                 <dt>Releases last checked</dt><dd id="nr-last-checked">–</dd>
                 <dt>Next refresh</dt><dd id="nr-next-refresh">–</dd>
                 <dt>Artists processed</dt><dd id="nr-artists-processed">–</dd>
+                <dt>Unfollowed artists</dt><dd id="nr-unfollowed-artists">–</dd>
                 <dt>Releases found</dt><dd id="nr-releases-found">–</dd>
             </dl>
             <p>The refresh interval is changed in Dashboard → Scheduled Tasks → New Releases → Refresh new releases.</p>
@@ -79,6 +80,7 @@
                 <button is="emby-button" type="button" class="raised" id="nr-run-now"><span>Run now</span></button>
                 <button is="emby-button" type="button" class="raised" id="nr-purge"><span>Purge release data</span></button>
                 <button is="emby-button" type="button" class="raised" id="nr-clear-archive"><span>Clear Archive</span></button>
+                <button is="emby-button" type="button" class="raised" id="nr-clear-unfollowed"><span>Clear unfollowed artists</span></button>
             </div>
 
             <h2>Unmatched artists</h2>
@@ -167,6 +169,7 @@
                 page.querySelector('#nr-last-checked').textContent = checkedText(status.releasesLastCheckedAt, Date.now());
                 page.querySelector('#nr-next-refresh').textContent = status.isRunning ? 'Running now' : when(status.nextRunAt);
                 page.querySelector('#nr-artists-processed').textContent = run ? run.artistsProcessed + ' of ' + status.libraryArtists : '–';
+                page.querySelector('#nr-unfollowed-artists').textContent = String(status.unfollowedArtists);
                 page.querySelector('#nr-releases-found').textContent = run ? String(run.releasesFound) : '–';
 
                 var displayName = function (id) {
@@ -283,6 +286,9 @@
             });
             page.querySelector('#nr-clear-archive').addEventListener('click', function () {
                 confirmed('Remove every Ignore and Have it decision? Archived releases reappear in the list.', 'Clear Archive', 'ClearArchive', 'Archive cleared.');
+            });
+            page.querySelector('#nr-clear-unfollowed').addEventListener('click', function () {
+                confirmed('Follow every unfollowed artist again? Their Releases show in the list again.', 'Clear unfollowed artists', 'ClearUnfollowedArtists', 'Unfollowed artists cleared.');
             });
         })();
     </script>

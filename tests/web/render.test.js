@@ -272,8 +272,8 @@ for (const [label, body] of [
     });
 }
 
-/** Each button of the row with `id`, as `[screen-reader label, visible text]`. */
-const buttonsOf = (panel, id) => [...rowOf(panel, id).matchAll(/<button [^>]*aria-label="([^"]*)">([^<]*)<\/button>/g)].map(([, label, text]) => [label, text]);
+/** Each Release action button of the row with `id`, as `[screen-reader label, visible text]`. The artist button (011) is not one: it carries `data-artist-action`. */
+const buttonsOf = (panel, id) => [...rowOf(panel, id).matchAll(/<button [^>]*\bdata-action="[^"]*" aria-label="([^"]*)">([^<]*)<\/button>/g)].map(([, label, text]) => [label, text]);
 
 test('U80: the buttons read Want it, Ignore, Have it and Restore, and their screen-reader labels name the release', () => {
     const body = fixture('releases.json');

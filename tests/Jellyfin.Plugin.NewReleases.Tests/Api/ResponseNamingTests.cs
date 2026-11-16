@@ -36,6 +36,17 @@ public class ResponseNamingTests
         Assert.Equal(NamesByPath(Fixture("artists.json")), NamesByPath(written));
     }
 
+    /// <summary>011: the Unfollowed artists tab reads the same shape as the artist filter, from its own endpoint, which declares its naming like the rest.</summary>
+    [Fact]
+    public void UnfollowedArtistsResponse_AsTheUnfollowedArtistsEndpointDeclaresIt_CarriesTheNamesTheUnfollowedArtistsTabReads()
+    {
+        var artists = new ArtistsResponse(new[] { new ArtistDto(Guid.NewGuid(), "Chromatics"), new ArtistDto(Guid.NewGuid(), "Desire") });
+
+        var written = Serialize(typeof(ReleasesController), artists);
+
+        Assert.Equal(NamesByPath(Fixture("unfollowed-artists.json")), NamesByPath(written));
+    }
+
     /// <summary>
     /// No page reads this response. `FR-010` covers it all the same: one rule, no judgement about
     /// which bodies matter, so the endpoint that returns it declares its naming like the rest.
@@ -81,6 +92,7 @@ public class ResponseNamingTests
             checkedAt.AddDays(1),
             false,
             83,
+            4,
             new Dictionary<string, int> { ["musicbrainz"] = 41, ["deezer"] = 38 },
             new[]
             {
@@ -108,10 +120,10 @@ public class ResponseNamingTests
         return new ListResponse(
             new[]
             {
-                new ReleaseDto(101, "Chromatics", chromatics, "Closer to Grey", "Album", "2019-10-02", "Day", "Missing", null, null, sources, null, covers),
-                new ReleaseDto(102, "Chromatics", chromatics, "Kill for Love", "Album", "2012-03-26", "Day", "Incomplete", new[] { "Into the Black" }, new ComparedEditionDto("musicbrainz", "Kill for Love (deluxe edition)"), sources, null, covers),
-                new ReleaseDto(103, "Desire", desire, "Escape", "Single", "2027-01-15", "Day", "Upcoming", null, null, sources, null, covers),
-                new ReleaseDto(104, "Desire", desire, "II", "Album", null, "None", "Missing", null, null, sources, new ArchivedDto("HaveIt", DateTimeOffset.UnixEpoch), covers),
+                new ReleaseDto(101, "Chromatics", chromatics, "Closer to Grey", "Album", "2019-10-02", "Day", "Missing", null, null, sources, null, covers, false),
+                new ReleaseDto(102, "Chromatics", chromatics, "Kill for Love", "Album", "2012-03-26", "Day", "Incomplete", new[] { "Into the Black" }, new ComparedEditionDto("musicbrainz", "Kill for Love (deluxe edition)"), sources, null, covers, false),
+                new ReleaseDto(103, "Desire", desire, "Escape", "Single", "2027-01-15", "Day", "Upcoming", null, null, sources, null, covers, false),
+                new ReleaseDto(104, "Desire", desire, "II", "Album", null, "None", "Missing", null, null, sources, new ArchivedDto("HaveIt", DateTimeOffset.UnixEpoch), covers, true),
             },
             4,
             true,
