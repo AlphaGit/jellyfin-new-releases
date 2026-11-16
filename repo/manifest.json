@@ -8,6 +8,14 @@
         "category": "General",
         "versions": [
             {
+                "version": "0.5.0.0",
+                "changelog": "### Added\n\n- **Unfollow.** Next to each artist name there is now a small Unfollow button, apart from the\n  Release buttons. Unfollowing an artist hides their Releases from the list for every user, and\n  the daily refresh stops reading the sources for them. It is meant for artists that are in your\n  library only because they collaborate with one you follow, or that you do not want to track.\n  Releases you already marked Have it, Want it or Ignore stay where they are. The new Unfollowed\n  artists tab lists them with a Follow button, and Follow brings the artist back. On the\n  administrator page, Unfollowed artists shows their count and Clear unfollowed artists follows\n  every artist again. Purge release data and Clear Archive leave unfollowed artists alone.\n\n### Changed\n\n- New routes: `POST Artists/{id}/Unfollow`, `POST Artists/{id}/Follow`, `GET Artists/Unfollowed`\n  and `POST Admin/ClearUnfollowedArtists`. Each Release in the list response carries\n  `artistUnfollowed`, and the administrator status carries `unfollowedArtists`.\n- Upgrading runs one database migration that adds a table and changes no existing row.",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/AlphaGit/jellyfin-new-releases/releases/download/v0.5.0/new-releases.zip",
+                "checksum": "e61f7a2ff6481c80c4039ee84059b695",
+                "timestamp": "2026-11-16T02:11:35Z"
+            },
+            {
                 "version": "0.4.0.0",
                 "changelog": "### Added\n\n- **Want it.** A release can now be marked Want it, next to Ignore and Have it. It moves to a new\n  Want it tab, a shopping list shared by every user. From there you can mark it Have it (you\n  bought it), Ignore (you decided against it) or Restore it to the list. In the Archive, Restore\n  and Want it are offered. A Want it release that your library gains leaves the tab by itself.\n  Purge release data and Clear Archive leave Want it decisions in place.\n\n### Changed\n\n- The list endpoint accepts `wanted=true` for the Want it list, and `POST Releases/{id}/WantIt`\n  records the decision. Asking for `archived=true` and `wanted=true` together answers 400.\n- Upgrading runs one database migration that keeps every existing Ignore and Have it decision.\n  A downgrade to an older version is not supported after it.",
                 "targetAbi": "12.0.0.0",
