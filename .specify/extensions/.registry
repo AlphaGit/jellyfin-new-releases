@@ -31,21 +31,6 @@
       },
       "registered_skills": [],
       "installed_at": "2026-09-06T17:29:03.606446+00:00"
-    },
-    "tasks-to-project": {
-      "version": "0.2.0",
-      "source": "local",
-      "manifest_hash": "sha256:aa941f46e632b61874ac7dbd94df86af269fe0a45254307e69cd88a3c657b22d",
-      "enabled": true,
-      "priority": 10,
-      "registered_commands": {
-        "claude": [
-          "speckit.tasks-to-project.publish",
-          "speckit.tasks-to-project.sync"
-        ]
-      },
-      "registered_skills": [],
-      "installed_at": "2026-09-06T17:29:04.219740+00:00"
     }
   }
 }

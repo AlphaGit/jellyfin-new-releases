@@ -18,10 +18,6 @@ Installed extensions (`specify extension list`; hooks in `.specify/extensions.ym
 - **worktrees** — `after_specify` offers a nested `.worktrees/<branch>` worktree. `auto_create`
   is off because Orca already isolates each agent in its own worktree; decline unless you
   need a second one.
-- **tasks-to-project** — one-way mirror of `tasks.md` onto a public GitHub Project (v2) so
-  third parties can see the roadmap. The repo is the source of truth; `sync` never writes back
-  to `tasks.md`. Config: `.specify/extensions/tasks-to-project/tasks-to-project-config.yml`
-  (`project.number` must be set before the `after_tasks` hook can publish).
 
 ## Conventions (inherited from concert-radar)
 

@@ -1,6 +1,5 @@
 installed:
 - grill
-- tasks-to-project
 - worktrees
 settings:
   auto_execute_hooks: true
@@ -13,22 +12,4 @@ hooks:
     priority: 10
     prompt: Execute speckit.worktrees.create?
     description: Auto-spawn a worktree after a new feature is specified
-    condition: null
-  after_tasks:
-  - extension: tasks-to-project
-    command: speckit.tasks-to-project.publish
-    enabled: true
-    optional: true
-    priority: 10
-    prompt: Execute speckit.tasks-to-project.publish?
-    description: Publish generated tasks as cards on a GitHub Project kanban
-    condition: null
-  after_implement:
-  - extension: tasks-to-project
-    command: speckit.tasks-to-project.sync
-    enabled: true
-    optional: true
-    priority: 10
-    prompt: Execute speckit.tasks-to-project.sync?
-    description: Sync completed tasks back to the GitHub Project kanban
     condition: null

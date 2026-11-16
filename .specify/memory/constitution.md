@@ -1,6 +1,16 @@
 <!--
 Sync Impact Report
-- Version change: 1.4.0 → 2.0.0
+- Version change: 2.0.0 → 2.0.1 (PATCH: the `tasks-to-project` extension was uninstalled, so
+  workflow wording that named it is removed. No principle is added, removed or redefined, and no
+  rule changes meaning.)
+- Modified principles: I. Spec-Driven Development (the bullet on `specs/` no longer mentions a
+  GitHub Project board mirror)
+- Modified sections: Development Workflow (Spec Kit order ends at `/speckit-implement`; the
+  `speckit-tasks-to-project-publish` and `speckit-tasks-to-project-sync` steps are removed)
+- Removed principles: none
+- Templates: none need changes; they read the constitution at runtime.
+- Follow-up TODOs: none
+- Previous amendment (2.0.0): Version change 1.4.0 → 2.0.0
 - Removed principles: II. Test-Driven Development. The `tdd` Spec Kit extension was
   uninstalled; its commands, `tdd/cycle-log.md` and `tdd-profile.md` no longer exist.
 - Modified principles: III. Hermetic Tests (the suite-speed rule no longer names the TDD profile
@@ -42,8 +52,7 @@ Behaviour exists only when a specification under `specs/` describes it.
 
 - Every feature starts with `/speckit-specify`, is clarified with `/speckit-grill-me` until no
   material decision is open, and is planned and tasked before any implementation begins.
-- `specs/` is the single source of truth. The public GitHub Project board is a one-way mirror
-  of `tasks.md`; nothing on the board changes a spec.
+- `specs/` is the single source of truth. Nothing outside it changes a spec.
 - Scope not written in the active spec MUST NOT be implemented. Discoveries during
   implementation go back into the spec first, then into code.
 
@@ -135,8 +144,7 @@ Ship the smallest change that satisfies the spec.
 ## Development Workflow
 
 - Spec Kit order per feature: `/speckit-specify` → `/speckit-grill-me` → `/speckit-plan` →
-  `/speckit-tasks` (accept `speckit-tasks-to-project-publish` to mirror the roadmap) →
-  `/speckit-implement` → `speckit-tasks-to-project-sync`.
+  `/speckit-tasks` → `/speckit-implement`.
 - Single-maintainer project: no feature branches and no pull requests. Finished work is
   committed to `main` and pushed. Parallel work and isolation use Orca worktrees; a worktree's
   scratch branch is fast-forwarded onto `main` and is never pushed on its own. The worktrees
@@ -168,4 +176,4 @@ This constitution supersedes every other practice document in the repository.
 - The constitution is reviewed when the Jellyfin target major version changes, when Spec Kit
   changes its artifact contract, or at the first release, whichever comes first.
 
-**Version**: 2.0.0 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-10-10
+**Version**: 2.0.1 | **Ratified**: 2026-09-06 | **Last Amended**: 2026-11-15
