@@ -3,6 +3,26 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 0.5.0 — 2026-11-15
+
+### Added
+
+- **Unfollow.** Next to each artist name there is now a small Unfollow button, apart from the
+  Release buttons. Unfollowing an artist hides their Releases from the list for every user, and
+  the daily refresh stops reading the sources for them. It is meant for artists that are in your
+  library only because they collaborate with one you follow, or that you do not want to track.
+  Releases you already marked Have it, Want it or Ignore stay where they are. The new Unfollowed
+  artists tab lists them with a Follow button, and Follow brings the artist back. On the
+  administrator page, Unfollowed artists shows their count and Clear unfollowed artists follows
+  every artist again. Purge release data and Clear Archive leave unfollowed artists alone.
+
+### Changed
+
+- New routes: `POST Artists/{id}/Unfollow`, `POST Artists/{id}/Follow`, `GET Artists/Unfollowed`
+  and `POST Admin/ClearUnfollowedArtists`. Each Release in the list response carries
+  `artistUnfollowed`, and the administrator status carries `unfollowedArtists`.
+- Upgrading runs one database migration that adds a table and changes no existing row.
+
 ## 0.4.0 — 2026-11-10
 
 ### Added
